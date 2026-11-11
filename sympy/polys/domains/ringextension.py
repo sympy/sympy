@@ -14,7 +14,7 @@ class RingExtension(Domain[Er], Generic[Er, Eg]):
     """Represents a ring extension.
 
     Examples are polynomial rings :ref:`K[x]`, algebraic number fields
-    :ref:`QQ(a)`, the Guassian domains :ref:`ZZ_I` and :ref:`QQ_I`.
+    :ref:`QQ(a)`, the Gaussian domains :ref:`ZZ_I` and :ref:`QQ_I`.
 
     A ``RingExtension`` domain has a ground domain and a set of generators
     and provides a ``.to_dict()`` method to convert elements to a dict

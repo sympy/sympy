@@ -1,3 +1,4 @@
+from __future__ import annotations
 from sympy.printing.mathml import mathml
 from sympy.utilities.mathml import c2p
 import tempfile

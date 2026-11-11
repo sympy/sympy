@@ -2,27 +2,38 @@
 
 from __future__ import annotations
 
+from functools import cached_property
 from sympy.core.add import Add
 from sympy.core.mul import Mul
-from sympy.core.expr import Expr
 from sympy.core.singleton import S
 from sympy.core.symbol import Dummy, symbols
 from sympy.external.gmpy import MPQ
-from sympy.polys.domains.domain import Domain
 from sympy.polys.domains.characteristiczero import CharacteristicZero
 from sympy.polys.domains.field import Field
 from sympy.polys.domains.simpledomain import SimpleDomain
+from sympy.polys.domains.conjugatedomain import ConjugateDomain
 from sympy.polys.domains.ringextension import RingExtension
 from sympy.polys.polyclasses import ANP, DMP
 from sympy.polys.polyerrors import CoercionFailed, DomainError, NotAlgebraic, IsomorphismFailed
 from sympy.utilities import public
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from sympy.polys.domains.domain import Domain
+    from sympy.core.expr import Expr
 
 
 Alg = ANP[MPQ]
 
 
 @public
-class AlgebraicField(Field[Alg], CharacteristicZero, SimpleDomain[Alg], RingExtension[Alg, MPQ]):
+class AlgebraicField(
+    Field[Alg],
+    CharacteristicZero,
+    SimpleDomain[Alg],
+    ConjugateDomain[Alg],
+    RingExtension[Alg, MPQ]
+):
     r"""Algebraic number field :ref:`QQ(a)`
 
     A :ref:`QQ(a)` domain represents an `algebraic number field`_
@@ -128,7 +139,7 @@ class AlgebraicField(Field[Alg], CharacteristicZero, SimpleDomain[Alg], RingExte
     >>> K.to_sympy(xk * yk)
     17*sqrt(2) + 30
     >>> K.to_sympy(xk + yk)
-    5 + 7*sqrt(2)
+    7*sqrt(2) + 5
     >>> K.to_sympy(xk ** 2)
     24*sqrt(2) + 41
     >>> K.to_sympy(xk / yk)
@@ -147,7 +158,7 @@ class AlgebraicField(Field[Alg], CharacteristicZero, SimpleDomain[Alg], RingExte
     >>> minpoly(g, x)
     x**2 + x + 1
     >>> factor(x**3 - 1, extension=g)
-    (x - 1)*(x - exp(2*I*pi/3))*(x + 1 + exp(2*I*pi/3))
+    (x - 1)*(x - exp(2*I*pi/3))*(x + exp(2*I*pi/3) + 1)
 
     It is also possible to make an algebraic field from multiple extension
     elements.
@@ -210,7 +221,7 @@ class AlgebraicField(Field[Alg], CharacteristicZero, SimpleDomain[Alg], RingExte
     >>> K
     QQ<sqrt(5)>
     >>> K.integral_basis(fmt='sympy')
-    [1, 1/2 + sqrt(5)/2]
+    [1, sqrt(5)/2 + 1/2]
     >>> K.maximal_order()
     Submodule[[2, 0], [1, 1]]/2
 
@@ -223,7 +234,7 @@ class AlgebraicField(Field[Alg], CharacteristicZero, SimpleDomain[Alg], RingExte
     >>> K
     QQ<exp(2*I*pi/7)>
     >>> K.primes_above(11)
-    [(11, _x**3 + 5*_x**2 + 4*_x - 1), (11, _x**3 - 4*_x**2 - 5*_x - 1)]
+    [(11, _0**3 + 5*_0**2 + 4*_0 - 1), (11, _0**3 - 4*_0**2 - 5*_0 - 1)]
 
     The Galois group of the Galois closure of the field can be computed (when
     the minimal polynomial of the field is of sufficiently small degree).
@@ -505,7 +516,7 @@ class AlgebraicField(Field[Alg], CharacteristicZero, SimpleDomain[Alg], RingExte
         >>> print(B0[1])  # doctest: +SKIP
         ANP([mpq(1,2), mpq(1,2)], [mpq(1,1), mpq(0,1), mpq(-5,1)], QQ)
         >>> print(B1[1])
-        1/2 + alpha/2
+        alpha/2 + 1/2
         >>> print(B2[1])
         alpha/2 + 1/2
 
@@ -547,6 +558,36 @@ class AlgebraicField(Field[Alg], CharacteristicZero, SimpleDomain[Alg], RingExte
         dK = self.discriminant()
         rad = self._nilradicals_mod_p.get(p)
         return prime_decomp(p, ZK=ZK, dK=dK, radical=rad)
+
+    @cached_property
+    def is_ConjugateDomain(self):
+        try:
+            _ = self.conjugate
+        except DomainError:
+            return False
+        return True
+
+    @cached_property
+    def conjugate(self):
+        """Returns the complex conjugate of ``a``. """
+        try:
+            # the conjugate of ext has the same minpoly as ext
+            z = self.ext.func((self.ext.minpoly, self.ext.conjugate()))
+            conj = self.from_sympy(z)
+        except CoercionFailed:
+            raise DomainError("the algebraic field is not closed under conjugation")
+
+        if conj.rep == [1, 0]:
+            # conj == ext implies ext is real
+            return lambda a: a
+
+        def conjugate(a):
+            v = self.zero
+            for c in a.rep:
+                v = v * conj + c
+            return v
+
+        return conjugate
 
     def galois_group(self, by_name=False, max_tries=30, randomize=False):
         """

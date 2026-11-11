@@ -1,7 +1,9 @@
+from __future__ import annotations
 from sympy.concrete.summations import Sum
 from sympy.core.basic import Basic
 from sympy.core.function import (Derivative, Function, count_ops)
 from sympy.core.numbers import (I, Rational, pi)
+from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.core.relational import (Eq, Rel)
 from sympy.core.singleton import S
 from sympy.core.symbol import (Symbol, symbols)
@@ -129,6 +131,8 @@ def test_count_ops_visual():
     #It checks that TUPLE is counted as an operation.
 
     assert count(Eq(x + y, S(2))) == ADD + EQ
+    assert count_ops(x*exp(-x), visual=True) == EXP + MUL + NEG
+    assert count_ops(1/sqrt(x), visual=True) == DIV + NEG + POW
 
 
 def test_issue_9324():

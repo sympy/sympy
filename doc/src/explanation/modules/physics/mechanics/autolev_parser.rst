@@ -87,7 +87,6 @@ The parser can be used as follows::
     >>> print(sympy_code)
     import sympy.physics.mechanics as me
     import sympy as sm
-    import math as m
     import numpy as np
 
     q1, q2, u1, u2 = me.dynamicsymbols('q1 q2 u1 u2')
@@ -342,7 +341,7 @@ Gotchas
 
 - Need to change ``me.dynamicsymbols._t`` to ``me.dynamicsymbols('t')`` for
   all occurrences of it in the Kane's equations. For example have a look at
-  line 10 of this `spring damper example <https://github.com/sympy/sympy/blob/master/sympy/parsing/autolev/test-examples/pydy-example-repo/mass_spring_damper.py#L10>`_.
+  line 10 of this `spring damper example <https://github.com/sympy/sympy/blob/master/sympy/parsing/autolev/test-examples/pydy-example-repo/mass_spring_damper.py>`_.
   This equation is used in forming the Kane's equations so we need to
   change ``me.dynamicsymbols._t`` to ``me.dynamicsymbols('t')`` in this case.
 

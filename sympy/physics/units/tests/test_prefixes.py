@@ -1,3 +1,5 @@
+from __future__ import annotations
+from sympy import srepr, sstr
 from sympy.core.mul import Mul
 from sympy.core.numbers import Rational
 from sympy.core.singleton import S
@@ -81,6 +83,49 @@ def test_bases():
     assert kibi.base == 2
 
 
-def test_repr():
-    assert eval(repr(kilo)) == kilo
-    assert eval(repr(kibi)) == kibi
+def test_prefix_printing():
+    assert str(kilo) == "k"
+    assert repr(kilo) == "kilo"
+    assert sstr(kilo) == "kilo"
+    assert sstr(kilo, abbrev=True) == "k"
+    assert srepr(kilo) == "kilo"
+
+
+def test_binary_prefix_abbreviations():
+    # The binary prefixes previously all had the abbreviation "Y" (a copy-paste
+    # from yotta); they must carry their own IEC abbreviations.  The abbreviation
+    # is a name, so it must be a Symbol, not sympified (which would turn "Ei"
+    # into the exponential-integral function and "E" into Euler's number).
+    from sympy.physics.units.prefixes import (
+        BIN_PREFIXES, kibi, mebi, gibi, tebi, pebi, exbi, exa)
+    expected = {
+        kibi: ("Ki", 2**10), mebi: ("Mi", 2**20), gibi: ("Gi", 2**30),
+        tebi: ("Ti", 2**40), pebi: ("Pi", 2**50), exbi: ("Ei", 2**60),
+    }
+    for prefix, (abbrev, scale) in expected.items():
+        assert str(prefix.abbrev) == abbrev
+        assert isinstance(prefix.abbrev, Symbol)
+        assert prefix.scale_factor == scale
+    # BIN_PREFIXES is keyed by the correct abbreviations:
+    assert {str(p.abbrev) for p in BIN_PREFIXES.values()} == set(BIN_PREFIXES)
+    # a decimal prefix whose abbreviation collides with a constant stays a name:
+    assert isinstance(exa.abbrev, Symbol)
+    assert str(exa.abbrev) == "E"
+
+
+def test_binary_prefix_operations():
+    # Products/quotients of binary prefixes must simplify to binary prefixes,
+    # just as decimal prefixes simplify to decimal prefixes.
+    from sympy.physics.units.prefixes import (
+        kibi, mebi, gibi, pebi, exbi, mega)
+    assert kibi*kibi == mebi
+    assert kibi*mebi == gibi
+    assert mebi*kibi == gibi
+    assert gibi/kibi == mebi
+    assert exbi/pebi == kibi
+    # decimal prefixes still simplify among themselves:
+    assert kilo*kilo == mega
+    # a mixed decimal/binary product has no prefix, so a number is returned:
+    assert kilo*kibi == 1024000
+    # 1/kibi has no (negative) binary prefix, so a plain fraction is returned:
+    assert 1/kibi == Rational(1, 1024)

@@ -1,3 +1,4 @@
+from __future__ import annotations
 from sympy.core.numbers import (E, Rational, pi)
 from sympy.functions.elementary.exponential import exp
 from sympy.functions.elementary.miscellaneous import sqrt
@@ -60,7 +61,25 @@ def test_convolution():
     assert convolution(b, e) == [-9, 10, Rational(239, 15), Rational(34, 3),
                                  Rational(32, 3), Rational(43, 5), Rational(113, 15),
                                  Rational(14, 5)]
+    assert convolution([1, 0, 1], [1, 1]) == convolution(
+        [S.One, S.Zero, S.One], [S.One, S.One])
 
+    # sympy Integer/Zero
+    r = convolution(
+        [S.Zero, S.One, S.Zero, Rational(-1, 6), S.Zero, Rational(1, 120)],
+        [S.One,  S.Zero, Rational(-1, 2), S.Zero, Rational(1, 24), S.Zero]
+    )
+    assert not any(x.has(I) or x.has(sqrt) for x in r)
+    assert r[1] == 1
+    assert r[3] == Rational(-2, 3)
+    assert r[5] == Rational(2, 15)
+
+
+def test_convolution_trailing_zeros_issue_30770():
+    assert convolution([1, 0], [1, 1]) == [1, 1, 0]
+    assert convolution([0, 0], [1, 2]) == [0, 0, 0]
+    # check that cyclic convolution preserves trailing zeros
+    assert convolution([1, 0], [1, 1], cycle=3) == [1, 1, 0]
 
 def test_cyclic_convolution():
     # fft
@@ -155,6 +174,26 @@ def test_cyclic_convolution():
              p*y + t*u]
 
     raises(ValueError, lambda: convolution([1, 2, 3], [4, 5, 6], cycle=-1))
+
+
+def test_convolution_empty_input():
+    # the convolution of an empty sequence with anything is empty
+    p = 19*2**10 + 1
+    for kwargs in ({}, {'prime': p}):
+        funcs = ((convolution, convolution_fft, convolution_int)
+                 if not kwargs else (convolution, convolution_ntt))
+        for func in funcs:
+            for seq in ([], [1], [1, 2], [1, 2, 3]):
+                assert func([], seq, **kwargs) == []
+                assert func(seq, [], **kwargs) == []
+    assert convolution([], [1, 2], cycle=3) == [0, 0, 0]
+    assert convolution([], [Rational(1, 2), 3]) == []
+    assert convolution([], [1, 2], dyadic=True) == []
+    assert convolution([], [1, 2], subset=True) == []
+    # a nonempty input is unaffected
+    assert convolution([1], [1, 2]) == [1, 2]
+    assert convolution_fft([1], [1, 2]) == [1, 2]
+    assert convolution_ntt([1], [1, 2], prime=p) == [1, 2]
 
 
 def test_convolution_fft():

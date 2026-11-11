@@ -1,11 +1,11 @@
+from __future__ import annotations
 from sympy import (S, sympify, expand, sqrt, Add, zeros, acos,
                    ImmutableMatrix as Matrix, simplify)
 from sympy.simplify.trigsimp import trigsimp
 from sympy.printing.defaults import Printable
 from sympy.utilities.misc import filldedent
 from sympy.core.evalf import EvalfMixin
-
-from mpmath.libmp.libmpf import prec_to_dps
+from sympy.external.mpmath import prec_to_dps
 
 
 __all__ = ['Vector']
@@ -568,9 +568,9 @@ class Vector(Printable, EvalfMixin):
         >>> A = N.orientnew('A', 'Axis', (beta, N.x))
         >>> vector.to_matrix(A)
         Matrix([
-        [                         a],
-        [ b*cos(beta) + c*sin(beta)],
-        [-b*sin(beta) + c*cos(beta)]])
+        [                        a],
+        [b*cos(beta) + c*sin(beta)],
+        [c*cos(beta) - b*sin(beta)]])
 
         """
 
@@ -773,7 +773,7 @@ class Vector(Printable, EvalfMixin):
         >>> ((1 + x*y) * A.x).xreplace({x: pi})
         (pi*y + 1)*A.x
         >>> ((1 + x*y) * A.x).xreplace({x: pi, y: 2})
-        (1 + 2*pi)*A.x
+        (2*pi + 1)*A.x
 
         Replacements occur only if an entire node in the expression tree is
         matched:

@@ -1,4 +1,5 @@
 """Tools for setting up printing in interactive sessions. """
+from __future__ import annotations
 
 from io import BytesIO
 
@@ -6,6 +7,7 @@ from sympy.printing.latex import latex as default_latex
 from sympy.printing.preview import preview
 from sympy.utilities.misc import debug
 from sympy.printing.defaults import Printable
+from sympy.core.function import FunctionClass
 from sympy.external import import_module
 
 
@@ -151,7 +153,7 @@ def _init_ipython_printing(ip, stringify_func, use_latex, euler, forecolor,
                 return all(_can_print(i) and _can_print(o[i]) for i in o)
             elif isinstance(o, bool):
                 return False
-            elif isinstance(o, Printable):
+            elif isinstance(o, (Printable, FunctionClass)):
                 # types known to SymPy
                 return True
             elif any(hasattr(o, hook) for hook in printing_hooks):
@@ -221,7 +223,7 @@ def _init_ipython_printing(ip, stringify_func, use_latex, euler, forecolor,
     # the approach required by builtin types. This allows downstream
     # packages to override the methods in their own subclasses of Printable,
     # which avoids the effects of gh-16002.
-    printable_types = [float, tuple, list, set, frozenset, dict, int]
+    printable_types = [float, tuple, list, set, frozenset, dict, int, FunctionClass]
 
     plaintext_formatter = ip.display_formatter.formatters['text/plain']
 
@@ -232,7 +234,7 @@ def _init_ipython_printing(ip, stringify_func, use_latex, euler, forecolor,
         plaintext_formatter.for_type(cls, _print_plain)
 
     svg_formatter = ip.display_formatter.formatters['image/svg+xml']
-    if use_latex in ('svg', ):
+    if use_latex == 'svg':
         debug("init_printing: using svg formatter")
         for cls in printable_types:
             svg_formatter.for_type(cls, _print_latex_svg)

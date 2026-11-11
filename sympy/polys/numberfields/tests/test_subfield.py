@@ -1,4 +1,5 @@
 """Tests for the subfield problem and allied problems. """
+from __future__ import annotations
 
 from sympy.core.numbers import (AlgebraicNumber, I, pi, Rational)
 from sympy.core.singleton import S
@@ -264,7 +265,7 @@ def test_primitive_element():
         (Poly(x**4 - 10*x**2 + 1, domain='QQ'), [1, 1], [[Q(1, 2), 0, -Q(9, 2),
          0], [-Q(1, 2), 0, Q(11, 2), 0]])
 
-    assert primitive_element([sqrt(2)], polys=True) == (Poly(x**2 - 2), [1])
+    assert (primitive_element([sqrt(2)], polys=True)[0].as_poly(x), [1]) == (Poly(x**2 - 2, domain='QQ'), [1])
 
     raises(ValueError, lambda: primitive_element([], x, ex=False))
     raises(ValueError, lambda: primitive_element([], x, ex=True))

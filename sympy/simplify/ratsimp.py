@@ -1,3 +1,4 @@
+from __future__ import annotations
 from itertools import combinations_with_replacement
 from sympy.core import symbols, Add, Dummy
 from sympy.core.numbers import Rational
@@ -43,7 +44,7 @@ def ratsimpmodprime(expr, G, *gens, quick=True, polynomial=False, **args):
     >>> from sympy.abc import x, y
     >>> eq = (x + y**5 + y)/(x - y)
     >>> ratsimpmodprime(eq, [x*y**5 - x - y], x, y, order='lex')
-    (-x**2 - x*y - x - y)/(-x**2 + x*y)
+    (-x**2 - x*y - x - y)/(x*y - x**2)
 
     If ``polynomial`` is ``False``, the algorithm computes a rational
     simplification which minimizes the sum of the total degrees of

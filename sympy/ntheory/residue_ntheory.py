@@ -1,10 +1,9 @@
 from __future__ import annotations
 
-from typing import Literal, SupportsIndex, cast, overload
+from typing import Literal, SupportsIndex, cast, overload, TYPE_CHECKING
 
 from sympy.external.gmpy import (MPZ, gcd, lcm, invert, sqrt, jacobi,
                                  bit_scan1, remove)
-from sympy.core.expr import Expr
 from sympy.polys import Poly
 from sympy.polys.domains import ZZ
 from sympy.polys.galoistools import gf_crt1, gf_crt2, linear_congruence, gf_csolve
@@ -19,6 +18,9 @@ from sympy.utilities.iterables import iproduct
 from sympy.core.random import _randint
 
 from itertools import product
+
+if TYPE_CHECKING:
+    from sympy.core.expr import Expr
 
 
 def n_order(a, n):
@@ -236,7 +238,7 @@ def _primitive_root_prime_power2_iter(p, e):
             yield g + p**e
 
 
-def primitive_root(p, smallest=True):
+def primitive_root(p: SupportsIndex, smallest: bool = True) -> int | None:
     r""" Returns a primitive root of ``p`` or None.
 
     Explanation
@@ -333,6 +335,7 @@ def primitive_root(p, smallest=True):
     for i in range(g + 1, p):
         if i % q and is_primitive_root(i, p):
             return i
+    return None
 
 
 def is_primitive_root(a, p):

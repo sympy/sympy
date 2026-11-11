@@ -1,3 +1,4 @@
+from __future__ import annotations
 from sympy.assumptions.refine import refine
 from sympy.calculus.accumulationbounds import AccumBounds
 from sympy.concrete.products import Product
@@ -7,6 +8,7 @@ from sympy.core.numbers import (E, Float, I, Rational, nan, oo, pi, zoo)
 from sympy.core.power import Pow
 from sympy.core.singleton import S
 from sympy.core.symbol import (Symbol, symbols)
+from sympy.functions.combinatorial.factorials import factorial
 from sympy.functions.elementary.complexes import (adjoint, conjugate, re, sign, transpose)
 from sympy.functions.elementary.exponential import (LambertW, exp, exp_polar, log)
 from sympy.functions.elementary.hyperbolic import (cosh, sinh, tanh)
@@ -437,6 +439,9 @@ def test_log_assumptions():
     n = symbols('n', negative=True)
     z = symbols('z', zero=True)
     x = symbols('x', infinite=True, extended_positive=True)
+    i = symbols('i', integer=True)
+    nn = symbols('nn', nonnegative=True)
+    nz = symbols('nz', finite=True, nonzero=True)
 
     assert log(z).is_positive is False
     assert log(x).is_extended_positive is True
@@ -452,6 +457,13 @@ def test_log_assumptions():
     assert log(42, evaluate=False).is_algebraic is False
 
     assert log(1 + z).is_rational
+    assert log(i).is_finite is None
+    assert log(nn).is_finite is None
+    assert log(z, evaluate=False).is_finite is False
+    assert log(x).is_finite is False
+    assert log(p).is_finite is True
+    assert log(n).is_finite is True
+    assert log(nz).is_finite is True
 
 
 def test_log_hashing():
@@ -656,6 +668,10 @@ def test_issue_5673():
 def test_log_fdiff():
     x = Symbol('x')
     raises(ArgumentIndexError, lambda: log(x).fdiff(2))
+    assert log(x).diff((x, 1)) == 1/x
+    assert log(x).diff((x, 2)) == -1/x**2
+    n = Symbol('n', integer=True, positive=True)
+    assert log(x).diff((x, n)) == S.NegativeOne**(n-1)*factorial(n-1)/x**n
 
 
 def test_log_taylor_term():

@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, ClassVar
+from typing import TYPE_CHECKING, ClassVar, Literal, overload
 from collections import defaultdict
 from functools import reduce
 from operator import attrgetter
@@ -31,10 +31,34 @@ def _could_extract_minus_sign(expr):
         return False
     elif positive_args < negative_args:
         return True
-    # choose based on .sort_key() to prefer
-    # x - 1 instead of 1 - x and
-    # 3 - sqrt(2) instead of -3 + sqrt(2)
+    # this is going to affect things like x - pi/4
+    # and f() - pi/4; trig funcs check for such args
+    if len(expr.args) == 2:
+        a, b = expr.args
+        if a.is_number != b.is_number:
+            return (b if a.is_number else a).could_extract_minus_sign()
+    # let the key decide between y - z and sqrt(3) - 2
+    # the negation here should not trigger evaluation
     return bool(expr.sort_key() < (-expr).sort_key())
+
+
+def _ca_terms(expr):
+    # return (c, a) where expr = c + a and c is a
+    # Symbol-free real number
+    if not expr.is_Add:
+        return S.Zero, expr
+    num, other = sift(
+        expr.args,
+        lambda x: (
+            x.is_number
+            and x.is_extended_real is True
+            and not any(t.is_Symbol for t in x.atoms())
+        ),
+        binary=True,
+    )
+    c = expr._new_rawargs(*num)
+    a = expr._new_rawargs(*other)
+    return c, a
 
 
 def _addsort(args):
@@ -187,7 +211,21 @@ class Add(Expr, AssocOp):
 
     if TYPE_CHECKING:
 
-        def __new__(cls, *args: Expr | complex, evaluate: bool=True) -> Expr: # type: ignore
+        @overload
+        def __new__(
+            cls,
+            arg1: Expr | complex,
+            arg2: Expr | complex,
+            *args: Expr | complex,
+            evaluate: Literal[False],
+        ) -> Add:  # type: ignore
+            ...
+
+        @overload
+        def __new__(cls, *args: Expr | complex, evaluate: bool = True) -> Expr:  # type: ignore
+            ...
+
+        def __new__(cls, *args: Expr | complex, evaluate: bool = True) -> Expr:  # type: ignore
             ...
 
         @property
@@ -764,7 +802,7 @@ class Add(Expr, AssocOp):
     def _eval_is_extended_positive(self):
         if self.is_number:
             return super()._eval_is_extended_positive()
-        c, a = self.as_coeff_Add()
+        c, a = _ca_terms(self)
         if not c.is_zero:
             from .exprtools import _monotonic_sign
             v = _monotonic_sign(a)
@@ -815,38 +853,49 @@ class Add(Expr, AssocOp):
 
     def _eval_is_extended_nonnegative(self):
         if not self.is_number:
-            c, a = self.as_coeff_Add()
+            from .exprtools import _monotonic_sign
+            c, a = _ca_terms(self)
             if not c.is_zero and a.is_extended_nonnegative:
-                from .exprtools import _monotonic_sign
                 v = _monotonic_sign(a)
                 if v is not None:
                     s = v + c
                     if s != self and s.is_extended_nonnegative:
                         return True
-                    if len(self.free_symbols) == 1:
-                        v = _monotonic_sign(self)
-                        if v is not None and v != self and v.is_extended_nonnegative:
-                            return True
+
+            elif (
+                c.is_positive
+                and a.is_extended_negative
+                and len(self.free_symbols) == 1
+            ):
+                v = _monotonic_sign(self)
+                if v is not None and v != self and v.is_extended_nonnegative:
+                    return True
 
     def _eval_is_extended_nonpositive(self):
         if not self.is_number:
-            c, a = self.as_coeff_Add()
+            from .exprtools import _monotonic_sign
+            c, a = _ca_terms(self)
             if not c.is_zero and a.is_extended_nonpositive:
-                from .exprtools import _monotonic_sign
                 v = _monotonic_sign(a)
                 if v is not None:
                     s = v + c
                     if s != self and s.is_extended_nonpositive:
                         return True
-                    if len(self.free_symbols) == 1:
-                        v = _monotonic_sign(self)
-                        if v is not None and v != self and v.is_extended_nonpositive:
-                            return True
+
+            elif (
+                c.is_negative
+                and a.is_extended_positive
+                and len(self.free_symbols) == 1
+            ):
+                from .exprtools import _monotonic_sign
+                v = _monotonic_sign(self)
+                if v is not None and v != self and v.is_extended_nonpositive:
+                    return True
 
     def _eval_is_extended_negative(self):
         if self.is_number:
             return super()._eval_is_extended_negative()
-        c, a = self.as_coeff_Add()
+        c, a = _ca_terms(self)
         if not c.is_zero:
             from .exprtools import _monotonic_sign
             v = _monotonic_sign(a)
@@ -1177,12 +1226,12 @@ class Add(Expr, AssocOp):
 
         >>> from sympy import sqrt
         >>> (3 + 3*sqrt(2)).as_content_primitive()
-        (3, 1 + sqrt(2))
+        (3, sqrt(2) + 1)
 
         Radical content can also be factored out of the primitive:
 
         >>> (2*sqrt(2) + 4*sqrt(10)).as_content_primitive(radical=True)
-        (2, sqrt(2)*(1 + 2*sqrt(5)))
+        (2, sqrt(2)*(2*sqrt(5) + 1))
 
         See docstring of Expr.as_content_primitive for more examples.
         """

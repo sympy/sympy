@@ -1,3 +1,4 @@
+from __future__ import annotations
 from collections import defaultdict
 
 from sympy.assumptions.ask import Q
@@ -238,7 +239,8 @@ def _(expr):
             allargs(x, Q.real(x), expr) >> Q.real(expr),
             allargs(x, Q.rational(x), expr) >> Q.rational(expr),
             allargs(x, Q.integer(x), expr) >> Q.integer(expr),
-            exactlyonearg(x, ~Q.rational(x), expr) >> ~Q.integer(expr),
+            (allargs(x, ~Q.zero(x), expr) &
+             exactlyonearg(x, ~Q.rational(x), expr)) >> ~Q.integer(expr),
             allargs(x, Q.commutative(x), expr) >> Q.commutative(expr),
             ]
 
@@ -255,14 +257,16 @@ def _(expr):
 def _(expr):
     # General Case: Odd number of imaginary args implies mul is imaginary(To be implemented)
     allargs_imag_or_real = allargs(x, Q.imaginary(x) | Q.real(x), expr)
+    allargs_not_zero = allargs(x, ~Q.zero(x), expr)
     onearg_imaginary = exactlyonearg(x, Q.imaginary(x), expr)
-    return Implies(allargs_imag_or_real, Implies(onearg_imaginary, Q.imaginary(expr)))
+    return Implies(allargs_imag_or_real & allargs_not_zero, Implies(onearg_imaginary, Q.imaginary(expr)))
 
 @class_fact_registry.register(Mul)
 def _(expr):
     allargs_real = allargs(x, Q.real(x), expr)
     onearg_irrational = exactlyonearg(x, Q.irrational(x), expr)
-    return Implies(allargs_real, Implies(onearg_irrational, Q.irrational(expr)))
+    return Implies(allargs_real & allargs(x, ~Q.zero(x), expr),
+                    Implies(onearg_irrational, Q.irrational(expr)))
 
 @class_fact_registry.register(Mul)
 def _(expr):

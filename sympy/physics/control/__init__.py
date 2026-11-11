@@ -1,3 +1,4 @@
+from __future__ import annotations
 from .lti import (TransferFunction, DiscreteTransferFunction,
     create_transfer_function, PIDController, Series, MIMOSeries, Parallel,
     MIMOParallel, Feedback, MIMOFeedback, TransferFunctionMatrix, StateSpace,

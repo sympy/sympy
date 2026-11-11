@@ -12,7 +12,7 @@ from .singleton import S
 from .operations import AssocOp, AssocOpDispatcher
 from .cache import cacheit
 from .intfunc import integer_nthroot, trailing
-from .logic import fuzzy_not, _fuzzy_group
+from .logic import fuzzy_not, fuzzy_or, _fuzzy_group
 from .expr import Expr
 from .parameters import global_parameters
 from .kind import KindDispatcher
@@ -22,6 +22,8 @@ from sympy.utilities.iterables import sift
 
 if TYPE_CHECKING:
     from .numbers import Number
+    from .symbol import Symbol
+    from sympy.polys.orderings import MonomKey
 
 
 # internal marker to indicate:
@@ -164,10 +166,10 @@ class Mul(Expr, AssocOp):
     """
     __slots__ = ()
 
-    is_Mul = True
+    is_Mul: bool = True
 
     _args_type = Expr
-    _kind_dispatcher = KindDispatcher("Mul_kind_dispatcher", commutative=True)
+    _kind_dispatcher: KindDispatcher = KindDispatcher("Mul_kind_dispatcher", commutative=True)
 
     identity: ClassVar[Expr]
 
@@ -191,7 +193,7 @@ class Mul(Expr, AssocOp):
         c = self.args[0]
         return c.is_Number and c.is_extended_negative
 
-    def __neg__(self):
+    def __neg__(self) -> Expr:
         c, args = self.as_coeff_mul()
         if args[0] is not S.ComplexInfinity:
             c = -c
@@ -420,7 +422,7 @@ class Mul(Expr, AssocOp):
                             if e.is_Integer:
                                 coeff *= Pow(b, e)  # it is an unevaluated power
                                 continue
-                            elif e.is_negative:    # also a sign of an unevaluated power
+                            elif e.is_negative:
                                 seq.append(Pow(b, e))
                                 continue
                             elif b.is_negative:
@@ -973,6 +975,19 @@ class Mul(Expr, AssocOp):
             plain = self.func(*plain)
             if sums:
                 deep = hints.get("deep", False)
+                for i, s in enumerate(sums):
+                    if not s.is_Add:
+                        continue
+                    o = s.getO()
+                    if o is not None and any(p != 0 for p in o.point):
+                        other = sums[:i] + sums[i + 1:]
+                        # Undo any Basic wrapper used by _expandsums for nc factors.
+                        other = [a.args[0] if type(a) is Basic else a for a in other]
+                        regular = self.func(plain, s.removeO(), *other)
+                        if regular.is_Mul and any(a.is_Add for a in regular.args):
+                            regular = regular._eval_expand_mul(**hints)
+                        return regular + self.func(plain, o, *other)
+
                 terms = self.func._expandsums(sums)
                 args = []
                 for term in terms:
@@ -1263,21 +1278,6 @@ class Mul(Expr, AssocOp):
         numers, denoms = list(zip(*[f.as_numer_denom() for f in self.args]))
         return self.func(*numers), self.func(*denoms)
 
-    def as_base_exp(self):
-        e1 = None
-        bases = []
-        nc = 0
-        for m in self.args:
-            b, e = m.as_base_exp()
-            if not b.is_commutative:
-                nc += 1
-            if e1 is None:
-                e1 = e
-            elif e != e1 or nc > 1 or not e.is_Integer:
-                return self, S.One
-            bases.append(b)
-        return self.func(*bases), e1
-
     def _eval_is_polynomial(self, syms):
         return all(term._eval_is_polynomial(syms) for term in self.args)
 
@@ -1510,7 +1510,7 @@ class Mul(Expr, AssocOp):
         t_not_re_im = None
 
         for t in self.args:
-            if (t.is_complex or t.is_infinite) is False and t.is_extended_real is False:
+            if fuzzy_or([t.is_complex, t.is_infinite]) is False and t.is_extended_real is False:
                 return False
             elif t.is_imaginary:  # I
                 real = not real
@@ -2096,7 +2096,7 @@ class Mul(Expr, AssocOp):
         # e.g. (2+2*x)*(3+3*x) should be (6, (1 + x)**2) not (6, (1+x)*(1+x))
         return coef, self.func(*args)
 
-    def as_ordered_factors(self, order=None):
+    def as_ordered_factors(self, order: str | Symbol | MonomKey | None = None) -> list[Expr]:
         """Transform an expression into an ordered list of factors.
 
         Examples
@@ -2114,7 +2114,7 @@ class Mul(Expr, AssocOp):
         return cpart + ncpart
 
     @property
-    def _sorted_args(self):
+    def _sorted_args(self) -> tuple[Expr, ...]:
         return tuple(self.as_ordered_factors())
 
 mul = AssocOpDispatcher('mul')
@@ -2189,8 +2189,11 @@ def _keep_coeff(coeff, factors, clear=True, sign=False):
             args = [i.as_coeff_Mul() for i in factors.args]
             args = [(_keep_coeff(c, coeff), m) for c, m in args]
             if any(c.is_Integer for c, _ in args):
-                return Add._from_args([Mul._from_args(
-                    i[1:] if i[0] == 1 else i) for i in args])
+                return Add._from_args([
+                    c if m is S.One else Mul._from_args(
+                        (m,) if c is S.One else (c, m))
+                    for c, m in args
+                ])
         return Mul(coeff, factors, evaluate=False)
     elif factors.is_Mul:
         margs = list(factors.args)

@@ -1,3 +1,4 @@
+from __future__ import annotations
 from sympy.core.expr import Expr
 from sympy.core.function import DefinedFunction, ArgumentIndexError
 from sympy.core.numbers import I, pi
@@ -9,6 +10,7 @@ from sympy.functions.elementary.complexes import Abs, conjugate
 from sympy.functions.elementary.exponential import exp
 from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.functions.elementary.trigonometric import sin, cos, cot
+from sympy.external.mpmath import local_workprec
 
 _x = Dummy("x")
 
@@ -93,7 +95,7 @@ class Ynm(DefinedFunction):
     >>> phi = Symbol("phi")
 
     >>> diff(Ynm(n, m, theta, phi), theta)
-    m*cot(theta)*Ynm(n, m, theta, phi) + sqrt((-m + n)*(m + n + 1))*exp(-I*phi)*Ynm(n, m + 1, theta, phi)
+    m*cot(theta)*Ynm(n, m, theta, phi) + sqrt((n - m)*(m + n + 1))*exp(-I*phi)*Ynm(n, m + 1, theta, phi)
 
     >>> diff(Ynm(n, m, theta, phi), phi)
     I*m*Ynm(n, m, theta, phi)
@@ -117,7 +119,7 @@ class Ynm(DefinedFunction):
     >>> phi = Symbol("phi")
 
     >>> expand_func(Ynm(n, m, theta, phi))
-    sqrt((2*n + 1)*factorial(-m + n)/factorial(m + n))*exp(I*m*phi)*assoc_legendre(n, m, cos(theta))/(2*sqrt(pi))
+    sqrt((2*n + 1)*factorial(n - m)/factorial(m + n))*exp(I*m*phi)*assoc_legendre(n, m, cos(theta))/(2*sqrt(pi))
 
     See Also
     ========
@@ -211,13 +213,12 @@ class Ynm(DefinedFunction):
         # Note: works without this function by just calling
         #       mpmath for Legendre polynomials. But using
         #       the dedicated function directly is cleaner.
-        from mpmath import mp, workprec
         n = self.args[0]._to_mpmath(prec)
         m = self.args[1]._to_mpmath(prec)
         theta = self.args[2]._to_mpmath(prec)
         phi = self.args[3]._to_mpmath(prec)
-        with workprec(prec):
-            res = mp.spherharm(n, m, theta, phi)
+        with local_workprec(prec) as ctx:
+            res = ctx.spherharm(n, m, theta, phi)
         return Expr._from_mpmath(res, prec)
 
 
@@ -246,7 +247,7 @@ def Ynm_c(n, m, theta, phi):
     >>> simplify(Ynm_c(0, 0, theta, phi).expand(func=True))
     1/(2*sqrt(pi))
     >>> simplify(Ynm_c(1, -1, theta, phi).expand(func=True))
-    sqrt(6)*exp(I*(-phi + 2*conjugate(phi)))*sin(theta)/(4*sqrt(pi))
+    sqrt(6)*exp(I*(2*conjugate(phi) - phi))*sin(theta)/(4*sqrt(pi))
 
     See Also
     ========

@@ -276,7 +276,7 @@ tutorial.  For example
      >>> 1 + x
      x + 1
 
-This because in SymPy, the arguments of the commutative operations ``Add`` and
+This is because in SymPy, the arguments of the commutative operations ``Add`` and
 ``Mul`` are stored in an arbitrary (but consistent!) order, which is
 independent of the order inputted (if you're worried about noncommutative
 multiplication, don't be.  In SymPy, you can create noncommutative Symbols
@@ -498,7 +498,7 @@ usages of the expression:
     >>> expr + x
     3*x
 
-That's why the class ``UnevaluatedExpr`` comes handy.
+That's why the class ``UnevaluatedExpr`` comes in handy.
 ``UnevaluatedExpr`` is a method provided by SymPy which lets the user keep
 an expression unevaluated. By *unevaluated* it is meant that the value
 inside of it will not interact with the expressions outside of it to give

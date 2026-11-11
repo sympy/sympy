@@ -1,3 +1,4 @@
+from __future__ import annotations
 from sympy.liealgebras.cartan_type import CartanType, Standard_Cartan
 
 def test_Standard_Cartan():

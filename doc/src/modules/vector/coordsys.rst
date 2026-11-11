@@ -135,15 +135,15 @@ coincides with the origin of the 'parent' system.
   0
 
 To compute the rotation matrix of any coordinate system with respect
-to another one, use the ``rotation_matrix`` method.
+to another one, use the ``change_of_basis_matrix_from`` method.
 
   >>> B = A.orient_new_axis('B', a, A.k)
-  >>> B.rotation_matrix(A)
+  >>> B.change_of_basis_matrix_from(A)
   Matrix([
   [ cos(a), sin(a), 0],
   [-sin(a), cos(a), 0],
   [      0,      0, 1]])
-  >>> B.rotation_matrix(B)
+  >>> B.change_of_basis_matrix_from(B)
   Matrix([
   [1, 0, 0],
   [0, 1, 0],
@@ -192,12 +192,23 @@ rotate system by setting appropriate transformation equations.
   >>> B = CoordSys3D('A', transformation=lambda x,y,z: (x*sin(y), x*cos(y), z))
 
 
-In ``CoordSys3D`` is also dedicated method, ``create_new`` which works
+In ``CoordSys3D`` there is also a dedicated method, ``create_new`` which works
 similarly to methods like ``locate_new``, ``orient_new_axis`` etc.
 
   >>> from sympy.vector import CoordSys3D
   >>> A = CoordSys3D('A')
   >>> B = A.create_new('B', transformation='spherical')
+
+To compute the change-of-basis matrix of any coordinate system with respect
+to another one, use the ``change_of_basis_matrix_from`` method. For example,
+the change-of-basis matrix from spherical coordinates to Cartesian is:
+
+  >>> A.change_of_basis_matrix_from(B)
+  Matrix([
+  [sin(B.theta)*cos(B.phi), cos(B.phi)*cos(B.theta), -sin(B.phi)],
+  [sin(B.phi)*sin(B.theta), sin(B.phi)*cos(B.theta),  cos(B.phi)],
+  [           cos(B.theta),           -sin(B.theta),           0]])
+
 
 Expression of quantities in different coordinate systems
 ========================================================
@@ -224,7 +235,7 @@ For purposes of this section, assume the following initializations:
 
   >>> v1 = N.i + N.j + N.k
   >>> express(v1, M)
-  (sin(a) + cos(a))*M.i + (-sin(a) + cos(a))*M.j + M.k
+  (sin(a) + cos(a))*M.i + (cos(a) - sin(a))*M.j + M.k
   >>> v2 = N.i + M.j
   >>> express(v2, N)
   (1 - sin(a))*N.i + (cos(a))*N.j
@@ -291,9 +302,9 @@ different results depending on the coordinate system being provided.
   >>> v = N.i + N.j + N.k
   >>> v.to_matrix(M)
   Matrix([
-  [ sin(a) + cos(a)],
-  [-sin(a) + cos(a)],
-  [               1]])
+  [sin(a) + cos(a)],
+  [cos(a) - sin(a)],
+  [              1]])
   >>> v.to_matrix(N)
   Matrix([
   [1],

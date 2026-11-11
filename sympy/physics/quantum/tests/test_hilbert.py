@@ -1,3 +1,4 @@
+from __future__ import annotations
 from sympy.physics.quantum.hilbert import (
     HilbertSpace, ComplexSpace, L2, FockSpace, TensorProductHilbertSpace,
     DirectSumHilbertSpace, TensorPowerHilbertSpace

@@ -1,0 +1,14 @@
+{
+	"name": "sympy",
+	"image": "mcr.microsoft.com/devcontainers/python:1-3.13",
+	"features": {},
+	"postCreateCommand": "pip install -e .; pip install -r requirements-dev.txt",
+	"customizations": {
+		"vscode": {
+			"extensions": [
+				"hbenl.vscode-test-explorer",
+				"ms-python.python"
+			]
+		}
+	}
+}

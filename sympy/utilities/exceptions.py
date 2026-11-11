@@ -1,9 +1,14 @@
 """
 General SymPy exceptions and warnings.
 """
+from __future__ import annotations
 
 import warnings
 import contextlib
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from collections.abc import Callable, Iterator
 
 from textwrap import dedent
 
@@ -50,7 +55,13 @@ class SymPyDeprecationWarning(DeprecationWarning):
     sympy.testing.pytest.warns_deprecated_sympy
 
     """
-    def __init__(self, message, *, deprecated_since_version, active_deprecations_target):
+    def __init__(
+        self,
+        message: str,
+        *,
+        deprecated_since_version: str,
+        active_deprecations_target: str,
+    ) -> None:
 
         super().__init__(message, deprecated_since_version,
                      active_deprecations_target)
@@ -73,31 +84,45 @@ This has been deprecated since SymPy version {deprecated_since_version}. It
 will be removed in a future version of SymPy.
 """
 
-    def __str__(self):
+    def __str__(self) -> str:
         return self.full_message
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return f"{self.__class__.__name__}({self.message!r}, deprecated_since_version={self.deprecated_since_version!r}, active_deprecations_target={self.active_deprecations_target!r})"
 
-    def __eq__(self, other):
+    def __eq__(self, other: object) -> bool:
         return isinstance(other, SymPyDeprecationWarning) and self.args == other.args
 
     # Make pickling work. The by default, it tries to recreate the expression
     # from its args, but this doesn't work because of our keyword-only
     # arguments.
     @classmethod
-    def _new(cls, message, deprecated_since_version,
-              active_deprecations_target):
+    def _new(
+        cls,
+        message: str,
+        deprecated_since_version: str,
+        active_deprecations_target: str,
+    ) -> SymPyDeprecationWarning:
         return cls(message, deprecated_since_version=deprecated_since_version, active_deprecations_target=active_deprecations_target)
 
-    def __reduce__(self):
+    def __reduce__(
+        self,
+    ) -> tuple[
+        Callable[[str, str, str], SymPyDeprecationWarning],
+        tuple[str, str, str],
+    ]:
         return (self._new, (self.message, self.deprecated_since_version, self.active_deprecations_target))
 
 # Python by default hides DeprecationWarnings, which we do not want.
 warnings.simplefilter("once", SymPyDeprecationWarning)
 
-def sympy_deprecation_warning(message, *, deprecated_since_version,
-                              active_deprecations_target, stacklevel=3):
+def sympy_deprecation_warning(
+    message: str,
+    *,
+    deprecated_since_version: str,
+    active_deprecations_target: str,
+    stacklevel: int = 3,
+) -> None:
     r'''
     Warn that a feature is deprecated in SymPy.
 
@@ -208,7 +233,7 @@ def sympy_deprecation_warning(message, *, deprecated_since_version,
 
 
 @contextlib.contextmanager
-def ignore_warnings(warningcls):
+def ignore_warnings(warningcls: type[Warning]) -> Iterator[None]:
     '''
     Context manager to suppress warnings during tests.
 

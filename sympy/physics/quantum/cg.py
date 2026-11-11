@@ -3,6 +3,7 @@
 # -Improve simplification method
 # -Implement new simplifications
 """Clebsch-Gordon Coefficients."""
+from __future__ import annotations
 
 from sympy.concrete.summations import Sum
 from sympy.core.add import Add

@@ -1,6 +1,7 @@
 """
 Exceptions raised by the matrix module.
 """
+from __future__ import annotations
 
 
 class MatrixError(Exception):

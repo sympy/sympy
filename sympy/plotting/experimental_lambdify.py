@@ -9,6 +9,7 @@ It does not aim to replace the current lambdify. Most importantly it will never
 ever support anything else than SymPy expressions (no Matrices, dictionaries
 and so on).
 """
+from __future__ import annotations
 
 
 import re

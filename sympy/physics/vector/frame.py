@@ -1,3 +1,4 @@
+from __future__ import annotations
 from sympy import (diff, expand, sin, cos, sympify, eye, zeros,
                                 ImmutableMatrix as Matrix, MatrixBase)
 from sympy.core.symbol import Symbol
@@ -962,9 +963,9 @@ class ReferenceFrame:
         >>> B.orient_body_fixed(N, (q1, q2, q3), 'XYX')
         >>> B.dcm(N)
         Matrix([
-        [        cos(q2),                            sin(q1)*sin(q2),                           -sin(q2)*cos(q1)],
-        [sin(q2)*sin(q3), -sin(q1)*sin(q3)*cos(q2) + cos(q1)*cos(q3),  sin(q1)*cos(q3) + sin(q3)*cos(q1)*cos(q2)],
-        [sin(q2)*cos(q3), -sin(q1)*cos(q2)*cos(q3) - sin(q3)*cos(q1), -sin(q1)*sin(q3) + cos(q1)*cos(q2)*cos(q3)]])
+        [        cos(q2),                            sin(q1)*sin(q2),                          -sin(q2)*cos(q1)],
+        [sin(q2)*sin(q3),  cos(q1)*cos(q3) - sin(q1)*sin(q3)*cos(q2), sin(q1)*cos(q3) + sin(q3)*cos(q1)*cos(q2)],
+        [sin(q2)*cos(q3), -sin(q1)*cos(q2)*cos(q3) - sin(q3)*cos(q1), cos(q1)*cos(q2)*cos(q3) - sin(q1)*sin(q3)]])
 
         This rotates reference frame B relative to reference frame N through
         ``q1`` about ``N.x``, then rotates B again through ``q2`` about
@@ -976,9 +977,9 @@ class ReferenceFrame:
         >>> B3.orient_axis(B2, B2.x, q3)
         >>> B3.dcm(N)
         Matrix([
-        [        cos(q2),                            sin(q1)*sin(q2),                           -sin(q2)*cos(q1)],
-        [sin(q2)*sin(q3), -sin(q1)*sin(q3)*cos(q2) + cos(q1)*cos(q3),  sin(q1)*cos(q3) + sin(q3)*cos(q1)*cos(q2)],
-        [sin(q2)*cos(q3), -sin(q1)*cos(q2)*cos(q3) - sin(q3)*cos(q1), -sin(q1)*sin(q3) + cos(q1)*cos(q2)*cos(q3)]])
+        [        cos(q2),                            sin(q1)*sin(q2),                          -sin(q2)*cos(q1)],
+        [sin(q2)*sin(q3),  cos(q1)*cos(q3) - sin(q1)*sin(q3)*cos(q2), sin(q1)*cos(q3) + sin(q3)*cos(q1)*cos(q2)],
+        [sin(q2)*cos(q3), -sin(q1)*cos(q2)*cos(q3) - sin(q3)*cos(q1), cos(q1)*cos(q2)*cos(q3) - sin(q1)*sin(q3)]])
 
         Acceptable rotation orders are of length 3, expressed in as a string
         ``'XYZ'`` or ``'123'`` or integer ``123``. Rotations about an axis
@@ -1053,9 +1054,9 @@ class ReferenceFrame:
         >>> B.orient_space_fixed(N, (q1, q2, q3), '312')
         >>> B.dcm(N)
         Matrix([
-        [ sin(q1)*sin(q2)*sin(q3) + cos(q1)*cos(q3), sin(q1)*cos(q2), sin(q1)*sin(q2)*cos(q3) - sin(q3)*cos(q1)],
-        [-sin(q1)*cos(q3) + sin(q2)*sin(q3)*cos(q1), cos(q1)*cos(q2), sin(q1)*sin(q3) + sin(q2)*cos(q1)*cos(q3)],
-        [                           sin(q3)*cos(q2),        -sin(q2),                           cos(q2)*cos(q3)]])
+        [sin(q1)*sin(q2)*sin(q3) + cos(q1)*cos(q3), sin(q1)*cos(q2), sin(q1)*sin(q2)*cos(q3) - sin(q3)*cos(q1)],
+        [sin(q2)*sin(q3)*cos(q1) - sin(q1)*cos(q3), cos(q1)*cos(q2), sin(q1)*sin(q3) + sin(q2)*cos(q1)*cos(q3)],
+        [                          sin(q3)*cos(q2),        -sin(q2),                           cos(q2)*cos(q3)]])
 
         is equivalent to:
 
@@ -1064,9 +1065,9 @@ class ReferenceFrame:
         >>> B3.orient_axis(B2, N.y, q3)
         >>> B3.dcm(N).simplify()
         Matrix([
-        [ sin(q1)*sin(q2)*sin(q3) + cos(q1)*cos(q3), sin(q1)*cos(q2), sin(q1)*sin(q2)*cos(q3) - sin(q3)*cos(q1)],
-        [-sin(q1)*cos(q3) + sin(q2)*sin(q3)*cos(q1), cos(q1)*cos(q2), sin(q1)*sin(q3) + sin(q2)*cos(q1)*cos(q3)],
-        [                           sin(q3)*cos(q2),        -sin(q2),                           cos(q2)*cos(q3)]])
+        [sin(q1)*sin(q2)*sin(q3) + cos(q1)*cos(q3), sin(q1)*cos(q2), sin(q1)*sin(q2)*cos(q3) - sin(q3)*cos(q1)],
+        [sin(q2)*sin(q3)*cos(q1) - sin(q1)*cos(q3), cos(q1)*cos(q2), sin(q1)*sin(q3) + sin(q2)*cos(q1)*cos(q3)],
+        [                          sin(q3)*cos(q2),        -sin(q2),                           cos(q2)*cos(q3)]])
 
         It is worth noting that space-fixed and body-fixed rotations are
         related by the order of the rotations, i.e. the reverse order of body
@@ -1075,16 +1076,16 @@ class ReferenceFrame:
         >>> B.orient_space_fixed(N, (q1, q2, q3), '231')
         >>> B.dcm(N)
         Matrix([
-        [cos(q1)*cos(q2), sin(q1)*sin(q3) + sin(q2)*cos(q1)*cos(q3), -sin(q1)*cos(q3) + sin(q2)*sin(q3)*cos(q1)],
-        [       -sin(q2),                           cos(q2)*cos(q3),                            sin(q3)*cos(q2)],
-        [sin(q1)*cos(q2), sin(q1)*sin(q2)*cos(q3) - sin(q3)*cos(q1),  sin(q1)*sin(q2)*sin(q3) + cos(q1)*cos(q3)]])
+        [cos(q1)*cos(q2), sin(q1)*sin(q3) + sin(q2)*cos(q1)*cos(q3), sin(q2)*sin(q3)*cos(q1) - sin(q1)*cos(q3)],
+        [       -sin(q2),                           cos(q2)*cos(q3),                           sin(q3)*cos(q2)],
+        [sin(q1)*cos(q2), sin(q1)*sin(q2)*cos(q3) - sin(q3)*cos(q1), sin(q1)*sin(q2)*sin(q3) + cos(q1)*cos(q3)]])
 
         >>> B.orient_body_fixed(N, (q3, q2, q1), '132')
         >>> B.dcm(N)
         Matrix([
-        [cos(q1)*cos(q2), sin(q1)*sin(q3) + sin(q2)*cos(q1)*cos(q3), -sin(q1)*cos(q3) + sin(q2)*sin(q3)*cos(q1)],
-        [       -sin(q2),                           cos(q2)*cos(q3),                            sin(q3)*cos(q2)],
-        [sin(q1)*cos(q2), sin(q1)*sin(q2)*cos(q3) - sin(q3)*cos(q1),  sin(q1)*sin(q2)*sin(q3) + cos(q1)*cos(q3)]])
+        [cos(q1)*cos(q2), sin(q1)*sin(q3) + sin(q2)*cos(q1)*cos(q3), sin(q2)*sin(q3)*cos(q1) - sin(q1)*cos(q3)],
+        [       -sin(q2),                           cos(q2)*cos(q3),                           sin(q3)*cos(q2)],
+        [sin(q1)*cos(q2), sin(q1)*sin(q2)*cos(q3) - sin(q3)*cos(q1), sin(q1)*sin(q2)*sin(q3) + cos(q1)*cos(q3)]])
 
         """
         from sympy.physics.vector.functions import dynamicsymbols
@@ -1152,9 +1153,9 @@ class ReferenceFrame:
         >>> B.orient_quaternion(N, (q0, q1, q2, q3))
         >>> B.dcm(N)
         Matrix([
-        [q0**2 + q1**2 - q2**2 - q3**2,             2*q0*q3 + 2*q1*q2,            -2*q0*q2 + 2*q1*q3],
-        [           -2*q0*q3 + 2*q1*q2, q0**2 - q1**2 + q2**2 - q3**2,             2*q0*q1 + 2*q2*q3],
-        [            2*q0*q2 + 2*q1*q3,            -2*q0*q1 + 2*q2*q3, q0**2 - q1**2 - q2**2 + q3**2]])
+        [q0**2 + q1**2 - q2**2 - q3**2,             2*q0*q3 + 2*q1*q2,             2*q1*q3 - 2*q0*q2],
+        [            2*q1*q2 - 2*q0*q3, q0**2 - q1**2 + q2**2 - q3**2,             2*q0*q1 + 2*q2*q3],
+        [            2*q0*q2 + 2*q1*q3,             2*q2*q3 - 2*q0*q1, q0**2 - q1**2 - q2**2 + q3**2]])
 
         """
 

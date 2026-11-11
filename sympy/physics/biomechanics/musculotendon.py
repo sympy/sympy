@@ -9,6 +9,7 @@ These are normalized functions that are dependent on the musculotendon's state
 and are specific to a given musculotendon model.
 
 """
+from __future__ import annotations
 
 from abc import abstractmethod
 from enum import IntEnum, unique
@@ -1120,7 +1121,7 @@ class MusculotendonDeGroote2016(MusculotendonBase):
     [tau_d_muscle],
     [    b_muscle]])
     >>> activation.rhs()
-    Matrix([[((1/2 - tanh(b_muscle*(-a_muscle(t) + e_muscle(t)))/2)*(3*...]])
+    Matrix([[((3*a_muscle(t)/2 + 1/2)*(1/2 - tanh(b_muscle*(e_muscle(t) - a_muscle(t)))/2)...*(e_muscle(t) - a_muscle(t))]])
 
     The musculotendon class requires symbols or values to be passed to represent
     the constants in the musculotendon dynamics. We'll use SymPy's ``symbols``
@@ -1160,7 +1161,7 @@ class MusculotendonDeGroote2016(MusculotendonBase):
     ``force`` attribute.
 
     >>> rigid_tendon_muscle.force
-    -F_M_max*(beta*(-l_T_slack + Abs(q(t)))*sign(q(t))*Derivative(q(t), t)...
+    -F_M_max*(beta*(Abs(q(t)) - l_T_slack)*sign(q(t))*Derivative(q(t), t)...)*cos(alpha_opt)
 
     When we created the musculotendon object, we passed in an instance of an
     activation dynamics object that governs the activation within the
@@ -1231,7 +1232,7 @@ class MusculotendonDeGroote2016(MusculotendonBase):
     ``Matrix``.
 
     >>> rigid_tendon_muscle.rhs()
-    Matrix([[((1/2 - tanh(b_muscle*(-a_muscle(t) + e_muscle(t)))/2)*(3*...]])
+    Matrix([[((3*a_muscle(t)/2 + 1/2)*(1/2 - tanh(b_muscle*(e_muscle(t) - a_muscle(t)))/2)...*(e_muscle(t) - a_muscle(t))]])
 
     The musculotendon class supports elastic tendon musculotendon models in
     addition to rigid tendon ones. You can choose to either use the fiber length
@@ -1262,7 +1263,7 @@ class MusculotendonDeGroote2016(MusculotendonBase):
     ... )
 
     >>> elastic_tendon_muscle.force
-    -F_M_max*TendonForceLengthDeGroote2016((-sqrt(l_M_opt**2*...
+    -F_M_max*TendonForceLengthDeGroote2016((Abs(q(t)) - sqrt(l_M_opt**2*...c_3_fl_T_muscle)
     >>> elastic_tendon_muscle.x
     Matrix([
     [l_M_tilde_muscle(t)],
@@ -1304,8 +1305,8 @@ class MusculotendonDeGroote2016(MusculotendonBase):
     [     c_3_fv_M_muscle]])
     >>> elastic_tendon_muscle.rhs()
     Matrix([
-    [v_M_max*FiberForceVelocityInverseDeGroote2016((l_M_opt*...],
-    [ ((1/2 - tanh(b_muscle*(-a_muscle(t) + e_muscle(t)))/2)*(3*...]])
+    [v_M_max*FiberForceVelocityInverseDeGroote2016((l_M_opt*.../l_M_opt],
+    [...((3*a_muscle(t)/2 + 1/2)*(1/2 - tanh(b_muscle*(e_muscle(t) - a_muscle(t)))/2)...*(e_muscle(t) - a_muscle(t))]])
 
     It is strongly recommended to use the alternate ``with_defaults``
     constructor when creating an instance because this will ensure that the

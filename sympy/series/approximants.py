@@ -1,14 +1,17 @@
 from __future__ import annotations
 
-from collections.abc import Iterator
 
-from sympy.core.expr import Expr
 from sympy.core.singleton import S
 from sympy.core.symbol import Symbol
 from sympy.polys.polytools import lcm
 from sympy.utilities import public
 from sympy import Poly
 from sympy.polys.polytools import gcdex_steps
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from sympy.core.expr import Expr
+    from collections.abc import Iterator
 
 @public
 def approximants(l, X=Symbol('x'), simplify=False):
@@ -159,7 +162,7 @@ def pade_approximants_gcdex(f: Poly, order: int) -> Iterator[tuple[Poly, Poly]]:
     >>> for num, denom in pade_sin: print(num/denom)
     x**5/120 - x**3/6 + x
     -(20*x**4 - 120*x**2)/(120*x)
-    (-7*x**3/60 + x)/(x**2/20 + 1)
+    (x - 7*x**3/60)/(x**2/20 + 1)
     360*x**2/(7*(60*x**3/7 + 360*x/7))
     x/(7*x**4/360 + x**2/6 + 1)
 

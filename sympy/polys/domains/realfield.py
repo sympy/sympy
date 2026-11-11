@@ -1,16 +1,16 @@
 """Implementation of :class:`RealField` class. """
+from __future__ import annotations
 
 
 from sympy.external.gmpy import SYMPY_INTS, MPQ
+from sympy.external.mpmath import to_rational as _mpmath_to_rational, MPContext
 from sympy.core.numbers import Float
 from sympy.polys.domains.field import Field
 from sympy.polys.domains.simpledomain import SimpleDomain
+from sympy.polys.domains.conjugatedomain import ConjugateDomain
 from sympy.polys.domains.characteristiczero import CharacteristicZero
 from sympy.polys.polyerrors import CoercionFailed
 from sympy.utilities import public
-
-from mpmath import MPContext
-from mpmath.libmp import to_rational as _mpmath_to_rational
 
 
 def to_rational(s, max_denom, limit=True):
@@ -52,7 +52,7 @@ def to_rational(s, max_denom, limit=True):
 
 
 @public
-class RealField(Field, CharacteristicZero, SimpleDomain):
+class RealField(Field, CharacteristicZero, SimpleDomain, ConjugateDomain):
     """Real numbers up to the given precision. """
 
     rep = 'RR'
@@ -215,6 +215,10 @@ class RealField(Field, CharacteristicZero, SimpleDomain):
         rounding error.
         """
         return a ** 0.5 if a >= 0 else None
+
+    def conjugate(self, a):
+        """Returns the complex conjugate of ``a``."""
+        return a
 
 
 RR = RealField()

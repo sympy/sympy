@@ -46,6 +46,7 @@ For the sake of completeness, `f(n)` can be:
     [2] a rational function        -> rsolve_ratio
     [3] a hypergeometric function  -> rsolve_hyper
 """
+from __future__ import annotations
 from collections import defaultdict
 
 from sympy.concrete import product
@@ -503,7 +504,7 @@ def rsolve_hyper(coeffs, f, n, **hints):
     >>> from sympy.abc import x
 
     >>> rsolve_hyper([-1, -1, 1], 0, x)
-    C0*(1/2 - sqrt(5)/2)**x + C1*(1/2 + sqrt(5)/2)**x
+    C0*(1/2 - sqrt(5)/2)**x + C1*(sqrt(5)/2 + 1/2)**x
 
     >>> rsolve_hyper([-1, 1], 1 + x, x)
     C0 + x*(x + 1)/2

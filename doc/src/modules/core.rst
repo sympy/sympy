@@ -32,6 +32,8 @@ basic
 
 .. py:class:: collections.abc.Iterable
 
+.. py:class:: _SupportsItems
+
 .. autoclass:: Basic
    :members:
 
@@ -208,6 +210,8 @@ power
 mul
 ---
 .. module:: sympy.core.mul
+
+.. py:class:: MonomKey
 
 .. autoclass:: Mul
    :members:

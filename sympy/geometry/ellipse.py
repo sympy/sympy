@@ -5,6 +5,7 @@ Contains
 * Circle
 
 """
+from __future__ import annotations
 
 from sympy.core.expr import Expr
 from sympy.core.relational import Eq
@@ -15,6 +16,7 @@ from sympy.core.logic import fuzzy_bool
 from sympy.core.numbers import Rational, oo
 from sympy.core.sorting import ordered
 from sympy.core.symbol import Dummy, uniquely_named_symbol, _symbol
+from sympy.external.mpmath import prec_to_dps
 from sympy.simplify.simplify import simplify
 from sympy.simplify.trigsimp import trigsimp
 from sympy.functions.elementary.miscellaneous import sqrt, Max
@@ -31,8 +33,9 @@ from sympy.solvers import solve
 from sympy.solvers.solveset import linear_coeffs
 from sympy.utilities.misc import filldedent, func_name
 
-from mpmath.libmp.libmpf import prec_to_dps
 
+# XXX: This should use sympy.core.random rather than using the stdlib random
+# module directly.
 import random
 
 x, y = [Dummy('ellipse_dummy', real=True) for i in range(2)]
@@ -503,7 +506,7 @@ class Ellipse(GeometrySet):
         >>> from sympy import Point, Ellipse
         >>> e1 = Ellipse(Point(1, 0), 3, 2)
         >>> e1.evolute()
-        2**(2/3)*y**(2/3) + (3*x - 3)**(2/3) - 5**(2/3)
+        2**(2/3)*y**(2/3) - 5**(2/3) + (3*x - 3)**(2/3)
         """
         if len(self.args) != 3:
             raise NotImplementedError('Evolute of arbitrary Ellipse is not supported.')

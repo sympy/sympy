@@ -1,3 +1,4 @@
+from __future__ import annotations
 import re
 from sympy.concrete.products import product
 from sympy.concrete.summations import Sum

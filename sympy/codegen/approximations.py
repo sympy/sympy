@@ -1,3 +1,4 @@
+from __future__ import annotations
 import math
 from sympy.sets.sets import Interval
 from sympy.calculus.singularities import is_increasing, is_decreasing
@@ -131,9 +132,9 @@ class SeriesApprox(Optimization):
     >>> series_approx8 = SeriesApprox(bounds, reltol=1e-8)
     >>> expr = sin(x)*sin(y)
     >>> optimize(expr, [series_approx2])
-    x*(-y + (y - pi)**3/6 + pi)
+    x*(-y + pi + (y - pi)**3/6)
     >>> optimize(expr, [series_approx3])
-    (-x**3/6 + x)*sin(y)
+    (x - x**3/6)*sin(y)
     >>> optimize(expr, [series_approx8])
     sin(x)*sin(y)
 

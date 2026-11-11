@@ -1,3 +1,4 @@
+from __future__ import annotations
 from sympy.tensor.array import (ImmutableDenseNDimArray,
         ImmutableSparseNDimArray, MutableDenseNDimArray, MutableSparseNDimArray)
 from sympy.abc import x, y, z

@@ -3,10 +3,13 @@
 # NOTE: keep tests sorted by (module, class name) key. If a class can't
 # be instantiated, add it here anyway with @SKIP("abstract class) (see
 # e.g. Function).
+from __future__ import annotations
 
 import os
 import re
 from pathlib import Path
+
+import pytest
 
 from sympy.assumptions.ask import Q
 from sympy.core.basic import Basic
@@ -29,6 +32,9 @@ whitelist = [
      "sympy.assumptions.relation.equality",    # tested by test_predicates()
 ]
 
+@pytest.mark.thread_unsafe(
+    reason="performs a package-wide import scan that cannot run concurrently"
+)
 def test_all_classes_are_tested():
     this = os.path.split(__file__)[0]
     path = os.path.join(this, os.pardir, os.pardir)
@@ -1637,6 +1643,10 @@ def test_sympy__stats__crv_types__ShiftedGompertzDistribution():
     from sympy.stats.crv_types import ShiftedGompertzDistribution
     assert _test_args(ShiftedGompertzDistribution(1, 1))
 
+def test_sympy__stats__crv_types__SkewNormalDistribution():
+    from sympy.stats.crv_types import SkewNormalDistribution
+    assert _test_args(SkewNormalDistribution(0, 1, 1))
+
 def test_sympy__stats__crv_types__StudentTDistribution():
     from sympy.stats.crv_types import StudentTDistribution
     assert _test_args(StudentTDistribution(1))
@@ -2554,6 +2564,12 @@ def test_sympy__functions__special__elliptic_integrals__elliptic_pi():
     assert _test_args(P(x, y, z))
 
 
+def test_sympy__functions__special__elliptic_functions__jtheta():
+    from sympy.functions.special.elliptic_functions import jtheta
+    assert _test_args(jtheta(1, x, y))
+    assert _test_args(jtheta(1, x, y, 2))
+
+
 def test_sympy__functions__special__delta_functions__DiracDelta():
     from sympy.functions.special.delta_functions import DiracDelta
     assert _test_args(DiracDelta(x, 1))
@@ -2660,6 +2676,11 @@ def test_sympy__functions__special__error_functions__Chi():
 def test_sympy__functions__special__error_functions__expint():
     from sympy.functions.special.error_functions import expint
     assert _test_args(expint(y, x))
+
+
+def test_sympy__functions__special__error_functions__owens_t():
+    from sympy.functions.special.error_functions import owens_t
+    assert _test_args(owens_t(2, 3))
 
 
 def test_sympy__functions__special__gamma_functions__gamma():
@@ -5180,6 +5201,12 @@ def test_sympy__tensor__array__expressions__array_expressions__Reshape():
     from sympy.tensor.array.expressions.array_expressions import ArraySymbol, Reshape
     A = ArraySymbol("A", (4,))
     assert _test_args(Reshape(A, (2, 2)))
+
+
+def test_sympy__tensor__array__expressions__array_expressions__ArraySum():
+    from sympy.tensor.array.expressions.array_expressions import ArraySum, ArraySymbol
+    A = ArraySymbol("A", (3, 3))
+    assert _test_args(ArraySum(A*sin(a), (a, 1, b)))
 
 
 def test_sympy__codegen__ast__Assignment():

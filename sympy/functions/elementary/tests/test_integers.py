@@ -1,3 +1,4 @@
+from __future__ import annotations
 from sympy.calculus.accumulationbounds import AccumBounds
 from sympy.core.numbers import (E, Float, I, Rational, Integer, nan, oo, pi, zoo)
 from sympy.core.relational import (Eq, Ge, Gt, Le, Lt, Ne)

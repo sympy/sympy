@@ -1,3 +1,4 @@
+from __future__ import annotations
 import sys
 
 sys._running_pytest = True  # type: ignore

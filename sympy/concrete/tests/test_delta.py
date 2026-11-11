@@ -1,3 +1,4 @@
+from __future__ import annotations
 from sympy.concrete import Sum
 from sympy.concrete.delta import deltaproduct as dp, deltasummation as ds, _extract_delta
 from sympy.core import Eq, S, symbols, oo

@@ -2,6 +2,7 @@
 This module implements a method to find
 Euler-Lagrange Equations for given Lagrangian.
 """
+from __future__ import annotations
 from itertools import combinations_with_replacement
 from sympy.core.function import (Derivative, Function, diff)
 from sympy.core.relational import Eq
@@ -60,7 +61,7 @@ def euler_equations(L, funcs=(), vars=()):
     >>> x = Symbol('x')
     >>> L = (u(t, x).diff(t))**2/2 - (u(t, x).diff(x))**2/2
     >>> euler_equations(L, u(t, x), [t, x])
-    [Eq(-Derivative(u(t, x), (t, 2)) + Derivative(u(t, x), (x, 2)), 0)]
+    [Eq(Derivative(u(t, x), (x, 2)) - Derivative(u(t, x), (t, 2)), 0)]
 
     References
     ==========

@@ -3,6 +3,7 @@
 www.cs.ubc.ca/~hoos/SATLIB/Benchmarks/SAT/satformat.ps
 
 """
+from __future__ import annotations
 
 from sympy.core import Symbol
 from sympy.logic.boolalg import And, Or

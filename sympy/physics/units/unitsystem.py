@@ -4,14 +4,18 @@ Unit system for physical quantities; include definition of constants.
 from __future__ import annotations
 
 from sympy.core.add import Add
-from sympy.core.function import (Derivative, Function)
+from sympy.core.function import (Application, Derivative, Function)
 from sympy.core.mul import Mul
 from sympy.core.power import Pow
 from sympy.core.singleton import S
 from sympy.physics.units.dimensions import _QuantityMapper
-from sympy.physics.units.quantities import Quantity
 
 from .dimensions import Dimension
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from sympy.core.expr import Expr
+    from sympy.physics.units.quantities import Quantity
 
 
 class UnitSystem(_QuantityMapper):
@@ -26,7 +30,7 @@ class UnitSystem(_QuantityMapper):
 
     _unit_systems: dict[str, UnitSystem] = {}
 
-    def __init__(self, base_units, units=(), name="", descr="", dimension_system=None, derived_units: dict[Dimension, Quantity]={}):
+    def __init__(self, base_units, units=(), name="", descr="", dimension_system=None, derived_units: dict[Dimension, Expr]={}):
 
         UnitSystem._unit_systems[name] = self
 
@@ -58,7 +62,7 @@ class UnitSystem(_QuantityMapper):
     def __repr__(self):
         return '<UnitSystem: %s>' % repr(self._base_units)
 
-    def extend(self, base, units=(), name="", description="", dimension_system=None, derived_units: dict[Dimension, Quantity]={}):
+    def extend(self, base, units=(), name="", description="", dimension_system=None, derived_units: dict[Dimension, Expr]={}):
         """Extend the current system into a new one.
 
         Take the base and normal units of the current system to merge
@@ -123,7 +127,7 @@ class UnitSystem(_QuantityMapper):
         return self.get_dimension_system().is_consistent
 
     @property
-    def derived_units(self) -> dict[Dimension, Quantity]:
+    def derived_units(self) -> dict[Dimension, Expr]:
         return self._derived_units
 
     def get_dimensional_expr(self, expr):
@@ -188,10 +192,27 @@ class UnitSystem(_QuantityMapper):
                 factor /= ifactor**count
                 dim /= idim**count
             return factor, dim
-        elif isinstance(expr, Function):
+        elif isinstance(expr, Application):
+            # ``Application`` (rather than ``Function``) so that ``Min``/``Max``
+            # and similar applied functions -- which are not ``Function``
+            # subclasses -- are handled too, instead of falling through to the
+            # ``else`` branch and being treated as opaque dimensionless objects.
             fds = [self._collect_factor_and_dimension(arg) for arg in expr.args]
-            dims = [Dimension(1) if self.get_dimension_system().is_dimensionless(d[1]) else d[1] for d in fds]
-            return (expr.func(*(f[0] for f in fds)), *dims)
+            dims = [Dimension(1) if self.get_dimension_system().is_dimensionless(d[1])
+                    else d[1] for d in fds]
+            # ``_collect_factor_and_dimension`` must return a single
+            # ``(factor, dimension)`` pair; the previous code splatted one
+            # dimension per argument, which produced a malformed tuple (and a
+            # crash when the result was unpacked) for multi-argument functions.
+            # The arguments of a function must all carry the same dimension,
+            # which is the dimension of the result.
+            dim = dims[0] if dims else Dimension(1)
+            for d in dims[1:]:
+                if not self.get_dimension_system().equivalent_dims(dim, d):
+                    raise ValueError(
+                        'Dimension of "{}" is {}, but it should be {}'.format(
+                            expr, d, dim))
+            return expr.func(*(f[0] for f in fds)), dim
         elif isinstance(expr, Dimension):
             return S.One, expr
         else:

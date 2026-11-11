@@ -2,6 +2,7 @@
 You can find lots of cnf files in
 ftp://dimacs.rutgers.edu/pub/challenge/satisfiability/benchmarks/cnf/
 """
+from __future__ import annotations
 
 from sympy.logic.utilities.dimacs import load
 from sympy.logic.algorithms.dpll import dpll_satisfiable

@@ -1,3 +1,4 @@
+from __future__ import annotations
 from sympy.assumptions.ask import Q
 from sympy.assumptions.refine import refine
 from sympy.core.numbers import oo
@@ -1457,3 +1458,23 @@ def test_evaluate_false():
     expr = Equivalent(x, x, x, evaluate=False)
     assert isinstance(expr, Equivalent)
     assert expr.args == (x, x, x)
+
+def test_simplify_logic_dontcare_issue_28369():
+   A, B = symbols('A B')
+
+   # Test 1: Fast path symbol check
+   assert simplify_logic(A, dontcare=~A) is S.true
+
+   # Test 2: Fast path form check
+   assert simplify_logic(A | B, dontcare=A, form='dnf') == B
+
+
+def test_simplify_univariate_endpoints():
+    assert simplify(~((x > 2) & (x < 5))) == (x <= 2) | (x >= 5)
+    assert simplify(~((x >= 2) & (x <= 5))) == (x < 2) | (x > 5)
+    assert simplify(~((x >= 2) & (x < 5))) == (x < 2) | (x >= 5)
+    assert simplify(~((x > 2) & (x <= 5))) == (x <= 2) | (x > 5)
+    expr = ~((x > 2) & (x < 4)) & ~((x > 5) & (x < 7))
+    res = simplify(expr)
+    for v in range(9):
+        assert res.subs(x, v) == expr.subs(x, v)

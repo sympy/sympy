@@ -1,3 +1,4 @@
+from __future__ import annotations
 from sympy.core.expr import unchanged
 from sympy.core.mul import Mul
 from sympy.core.numbers import (I, Rational as R, pi)
@@ -5,7 +6,7 @@ from sympy.core.power import Pow
 from sympy.core.singleton import S
 from sympy.core.symbol import Symbol
 from sympy.functions.combinatorial.factorials import factorial
-from sympy.functions.elementary.exponential import (exp, log)
+from sympy.functions.elementary.exponential import (exp, log, exp_polar)
 from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.functions.elementary.trigonometric import (cos, sin)
 from sympy.series.order import O
@@ -176,6 +177,8 @@ def test_expand_power_base():
     assert expand_power_base((exp(x)*exp(y))**z).is_Pow
     assert expand_power_base(
         (exp(x)*exp(y))**z, force=True) == exp(x)**z*exp(y)**z
+    q = exp_polar(I*pi/2)
+    assert expand_power_base(sqrt(z*q)) == sqrt(z)*exp_polar(I*pi/4)
 
 
 def test_expand_arit():

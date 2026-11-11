@@ -45,6 +45,9 @@ def _pinv_rank_decomposition(M):
     if M.is_zero_matrix:
         return M.H
 
+    if M.rows == 1 or M.cols == 1:
+        return M.H / M.dot(M, hermitian=True)
+
     B, C = M.rank_decomposition()
 
     Bp = _pinv_full_rank(B)
@@ -181,7 +184,10 @@ def _inv_ADJ(M, iszerofunc=_iszero):
     inverse_LDL
     """
 
-    d = _verify_invertible(M, iszerofunc=iszerofunc)
+    d = M.det()
+
+    if iszerofunc(d):
+        raise NonInvertibleMatrixError("Matrix det == 0; not invertible.")
 
     return M.adjugate() / d
 
@@ -226,8 +232,6 @@ def _inv_LU(M, iszerofunc=_iszero):
 
     if not M.is_square:
         raise NonSquareMatrixError("A Matrix must be square to invert.")
-    if M.free_symbols:
-        _verify_invertible(M, iszerofunc=iszerofunc)
 
     return M.LUsolve(M.eye(M.rows), iszerofunc=_iszero)
 

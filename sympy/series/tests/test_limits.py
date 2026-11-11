@@ -1,3 +1,4 @@
+from __future__ import annotations
 from itertools import product
 
 from sympy.concrete.summations import Sum
@@ -13,7 +14,7 @@ from sympy.functions.elementary.complexes import (Abs, re, sign)
 from sympy.functions.elementary.exponential import (LambertW, exp, log)
 from sympy.functions.elementary.hyperbolic import (atanh, asinh, acosh, acoth, acsch, asech, tanh, sinh)
 from sympy.functions.elementary.integers import (ceiling, floor, frac)
-from sympy.functions.elementary.miscellaneous import (cbrt, real_root, sqrt)
+from sympy.functions.elementary.miscellaneous import (cbrt, real_root, sqrt, Min, Max)
 from sympy.functions.elementary.piecewise import Piecewise
 from sympy.functions.elementary.trigonometric import (acos, acot, acsc, asec, asin,
                                                       atan, cos, cot, csc, sec, sin, tan)
@@ -30,7 +31,7 @@ from sympy.calculus.accumulationbounds import AccumBounds
 from sympy.core.mul import Mul
 from sympy.series.limits import heuristics
 from sympy.series.order import Order
-from sympy.testing.pytest import XFAIL, raises
+from sympy.testing.pytest import XFAIL, raises, slow
 
 from sympy import elliptic_e, elliptic_k
 
@@ -683,6 +684,11 @@ def test_issue_6052():
 def test_issue_7224():
     expr = sqrt(x)*besseli(1,sqrt(8*x))
     assert limit(x*diff(expr, x, x)/expr, x, 0) == 2
+
+
+@slow
+def test_issue_7224_at_one():
+    expr = sqrt(x)*besseli(1,sqrt(8*x))
     assert limit(x*diff(expr, x, x)/expr, x, 1).evalf() == 2.0
 
 
@@ -751,6 +757,7 @@ def test_issue_9558():
     assert limit(sin(x)**15, x, 0, '-') == 0
 
 
+@slow
 def test_issue_10801():
     # make sure limits work with binomial
     assert limit(16**k / (k * binomial(2*k, k)**2), k, oo) == pi
@@ -771,6 +778,21 @@ def test_issue_9205():
     assert Limit(x, x, a, '-').free_symbols == {a}
     assert Limit(x + y, x + y, a).free_symbols == {a}
     assert Limit(-x**2 + y, x**2, a).free_symbols == {y, a}
+
+
+def test_issue_30913():
+    x, y, z, w = symbols('x y z w')
+    L1 = Limit(x + y, x, 0)
+    assert L1.bound_symbols == (x,)
+    assert L1.free_symbols == {y}
+
+    L2 = Limit(x + y, x, z)
+    assert L2.bound_symbols == (x,)
+    assert L2.free_symbols == {y, z}
+
+    L_w = Limit(w + y, w, 0)
+    assert L1.as_dummy() == Limit(Symbol('_0') + y, Symbol('_0'), 0, dir='+')
+    assert L1.dummy_eq(L_w) is True
 
 
 def test_issue_9471():
@@ -994,6 +1016,7 @@ def test_issue_16714():
     assert limit(((x**(x + 1) + (x + 1)**x) / x**(x + 1))**x, x, oo) == exp(exp(1))
 
 
+@slow
 def test_issue_16722():
     z = symbols('z', positive=True)
     assert limit(binomial(n + z, n)*n**-z, n, oo) == 1/gamma(z + 1)
@@ -1468,3 +1491,22 @@ def test_issue_28558():
     # The original problematic case now raises NotImplementedError instead of TypeError
     # This confirms the fix - the TypeError about missing 'cdir' is resolved
     raises(NotImplementedError, lambda: limit(log(x)*cos(x), x, oo, dir='-'))
+
+
+def test_issue_28975():
+    assert limit(2**(1/x), x, 0, dir='-') == 0
+    assert limit(2**(1/x), x, 0, dir='+') == oo
+    assert limit((1/2)**(1/x), x, 0, dir='-') == oo
+    assert limit((1/2)**(1/x), x, 0, dir='+') == 0
+    assert limit(3**(1/(x-1)), x, 1, dir='-') == 0
+    assert limit(3**(1/(x-1)), x, 1, dir='+') == oo
+    assert limit(3**(tan(x)), x, pi/2, dir='-') == oo
+    assert limit(3**(tan(x)), x, pi/2, dir='+') == 0
+
+
+def test_issue_30568():
+    x = Symbol('x', real=True)
+    assert limit(Min(x, x**2), x, 0) == 0
+    assert limit(Max(x, sin(x)), x, 0) == 0
+    assert limit(Min(exp(x), exp(2*x)), x, oo) == oo
+    assert limit(Max(1/x, 1/x**2), x, oo) == 0

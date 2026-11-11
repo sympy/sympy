@@ -1,3 +1,4 @@
+from __future__ import annotations
 from sympy.core.symbol import Symbol
 from sympy.matrices.dense import (eye, zeros)
 from sympy.solvers.solvers import solve_linear_system

@@ -9,6 +9,7 @@ References
 
 .. [1] https://en.wikipedia.org/wiki/Pauli_matrices
 """
+from __future__ import annotations
 
 from sympy.core.add import Add
 from sympy.core.mul import Mul

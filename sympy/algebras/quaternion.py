@@ -5,10 +5,11 @@ from typing import TYPE_CHECKING, overload
 from sympy.core.numbers import Rational
 from sympy.core.singleton import S
 from sympy.core.relational import is_eq
+from sympy.external.mpmath import prec_to_dps
 from sympy.functions.elementary.complexes import (conjugate, im, re, sign)
 from sympy.functions.elementary.exponential import (exp, log as ln)
 from sympy.functions.elementary.miscellaneous import sqrt
-from sympy.functions.elementary.trigonometric import (acos, asin, atan2)
+from sympy.functions.elementary.trigonometric import (acos, asin, atan2, sinc)
 from sympy.functions.elementary.trigonometric import (cos, sin)
 from sympy.simplify.trigsimp import trigsimp
 from sympy.integrals.integrals import integrate
@@ -18,12 +19,12 @@ from sympy.core.sympify import sympify, _sympify
 from sympy.core.logic import fuzzy_not, fuzzy_or
 from sympy.utilities.misc import as_int
 
-from mpmath.libmp.libmpf import prec_to_dps
 
 if TYPE_CHECKING:
     from typing import Iterable, Sequence
     from sympy.integrals.integrals import SymbolLimits
     SExpr = Expr | complex
+
 
 def _check_norm(elements: Iterable[Expr], norm: Expr | None) -> None:
     """validate if input norm is consistent"""
@@ -280,19 +281,19 @@ class Quaternion(Expr):
 
         >>> q2.product_matrix_right * q1.to_Matrix()
         Matrix([
-        [ a - d],
-        [ b + c],
-        [-b + c],
-        [ a + d]])
+        [a - d],
+        [b + c],
+        [c - b],
+        [a + d]])
 
         This is equivalent to:
 
         >>> (q1 * q2).to_Matrix()
         Matrix([
-        [ a - d],
-        [ b + c],
-        [-b + c],
-        [ a + d]])
+        [a - d],
+        [b + c],
+        [c - b],
+        [a + d]])
         """
         return Matrix([
                 [self.a, -self.b, -self.c, -self.d],
@@ -517,9 +518,7 @@ class Quaternion(Expr):
         >>> from sympy.abc import a, b, c, d
         >>> euler = Quaternion(a, b, c, d).to_euler('zyz')
         >>> euler
-        (-atan2(-b, c) + atan2(d, a),
-         2*atan2(sqrt(b**2 + c**2), sqrt(a**2 + d**2)),
-         atan2(-b, c) + atan2(d, a))
+        (atan2(d, a) - atan2(-b, c), 2*atan2(sqrt(b**2 + c**2), sqrt(a**2 + d**2)), atan2(-b, c) + atan2(d, a))
 
 
         References
@@ -923,9 +922,8 @@ class Quaternion(Expr):
         """Returns the norm of the quaternion."""
         if self._norm is None:  # check if norm is pre-defined
             q = self
-            # trigsimp is used to simplify sin(x)^2 + cos(x)^2 (these terms
-            # arise when from_axis_angle is used).
-            return sqrt(trigsimp(q.a**2 + q.b**2 + q.c**2 + q.d**2))
+            # target trig and hyperbolics that arise when using from_axis_angle.
+            return sqrt(trigsimp((q.a**2 + q.b**2 + q.c**2 + q.d**2).together()))
 
         return self._norm
 
@@ -939,7 +937,7 @@ class Quaternion(Expr):
         q = self
         if not q.norm():
             raise ValueError("Cannot compute inverse for a quaternion with zero norm")
-        return conjugate(q) * (1/q.norm()**2)
+        return q._eval_conjugate() * (1/q.norm()**2)
 
     def pow(self, p: int) -> Quaternion:
         """Finds the pth power of the quaternion.
@@ -1002,20 +1000,28 @@ class Quaternion(Expr):
         >>> q = Quaternion(1, 2, 3, 4)
         >>> q.exp()
         E*cos(sqrt(29))
-        + 2*sqrt(29)*E*sin(sqrt(29))/29*i
-        + 3*sqrt(29)*E*sin(sqrt(29))/29*j
-        + 4*sqrt(29)*E*sin(sqrt(29))/29*k
+        + 2*E*sinc(sqrt(29))*i
+        + 3*E*sinc(sqrt(29))*j
+        + 4*E*sinc(sqrt(29))*k
 
         """
         # exp(q) = e^a(cos||v|| + v/||v||*sin||v||)
         q = self
         vector_norm = sqrt(q.b**2 + q.c**2 + q.d**2)
         a = exp(q.a) * cos(vector_norm)
-        b = exp(q.a) * sin(vector_norm) * q.b / vector_norm
-        c = exp(q.a) * sin(vector_norm) * q.c / vector_norm
-        d = exp(q.a) * sin(vector_norm) * q.d / vector_norm
 
-        return Quaternion(a, b, c, d)
+        # Handle purely real quaternions to avoid division by zero
+        if vector_norm.is_zero:
+            return Quaternion(a, a*q.b, a*q.c, a*q.d,
+                real_field=q.real_field)
+
+        a = exp(q.a)
+        scale = a*sinc(vector_norm)
+
+        return Quaternion(
+            a*cos(vector_norm),
+            scale*q.b, scale*q.c, scale*q.d,
+            real_field=q.real_field)
 
     def log(self):
         r"""Returns the logarithm of the quaternion, given by $\log q$.

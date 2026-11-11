@@ -22,6 +22,7 @@ strategies.core       - generic non-SymPy specific strategies
 strategies.traverse   - strategies that traverse a SymPy tree
 strategies.tools      - some conglomerate strategies that do depend on SymPy
 """
+from __future__ import annotations
 
 from . import rl
 from . import traverse

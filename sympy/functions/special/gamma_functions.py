@@ -1,3 +1,4 @@
+from __future__ import annotations
 from math import prod
 
 from sympy.core import Add, S, Dummy, expand_func
@@ -6,6 +7,7 @@ from sympy.core.function import DefinedFunction, ArgumentIndexError, PoleError
 from sympy.core.logic import fuzzy_and, fuzzy_not
 from sympy.core.numbers import Rational, pi, oo, I
 from sympy.core.power import Pow
+from sympy.external.mpmath import prec_to_dps, local_workprec
 from sympy.functions.special.zeta_functions import zeta
 from sympy.functions.special.error_functions import erf, erfc, Ei
 from sympy.functions.elementary.complexes import re, unpolarify
@@ -17,8 +19,6 @@ from sympy.functions.combinatorial.numbers import bernoulli, harmonic
 from sympy.functions.combinatorial.factorials import factorial, rf, RisingFactorial
 from sympy.utilities.misc import as_int
 
-from mpmath import mp, workprec
-from mpmath.libmp.libmpf import prec_to_dps
 
 def intlike(n):
     try:
@@ -77,7 +77,7 @@ class gamma(DefinedFunction):
 
     >>> from sympy import series
     >>> series(gamma(x), x, 0, 3)
-    1/x - EulerGamma + x*(EulerGamma**2/2 + pi**2/12) + x**2*(-EulerGamma*pi**2/12 - zeta(3)/3 - EulerGamma**3/6) + O(x**3)
+    1/x - EulerGamma + x*(EulerGamma**2/2 + pi**2/12) + x**2*(-EulerGamma**3/6 - EulerGamma*pi**2/12 - zeta(3)/3) + O(x**3)
 
     We can numerically evaluate the ``gamma`` function to arbitrary precision
     on the whole complex plane:
@@ -246,7 +246,7 @@ class lowergamma(DefinedFunction):
     >>> lowergamma(s, x)
     lowergamma(s, x)
     >>> lowergamma(3, x)
-    -2*(x**2/2 + x + 1)*exp(-x) + 2
+    2 - 2*(x**2/2 + x + 1)*exp(-x)
     >>> lowergamma(-S(1)/2, x)
     -2*sqrt(pi)*erf(sqrt(x)) - 2*exp(-x)/sqrt(x)
 
@@ -342,8 +342,8 @@ class lowergamma(DefinedFunction):
         if all(x.is_number for x in self.args):
             a = self.args[0]._to_mpmath(prec)
             z = self.args[1]._to_mpmath(prec)
-            with workprec(prec):
-                res = mp.gammainc(a, 0, z)
+            with local_workprec(prec) as ctx:
+                res = ctx.gammainc(a, 0, z)
             return Expr._from_mpmath(res, prec)
         else:
             return self
@@ -431,7 +431,7 @@ class uppergamma(DefinedFunction):
     >>> uppergamma(3, x)
     2*(x**2/2 + x + 1)*exp(-x)
     >>> uppergamma(-S(1)/2, x)
-    -2*sqrt(pi)*erfc(sqrt(x)) + 2*exp(-x)/sqrt(x)
+    2*exp(-x)/sqrt(x) - 2*sqrt(pi)*erfc(sqrt(x))
     >>> uppergamma(-2, x)
     expint(3, x)/x**2
 
@@ -476,8 +476,8 @@ class uppergamma(DefinedFunction):
         if all(x.is_number for x in self.args):
             a = self.args[0]._to_mpmath(prec)
             z = self.args[1]._to_mpmath(prec)
-            with workprec(prec):
-                res = mp.gammainc(a, z, mp.inf)
+            with local_workprec(prec) as ctx:
+                res = ctx.gammainc(a, z, ctx.inf)
             return Expr._from_mpmath(res, prec)
         return self
 
@@ -589,11 +589,11 @@ class polygamma(DefinedFunction):
     >>> polygamma(0, 1)
     -EulerGamma
     >>> polygamma(0, 1/S(2))
-    -2*log(2) - EulerGamma
+    -EulerGamma - 2*log(2)
     >>> polygamma(0, 1/S(3))
-    -log(3) - sqrt(3)*pi/6 - EulerGamma - log(sqrt(3))
+    -sqrt(3)*pi/6 - EulerGamma - log(3) - log(sqrt(3))
     >>> polygamma(0, 1/S(4))
-    -pi/2 - log(4) - log(2) - EulerGamma
+    -EulerGamma - pi/2 - log(2) - log(4)
     >>> polygamma(0, 2)
     1 - EulerGamma
     >>> polygamma(0, 23)
@@ -643,7 +643,7 @@ class polygamma(DefinedFunction):
     2*harmonic(x - 1, 3) - 2*zeta(3)
     >>> ni = Symbol("n", integer=True)
     >>> polygamma(ni, x).rewrite(harmonic)
-    (-1)**(n + 1)*(-harmonic(x - 1, n + 1) + zeta(n + 1))*factorial(n)
+    (-1)**(n + 1)*(zeta(n + 1) - harmonic(x - 1, n + 1))*factorial(n)
 
     See Also
     ========
@@ -850,15 +850,18 @@ class polygamma(DefinedFunction):
             return
         s = self.args[0]._to_mpmath(prec+12)
         z = self.args[1]._to_mpmath(prec+12)
-        if mp.isint(z) and z <= 0:
-            return S.ComplexInfinity
-        with workprec(prec+12):
+        with local_workprec(prec+12) as mp:
+            if mp.isint(z) and z <= 0:
+                return S.ComplexInfinity
             if mp.isint(s) and s >= 0:
                 res = mp.polygamma(s, z)
             else:
-                zt = mp.zeta(s+1, z)
-                dzt = mp.zeta(s+1, z, 1)
-                res = (dzt + (mp.euler + mp.digamma(-s)) * zt) * mp.rgamma(-s)
+                zt = mp.zeta(mp.fadd(s,1), z)
+                dzt = mp.zeta(mp.fadd(s,1), z, 1)
+                res = mp.fmul(
+                    mp.fadd(dzt, mp.fmul(mp.fadd(mp.euler, mp.digamma(mp.fneg(s))), zt)),
+                    mp.rgamma(mp.fneg(s))
+                )
         return Expr._from_mpmath(res, prec)
 
 
@@ -907,13 +910,13 @@ class loggamma(DefinedFunction):
     >>> from sympy import expand_func
     >>> L = loggamma(S(16)/3)
     >>> expand_func(L).doit()
-    -5*log(3) + loggamma(1/3) + log(4) + log(7) + log(10) + log(13)
+    -5*log(3) + log(4) + log(7) + log(10) + log(13) + loggamma(1/3)
     >>> L = loggamma(S(19)/4)
     >>> expand_func(L).doit()
-    -4*log(4) + loggamma(3/4) + log(3) + log(7) + log(11) + log(15)
+    log(3) - 4*log(4) + log(7) + log(11) + log(15) + loggamma(3/4)
     >>> L = loggamma(S(23)/7)
     >>> expand_func(L).doit()
-    -3*log(7) + log(2) + loggamma(2/7) + log(9) + log(16)
+    log(2) - 3*log(7) + log(9) + log(16) + loggamma(2/7)
 
     The ``loggamma`` function has the following limits towards infinity:
 

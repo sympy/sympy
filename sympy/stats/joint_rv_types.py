@@ -1,3 +1,4 @@
+from __future__ import annotations
 from sympy.concrete.products import Product
 from sympy.concrete.summations import Sum
 from sympy.core.add import Add
@@ -242,7 +243,7 @@ def MultivariateNormal(name, mu, sigma):
     calculated using a matrix argument, as shown below.
 
     >>> density(X)(obs)
-    (exp(((1/2)*mu.T - (1/2)*obs.T)*Sg**(-1)*(-mu + obs))/sqrt((2*pi)**n*Determinant(Sg)))[0, 0]
+    (exp(((1/2)*mu.T - (1/2)*obs.T)*Sg**(-1)*(obs - mu))/sqrt((2*pi)**n*Determinant(Sg)))[0, 0]
 
     References
     ==========
@@ -315,7 +316,7 @@ def MultivariateLaplace(name, mu, sigma):
     >>> y, z = symbols('y z')
     >>> X = MultivariateLaplace('X', [2, 4], [[3, 1], [1, 3]])
     >>> density(X)(y, z)
-    sqrt(2)*exp(y/4 + 5*z/4)*besselk(0, sqrt(15*y*(3*y/8 - z/8)/2 + 15*z*(-y/8 + 3*z/8)/2))/(4*pi)
+    sqrt(2)*exp(y/4 + 5*z/4)*besselk(0, sqrt(15*y*(3*y/8 - z/8)/2 + 15*z*(3*z/8 - y/8)/2))/(4*pi)
     >>> density(X)(1, 2)
     sqrt(2)*exp(11/4)*besselk(0, sqrt(165)/4)/(4*pi)
 
@@ -705,8 +706,8 @@ def GeneralizedMultivariateLogGamma(syms, delta, v, lamda, mu):
     >>> y = symbols('y_1:4', positive=True)
     >>> Gd = GeneralizedMultivariateLogGamma('G', d, v, l, mu)
     >>> density(Gd)(y[0], y[1], y[2])
-    Sum(exp((n + 1)*(y_1 + y_2 + y_3) - exp(y_1) - exp(y_2) -
-    exp(y_3))/(2**n*gamma(n + 1)**3), (n, 0, oo))/2
+    Sum((1/2)**n*exp((n + 1)*(y_1 + y_2 + y_3) - exp(y_1) - exp(y_2) -
+        exp(y_3))/gamma(n + 1)**3, (n, 0, oo))/2
 
     References
     ==========

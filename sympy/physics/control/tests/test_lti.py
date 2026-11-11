@@ -1,3 +1,4 @@
+from __future__ import annotations
 from sympy.core.add import Add
 from sympy.core.function import Function
 from sympy.core.mul import Mul
@@ -25,8 +26,7 @@ from sympy.physics.control.lti import (
     TransferFunctionMatrix, MIMOSeries, MIMOParallel, MIMOFeedback, StateSpace,
     DiscreteStateSpace, create_state_space, gbt, bilinear, forward_diff,
     backward_diff, phase_margin, gain_margin)
-from sympy.testing.pytest import raises
-from sympy.logic.boolalg import false, true
+from sympy.testing.pytest import raises, XFAIL
 
 from math import isclose
 
@@ -38,6 +38,35 @@ a0, a1, a2, a3, b0, b1, b2, b3, b4, c0, c1, c2, c3, d0, d1, d2, d3 = \
 TF1 = TransferFunction(1, s**2 + 2*zeta*wn*s + wn**2, s)
 TF2 = TransferFunction(k, 1, s)
 TF3 = TransferFunction(a2*p - s, a2*s + p, s)
+TF4 = TransferFunction(k*s + p, tau*s + 1, s)
+TF5 = TransferFunction(k, p, s)
+TF6 = TransferFunction(k*s + p, k*s + p, s)
+
+
+@XFAIL
+def test_state_space_rewrite_from_pr_27651():
+    c0, c1, c2 = symbols('c0, c1, c2', real=True)
+    a0, a1, a2, a3 = symbols('a0, a1, a2, a3', real=True)
+    d = symbols('d', real=True)
+    s = symbols('s')
+    t = TransferFunction(d, 1, s) + TransferFunction(c2*s**2 + c1*s**1 + c0,
+                                                     s**4 + a3*s**3 + a2*s**2 +
+                                                     a1*s**1 + a0, s)
+    expected = StateSpace(
+        Matrix([[0,   1,   0,   0],
+                [0,   0,   1,   0],
+                [0,   0,   0,   1],
+                [-a0, -a1, -a2, -a3]]),
+        Matrix([[0],
+                [0],
+                [0],
+                [1]]),
+        Matrix([[c0, c1, c2, 0]]),
+        Matrix([[d]]))
+
+    # The call to Parallel.doit() is not working correctly.
+    assert t.rewrite(StateSpace).doit() == expected
+    assert t.rewrite(StateSpace).doit() == t.doit().rewrite(StateSpace)
 
 
 def test_create_transfer_function():
@@ -330,8 +359,8 @@ def test_TransferFunction_functions():
         b3*b4 > 0, -b1*b4 + b2*b3 > 0,
         -b0*b3**2*b4 -b1**2*b4**2 + b1*b2*b3*b4 > 0,
         b0*b4 > 0]
-    assert TransferFunction(1, (s+1)*(s+2*I)*(s-2*I), s).get_asymptotic_stability_conditions() == [false]
-    assert TransferFunction(1, (s+1)*(s+2)*(s+1/2), s).get_asymptotic_stability_conditions() == [true, true, true]
+    assert TransferFunction(1, (s+1)*(s+2*I)*(s-2*I), s).get_asymptotic_stability_conditions() == [False]
+    assert TransferFunction(1, (s+1)*(s+2)*(s+1/2), s).get_asymptotic_stability_conditions() == [True, True, True]
     assert stable_tf.get_asymptotic_stability_conditions() == [True]
 
     # Zeros of a transfer function.
@@ -847,7 +876,7 @@ def test_DiscreteTransferFunction_functions():
     assert marginally_stable_tf.is_stable() == False
     assert unstable_tf.is_stable() == False
     assert DiscreteTransferFunction(
-        z, (z+Rational(1,8))*(z+k), z).is_stable() == None
+        z, (z+Rational(1,8))*(z+k), z).is_stable() is None
 
     generic_den = b4 * s**4 + b3 * s**3 + b2 * s**2 + b1 * s + b0
 
@@ -3484,6 +3513,21 @@ def test_conversion():
                    Matrix([[1, 0]]),
                    Matrix([[0]]))
     assert SS.rewrite(TransferFunction)[0][0] == TF1
+
+    SS1 = TF4.rewrite(StateSpace)
+    assert SS1 == \
+        StateSpace(Matrix([[-1/tau]]), Matrix([[1]]), Matrix([[-k/tau**2 + p/tau]]),
+                   Matrix([[k/tau]]))
+    assert SS1.rewrite(TransferFunction)[0][0] == TF4
+
+    SS2 = TF5.rewrite(StateSpace)
+    assert SS2 == \
+        StateSpace(Matrix([[0]]), Matrix([[0]]), Matrix([[0]]), Matrix([[k/p]]))
+    assert SS2.rewrite(TransferFunction)[0][0] == TF5
+
+    SS3 = TF6.rewrite(StateSpace)
+    assert SS3 == \
+        StateSpace(Matrix([[0]]), Matrix([[0]]), Matrix([[0]]), Matrix([[1]]))
 
     # TransferFunction cannot be converted to DiscreteStateSpace
     raises(TypeError, lambda: TF1.rewrite(DiscreteStateSpace))

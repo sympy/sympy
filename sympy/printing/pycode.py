@@ -3,11 +3,13 @@ Python code printers
 
 This module contains Python code printers for plain Python as well as NumPy & SciPy enabled code.
 """
+from __future__ import annotations
 from collections import defaultdict
 from itertools import chain
 from sympy.core import S
 from sympy.core.mod import Mod
-from .precedence import precedence
+from sympy.core.symbol import Dummy
+from .precedence import precedence, PRECEDENCE
 from .codeprinter import CodePrinter
 
 _kw = {
@@ -212,7 +214,13 @@ class AbstractPythonCodePrinter(CodePrinter):
 
     def _print_Mod(self, expr):
         PREC = precedence(expr)
-        return ('{} % {}'.format(*(self.parenthesize(x, PREC) for x in expr.args)))
+        num, den = expr.args
+        if den.is_Pow and den.exp.is_negative:
+            den_prec = PRECEDENCE["Pow"]
+        else:
+            den_prec = PREC
+        return '{} % {}'.format(self.parenthesize(num, PREC),
+                                self.parenthesize(den, den_prec))
 
     def _print_Piecewise(self, expr):
         result = []
@@ -268,6 +276,9 @@ class AbstractPythonCodePrinter(CodePrinter):
 
     def _print_ImaginaryUnit(self, expr):
         return '1j'
+
+    def _print_conjugate(self, expr):
+        return '({}).conjugate()'.format(self._print(expr.args[0]))
 
     def _print_KroneckerDelta(self, expr):
         a, b = expr.args
@@ -339,7 +350,8 @@ class AbstractPythonCodePrinter(CodePrinter):
                 self._print(prnt.format_string),
                 print_args
             )
-        if prnt.file != None: # Must be '!= None', cannot be 'is not None'
+        # Must be '!= None', cannot be 'is not None'
+        if prnt.file != None:  # noqa: E711
             print_args += ', file=%s' % self._print(prnt.file)
         return 'print(%s)' % print_args
 
@@ -421,6 +433,43 @@ class AbstractPythonCodePrinter(CodePrinter):
         return "{}**{}".format(base_str, exp_str)
 
 
+def _is_atomic_code(code):
+    # Whether ``code`` is an identifier or a single call, i.e. needs no
+    # parentheses when an operator is applied to it.
+    if code.isidentifier():
+        return True
+    head, sep, rest = code.partition("(")
+    if not sep or not head.replace(".", "").isidentifier() or not rest.endswith(")"):
+        return False
+    depth = 1
+    for i, c in enumerate(rest):
+        depth += (c == "(") - (c == ")")
+        if depth == 0:
+            return i == len(rest) - 1
+    return False
+
+
+class _ElementwiseOperand(Dummy):
+    """Placeholder for the operand of an ``ArrayElementwiseApplyFunc``.
+
+    Its name is the printed code of the operand, which ``ArrayPrinter``
+    prints as it is: nothing is substituted in the printed function body,
+    so the operand cannot be confused with other symbols. Its precedence
+    is the one of the printed operand, so that it is parenthesized when
+    needed.
+    """
+    __slots__ = ('precedence',)
+
+    def __new__(cls, code, precedence):
+        obj = Dummy.__new__(cls, code)
+        obj.precedence = precedence
+        return obj
+
+    def sort_key(self, order=None):
+        # Before symbols, so that the operand leads printed sums and products.
+        return (2, 0, ''), (0, ()), S.One.sort_key(), S.One
+
+
 class ArrayPrinter:
 
     def _arrayify(self, indexed):
@@ -473,8 +522,10 @@ class ArrayPrinter:
         raise ValueError("out of letters")
 
     def _print_ArrayTensorProduct(self, expr):
+        from sympy.tensor.array.expressions.array_expressions import _get_sub_ndim_list
+
         letters = self._get_letter_generator_for_einsum()
-        contraction_string = ",".join(["".join([next(letters) for j in range(i)]) for i in expr.subranks])
+        contraction_string = ",".join(["".join([next(letters) for j in range(i)]) for i in _get_sub_ndim_list(expr)])
         return '%s("%s", %s)' % (
                 self._module_format(self._module + "." + self._einsum),
                 contraction_string,
@@ -487,13 +538,14 @@ class ArrayPrinter:
         contraction_indices = expr.contraction_indices
 
         if isinstance(base, ArrayTensorProduct):
+            from sympy.tensor.array.expressions.array_expressions import _get_sub_ndim_list
             elems = ",".join(["%s" % (self._print(arg)) for arg in base.args])
-            ranks = base.subranks
+            ndim_list = _get_sub_ndim_list(base)
         else:
             elems = self._print(base)
-            ranks = [len(base.shape)]
+            ndim_list = [len(base.shape)]
 
-        contraction_string, letters_free, letters_dum = self._get_einsum_string(ranks, contraction_indices)
+        contraction_string, letters_free, letters_dum = self._get_einsum_string(ndim_list, contraction_indices)
 
         if not contraction_indices:
             return self._print(base)
@@ -509,12 +561,14 @@ class ArrayPrinter:
 
     def _print_ArrayDiagonal(self, expr):
         from sympy.tensor.array.expressions.array_expressions import ArrayTensorProduct
+        from sympy.tensor.array.expressions.array_expressions import _get_sub_ndim_list
+
         diagonal_indices = list(expr.diagonal_indices)
         if isinstance(expr.expr, ArrayTensorProduct):
-            subranks = expr.expr.subranks
+            subranks = _get_sub_ndim_list(expr.expr)
             elems = expr.expr.args
         else:
-            subranks = expr.subranks
+            subranks = _get_sub_ndim_list(expr)
             elems = [expr.expr]
         diagonal_string, letters_free, letters_dum = self._get_einsum_string(subranks, diagonal_indices)
         elems = [self._print(i) for i in elems]
@@ -533,6 +587,31 @@ class ArrayPrinter:
 
     def _print_ArrayAdd(self, expr):
         return self._expand_fold_binary_op(self._module + "." + self._add, expr.args)
+
+    def _print_ArrayElementwiseApplyFunc(self, expr):
+        return self._print(self._elementwise_body(expr))
+
+    def _elementwise_body(self, expr):
+        # The function of ``expr`` applied to a placeholder printing as the
+        # printed operand. Scalar functions and arithmetic are elementwise
+        # in the array libraries, while applying the function to the
+        # operand symbolically would turn e.g. d**2 into a matrix power
+        # for a matrix operand.
+        from sympy.core.function import Lambda
+        from sympy.tensor.array.expressions.array_expressions import ArrayElementwiseApplyFunc
+        operand = expr.expr
+        if isinstance(operand, ArrayElementwiseApplyFunc):
+            operand = self._elementwise_body(operand)
+        code = self._print(operand)
+        prec = PRECEDENCE["Atom"] if _is_atomic_code(code) else precedence(operand)
+        placeholder = _ElementwiseOperand(code, prec)
+        function = expr.function
+        if isinstance(function, Lambda):
+            return function.expr.xreplace({function.variables[0]: placeholder})
+        return function(placeholder)
+
+    def _print__ElementwiseOperand(self, expr):
+        return expr.name
 
     def _print_OneArray(self, expr):
         return "%s((%s,))" % (
@@ -585,7 +664,7 @@ class PythonCodePrinter(AbstractPythonCodePrinter):
         return self._print_Rational(expr)
 
     def _print_frac(self, expr):
-        return self._print_Mod(Mod(expr.args[0], 1))
+        return '({})'.format(self._print_Mod(Mod(expr.args[0], 1)))
 
     def _print_Symbol(self, expr):
 

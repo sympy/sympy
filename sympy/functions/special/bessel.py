@@ -1,3 +1,4 @@
+from __future__ import annotations
 from functools import wraps
 
 from sympy.core import S
@@ -10,6 +11,7 @@ from sympy.core.numbers import Rational, pi, I
 from sympy.core.power import Pow
 from sympy.core.symbol import Dummy, uniquely_named_symbol, Wild
 from sympy.core.sympify import sympify
+from sympy.external.mpmath import dps_to_prec, local_workprec
 from sympy.functions.combinatorial.factorials import factorial, RisingFactorial
 from sympy.functions.elementary.trigonometric import sin, cos, csc, cot
 from sympy.functions.elementary.integers import ceiling
@@ -20,7 +22,6 @@ from sympy.functions.special.gamma_functions import gamma, digamma, uppergamma
 from sympy.functions.special.hyper import hyper
 from sympy.polys.orthopolys import spherical_bessel_fn
 
-from mpmath import mp, workprec
 
 # TODO
 # o Scorer functions G1 and G2
@@ -976,7 +977,7 @@ class jn(SphericalBesselBase):
     >>> expand_func(jn(1, z)) == sin(z)/z**2 - cos(z)/z
     True
     >>> expand_func(jn(3, z))
-    (-6/z**2 + 15/z**4)*sin(z) + (1/z - 15/z**3)*cos(z)
+    (15/z**4 - 6/z**2)*sin(z) + (1/z - 15/z**3)*cos(z)
     >>> jn(nu, z).rewrite(besselj)
     sqrt(2)*sqrt(pi)*sqrt(1/z)*besselj(nu + 1/2, z)/2
     >>> jn(nu, z).rewrite(bessely)
@@ -1179,7 +1180,7 @@ class hn1(SphericalHankelBase):
     >>> print(expand_func(hn1(1, z)))
     -I*sin(z)/z - cos(z)/z + sin(z)/z**2 - I*cos(z)/z**2
     >>> hn1(nu, z).rewrite(jn)
-    (-1)**(nu + 1)*I*jn(-nu - 1, z) + jn(nu, z)
+    jn(nu, z) + (-1)**(nu + 1)*I*jn(-nu - 1, z)
     >>> hn1(nu, z).rewrite(yn)
     (-1)**nu*yn(-nu - 1, z) + I*yn(nu, z)
     >>> hn1(nu, z).rewrite(hankel1)
@@ -1237,7 +1238,7 @@ class hn2(SphericalHankelBase):
     >>> hn2(nu, z).rewrite(hankel2)
     sqrt(2)*sqrt(pi)*sqrt(1/z)*hankel2(nu, z)/2
     >>> hn2(nu, z).rewrite(jn)
-    -(-1)**(nu + 1)*I*jn(-nu - 1, z) + jn(nu, z)
+    jn(nu, z) - (-1)**(nu + 1)*I*jn(-nu - 1, z)
     >>> hn2(nu, z).rewrite(yn)
     (-1)**nu*yn(-nu - 1, z) - I*yn(nu, z)
 
@@ -1308,12 +1309,13 @@ def jn_zeros(n, k, method="sympy", dps=15):
     from math import pi as math_pi
 
     if method == "sympy":
-        from mpmath import besseljzero
-        from mpmath.libmp.libmpf import dps_to_prec
         prec = dps_to_prec(dps)
-        return [Expr._from_mpmath(besseljzero(S(n + 0.5)._to_mpmath(prec),
-                                              int(l)), prec)
-                for l in range(1, k + 1)]
+        with local_workprec(prec) as ctx:
+            values = []
+            for l in range(1, k + 1):
+                v = ctx.besseljzero(S(n + 0.5)._to_mpmath(prec), l)
+                values.append(Expr._from_mpmath(v, prec))
+        return values
     elif method == "scipy":
         from scipy.optimize import newton
         try:
@@ -1441,7 +1443,7 @@ class airyai(AiryBase):
 
     >>> from sympy import hyper
     >>> airyai(z).rewrite(hyper)
-    -3**(2/3)*z*hyper((), (4/3,), z**3/9)/(3*gamma(1/3)) + 3**(1/3)*hyper((), (2/3,), z**3/9)/(3*gamma(2/3))
+    3**(1/3)*hyper((), (2/3,), z**3/9)/(3*gamma(2/3)) - 3**(2/3)*z*hyper((), (4/3,), z**3/9)/(3*gamma(1/3))
 
     See Also
     ========
@@ -1822,8 +1824,8 @@ class airyaiprime(AiryBase):
 
     def _eval_evalf(self, prec):
         z = self.args[0]._to_mpmath(prec)
-        with workprec(prec):
-            res = mp.airyai(z, derivative=1)
+        with local_workprec(prec) as ctx:
+            res = ctx.airyai(z, derivative=1)
         return Expr._from_mpmath(res, prec)
 
     def _eval_rewrite_as_besselj(self, z, **kwargs):
@@ -1842,7 +1844,7 @@ class airyaiprime(AiryBase):
             a = Pow(z, Rational(3, 2))
             b = Pow(a, tt)
             c = Pow(a, -tt)
-            return ot * (z**2*c*besseli(tt, tt*a) - b*besseli(-ot, tt*a))
+            return ot * (z**2*c*besseli(tt, tt*a) - b*besseli(-tt, tt*a))
 
     def _eval_rewrite_as_hyper(self, z, **kwargs):
         pf1 = z**2 / (2*3**Rational(2, 3)*gamma(Rational(2, 3)))
@@ -1986,8 +1988,8 @@ class airybiprime(AiryBase):
 
     def _eval_evalf(self, prec):
         z = self.args[0]._to_mpmath(prec)
-        with workprec(prec):
-            res = mp.airybi(z, derivative=1)
+        with local_workprec(prec) as ctx:
+            res = ctx.airybi(z, derivative=1)
         return Expr._from_mpmath(res, prec)
 
     def _eval_rewrite_as_besselj(self, z, **kwargs):
@@ -2068,15 +2070,15 @@ class marcumq(DefinedFunction):
     >>> marcumq(0, a, 0)
     1 - exp(-a**2/2)
     >>> marcumq(1, a, a)
-    1/2 + exp(-a**2)*besseli(0, a**2)/2
+    exp(-a**2)*besseli(0, a**2)/2 + 1/2
     >>> marcumq(2, a, a)
-    1/2 + exp(-a**2)*besseli(0, a**2)/2 + exp(-a**2)*besseli(1, a**2)
+    exp(-a**2)*besseli(0, a**2)/2 + exp(-a**2)*besseli(1, a**2) + 1/2
 
     Differentiation with respect to $a$ and $b$ is supported:
 
     >>> from sympy import diff
     >>> diff(marcumq(m, a, b), a)
-    a*(-marcumq(m, a, b) + marcumq(m + 1, a, b))
+    a*(marcumq(m + 1, a, b) - marcumq(m, a, b))
     >>> diff(marcumq(m, a, b), b)
     -a**(1 - m)*b**m*exp(-a**2/2 - b**2/2)*besseli(m - 1, a*b)
 

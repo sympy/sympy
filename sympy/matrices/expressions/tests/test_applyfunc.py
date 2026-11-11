@@ -1,3 +1,4 @@
+from __future__ import annotations
 from sympy.core.symbol import symbols, Dummy
 from sympy.matrices.expressions.applyfunc import ElementwiseApplyFunction
 from sympy.core.function import Lambda
@@ -116,3 +117,14 @@ def test_applyfunc_shape_11_matrices():
     expr = M.applyfunc(double)
     assert isinstance(expr, MatMul)
     assert expr == 2*M
+
+
+def test_derivative_keeps_function_argument():
+    # https://github.com/sympy/sympy/issues/30902 (item 2)
+    # The derivative of an elementwise function must keep the argument of
+    # the differentiated function, e.g. exp(z + 1) -> exp(z + 1), not exp(z).
+    expr = X.applyfunc(lambda z: exp(z + 1))
+    dexpr = expr.diff(X).as_explicit()
+    assert dexpr[0, 0, 0, 0] == exp(X[0, 0] + 1)
+    assert dexpr[1, 2, 1, 2] == exp(X[1, 2] + 1)
+    assert dexpr[0, 0, 0, 1] == 0

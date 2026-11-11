@@ -10,6 +10,7 @@ methods of the quantum classes, which were found to be inconsistent.
 
 THIS IS EXPERIMENTAL.
 """
+from __future__ import annotations
 from sympy.core.basic import Basic
 from sympy.core.expr import Expr
 from sympy.core.mul import Mul

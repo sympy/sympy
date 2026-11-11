@@ -1,3 +1,4 @@
+from __future__ import annotations
 from sympy.core.numbers import (Float, I, Integer)
 from sympy.matrices.dense import Matrix
 from sympy.external import import_module

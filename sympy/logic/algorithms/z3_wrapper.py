@@ -1,3 +1,4 @@
+from __future__ import annotations
 from sympy.printing.smtlib import smtlib_code
 from sympy.assumptions.assume import AppliedPredicate
 from sympy.assumptions.cnf import EncodedCNF
@@ -32,6 +33,12 @@ def z3_satisfiable(expr, all_models=False):
         exprs.add_prop(expr)
         expr = exprs
 
+    # Return UNSAT when False (encoded as 0) or empty clause is present in the CNF
+    if {0} in expr.data or set() in expr.data:
+        if all_models:
+            return (f for f in [False])
+        return False
+
     z3 = import_module("z3")
     if z3 is None:
         raise ImportError("z3 is not installed")
@@ -42,7 +49,8 @@ def z3_satisfiable(expr, all_models=False):
     if res == "unsat":
         return False
     elif res == "sat":
-        return z3_model_to_sympy_model(s.model(), expr)
+        sympy_model = z3_model_to_sympy_model(s.model(), expr)
+        return {True: True} if sympy_model == {} else sympy_model
     else:
         return None
 
@@ -92,7 +100,7 @@ def encoded_cnf_to_z3_solver(enc_cnf, z3):
 
         symbols |= pred.free_symbols
         pred = pred_str
-        assertion = f"(assert  (implies d{enc} {pred}))"
+        assertion = f"(assert (= d{enc} {pred}))"
         assertions.append(assertion)
 
     for sym in symbols:
@@ -100,7 +108,7 @@ def encoded_cnf_to_z3_solver(enc_cnf, z3):
 
     for f, arity in uninterpreted_functions_to_arity.items():
         # Rather than defining new types for the domain and range
-        # we assume they are real to avoid unnecesary complexity.
+        # we assume they are real to avoid unnecessary complexity.
         arg_types = " ".join(["Real"] * arity)
         declarations.append(f"(declare-fun {f} ({arg_types}) Real)")
 
