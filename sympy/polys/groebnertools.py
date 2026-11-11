@@ -31,6 +31,10 @@ def groebner(seq, ring, method=None):
     except KeyError:
         raise ValueError("'%s' is not a valid Groebner bases algorithm (valid are 'buchberger' and 'f5b')" % method)
 
+    seq = [s for s in seq if s]
+    if not seq:
+        return []
+
     domain, orig = ring.domain, None
 
     if not domain.is_Field or not domain.has_assoc_Field:
@@ -191,7 +195,9 @@ def _buchberger(f, ring):
         return []
 
     # replace f with a reduced list of initial polynomials; see [BW] page 203
-    f1 = f[:]
+    f1 = [p for p in f if p]
+    if not f1:
+        return []
 
     while True:
         f = f1[:]
@@ -601,7 +607,9 @@ def _f5b(F, ring):
     order = ring.order
 
     # reduce polynomials (like in Mario Pernici's implementation) (Becker, Weispfenning, p. 203)
-    B = F
+    B = [p for p in F if p]
+    if not B:
+        return []
     while True:
         F = B
         B = []
