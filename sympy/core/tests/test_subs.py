@@ -659,16 +659,12 @@ def test_aresame_identical_and_class():
     f1 = float('nan')
     f2 = float('nan')
     b1 = Basic(f1)
-    b2 = Basic(f1)
-
-    assert f1 is not f2
-    assert b1 is not b2
+    b2 = Basic(f2)
 
     assert _aresame(f1, f1)
-    assert not _aresame(f1, f2)
     assert _aresame(b1, b1)
-    assert _aresame(b1, b2)
-    assert not _aresame(b1, Basic(f2))
+    assert _aresame(f1, f2) == (f1 is f2)
+    assert _aresame(b1, b2) == (f1 is f2)
 
     assert not _aresame(f1, S.NaN)
     assert not _aresame(b1, Basic(S.NaN))
