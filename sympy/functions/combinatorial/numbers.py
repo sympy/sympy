@@ -2684,9 +2684,9 @@ def _eval_stirling1(n, k):
 @cacheit
 def _stirling1(n, k):
     if n < k:
-        return 0
+        return S.Zero
     if not k:
-        return int(n == 0)
+        return Integer(n == 0)
 
     d = n-k
     row = [1]*(k+1)
@@ -2720,9 +2720,9 @@ def _eval_stirling2(n, k):
 @cacheit
 def _stirling2(n, k):
     if n < k:
-        return 0
+        return S.Zero
     if not k:
-        return int(n == 0)
+        return Integer(n == 0)
 
     d = n-k
     row = [1]*(k+1)
