@@ -215,7 +215,7 @@ class elliptic_e(DefinedFunction):
     >>> from sympy import elliptic_e, I
     >>> from sympy.abc import z, m
     >>> elliptic_e(z, m).series(z)
-    z + z**5*(-m**2/40 + m/30) - m*z**3/6 + O(z**6)
+    z + z**5*(m/30 - m**2/40) - m*z**3/6 + O(z**6)
     >>> elliptic_e(m).series(n=4)
     pi/2 - pi*m/8 - 3*pi*m**2/128 - 5*pi*m**3/512 + O(m**4)
     >>> elliptic_e(1 + I, 2 - I/2).n()

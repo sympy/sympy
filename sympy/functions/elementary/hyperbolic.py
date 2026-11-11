@@ -1256,7 +1256,7 @@ class asinh(InverseHyperbolicFunction):
     >>> asinh(x).diff(x)
     1/sqrt(x**2 + 1)
     >>> asinh(1)
-    log(1 + sqrt(2))
+    log(sqrt(2) + 1)
 
     See Also
     ========
@@ -2138,7 +2138,7 @@ class acsch(InverseHyperbolicFunction):
     >>> acsch(1).diff(x)
     0
     >>> acsch(1)
-    log(1 + sqrt(2))
+    log(sqrt(2) + 1)
     >>> acsch(I)
     -I*pi/2
     >>> acsch(-2*I)

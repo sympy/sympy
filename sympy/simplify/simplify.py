@@ -381,11 +381,11 @@ def signsimp(expr, evaluate=None):
     >>> i = symbols('i', odd=True)
     >>> n = -1 + 1/x
     >>> n/x/(-n)**2 - 1/n/x
-    (-1 + 1/x)/(x*(1 - 1/x)**2) - 1/(x*(-1 + 1/x))
+    (1/x - 1)/(x*(1 - 1/x)**2) - 1/(x*(1/x - 1))
     >>> signsimp(_)
     0
     >>> x*n + x*-n
-    x*(-1 + 1/x) + x*(1 - 1/x)
+    x*(1/x - 1) + x*(1 - 1/x)
     >>> signsimp(_)
     0
 
@@ -398,7 +398,7 @@ def signsimp(expr, evaluate=None):
     exponent into canonical form:
 
     >>> n**i
-    (-1 + 1/x)**i
+    (1/x - 1)**i
 
     By default, signsimp does not leave behind any hollow simplification:
     if making an Add canonical wrt sign didn't change the expression, the
@@ -625,7 +625,8 @@ def simplify(expr, ratio=1.7, measure=count_ops, rational=False, inverse=False, 
     if _eval_simplify is not None:
         return _eval_simplify(**kwargs)
 
-    original_expr = expr = collect_abs(signsimp(expr))
+    original_expr = expr
+    expr = collect_abs(signsimp(expr))
 
     if not isinstance(expr, Basic) or not expr.args:  # XXX: temporary hack
         return expr
@@ -1469,7 +1470,7 @@ def nsimplify(expr, constants=(), tolerance=None, full=False, rational=None,
 
     >>> from sympy import nsimplify, sqrt, GoldenRatio, exp, I, pi
     >>> nsimplify(4/(1+sqrt(5)), [GoldenRatio])
-    -2 + 2*GoldenRatio
+    2*GoldenRatio - 2
     >>> nsimplify((1/(exp(3*pi*I/5)+1)))
     1/2 - I*sqrt(sqrt(5)/10 + 1/4)
     >>> nsimplify(I**I, [pi])
