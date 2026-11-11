@@ -75,7 +75,6 @@ def test_conjugate_printing():
 
 
 def test_conjugate_matmul_matadd():
-    from sympy import MatMul, MatAdd
     n = symbols('n', integer=True, positive=True)
     A = MatrixSymbol('A', n, n)
     B = MatrixSymbol('B', n, n)
@@ -85,7 +84,7 @@ def test_conjugate_matmul_matadd():
 
 
 def test_matpow_conjugate_issue_16498():
-    from sympy.functions import adjoint, conjugate
+    from sympy.functions import adjoint
     n = symbols('n', integer=True, positive=True)
     C = MatrixSymbol('C', n, n)
     B = MatrixSymbol('B', n, n)
