@@ -122,6 +122,23 @@ class Mod(DefinedFunction):
         if rv is not None:
             return rv
 
+        # Leave Float operands where they are: moving a Float from the
+        # modulus to the dividend (or extracting it as a coefficient)
+        # can change the result after substitution. A nested Mod is
+        # already protected, so it need not block outer simplification.
+        def has_float_outside_mod(expr):
+            stack = [expr]
+            while stack:
+                term = stack.pop()
+                if term.is_Float:
+                    return True
+                if not isinstance(term, cls):
+                    stack.extend(term.args)
+            return False
+
+        if has_float_outside_mod(p) or has_float_outside_mod(q):
+            return
+
         # denest
         if isinstance(p, cls):
             qinner = p.args[1]
@@ -206,9 +223,7 @@ class Mod(DefinedFunction):
                 p = Add(*args)
 
         else:
-            # handle coefficients if they are not Rational
-            # since those are not handled by factor_terms
-            # e.g. Mod(.6*x, .3*y) -> 0.3*Mod(2*x, y)
+            # handle non-Rational coefficients that factor_terms cannot
             cp, p = p.as_coeff_Mul()
             cq, q = q.as_coeff_Mul()
             ok = False
@@ -231,13 +246,6 @@ class Mod(DefinedFunction):
         if rv is not None:
             return rv*G
 
-        # put 1.0 from G on inside
-        if G.is_Float and equal_valued(G, 1):
-            p *= G
-            return cls(p, q, evaluate=False)
-        elif G.is_Mul and G.args[0].is_Float and equal_valued(G.args[0], 1):
-            p = G.args[0]*p
-            G = Mul._from_args(G.args[1:])
         return G*cls(p, q, evaluate=(p, q) != (pwas, qwas))
 
     def _eval_is_integer(self):

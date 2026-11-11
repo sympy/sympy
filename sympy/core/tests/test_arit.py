@@ -1859,9 +1859,20 @@ def test_Mod():
     assert k**m % k == 0
     assert (-2*k)**m % k == 0
 
-    # Float handling
+    # Float handling: do not move inexact factors between operands or
+    # extract them outside Mod, where they can be dropped by solvers.
+    assert unchanged(Mod, x, Float(1))
+    assert unchanged(Mod, x, Float('3.3'))
+    assert unchanged(Mod, x, Float('0.5'))
+    delta = Rational(1, 10**20)
+    assert Mod(x, Float(1)).subs(x, 1 + delta) == Float(delta)
+    assert Mod(x, Float('0.5')).subs(x, 1 + delta) == Float(delta)
+    # The Float originated in the dividend in this case.
+    assert unchanged(Mod, x + 3.0, 1)
+    assert Mod(x + 3.0, 1).subs(x, 1 + delta) == 0
+
     point3 = Float(3.3) % 1
-    assert (x - 3.3) % 1 == Mod(1.*x + 1 - point3, 1)
+    assert unchanged(Mod, x - 3.3, 1)
     assert Mod(-3.3, 1) == 1 - point3
     assert Mod(0.7, 1) == Float(0.7)
     e = Mod(1.3, 1)
@@ -1934,15 +1945,14 @@ def test_Mod():
 
     # handling sums
     assert (x + 3) % 1 == Mod(x, 1)
-    assert (x + 3.0) % 1 == Mod(1.*x, 1)
+    assert unchanged(Mod, x + 3.0, 1)
     assert (x - S(33)/10) % 1 == Mod(x + S(7)/10, 1)
 
     a = Mod(.6*x + y, .3*y)
     b = Mod(0.1*y + 0.6*x, 0.3*y)
-    # Test that a, b are equal, with 1e-14 accuracy in coefficients
-    eps = 1e-14
-    assert abs((a.args[0] - b.args[0]).subs({x: 1, y: 1})) < eps
-    assert abs((a.args[1] - b.args[1]).subs({x: 1, y: 1})) < eps
+    assert a.args == (.6*x + y, .3*y)
+    assert b.args == (.1*y + .6*x, .3*y)
+    assert comp(a.subs({x: 1, y: 2}), b.subs({x: 1, y: 2}))
 
     assert (x + 1) % x == 1 % x
     assert (x + y) % x == y % x
@@ -1952,18 +1962,18 @@ def test_Mod():
 
     # gcd extraction
     assert (-3*x) % (-2*y) == -Mod(3*x, 2*y)
-    assert (.6*pi) % (.3*x*pi) == 0.3*pi*Mod(2, x)
-    assert (.6*pi) % (.31*x*pi) == pi*Mod(0.6, 0.31*x)
-    assert (6*pi) % (.3*x*pi) == 0.3*pi*Mod(20, x)
-    assert (6*pi) % (.31*x*pi) == pi*Mod(6, 0.31*x)
-    assert (6*pi) % (.42*x*pi) == pi*Mod(6, 0.42*x)
+    assert unchanged(Mod, .6*pi, .3*x*pi)
+    assert unchanged(Mod, .6*pi, .31*x*pi)
+    assert unchanged(Mod, 6*pi, .3*x*pi)
+    assert unchanged(Mod, 6*pi, .31*x*pi)
+    assert unchanged(Mod, 6*pi, .42*x*pi)
     assert (12*x) % (2*y) == 2*Mod(6*x, y)
     assert (12*x) % (3*5*y) == 3*Mod(4*x, 5*y)
     assert (12*x) % (15*x*y) == 3*x*Mod(4, 5*y)
     assert (-2*pi) % (3*pi) == pi
     assert (2*x + 2) % (x + 1) == 0
     assert (x*(x + 1)) % (x + 1) == (x + 1)*Mod(x, 1)
-    assert Mod(5.0*x, 0.1*y) == 0.1*Mod(50*x, y)
+    assert unchanged(Mod, 5.0*x, 0.1*y)
     i = Symbol('i', integer=True)
     assert (3*i*x) % (2*i*y) == i*Mod(3*x, 2*y)
     assert Mod(4*i, 4) == 0
@@ -2021,7 +2031,8 @@ def test_Mod():
 
     # issue 24215
     from sympy.abc import phi
-    assert Mod(4.0*Mod(phi, 1) , 2) == 2.0*(Mod(2*(Mod(phi, 1)), 1))
+    assert unchanged(Mod, 4.0*Mod(phi, 1), 2)
+    assert comp(Mod(4.0*Mod(phi, 1), 2).subs(phi, 0.9), 1.6)
 
     xi = symbols('x', integer=True)
     assert unchanged(Mod, xi, 2)
