@@ -4,7 +4,7 @@ from __future__ import annotations
 from sympy.core.cache import cacheit
 from sympy.core.containers import Tuple
 from sympy.core.expr import Expr
-from sympy.core.function import Function
+from sympy.core.function import DefinedFunction
 from sympy.core.numbers import oo, equal_valued
 from sympy.core.singleton import S
 from sympy.functions.elementary.complexes import conjugate
@@ -654,7 +654,7 @@ class OrthogonalBra(OrthogonalState, BraBase):
         return OrthogonalKet
 
 
-class Wavefunction(Function):
+class Wavefunction(DefinedFunction):
     """Class for representations in continuous bases
 
     This class takes an expression and coordinates in its constructor. It can

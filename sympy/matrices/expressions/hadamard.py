@@ -1,5 +1,6 @@
 from __future__ import annotations
 from collections import Counter
+from typing import TYPE_CHECKING
 
 from sympy.core import Mul, sympify
 from sympy.core.add import Add
@@ -12,6 +13,10 @@ from sympy.strategies import (
     unpack, flatten, condition, exhaust, rm_id, sort
 )
 from sympy.utilities.exceptions import sympy_deprecation_warning
+
+
+if TYPE_CHECKING:
+    from sympy.core.expr import Expr
 
 
 def hadamard_product(*matrices):
@@ -326,7 +331,7 @@ class HadamardPower(MatrixExpr):
         a^{\circ b} = a^b
     """
 
-    def __new__(cls, base, exp):
+    def __new__(cls, base: Expr | complex, exp: Expr | complex) -> Expr: # type: ignore
         base = sympify(base)
         exp = sympify(exp)
 
@@ -339,13 +344,18 @@ class HadamardPower(MatrixExpr):
         obj = super().__new__(cls, base, exp)
         return obj
 
-    @property
-    def base(self):
-        return self._args[0]
+    if TYPE_CHECKING:
+        @property
+        def args(self) -> tuple[Expr, Expr]:
+            ...
 
     @property
-    def exp(self):
-        return self._args[1]
+    def base(self) -> Expr:
+        return self.args[0]
+
+    @property
+    def exp(self) -> Expr:
+        return self.args[1]
 
     @property
     def shape(self):

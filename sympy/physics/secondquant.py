@@ -15,7 +15,7 @@ from sympy.core.basic import Basic
 from sympy.core.cache import cacheit
 from sympy.core.containers import Tuple
 from sympy.core.expr import Expr
-from sympy.core.function import Function
+from sympy.core.function import DefinedFunction, Function
 from sympy.core.mul import Mul
 from sympy.core.numbers import I
 from sympy.core.power import Pow
@@ -1652,7 +1652,7 @@ class FixedBosonicBasis(BosonicBasis):
         return repr(self.basis)
 
 
-class Commutator(Function):
+class Commutator(DefinedFunction):
     """
     The Commutator:  [A, B] = A*B - B*A
 

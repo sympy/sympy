@@ -1,6 +1,6 @@
 from __future__ import annotations
 from mpmath.libmp import prec_to_dps
-from sympy.core.function import Add, ArgumentIndexError, Function
+from sympy.core.function import Add, ArgumentIndexError, DefinedFunction
 from sympy.core.power import Pow
 from sympy.core.singleton import S
 from sympy.core.sorting import default_sort_key
@@ -31,7 +31,7 @@ def _logaddexp2(x1, x2, *, evaluate=True):
                    _exp2(x2, evaluate=evaluate), evaluate=evaluate))
 
 
-class logaddexp(Function):
+class logaddexp(DefinedFunction):
     """ Logarithm of the sum of exponentiations of the inputs.
 
     Helper class for use with e.g. numpy.logaddexp
@@ -44,7 +44,7 @@ class logaddexp(Function):
     nargs = 2
 
     def __new__(cls, *args):
-        return Function.__new__(cls, *sorted(args, key=default_sort_key))
+        return DefinedFunction.__new__(cls, *sorted(args, key=default_sort_key))
 
     def fdiff(self, argindex=1):
         """
@@ -73,7 +73,7 @@ class logaddexp(Function):
             return logaddexp(a, b)
 
 
-class logaddexp2(Function):
+class logaddexp2(DefinedFunction):
     """ Logarithm of the sum of exponentiations of the inputs in base-2.
 
     Helper class for use with e.g. numpy.logaddexp2
@@ -86,7 +86,7 @@ class logaddexp2(Function):
     nargs = 2
 
     def __new__(cls, *args):
-        return Function.__new__(cls, *sorted(args, key=default_sort_key))
+        return DefinedFunction.__new__(cls, *sorted(args, key=default_sort_key))
 
     def fdiff(self, argindex=1):
         """
@@ -147,7 +147,7 @@ class amax(Token):
     _construct_axis = staticmethod(sympify)
 
 
-class maximum(Function):
+class maximum(DefinedFunction):
     """ Element-wise maximum of array elements.
 
     Helper class for use with e.g. numpy.maximum
@@ -163,7 +163,7 @@ class maximum(Function):
         return Max(*self.args)
 
 
-class minimum(Function):
+class minimum(DefinedFunction):
     """ Element-wise minimum of array elements.
 
     Helper class for use with e.g. numpy.minimum

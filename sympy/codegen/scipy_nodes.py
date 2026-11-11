@@ -1,6 +1,6 @@
 from __future__ import annotations
 from mpmath.libmp import prec_to_dps
-from sympy.core.function import Add, ArgumentIndexError, Function
+from sympy.core.function import Add, ArgumentIndexError, DefinedFunction
 from sympy.core.power import Pow
 from sympy.core.singleton import S
 from sympy.functions.elementary.exponential import log
@@ -11,7 +11,7 @@ def _cosm1(x, *, evaluate=True):
     return Add(cos(x, evaluate=evaluate), -S.One, evaluate=evaluate)
 
 
-class cosm1(Function):
+class cosm1(DefinedFunction):
     """ Minus one plus cosine of x, i.e. cos(x) - 1. For use when x is close to zero.
 
     Helper class for use with e.g. scipy.special.cosm1
@@ -47,7 +47,7 @@ def _powm1(x, y, *, evaluate=True):
     return Add(Pow(x, y, evaluate=evaluate), -S.One, evaluate=evaluate)
 
 
-class powm1(Function):
+class powm1(DefinedFunction):
     """ Minus one plus x to the power of y, i.e. x**y - 1. For use when x is close to one or y is close to zero.
 
     Helper class for use with e.g. scipy.special.powm1
