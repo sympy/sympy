@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-from sympy.core.basic import Basic
 from sympy.core.sympify import _sympify
 from sympy.matrices.expressions.matexpr import MatrixExpr
 
@@ -39,11 +38,8 @@ class Conjugate(MatrixExpr):
 
     def doit(self, **hints):
         from sympy.functions.elementary.complexes import conjugate
-        arg = self.arg
-        if hints.get('deep', True) and isinstance(arg, Basic):
-            return conjugate(arg.doit(**hints))
-        else:
-            return conjugate(self.arg)
+        arg = self.arg.doit(**hints) if hints.get('deep', True) else self.arg
+        return conjugate(arg)
 
     @property
     def arg(self):
