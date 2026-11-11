@@ -6,15 +6,22 @@ from sympy.core import Atom, Basic
 
 if TYPE_CHECKING:
     from sympy.matrices.dense import Matrix
+    from .type_a import TypeA
+    from .type_b import TypeB
+    from .type_c import TypeC
+    from .type_d import TypeD
+    from .type_e import TypeE
+    from .type_f import TypeF
+    from .type_g import TypeG
 
 
 class CartanType_generator():
     """
     Constructor for actually creating things
     """
-    def __call__(self, *args: str | list[str | int]):
+    def __call__(self, *args: str | list[str | int]) -> TypeA | TypeB | TypeC | TypeD | TypeE | TypeF | TypeG:
         c = args[0]
-        if isinstance(c, list):
+        if isinstance(c, list) and isinstance(c[0], str):
             letter, n = c[0], int(c[1])
         elif isinstance(c, str):
             letter, n = c[0], int(c[1:])
@@ -52,6 +59,8 @@ class CartanType_generator():
             if n == 2:
                 from . import type_g
                 return type_g.TypeG(2)
+
+        raise ValueError(f"Invalid Cartan type: {letter}{n}")
 
 CartanType = CartanType_generator()
 
