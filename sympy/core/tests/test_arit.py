@@ -2034,6 +2034,33 @@ def test_Mod():
     assert Mod(3 * Mod(x1_int, 7), 7) == Mod(3 * x1_int, 7)
     assert Mod(5 * Mod(x1_int, 3), 3) == Mod(2 * x1_int, 3)
 
+def test_Mod_integer_terms():
+    i, j = symbols('i j', integer=True)
+    u = Symbol('u')
+    r = Symbol('r', rational=True)
+
+    # Integer-valued terms may be reduced even when the whole sum is
+    # not integer-valued.
+    assert Mod(3*i + 4*u, 2) == Mod(i + 4*u, 2)
+    assert Mod(7*i + 4*u, 3) == Mod(i + 4*u, 3)
+    assert Mod(6*i + u, 3) == Mod(u, 3)
+    assert Mod(3*i + u, 1) == Mod(u, 1)
+    assert Mod(3*i + 4*j, 2) == Mod(i, 2)
+    assert Mod(3*i + 4*r, 2) == Mod(i + 4*r, 2)
+    assert Mod(3*i + u, -2) == Mod(i + u, -2)
+    assert Mod(-i + u, 5) == Mod(4*i + u, 5)
+
+    # The same canonical form allows expressions to combine.
+    assert Mod(3*i + 4*u, 2) + Mod(i + 4*u, 2) == 2*Mod(i + 4*u, 2)
+
+    # Without the integer assumption, coefficients cannot be reduced.
+    assert unchanged(Mod, 3*x + 4*y, 2)
+
+    # The integer-valued factor need not itself be a Symbol.
+    xr = Symbol('xr', real=True)
+    assert Mod(3*floor(xr) + u, 2) == Mod(floor(xr) + u, 2)
+
+
 def test_Mod_Pow():
     # modular exponentiation
     assert isinstance(Mod(Pow(2, 2, evaluate=False), 3), Integer)

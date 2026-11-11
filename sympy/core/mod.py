@@ -192,6 +192,12 @@ class Mod(DefinedFunction):
         if p.is_Add:
             args = []
             for i in p.args:
+                if q.is_Integer:
+                    c, term = i.as_coeff_Mul()
+                    if c.is_Integer and term.is_integer:
+                        # Integer-valued terms can have their coefficients
+                        # reduced modulo q, even if p is not an integer.
+                        i = (c % abs(q))*term
                 a = cls(i, q)
                 if a.count(cls) > i.count(cls):
                     args.append(i)
