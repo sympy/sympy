@@ -38,7 +38,7 @@ if TYPE_CHECKING:
     from sympy.functions.elementary.exponential import exp, log
     from sympy.functions.elementary.complexes import Abs, re, im
     from sympy.functions.elementary.integers import ceiling, floor
-    from sympy.functions.elementary.trigonometric import atan
+    from sympy.functions.elementary.trigonometric import atan, sin, cos, tan
     from .numbers import Float, Rational, Integer, AlgebraicNumber, Number
 
 LG10 = math.log2(10)
@@ -868,7 +868,12 @@ def evalf_pow(v: 'Pow', prec: int, options) -> TMP_RES:
 
     # Pure square root
     if exp is S.Half:
-        xre, xim, _, _ = result
+        xre, xim, re_acc, im_acc = result
+        if (xim and xre and mpf_lt(xre, fzero)
+                and im_acc is not None and im_acc < 2):
+            if base.as_real_imag()[1].is_zero:
+                # ^ or base.expand(complex=True).as_real_imag()[1].is_zero?
+                return None, mpf_sqrt(mpf_neg(xre), prec), None, prec
         # General complex square root
         if xim:
             re, im = mpc_sqrt((xre or fzero, xim), prec)
@@ -946,7 +951,7 @@ def evalf_exp(expr: 'exp', prec: int, options: OPT_DICT) -> TMP_RES:
     return evalf_pow(Pow(S.Exp1, expr.exp, evaluate=False), prec, options)
 
 
-def evalf_trig(v: Expr, prec: int, options: OPT_DICT) -> TMP_RES:
+def evalf_trig(v: cos | sin | tan, prec: int, options: OPT_DICT) -> TMP_RES:
     """
     This function handles sin , cos and tan of complex arguments.
 
@@ -967,7 +972,7 @@ def evalf_trig(v: Expr, prec: int, options: OPT_DICT) -> TMP_RES:
     re, im, re_acc, im_acc = evalf(arg, xprec, options)
     if im:
         if 'subs' in options:
-            v = v.subs(options['subs'])
+            v = v.subs(options['subs']) # type: ignore
         return evalf(v._eval_evalf(prec), prec, options) # type: ignore
     if not re:
         if isinstance(v, cos):

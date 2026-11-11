@@ -438,7 +438,7 @@ def kronecker_mat_add(expr):
     krons = []
     for group in args.values():
         # Greedily merge each addend into the first mergeable partner:
-        merged: list[tuple] = []
+        merged = []
         for pair in map(_coeff_kron, group):
             for i, other in enumerate(merged):
                 combined = _kronecker_merge_add(other, pair)

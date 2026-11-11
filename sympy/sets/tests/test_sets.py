@@ -747,12 +747,71 @@ def test_set_evalf():
     assert FiniteSet(2, x).evalf() == FiniteSet(Float('2.0'), x)
 
 
+def test_Interval_measure_reversed_symbolic_endpoints():
+    # The measure of an interval whose endpoints turn out to be reversed is
+    # 0 (it is empty), not a negative number.
+    a, b = symbols('a b', real=True)
+    m = Interval(a, b).measure
+    assert m == Max(0, b - a)
+    assert m.subs({a: 3, b: 1}) == 0
+    assert m.subs({a: 1, b: 3}) == 2
+    assert Interval.open(a, b).measure == Max(0, b - a)
+    # a provably nonnegative length is unchanged
+    x = Symbol('x', positive=True)
+    assert Interval(0, x).measure == x
+
+
+def test_Interval_measure_assumptions():
+    n = Symbol('n', negative=True)
+    nonpos = Symbol('nonpos', nonpositive=True)
+    p = Symbol('p', positive=True)
+    nonneg = Symbol('nonneg', nonnegative=True)
+    inf_pos = Symbol('inf_pos', extended_positive=True, finite=False)
+    a = Symbol('a', real=True)
+
+    # sign information lets Max collapse
+    assert Interval(n, 0).measure == -n
+    assert Interval(n, p).measure == p - n
+    assert Interval(0, nonneg).measure == nonneg
+    assert Interval(nonpos, 0).measure == -nonpos
+    assert Interval(0, nonpos).measure == 0
+
+    # infinite endpoints
+    assert Interval(-oo, oo).measure is oo
+    assert Interval(0, oo).measure is oo
+    assert Interval(-oo, 0).measure is oo
+    assert Interval(-oo, a).measure is oo
+    assert Interval(a, oo).measure is oo
+    assert Interval(0, inf_pos).measure == inf_pos
+
+    # intervals that are provably empty have measure 0
+    assert Interval(0, n) is S.EmptySet
+    assert Interval(0, n).measure == 0
+    assert Interval.open(a, a) is S.EmptySet
+    assert Interval.open(a, a).measure == 0
+
+
+def test_Interval_zero_measure_not_always_empty():
+    a, b = symbols('a b', real=True)
+    nonpos = Symbol('nonpos', nonpositive=True)
+    # measure 0 does not imply EmptySet: a single point has measure 0
+    assert Interval(1, 1) == FiniteSet(1)
+    assert Interval(1, 1).measure == 0
+    assert Interval(a, a) == FiniteSet(a)
+    assert Interval(a, a).measure == 0
+    # empty intervals do have measure 0
+    assert Interval(3, 1) is S.EmptySet and S.EmptySet.measure == 0
+    # undetermined cases stay unevaluated rather than claiming EmptySet
+    assert Interval(a, b).is_empty is None
+    assert Interval(0, nonpos).is_empty is None
+
+
 def test_measure():
     a = Symbol('a', real=True)
 
     assert Interval(1, 3).measure == 2
-    assert Interval(0, a).measure == a
-    assert Interval(1, a).measure == a - 1
+    assert Interval(0, a).measure == Max(0, a)
+    assert Interval(1, a).measure == Max(0, a - 1)
 
     assert Union(Interval(1, 2), Interval(3, 4)).measure == 2
     assert Union(Interval(1, 2), Interval(3, 4), FiniteSet(5, 6, 7)).measure \

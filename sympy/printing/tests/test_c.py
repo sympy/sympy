@@ -50,7 +50,7 @@ def test_ccode_Pow():
     assert ccode(x**(y**3)) == "pow(x, pow(y, 3))"
     g = implemented_function('g', Lambda(x, 2*x))
     assert ccode(1/(g(x)*3.5)**(x - y**x)/(x**2 + y)) == \
-        "pow(3.5*2*x, -x + pow(y, x))/(pow(x, 2) + y)"
+        'pow(3.5*2*x, pow(y, x) - x)/(pow(x, 2) + y)'
     assert ccode(x**-1.0) == '1.0/x'
     assert ccode(x**Rational(2, 3)) == 'pow(x, 2.0/3.0)'
     assert ccode(x**Rational(2, 3), type_aliases={real: float80}) == 'powl(x, 2.0L/3.0L)'
@@ -170,8 +170,8 @@ def test_ccode_functions2():
     assert ccode(Mod(p1, p2)**s) == 'pow(p1 % p2, s)'
     n = symbols('n', integer=True, negative=True)
     assert ccode(Mod(-n, p2)) == '(-n) % p2'
-    assert ccode(fibonacci(n)) == '((1.0/5.0)*pow(2, -n)*sqrt(5)*(-pow(1 - sqrt(5), n) + pow(1 + sqrt(5), n)))'
-    assert ccode(lucas(n)) == '(pow(2, -n)*(pow(1 - sqrt(5), n) + pow(1 + sqrt(5), n)))'
+    assert ccode(fibonacci(n)) == '((1.0/5.0)*pow(2, -n)*sqrt(5)*(pow(sqrt(5) + 1, n) - pow(1 - sqrt(5), n)))'
+    assert ccode(lucas(n)) == '(pow(2, -n)*(pow(1 - sqrt(5), n) + pow(sqrt(5) + 1, n)))'
 
 
 def test_ccode_user_functions():

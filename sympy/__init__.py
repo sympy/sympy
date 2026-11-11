@@ -13,7 +13,7 @@ See the webpage for more information and documentation:
 """
 
 
-# Keep this in sync with setup.py/pyproject.toml
+# Keep this in sync with pyproject.toml
 import sys
 if sys.version_info < (3, 10):
     raise ImportError("Python version 3.10 or above is required for SymPy.")

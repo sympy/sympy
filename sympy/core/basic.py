@@ -1069,9 +1069,9 @@ class Basic(Printable):
         >>> (1 + x*y).subs(x, pi)
         pi*y + 1
         >>> (1 + x*y).subs({x:pi, y:2})
-        1 + 2*pi
+        2*pi + 1
         >>> (1 + x*y).subs([(x, pi), (y, 2)])
-        1 + 2*pi
+        2*pi + 1
         >>> reps = [(y, x**2), (x, 2)]
         >>> (x + y).subs(reps)
         6
@@ -1395,7 +1395,7 @@ class Basic(Printable):
         >>> (1 + x*y).xreplace({x: pi})
         pi*y + 1
         >>> (1 + x*y).xreplace({x: pi, y: 2})
-        1 + 2*pi
+        2*pi + 1
 
         Replacements occur only if an entire node in the expression tree is
         matched:
@@ -2163,9 +2163,9 @@ class Basic(Printable):
         Pattern can be a type or an iterable of types.
 
         >>> expr.rewrite(sin, exp)
-        exp(I*x)/2 + cos(x) - exp(-I*x)/2
+        -exp(-I*x)/2 + exp(I*x)/2 + cos(x)
         >>> expr.rewrite([cos,], exp)
-        exp(I*x)/2 + I*sin(x) + exp(-I*x)/2
+        exp(-I*x)/2 + exp(I*x)/2 + I*sin(x)
         >>> expr.rewrite([cos, sin], exp)
         exp(I*x)
 
@@ -2181,7 +2181,7 @@ class Basic(Printable):
         ...         if rule == sqrt:
         ...             return sqrt(1 - cos(x)**2)
         >>> MySin(MySin(x)).rewrite(cos)
-        cos(-cos(-x + pi/2) + pi/2)
+        cos(pi/2 - cos(pi/2 - x))
         >>> MySin(x).rewrite(sqrt)
         sqrt(1 - cos(x)**2)
 
@@ -2194,7 +2194,7 @@ class Basic(Printable):
         ...         x, = args
         ...         return cos(pi/2 - x, evaluate=False)
         >>> MySin(x).rewrite(cos)
-        cos(-x + pi/2)
+        cos(pi/2 - x)
 
         """
         if not args:
@@ -2346,18 +2346,24 @@ class Basic(Printable):
         False
 
         """
+        if approx is None:
+            if a is b:
+                return True
+            if a.__class__ != b.__class__:
+                return False
+            if isinstance(a, Basic) and not a.args and not b.args:
+                return a == b
         from .numbers import Number
         from .traversal import postorder_traversal as pot
-        for t in zip_longest(pot(a), pot(b)):
-            if None in t:
+        for a, b in zip_longest(pot(a), pot(b)):
+            if a is None or b is None:
                 return False
-            a, b = t
             if isinstance(a, Number):
                 if not isinstance(b, Number):
                     return False
                 if approx:
                     return approx(a, b)
-            if not (a == b and a.__class__ == b.__class__):
+            if not (a is b or a == b and a.__class__ == b.__class__):
                 return False
         return True
 

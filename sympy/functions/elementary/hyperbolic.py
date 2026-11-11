@@ -1,4 +1,5 @@
 from __future__ import annotations
+from typing import TYPE_CHECKING
 from sympy.core import S, sympify, cacheit
 from sympy.core.add import Add
 from sympy.core.function import DefinedFunction, ArgumentIndexError
@@ -16,6 +17,11 @@ from sympy.functions.elementary.trigonometric import (
     acos, acot, asin, atan, cos, cot, csc, sec, sin, tan,
     _imaginary_unit_as_coefficient)
 from sympy.polys.specialpolys import symmetric_poly
+
+
+if TYPE_CHECKING:
+    from typing import ClassVar
+    from sympy.core.expr import Expr
 
 
 def _rewrite_hyperbolics_as_exp(expr):
@@ -1025,7 +1031,7 @@ class ReciprocalHyperbolicFunction(HyperbolicFunction):
     """Base class for reciprocal functions of hyperbolic functions. """
 
     #To be defined in class
-    _reciprocal_of = None
+    _reciprocal_of: ClassVar[type[HyperbolicFunction]]
     _is_even: FuzzyBool = None
     _is_odd: FuzzyBool = None
 
@@ -1239,7 +1245,10 @@ class sech(ReciprocalHyperbolicFunction):
 class InverseHyperbolicFunction(DefinedFunction):
     """Base class for inverse hyperbolic functions."""
 
-    pass
+    if TYPE_CHECKING:
+        @property
+        def args(self) -> tuple[Expr]:
+            ...
 
 
 class asinh(InverseHyperbolicFunction):
@@ -1256,7 +1265,7 @@ class asinh(InverseHyperbolicFunction):
     >>> asinh(x).diff(x)
     1/sqrt(x**2 + 1)
     >>> asinh(1)
-    log(1 + sqrt(2))
+    log(sqrt(2) + 1)
 
     See Also
     ========
@@ -2138,7 +2147,7 @@ class acsch(InverseHyperbolicFunction):
     >>> acsch(1).diff(x)
     0
     >>> acsch(1)
-    log(1 + sqrt(2))
+    log(sqrt(2) + 1)
     >>> acsch(I)
     -I*pi/2
     >>> acsch(-2*I)

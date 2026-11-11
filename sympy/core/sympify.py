@@ -274,7 +274,7 @@ def sympify(a, locals=None, convert_xor=True, strict=False, rational=False,
     >>> sympify('4/2+7', evaluate=True)
     9
     >>> sympify('4/2+7', evaluate=False)
-    4/2 + 7
+    7 + 4/2
     >>> sympify(4/2+7, evaluate=False)
     9.00000000000000
 
@@ -352,7 +352,7 @@ def sympify(a, locals=None, convert_xor=True, strict=False, rational=False,
     >>> sympify(s)
     -1
     >>> kernS(s)
-    -2*(-(-x + 1/x)/(x*(x - 1/x)**2) - 1/(x*(x - 1/x))) - 1
+    -2*(-(1/x - x)/(x*(x - 1/x)**2) - 1/(x*(x - 1/x))) - 1
 
     Parameters
     ==========
