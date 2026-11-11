@@ -36,7 +36,6 @@ git_whitelist = {
     '.github/workflows/runtests.yml',
     '.github/workflows/emscripten.yml',
     '.github/workflows/release.yml',
-    '.github/workflows/checkconflict.yml',
     '.github/workflows/nightly-wheels.yml',
     '.github/workflows/zizmor.yml',
     '.ci/durations.json',
