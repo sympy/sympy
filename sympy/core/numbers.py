@@ -2183,7 +2183,7 @@ class Integer(Rational):
         x, xexact = integer_nthroot(abs(self.p), expt.q)
         if xexact:
             # if it's a perfect root we've finished
-            result = Integer(x**abs(expt.p))
+            result: Expr = Integer(x**abs(expt.p))
             if self.is_negative:
                 result *= S.NegativeOne**expt
             return result
@@ -2201,7 +2201,7 @@ class Integer(Rational):
 
         # now process the dict of factors
         out_int = 1  # integer part
-        out_rad = 1  # extracted radicals
+        out_rad: Expr | int = 1  # extracted radicals
         sqr_int = 1
         sqr_gcd = 0
         sqr_dict = {}
@@ -2229,13 +2229,14 @@ class Integer(Rational):
                     break
         for k, v in sqr_dict.items():
             sqr_int *= k**(v//sqr_gcd)
+
         if sqr_int == b_pos and out_int == 1 and out_rad == 1:
-            result = None
+            return None
         else:
             result = out_int*out_rad*Pow(sqr_int, Rational(sqr_gcd, expt.q))
             if self.is_negative:
                 result *= Pow(S.NegativeOne, expt)
-        return result
+            return result
 
     def _eval_is_prime(self) -> bool:
         from sympy.ntheory.primetest import isprime
@@ -2264,7 +2265,7 @@ class Integer(Rational):
             return Integer(self.p // other)
         return divmod(self, other)[0]
 
-    def __rfloordiv__(self, other: Expr | complex) -> Integer:
+    def __rfloordiv__(self, other: Expr | float) -> Integer:
         return Integer(Integer(other).p // self.p)
 
     # These bitwise operations (__lshift__, __rlshift__, ..., __invert__) are defined

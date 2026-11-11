@@ -1,9 +1,9 @@
 from __future__ import annotations
 
 from operator import lt
-from typing import Callable
+from typing import Callable, cast
 
-from sympy.core import Basic, Integer
+from sympy.core import Basic, Integer, S
 
 
 class OmegaPower(Basic):
@@ -278,10 +278,10 @@ class Ordinal(Basic):
                         )
             new_degree = Ordinal(*exponent_terms)
             if finite_part == ord0:
-                mult = 1
+                mult: Integer = S.One
             else:
-                mult = self.leading_term.mult ** finite_part
-            return Ordinal(OmegaPower(new_degree,mult))
+                mult = cast(Integer, self.leading_term.mult ** finite_part)
+            return Ordinal(OmegaPower(new_degree, mult))
 
         # infinite self to limit ordinal other
         if other.is_limit_ordinal:
