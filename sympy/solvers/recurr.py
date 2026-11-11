@@ -589,22 +589,40 @@ def rsolve_hyper(coeffs, f, n, **hints):
 
     p, q = coeffs[0], coeffs[r].subs(n, n - r + 1)
 
-    p_factors = list(roots(p, n).keys())
-    q_factors = list(roots(q, n).keys())
+    p_roots = roots(p, n)
+    q_roots = roots(q, n)
 
-    factors = [(S.One, S.One)]
+    p_factors = list(p_roots)
+    q_factors = list(q_roots)
 
-    for p in p_factors:
-        for q in q_factors:
-            if p.is_integer and q.is_integer and p <= q:
+    # Petkovsek's algorithm enumerates monic divisors of the trailing and the
+    # leading coefficient polynomials, so both repeated roots (multiplicity)
+    # and products of distinct roots have to be covered.  Taking only the
+    # distinct roots misses ratios such as 1/(n + 1)**2 (from a double root of
+    # the leading coefficient) or (n + 1)*(n + 2) (from two distinct roots of
+    # the trailing coefficient); see issue #31017 (items W1/W2 there).
+    p_divs = [S.One]
+    for p_ in p_factors:
+        p_divs = [d*(n - p_)**k for d in p_divs for k in range(p_roots[p_] + 1)]
+
+    q_divs = [S.One]
+    for q_ in q_factors:
+        q_divs = [d*(n - q_)**k for d in q_divs for k in range(q_roots[q_] + 1)]
+
+    factors = []
+
+    for A in p_divs:
+        for B in q_divs:
+            if A == S.One or B == S.One:
+                factors += [(A, B)]
                 continue
-            else:
-                factors += [(n - p, n - q)]
-
-    p = [(n - p, S.One) for p in p_factors]
-    q = [(S.One, n - q) for q in q_factors]
-
-    factors = p + factors + q
+            # A ratio A/B is only shift-coprime when no integer root of A is
+            # less than or equal to an integer root of B; reduced ratios of
+            # skipped pairs are covered by other divisor combinations.
+            if any(p_.is_integer and q_.is_integer and p_ <= q_
+                   for p_ in p_factors for q_ in q_factors):
+                continue
+            factors += [(A, B)]
 
     for A, B in factors:
         polys, degrees = [], []
@@ -657,6 +675,13 @@ def rsolve_hyper(coeffs, f, n, **hints):
                         return None
                     elif (n0 < (n_root + 1)) == True:
                         n0 = n_root + 1
+                # product() cannot handle hypergeometric terms whose
+                # gamma/factorial simplification involves complex shifts
+                # (e.g. numerators with complex roots); skip such candidates
+                # instead of crashing.  See issue #31017.
+                if any(n_root.has(I)
+                       for n_root in roots(ratio.as_numer_denom()[0], n).keys()):
+                    continue
                 K = product(ratio, (n, n0, n - 1))
                 if K.has(factorial, FallingFactorial, RisingFactorial):
                     K = simplify(K)

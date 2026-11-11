@@ -127,6 +127,19 @@ def test_rsolve_0_sol_homogeneous():
     assert rsolve_hyper([n**2 - n + 12, 1], n*(n**2 - n + 12) + n + 1, n) == n
 
 
+def test_rsolve_hyper_root_multiplicity():
+    # issue #31017 (items W1 there): rsolve_hyper enumerated only the distinct
+    # roots of the trailing/leading coefficient polynomials, so ratios built
+    # from a repeated root or from a product of distinct roots were never
+    # tried and rsolve returned the trivial solution 0.
+    assert rsolve((n + 1)**2*y(n + 1) - y(n), y(n), {y(0): 1}) == factorial(n)**(-2)
+    assert rsolve(y(n + 1) - (n + 1)*(n + 2)*y(n), y(n), {y(0): 1}) == factorial(n)*factorial(n + 1)
+    # a repeated root on the trailing side:
+    assert rsolve(y(n) - (n + 1)**2*y(n + 1), y(n), {y(0): 1}) == factorial(n)**(-2)
+    # candidates whose product involves complex shifts must be skipped, not crash:
+    assert rsolve_hyper([n**2 - n + 12, 1], 0, n) is not None
+
+
 def test_rsolve():
     f = y(n + 2) - y(n + 1) - y(n)
     h = sqrt(5)*(S.Half + S.Half*sqrt(5))**n \
