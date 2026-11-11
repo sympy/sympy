@@ -1050,7 +1050,7 @@ def rad_rationalize(num, den):
     return rad_rationalize(num, den)
 
 
-def fraction(expr: Expr, exact: bool = False) -> tuple[Expr, Expr]:
+def fraction(expr: Expr | complex, exact: bool = False) -> tuple[Expr, Expr]:
     """Returns a pair with expression's numerator and denominator.
        If the given expression is not a fraction then this function
        will return the tuple (expr, 1).
@@ -1144,11 +1144,11 @@ def fraction(expr: Expr, exact: bool = False) -> tuple[Expr, Expr]:
     return Mul(*numer, evaluate=not exact), Mul(*denom, evaluate=not exact)
 
 
-def numer(expr: Expr, exact: bool = False) -> Expr:  # default matches fraction's default
+def numer(expr: Expr | complex, exact: bool = False) -> Expr:  # default matches fraction's default
     return fraction(expr, exact=exact)[0]
 
 
-def denom(expr: Expr, exact: bool = False) -> Expr:  # default matches fraction's default
+def denom(expr: Expr | complex, exact: bool = False) -> Expr:  # default matches fraction's default
     return fraction(expr, exact=exact)[1]
 
 
