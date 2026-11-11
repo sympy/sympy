@@ -179,17 +179,14 @@ def test_cyclic_convolution():
 def test_convolution_empty_input():
     # the convolution of an empty sequence with anything is empty
     p = 19*2**10 + 1
-    for seq in ([], [1], [1, 2], [1, 2, 3]):
-        assert convolution([], seq) == []
-        assert convolution(seq, []) == []
-        assert convolution([], seq, prime=p) == []
-        assert convolution(seq, [], prime=p) == []
-        assert convolution_fft([], seq) == []
-        assert convolution_fft(seq, []) == []
-        assert convolution_ntt([], seq, prime=p) == []
-        assert convolution_ntt(seq, [], prime=p) == []
-        assert convolution_int([], seq) == []
-        assert convolution_int(seq, []) == []
+    for kwargs in ({}, {'prime': p}):
+        funcs = ((convolution, convolution_fft, convolution_int)
+                 if not kwargs else (convolution, convolution_ntt))
+        for func in funcs:
+            for seq in ([], [1], [1, 2], [1, 2, 3]):
+                assert func([], seq, **kwargs) == []
+                assert func(seq, [], **kwargs) == []
+    assert convolution([], [1, 2], cycle=3) == [0, 0, 0]
     assert convolution([], [Rational(1, 2), 3]) == []
     assert convolution([], [1, 2], dyadic=True) == []
     assert convolution([], [1, 2], subset=True) == []

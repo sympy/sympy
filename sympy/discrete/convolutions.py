@@ -218,9 +218,9 @@ def convolution_ntt(a, b, prime):
 
     """
 
-    a, b, p = a[:], b[:], as_int(prime)
     if not a or not b:
         return []
+    a, b, p = a[:], b[:], as_int(prime)
     n = m = len(a) + len(b) - 1 # convolution size
 
     if n > 0 and n&(n - 1): # not a power of 2
