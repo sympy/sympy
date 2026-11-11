@@ -609,7 +609,13 @@ def _invert_abs(f, g_ys, symbol):
         parg = _invert_real(f, pos, symbol)
         narg = _invert_real(-f, pos, symbol)
         if parg[0] != narg[0]:
-            raise NotImplementedError
+            message: str = (f"I inverted `{f = }` and `-f` over the nonnegative"
+                f" part of `{g_ys = }`, and I got different expressions in"
+                f" `{symbol = }`: `{parg[0] = }` and `{narg[0] = }`. I can"
+                " combine the two branches of `Abs` only if I get the same"
+                " expression from both.")
+            raise NotImplementedError(filldedent('''
+                %s''' % message))
         return parg[0], Union(narg[1], parg[1])
 
     # check conditions: all these must be true. If any are unknown
