@@ -120,15 +120,13 @@ by its terms. See [CODE\_OF\_CONDUCT.md](CODE_OF_CONDUCT.md).
 
 ## Tests
 
-To execute all tests, run:
+To run the tests and doctests, run:
 
-    $./setup.py test
+    $ python bin/test
+    $ python bin/doctest
 
-in the current directory.
-
-For the more fine-grained running of tests or doctests, use `bin/test`
-or respectively `bin/doctest`. The master branch is automatically tested
-by GitHub Actions.
+in the repository root. Both commands accept paths to run specific tests
+or doctests. The master branch is automatically tested by GitHub Actions.
 
 To test pull requests, use
 [sympy-bot](https://github.com/sympy/sympy-bot).
@@ -155,7 +153,12 @@ java -jar /usr/local/lib/antlr-4.11.1-complete.jar "$@"
 
 After making changes to `sympy/parsing/latex/LaTeX.g4`, run:
 
-    $ ./setup.py antlr
+    $ python -m sympy.parsing.latex._build_latex_antlr
+
+To regenerate the Autolev parser and lexer after changing
+`sympy/parsing/autolev/Autolev.g4`, run:
+
+    $ python -m sympy.parsing.autolev._build_autolev_antlr
 
 ## Clean
 

@@ -3387,12 +3387,21 @@ def test_solve_modular():
     # a.is_Pow tests
     assert dumeq(solveset(Mod(7**x, 41) - 15, x, S.Integers),
             ImageSet(Lambda(n, 40*n + 3), S.Naturals0))
-    assert dumeq(solveset(Mod(12**x, 21) - 18, x, S.Integers),
-            ImageSet(Lambda(n, 6*n + 2), S.Naturals0))
+    # 12 and 21 share a factor so this is left unevaluated
+    assert solveset(Mod(12**x, 21) - 18, x, S.Integers).dummy_eq(
+        ConditionSet(x, Eq(Mod(12**x, 21) - 18, 0), S.Integers))
     assert dumeq(solveset(Mod(3**x, 4) - 3, x, S.Integers),
             ImageSet(Lambda(n, 2*n + 1), S.Naturals0))
     assert dumeq(solveset(Mod(2**x, 7) - 2 , x, S.Integers),
             ImageSet(Lambda(n, 3*n + 1), S.Naturals0))
+    # base and modulus share a factor, issue 30996: the result is left
+    # unevaluated rather than being wrong
+    for expr in [Mod(2**x, 42), Mod(2**x - 1, 42), Mod(2**x - 22, 42),
+            Mod(2*2**x - 1, 42), Mod(2**x, 12) - 8, Mod(6**x, 12)]:
+        assert solveset(expr, x, S.Integers).dummy_eq(
+            ConditionSet(x, Eq(expr, 0), S.Integers))
+    assert dumeq(solveset(Mod(2*2**x - 2, 42), x, S.Integers),
+            ImageSet(Lambda(n, 6*n), S.Naturals0))
     assert dumeq(solveset(Mod(3**(3**x), 4) - 3, x, S.Integers),
             Intersection(ImageSet(Lambda(n, Intersection({log(2*n + 1)/log(3)},
             S.Integers)), S.Naturals0), S.Integers))

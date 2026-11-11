@@ -686,7 +686,7 @@ nonnegative for nonreal $x$, for example:
 ```py
 >>> from sympy import I
 >>> 1 - cos(pi + I*pi)
-1 + cosh(pi)
+cosh(pi) + 1
 >>> (1 - cos(pi + I*pi)).evalf()
 12.5919532755215
 ```
@@ -1359,7 +1359,7 @@ recursively use the `as_real_imag()` that is already defined for `1 - cos(x)`.
 ...     def as_real_imag(self, deep=True, **hints):
 ...         return (1 - cos(self.args[0])).as_real_imag(deep=deep, **hints)
 >>> versin(x).as_real_imag()
-(-cos(re(x))*cosh(im(x)) + 1, sin(re(x))*sinh(im(x)))
+(1 - cos(re(x))*cosh(im(x)), sin(re(x))*sinh(im(x)))
 ```
 
 Defining `as_real_imag()` also automatically makes {func}`~.expand_complex`

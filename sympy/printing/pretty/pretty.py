@@ -230,6 +230,7 @@ class PrettyPrinter(Printer):
 
     def _print_Not(self, e):
         from sympy.logic.boolalg import (Equivalent, Implies)
+        from sympy.sets.contains import Contains
         if self._use_unicode:
             arg = e.args[0]
             pform = self._print(arg)
@@ -238,7 +239,7 @@ class PrettyPrinter(Printer):
             if isinstance(arg, Implies):
                 return self._print_Implies(arg, altchar=pretty_atom('NotArrow'))
 
-            if arg.is_Boolean and not arg.is_Not:
+            if (arg.is_Boolean or arg.is_Relational or isinstance(arg, Contains)) and not arg.is_Not:
                 pform = prettyForm(*pform.parens())
 
             return prettyForm(*pform.left(pretty_atom('Not')))
@@ -855,7 +856,7 @@ class PrettyPrinter(Printer):
                 x[0] = ''
             if x[1] == dim:
                 x[1] = ''
-            return prettyForm(*self._print_seq(x, delimiter=':'))
+            return self._print_seq(x, delimiter=':')
         prettyArgs = self._print_seq((ppslice(m.rowslice, m.parent.rows),
             ppslice(m.colslice, m.parent.cols)), delimiter=', ').parens(left='[', right=']')[0]
 

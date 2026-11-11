@@ -1105,11 +1105,11 @@ def test_issue_22604():
     assert x1sol == Eq(x1(t), (-sqrt(5) + 3 + 3*sqrt(2)*sqrt(3 - sqrt(5)))
                        *cos(sqrt(2)*t*sqrt(3 - sqrt(5))/2)/10 - sqrt(sqrt(5) + 3)
                        *(-sqrt(3 - sqrt(5)) + 2*sqrt(2))*cos(sqrt(2)*t*sqrt(sqrt(5) + 3)/2)/10)
-    assert x2sol == Eq(x2(t), (-2 + 3*sqrt(2)*sqrt(3 - sqrt(5))
+    assert x2sol.equals(Eq(x2(t), (-2 + 3*sqrt(2)*sqrt(3 - sqrt(5))
                         + 2*sqrt(5) + 3*sqrt(10)*sqrt(3 - sqrt(5)))*cos(sqrt(2)
                         *t*sqrt(3 - sqrt(5))/2)/20 + sqrt(sqrt(5) + 3)*(-2*sqrt(2) - sqrt(5)
                         *sqrt(3 - sqrt(5)) + sqrt(3 - sqrt(5)) + 2*sqrt(10))
-                        *cos(sqrt(2)*t*sqrt(sqrt(5) + 3)/2)/20)
+                        *cos(sqrt(2)*t*sqrt(sqrt(5) + 3)/2)/20))
 
 def test_issue_22462():
     for de in [

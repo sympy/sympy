@@ -4,12 +4,12 @@ from sympy.sets import Interval, FiniteSet, Intersection, ImageSet, Union
 
 from sympy.core.expr import Expr
 from sympy.core.function import Lambda
-from sympy.core.numbers import (I, Rational, oo, nan)
+from sympy.core.numbers import (I, Rational, oo, nan, pi)
 from sympy.core.singleton import S
 from sympy.core.symbol import (Dummy, Symbol, symbols)
 from sympy.functions.elementary.exponential import (exp, log)
 from sympy.functions.elementary.miscellaneous import (Max, Min, sqrt)
-from sympy.functions.elementary.trigonometric import cos
+from sympy.functions.elementary.trigonometric import cos, sin
 from sympy.sets.sets import Set, imageset
 
 
@@ -37,6 +37,17 @@ def test_scalar_funcs():
         output = input_se.set
         expected = Interval(Min(f(a), f(b)), Max(f(a), f(b)))
         assert output == expected
+
+
+def test_trigonometric_interval():
+    a = SetExpr(Interval(1, 2))
+    assert sin(a) == SetExpr(Interval(sin(1), 1))
+    assert cos(a) == SetExpr(Interval(cos(2), cos(1)))
+    assert sin(SetExpr(Interval(0, 2*pi))) == SetExpr(Interval(-1, 1))
+    assert sin(SetExpr(Interval.open(0, pi/2))) == \
+        SetExpr(Interval.open(0, 1))
+    assert cos(SetExpr(Interval.open(0, pi))) == \
+        SetExpr(Interval.open(-1, 1))
 
 
 def test_Add_Mul():

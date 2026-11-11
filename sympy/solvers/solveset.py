@@ -149,7 +149,7 @@ def _invert(f_x, y, x, domain=S.Complexes):
     When does exp(x) == y?
 
     >>> invert_complex(exp(x), y, x)
-    (x, ImageSet(Lambda(_n, I*(2*_n*pi + arg(y)) + log(Abs(y))), Integers))
+    (x, ImageSet(Lambda(_n, log(Abs(y)) + I*(2*_n*pi + arg(y))), Integers))
     >>> invert_real(exp(x), y, x)
     (x, Intersection({log(y)}, Reals))
 
@@ -1184,7 +1184,7 @@ def solve_decomposition(f, symbol, domain):
                2
     >>> f3 = sin(x + 2)
     >>> pprint(sd(f3, x, S.Reals), use_unicode=False)
-    {2*n*pi - 2 | n in Integers} U {2*n*pi - 2 + pi | n in Integers}
+    {2*n*pi - 2 | n in Integers} U {2*n*pi + pi - 2 | n in Integers}
 
     """
     from sympy.solvers.decompogen import decompogen
@@ -1538,6 +1538,8 @@ def _invert_modular(modterm, rhs, n, symbol):
     (x**2 + x + 1, ImageSet(Lambda(_n, 3*_n + 1), Naturals0))
 
     """
+    if not isinstance(modterm, Mod):
+        return modterm, rhs
     a, m = modterm.args
 
     if rhs.is_integer is False:
@@ -1575,7 +1577,9 @@ def _invert_modular(modterm, rhs, n, symbol):
         if expo.has(symbol) and not base.has(symbol):
             # remainder -> solution independent of n of equation.
             # m, rhs are made coprime by dividing number_gcd(m, rhs)
-            if not m.is_Integer and rhs.is_Integer and a.base.is_Integer:
+            if not (m.is_Integer and rhs.is_Integer and base.is_Integer):
+                return modterm, rhs
+            if number_gcd(m.p, base.p) != 1 or number_gcd(m.p, rhs.p) != 1:
                 return modterm, rhs
 
             mdiv = m.p // number_gcd(m.p, rhs.p)
@@ -1653,7 +1657,7 @@ def _solve_modular(f, symbol, domain):
     >>> solve_modulo(-7 + Mod(x, 5), x, S.Integers)
     EmptySet
     >>> solve_modulo(Mod(12**x, 21) - 18, x, S.Integers)
-    ImageSet(Lambda(_n, 6*_n + 2), Naturals0)
+    ConditionSet(x, Eq(Mod(12**x, 21) - 18, 0), Integers)
     >>> solve_modulo(Mod(sin(x), 7) - 3, x, S.Integers) # not solvable
     ConditionSet(x, Eq(Mod(sin(x), 7) - 3, 0), Integers)
     >>> solve_modulo(3 - Mod(x, 5), x, Intersection(S.Integers, Interval(0, 100)))
@@ -1777,7 +1781,7 @@ def _solve_exponential(lhs, rhs, symbol, domain):
     >>> solve_expo(a**x - b**x, 0, x, S.Reals)  # solvable but incorrect assumptions
     ConditionSet(x, (a > 0) & (b > 0), {0})
     >>> solve_expo(3**(2*x) - 2**(x + 3), 0, x, S.Reals)
-    {-3*log(2)/(-2*log(3) + log(2))}
+    {-3*log(2)/(log(2) - 2*log(3))}
     >>> solve_expo(2**x - 4**x, 0, x, S.Reals)
     {0}
 
@@ -2181,7 +2185,7 @@ def _transolve(f, symbol, domain):
     >>> from sympy import symbols, S, pprint
     >>> x = symbols('x', real=True) # assumption added
     >>> transolve(5**(x - 3) - 3**(2*x + 1), x, S.Reals)
-    {-(log(3) + 3*log(5))/(-log(5) + 2*log(3))}
+    {-(log(3) + 3*log(5))/(2*log(3) - log(5))}
 
     How ``_transolve`` works
     ========================
@@ -2224,9 +2228,9 @@ def _transolve(f, symbol, domain):
 
     >>> f = 3**(2*x) - 2**(x + 3)
     >>> pprint(transolve(f, x, S.Reals), use_unicode=False)
-        -3*log(2)
-    {------------------}
-     -2*log(3) + log(2)
+            -3*log(2)
+        {-----------------}
+         log(2) - 2*log(3)
     >>> pprint(tsolve(f, x), use_unicode=False)
          /   3     \
          | --------|
@@ -2955,7 +2959,7 @@ def linsolve(system, *symbols):
     >>> a, b, c, d, e, f = symbols('a, b, c, d, e, f')
     >>> eqns = [a*x + b*y - c, d*x + e*y - f]
     >>> linsolve(eqns, x, y)
-    {((-b*f + c*e)/(a*e - b*d), (a*f - c*d)/(a*e - b*d))}
+    {((c*e - b*f)/(a*e - b*d), (a*f - c*d)/(a*e - b*d))}
 
     * A degenerate system returns solution as set of given
       symbols.
@@ -3233,17 +3237,11 @@ def substitution(system, symbols, result=[{}], known_symbols=[],
     >>> x, y, z = symbols('x, y, z')
     >>> from sympy import exp, sin
     >>> substitution([exp(x) - sin(y), y**2 - 4], [x, y])
-    {(ImageSet(Lambda(_n, I*(2*_n*pi + pi) + log(sin(2))), Integers), -2),
-     (ImageSet(Lambda(_n, 2*_n*I*pi + log(sin(2))), Integers), 2)}
+    {(ImageSet(Lambda(_n, log(sin(2)) + I*(2*_n*pi + pi)), Integers), -2), (ImageSet(Lambda(_n, log(sin(2)) + 2*_n*I*pi), Integers), 2)}
 
     >>> eqs = [z**2 + exp(2*x) - sin(y), -3 + exp(-y)]
     >>> substitution(eqs, [y, z])
-    {(-log(3), -sqrt(-exp(2*x) - sin(log(3)))),
-     (-log(3), sqrt(-exp(2*x) - sin(log(3)))),
-     (ImageSet(Lambda(_n, 2*_n*I*pi - log(3)), Integers),
-      ImageSet(Lambda(_n, -sqrt(-exp(2*x) + sin(2*_n*I*pi - log(3)))), Integers)),
-     (ImageSet(Lambda(_n, 2*_n*I*pi - log(3)), Integers),
-      ImageSet(Lambda(_n, sqrt(-exp(2*x) + sin(2*_n*I*pi - log(3)))), Integers))}
+    {(-log(3), -sqrt(-exp(2*x) - sin(log(3)))), (-log(3), sqrt(-exp(2*x) - sin(log(3)))), (ImageSet(Lambda(_n, -log(3) + 2*_n*I*pi), Integers), ImageSet(Lambda(_n, -sqrt(sin(-log(3) + 2*_n*I*pi) - exp(2*x))), Integers)), (ImageSet(Lambda(_n, -log(3) + 2*_n*I*pi), Integers), ImageSet(Lambda(_n, sqrt(sin(-log(3) + 2*_n*I*pi) - exp(2*x))), Integers))}
 
     """
 
@@ -3943,8 +3941,7 @@ def nonlinsolve(system, *symbols):
 
     >>> from sympy import exp, sin
     >>> nonlinsolve([exp(x) - sin(y), y**2 - 4], [x, y])
-    {(ImageSet(Lambda(_n, I*(2*_n*pi + pi) + log(sin(2))), Integers), -2),
-     (ImageSet(Lambda(_n, 2*_n*I*pi + log(sin(2))), Integers), 2)}
+    {(ImageSet(Lambda(_n, log(sin(2)) + I*(2*_n*pi + pi)), Integers), -2), (ImageSet(Lambda(_n, log(sin(2)) + 2*_n*I*pi), Integers), 2)}
 
     3. If system is non-linear polynomial and zero-dimensional then it
     returns both solution (real and complex solutions, if present) using
@@ -3971,9 +3968,9 @@ def nonlinsolve(system, *symbols):
     >>> nonlinsolve((e1, e2), (x, y))
     {(191/20, -3*sqrt(391)/20), (191/20, 3*sqrt(391)/20)}
     >>> nonlinsolve([x**2 + 2/y - 2, x + y - 3], [x, y])
-    {(1, 2), (1 - sqrt(5), 2 + sqrt(5)), (1 + sqrt(5), 2 - sqrt(5))}
+    {(1, 2), (1 - sqrt(5), sqrt(5) + 2), (sqrt(5) + 1, 2 - sqrt(5))}
     >>> nonlinsolve([x**2 + 2/y - 2, x + y - 3], [y, x])
-    {(2, 1), (2 - sqrt(5), 1 + sqrt(5)), (2 + sqrt(5), 1 - sqrt(5))}
+    {(2, 1), (2 - sqrt(5), sqrt(5) + 1), (sqrt(5) + 2, 1 - sqrt(5))}
 
     6. It is better to use symbols instead of trigonometric functions or
     :class:`~.Function`. For example, replace $\sin(x)$ with a symbol, replace
