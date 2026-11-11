@@ -4,9 +4,11 @@ import pytest
 
 from sympy.calculus.accumulationbounds import AccumBounds
 from sympy.core.add import Add
+from sympy.core.cache import clear_cache
 from sympy.core.basic import Basic
 from sympy.core.containers import (Dict, Tuple)
-from sympy.core.function import (Derivative, Function, Lambda, Subs)
+from sympy.core.function import (Derivative, Function, Lambda, Subs,
+    UndefinedFunction)
 from sympy.core.mul import Mul
 from sympy.core.numbers import (Float, I, Integer, Rational, oo, pi, zoo)
 from sympy.core.relational import Eq
@@ -633,6 +635,43 @@ def test_issue_6079():
     assert _aresame(cos, cos)
     assert not _aresame(1, S.One)
     assert not _aresame(x, symbols('x', positive=True))
+
+
+def test_aresame_identical_and_class():
+    e = cos(x) + x**2
+    assert _aresame(e, e)
+    assert _aresame(e, cos(x) + x**2)
+    assert not _aresame(e, cos(x))
+    assert not _aresame(x, Basic(x))
+    assert _aresame(Float(0.5), Float(0.5))
+    assert not _aresame(Float(0.5), S.Half)
+    assert not _aresame(x, y)
+    assert not _aresame(Tuple(), Tuple(x))
+    assert _aresame(2, 2)
+    assert not _aresame(2, 3)
+    f1 = UndefinedFunction('f', real=True)
+    f1x = f1(x)
+    clear_cache()
+    f2 = UndefinedFunction('f', real=True)
+    assert f2 is not f1
+    assert _aresame(f1x, f2(x))
+    # float('nan') behaves the same as S.NaN
+    f1 = float('nan')
+    f2 = float('nan')
+    b1 = Basic(f1)
+    b2 = Basic(f1)
+
+    assert f1 is not f2
+    assert b1 is not b2
+
+    assert _aresame(f1, f1)
+    assert not _aresame(f1, f2)
+    assert _aresame(b1, b1)
+    assert _aresame(b1, b2)
+    assert not _aresame(b1, Basic(f2))
+
+    assert not _aresame(f1, S.NaN)
+    assert not _aresame(b1, Basic(S.NaN))
 
 
 def test_issue_4680():
