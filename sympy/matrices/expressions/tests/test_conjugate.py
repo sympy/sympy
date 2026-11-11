@@ -98,4 +98,3 @@ def test_matpow_conjugate_issue_16498():
     adj_cmplx = adjoint(C**I)
     assert isinstance(adj_cmplx, Conjugate)
     assert adj_cmplx.shape == (n, n)
-

@@ -98,4 +98,3 @@ def refine_Conjugate(expr, assumptions):
 
 
 handlers_dict['Conjugate'] = refine_Conjugate
-
