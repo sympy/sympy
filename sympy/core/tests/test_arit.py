@@ -1859,8 +1859,8 @@ def test_Mod():
     assert k**m % k == 0
     assert (-2*k)**m % k == 0
 
-    # Float handling: do not move inexact factors between operands or
-    # extract them outside Mod, where they can be dropped by solvers.
+    # Float handling: keep inexact factors inside Mod even when
+    # a common exact factor can be extracted.
     assert unchanged(Mod, x, Float(1))
     assert unchanged(Mod, x, Float('3.3'))
     assert unchanged(Mod, x, Float('0.5'))
@@ -1962,11 +1962,15 @@ def test_Mod():
 
     # gcd extraction
     assert (-3*x) % (-2*y) == -Mod(3*x, 2*y)
-    assert unchanged(Mod, .6*pi, .3*x*pi)
-    assert unchanged(Mod, .6*pi, .31*x*pi)
-    assert unchanged(Mod, 6*pi, .3*x*pi)
-    assert unchanged(Mod, 6*pi, .31*x*pi)
-    assert unchanged(Mod, 6*pi, .42*x*pi)
+    # The Float coefficient of the gcd (1.0*pi) must not be extracted,
+    # but the exact factor pi must still be taken outside.
+    assert Mod(6*pi, Float('0.3')*x*pi) == pi*Mod(6, Float('0.3')*x)
+    assert Mod(6*pi, Float('0.3')*x*pi).has(Float)
+    assert (.6*pi) % (.3*x*pi) == pi*Mod(.6, .3*x)
+    assert (.6*pi) % (.31*x*pi) == pi*Mod(.6, .31*x)
+    assert (6*pi) % (.3*x*pi) == pi*Mod(6, .3*x)
+    assert (6*pi) % (.31*x*pi) == pi*Mod(6, .31*x)
+    assert (6*pi) % (.42*x*pi) == pi*Mod(6, .42*x)
     assert (12*x) % (2*y) == 2*Mod(6*x, y)
     assert (12*x) % (3*5*y) == 3*Mod(4*x, 5*y)
     assert (12*x) % (15*x*y) == 3*x*Mod(4, 5*y)

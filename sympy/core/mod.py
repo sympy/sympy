@@ -5,7 +5,7 @@ from .function import DefinedFunction
 from .kind import NumberKind
 from .logic import fuzzy_and, fuzzy_not
 from .mul import Mul
-from .numbers import equal_valued
+from .numbers import Float, equal_valued
 from .relational import is_le, is_lt, is_ge, is_gt
 from .singleton import S
 
@@ -122,23 +122,6 @@ class Mod(DefinedFunction):
         if rv is not None:
             return rv
 
-        # Leave Float operands where they are: moving a Float from the
-        # modulus to the dividend (or extracting it as a coefficient)
-        # can change the result after substitution. A nested Mod is
-        # already protected, so it need not block outer simplification.
-        def has_float_outside_mod(expr):
-            stack = [expr]
-            while stack:
-                term = stack.pop()
-                if term.is_Float:
-                    return True
-                if not isinstance(term, cls):
-                    stack.extend(term.args)
-            return False
-
-        if has_float_outside_mod(p) or has_float_outside_mod(q):
-            return
-
         # denest
         if isinstance(p, cls):
             qinner = p.args[1]
@@ -202,6 +185,11 @@ class Mod(DefinedFunction):
         # extract gcd; any further simplification should be done by the user
         try:
             G = gcd(p, q)
+            # gcd can contain a Float coefficient (even 1.0). Extract
+            # only Float-free factors so inexact coefficients remain
+            # inside Mod, where substitution will respect their precision.
+            if G.has(Float):
+                G = Mul(*[g for g in Mul.make_args(G) if not g.has(Float)])
             if not equal_valued(G, 1):
                 p, q = [gcd_terms(i/G, clear=False, fraction=False)
                         for i in (p, q)]
@@ -212,22 +200,26 @@ class Mod(DefinedFunction):
         # simplify terms
         # (x + y + 2) % x -> Mod(y + 2, x)
         if p.is_Add:
-            args = []
-            for i in p.args:
-                a = cls(i, q)
-                if a.count(cls) > i.count(cls):
-                    args.append(i)
-                else:
-                    args.append(a)
-            if args != list(p.args):
-                p = Add(*args)
+            # Reducing separate terms modulo q can discard Float terms or
+            # round them before the remaining symbols are substituted.
+            if not (p.has(Float) or q.has(Float)):
+                args = []
+                for i in p.args:
+                    a = cls(i, q)
+                    if a.count(cls) > i.count(cls):
+                        args.append(i)
+                    else:
+                        args.append(a)
+                if args != list(p.args):
+                    p = Add(*args)
 
         else:
             # handle non-Rational coefficients that factor_terms cannot
             cp, p = p.as_coeff_Mul()
             cq, q = q.as_coeff_Mul()
             ok = False
-            if not cp.is_Rational or not cq.is_Rational:
+            if (not cp.is_Rational or not cq.is_Rational) and not (
+                    cp.has(Float) or cq.has(Float)):
                 r = cp % cq
                 if equal_valued(r, 0):
                     G *= cq
