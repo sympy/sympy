@@ -2047,7 +2047,11 @@ def test_Mod_integer_terms():
     assert Mod(3*i + u, 1) == Mod(u, 1)
     assert Mod(3*i + 4*j, 2) == Mod(i, 2)
     assert Mod(3*i + 4*r, 2) == Mod(i + 4*r, 2)
-    assert Mod(3*i + u, -2) == Mod(i + u, -2)
+    assert Mod(3*i + u, -2) == Mod(-i + u, -2)
+    # Keep negative remainders decidable for odd integer symbols.
+    o = Symbol('o', integer=True, odd=True)
+    assert Mod(8 - o, -2) == -1
+    assert Mod(9 - o, -2) == 0
     assert Mod(-i + u, 5) == Mod(4*i + u, 5)
 
     # The same canonical form allows expressions to combine.

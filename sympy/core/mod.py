@@ -197,7 +197,9 @@ class Mod(DefinedFunction):
                     if c.is_Integer and term.is_integer:
                         # Integer-valued terms can have their coefficients
                         # reduced modulo q, even if p is not an integer.
-                        i = (c % abs(q))*term
+                        # Use q's sign so negative moduli preserve the
+                        # remainder convention and parity simplifications.
+                        i = (c % q)*term
                 a = cls(i, q)
                 if a.count(cls) > i.count(cls):
                     args.append(i)
