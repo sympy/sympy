@@ -54,6 +54,7 @@ class CodePrinter(StrPrinter):
     """
     The base class for code-printing subclasses.
     """
+    _mod_precedence = PRECEDENCE["Mul"]
 
     _operators = {
         'and': '&&',

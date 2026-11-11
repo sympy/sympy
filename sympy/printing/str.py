@@ -7,6 +7,7 @@ from typing import Any
 
 from sympy.core import S, Rational, Pow, Basic, Mul, Number, UnevaluatedExpr
 from sympy.core.function import Lambda
+from sympy.core.mod import Mod
 from sympy.core.mul import _keep_coeff
 from sympy.core.numbers import Integer
 from sympy.core.relational import Relational
@@ -24,6 +25,9 @@ _rootsum_w = Symbol('w')
 
 class StrPrinter(Printer):
     printmethod = "_sympystr"
+
+    _mod_precedence = PRECEDENCE["Func"]
+
     _default_settings: dict[str, Any] = {
         "order": None,
         "full_prec": "auto",
@@ -38,7 +42,8 @@ class StrPrinter(Printer):
     _relationals: dict[str, str] = {}
 
     def parenthesize(self, item, level, strict=False):
-        if (precedence(item) < level) or ((not strict) and precedence(item) <= level):
+        prec = self._mod_precedence if isinstance(item, Mod) else precedence(item)
+        if prec < level or (not strict and prec <= level):
             return "(%s)" % self._print(item)
         else:
             return self._print(item)
