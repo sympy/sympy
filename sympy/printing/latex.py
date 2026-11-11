@@ -1842,6 +1842,9 @@ class LatexPrinter(Printer):
             else:
                 return r"%s^{%s}" % (s, adjoint_style)
 
+    def _print_Conjugate(self, expr, exp=None):
+        return self._print_conjugate(expr, exp=exp)
+
     def _print_MatMul(self, expr):
         from sympy import MatMul
 

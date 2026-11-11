@@ -892,6 +892,9 @@ class conjugate(DefinedFunction):
         obj = arg._eval_conjugate()
         if obj is not None:
             return obj
+        if getattr(arg, 'is_Matrix', False):
+            from sympy.matrices.expressions.conjugate import Conjugate
+            return Conjugate(arg)
 
     def inverse(self):
         return conjugate
