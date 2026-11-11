@@ -3328,6 +3328,13 @@ def test_invert_modular():
     assert invert_modular(Mod((x + 1)*(x + 2), 7), S(5), n, x) == \
             (Mod((x + 1)*(x + 2), 7), 5)
     # a.is_Pow
+    assert invert_modular(Mod(6**(x + 1)/6, 30), S(10), n, x) == \
+            (x, S.EmptySet)
+    sol = solveset(Mod(6**(x + 1)/6, 30) - 6,
+                   x, S.Integers)
+    assert 1 in sol
+    assert 2 in sol
+    assert 0 not in sol
     assert invert_modular(Mod(x**4, 7), S(5), n, x) == \
             (x, S.EmptySet)
     assert dumeq(invert_modular(Mod(3**x, 4), S(3), n, x),
@@ -3389,6 +3396,10 @@ def test_solve_modular():
             ImageSet(Lambda(n, 40*n + 3), S.Naturals0))
     assert dumeq(solveset(Mod(12**x, 21) - 18, x, S.Integers),
             ImageSet(Lambda(n, 6*n + 2), S.Naturals0))
+    sol = solveset(Mod(12**(x + 1)/3, 7) - 6, x, S.Integers)
+    assert 1 in sol
+    assert dumeq(solveset(Mod(12**(x + 1), 21) - 18, x, S.Integers),
+            ImageSet(Lambda(n, 6*n + 1), S.Naturals0))
     assert dumeq(solveset(Mod(3**x, 4) - 3, x, S.Integers),
             ImageSet(Lambda(n, 2*n + 1), S.Naturals0))
     assert dumeq(solveset(Mod(2**x, 7) - 2 , x, S.Integers),

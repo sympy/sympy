@@ -15,7 +15,8 @@ from sympy.core.sympify import sympify
 from sympy.core import (S, Pow, Dummy, pi, Expr, Wild, Mul, Add)
 from sympy.core.containers import Tuple
 from sympy.core.function import (Lambda, expand_complex, AppliedUndef,
-                                expand_log, _mexpand, expand_trig, nfloat)
+                                expand_log, _mexpand, expand_trig,
+                                nfloat, expand_power_exp)
 from sympy.core.mod import Mod
 from sympy.core.numbers import I, Number, Rational, oo
 from sympy.core.intfunc import integer_log
@@ -1564,6 +1565,17 @@ def _invert_modular(modterm, rhs, n, symbol):
         if g is not S.Zero:
             x_indep_term = rhs - Mod(g, m)
             return _invert_modular(Mod(h, m), Mod(x_indep_term, m), n, symbol)
+
+    for reject in range(2):
+        if a.is_Mul:
+            g, h = a.as_independent(symbol)
+            c = g.as_coeff_Mul()[0]
+            if (c.is_Rational and c.q != 1 and
+                    h.is_Pow and not h.exp.is_Integer):
+                if reject:
+                    return modterm, rhs
+                else:
+                    a = expand_power_exp(a)
 
     if a.is_Mul:
         # g*h = a
