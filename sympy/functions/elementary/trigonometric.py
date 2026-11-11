@@ -1,7 +1,7 @@
 from __future__ import annotations
 from sympy.core.add import Add
 from sympy.core.cache import cacheit
-from sympy.core.function import DefinedFunction, ArgumentIndexError, PoleError, expand_mul
+from sympy.core.function import DefinedFunction, ExprFunction1Arg, ArgumentIndexError, PoleError, expand_mul
 from sympy.core.logic import fuzzy_not, fuzzy_or, FuzzyBool, fuzzy_and
 from sympy.core.mod import Mod
 from sympy.core.numbers import Rational, pi, Integer, Float, equal_valued
@@ -47,13 +47,8 @@ def _imaginary_unit_as_coefficient(arg):
 ###############################################################################
 
 
-class TrigonometricFunction(DefinedFunction):
+class TrigonometricFunction(ExprFunction1Arg):
     """Base class for trigonometric functions. """
-
-    if TYPE_CHECKING:
-        @property
-        def args(self) -> tuple[Expr]:
-            ...
 
     unbranched = True
     _singularities = (S.ComplexInfinity,)
@@ -2029,7 +2024,7 @@ class csc(ReciprocalTrigonometricFunction):
         return self.func(x0) if x0.is_finite else self
 
 
-class sinc(DefinedFunction):
+class sinc(ExprFunction1Arg):
     r"""
     Represents an unnormalized sinc function:
 
@@ -2234,7 +2229,7 @@ class InverseTrigonometricFunction(DefinedFunction):
         }
 
 
-class asin(InverseTrigonometricFunction):
+class asin(ExprFunction1Arg, InverseTrigonometricFunction):
     r"""
     The inverse sine function.
 
@@ -2477,7 +2472,7 @@ class asin(InverseTrigonometricFunction):
         return sin
 
 
-class acos(InverseTrigonometricFunction):
+class acos(ExprFunction1Arg, InverseTrigonometricFunction):
     r"""
     The inverse cosine function.
 
@@ -2728,7 +2723,7 @@ class acos(InverseTrigonometricFunction):
             return r
 
 
-class atan(InverseTrigonometricFunction):
+class atan(ExprFunction1Arg, InverseTrigonometricFunction):
     r"""
     The inverse tangent function.
 
@@ -2766,8 +2761,6 @@ class atan(InverseTrigonometricFunction):
     .. [3] https://functions.wolfram.com/ElementaryFunctions/ArcTan
 
     """
-
-    args: tuple[Expr]
 
     _singularities = (S.ImaginaryUnit, -S.ImaginaryUnit)
 
@@ -2940,7 +2933,7 @@ class atan(InverseTrigonometricFunction):
         return sqrt(arg**2)/arg*(pi/2 - acsc(sqrt(1 + arg**2)))
 
 
-class acot(InverseTrigonometricFunction):
+class acot(ExprFunction1Arg, InverseTrigonometricFunction):
     r"""
     The inverse cotangent function.
 
@@ -3166,7 +3159,7 @@ class acot(InverseTrigonometricFunction):
         return arg*sqrt(1/arg**2)*(pi/2 - acsc(sqrt((1 + arg**2)/arg**2)))
 
 
-class asec(InverseTrigonometricFunction):
+class asec(ExprFunction1Arg, InverseTrigonometricFunction):
     r"""
     The inverse secant function.
 
@@ -3407,7 +3400,7 @@ class asec(InverseTrigonometricFunction):
         return pi/2 - acsc(arg)
 
 
-class acsc(InverseTrigonometricFunction):
+class acsc(ExprFunction1Arg, InverseTrigonometricFunction):
     r"""
     The inverse cosecant function.
 

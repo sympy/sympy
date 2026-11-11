@@ -5,7 +5,7 @@ from typing import TYPE_CHECKING, overload
 from sympy.core import S, Add, Mul, sympify, Symbol, Dummy, Basic
 from sympy.core.expr import Expr
 from sympy.core.exprtools import factor_terms
-from sympy.core.function import (DefinedFunction, Derivative, ArgumentIndexError,
+from sympy.core.function import (DefinedFunction, ExprFunction1Arg, Derivative, ArgumentIndexError,
     AppliedUndef, expand_mul, PoleError)
 from sympy.core.logic import fuzzy_not, fuzzy_or
 from sympy.core.numbers import pi, I, oo
@@ -277,7 +277,7 @@ class im(DefinedFunction):
 ############### SIGN, ABSOLUTE VALUE, ARGUMENT and CONJUGATION ################
 ###############################################################################
 
-class sign(DefinedFunction):
+class sign(ExprFunction1Arg):
     """
     Returns the complex sign of an expression:
 
@@ -458,7 +458,7 @@ class sign(DefinedFunction):
         return self.func(factor_terms(self.args[0]))  # XXX include doit?
 
 
-class Abs(DefinedFunction):
+class Abs(ExprFunction1Arg):
     """
     Return the absolute value of the argument.
 
@@ -515,8 +515,6 @@ class Abs(DefinedFunction):
 
     sign, conjugate
     """
-
-    args: tuple[Expr]
 
     is_extended_real = True
     is_extended_negative = False
@@ -708,7 +706,7 @@ class Abs(DefinedFunction):
         return sqrt(arg*conjugate(arg))
 
 
-class arg(DefinedFunction):
+class arg(ExprFunction1Arg):
     r"""
     Returns the argument (in radians) of a complex number. The argument is
     evaluated in consistent convention with ``atan2`` where the branch-cut is
@@ -1041,7 +1039,7 @@ class adjoint(DefinedFunction):
 ###############################################################################
 
 
-class polar_lift(DefinedFunction):
+class polar_lift(ExprFunction1Arg):
     """
     Lift argument to the Riemann surface of the logarithm, using the
     standard branch.

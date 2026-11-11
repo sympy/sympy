@@ -2,7 +2,7 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 from sympy.core import S, sympify, cacheit
 from sympy.core.add import Add
-from sympy.core.function import DefinedFunction, ArgumentIndexError
+from sympy.core.function import ExprFunction1Arg, ArgumentIndexError
 from sympy.core.logic import fuzzy_or, fuzzy_and, fuzzy_not, FuzzyBool
 from sympy.core.numbers import I, pi, Rational
 from sympy.core.symbol import Dummy
@@ -21,7 +21,6 @@ from sympy.polys.specialpolys import symmetric_poly
 
 if TYPE_CHECKING:
     from typing import ClassVar
-    from sympy.core.expr import Expr
 
 
 def _rewrite_hyperbolics_as_exp(expr):
@@ -110,7 +109,7 @@ def _asech_table():
 ###############################################################################
 
 
-class HyperbolicFunction(DefinedFunction):
+class HyperbolicFunction(ExprFunction1Arg):
     """
     Base class for hyperbolic functions.
 
@@ -1242,13 +1241,8 @@ class sech(ReciprocalHyperbolicFunction):
 ############################# HYPERBOLIC INVERSES #############################
 ###############################################################################
 
-class InverseHyperbolicFunction(DefinedFunction):
+class InverseHyperbolicFunction(ExprFunction1Arg):
     """Base class for inverse hyperbolic functions."""
-
-    if TYPE_CHECKING:
-        @property
-        def args(self) -> tuple[Expr]:
-            ...
 
 
 class asinh(InverseHyperbolicFunction):

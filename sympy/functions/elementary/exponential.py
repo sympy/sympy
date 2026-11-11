@@ -3,7 +3,7 @@ from itertools import product
 
 from sympy.core.add import Add
 from sympy.core.cache import cacheit
-from sympy.core.function import (DefinedFunction, ArgumentIndexError, expand_log,
+from sympy.core.function import (DefinedFunction, ExprFunction1Arg, ArgumentIndexError, expand_log,
     expand_mul, FunctionClass, PoleError, expand_multinomial, expand_complex)
 from sympy.core.logic import fuzzy_and, fuzzy_not, fuzzy_or
 from sympy.core.mul import Mul
@@ -36,15 +36,10 @@ if TYPE_CHECKING:
 # p.is_positive.]
 
 
-class ExpBase(DefinedFunction):
+class ExpBase(ExprFunction1Arg):
 
     unbranched = True
     _singularities = (S.ComplexInfinity,)
-
-    if TYPE_CHECKING:
-        @property
-        def args(self) -> tuple[Expr]:
-            ...
 
     @property
     def kind(self):
