@@ -1,5 +1,3 @@
-from sympy.core.symbol import Symbol
-from sympy.core.relational import LessThan, GreaterThan, StrictLessThan, StrictGreaterThan
 from __future__ import annotations
 from sympy.core.logic import fuzzy_and
 from sympy.core.sympify import _sympify
@@ -1429,9 +1427,7 @@ def test_rewrite_Add():
     with warns_deprecated_sympy():
         assert Eq(x, y).rewrite(Add) == x - y
 
-        HEAD
 
-        fix-ambiguous-infinities
         
 
 def test_infinite_symbol_relational():
