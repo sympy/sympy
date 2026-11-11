@@ -27,6 +27,8 @@ from sympy.functions.elementary.exponential import log
 from sympy.functions.elementary.trigonometric import sec, csc, cot, tan, cos
 from sympy.functions.elementary.hyperbolic import (
     sech, csch, coth, tanh, cosh, asech, acsch, atanh, acoth)
+from sympy.utilities.misc import filldedent
+
 
 if TYPE_CHECKING:
     from typing import Callable
@@ -126,7 +128,8 @@ def singularities(
                 f" power `{i}` with the infinite exponent `{i.exp}`, but I do"
                 " not have a method to find the singularities of a power with"
                 " an infinite exponent.")
-            raise NotImplementedError(message)
+            raise NotImplementedError(filldedent('''
+                %s''' % message))
         if i.exp.is_negative:
             sings += solveset(i.base, symbol, domain)
         elif symbol in i.exp.free_symbols:
@@ -194,14 +197,16 @@ def monotonicity_helper(
             message: str = (f"I received {expression.free_symbols = }, which has"
                 f" {len(free)} free symbols, but this function does not yet accept"
                 " more than one free symbol (a multivariate expression).")
-            raise NotImplementedError(message)
+            raise NotImplementedError(filldedent('''
+                %s''' % message))
         elif free:
             free_symbol = free.pop()
             if not isinstance(free_symbol, Symbol):
                 message = (f"I received `expression` with {free_symbol = }, which"
                     f" is a `{type(free_symbol).__name__}` `type`, but this function"
                     " needs a `Symbol` `type`.")
-                raise TypeError(message)
+                raise TypeError(filldedent('''
+                    %s''' % message))
             variable = free_symbol
         else:
             variable = Symbol('x')
@@ -533,14 +538,16 @@ def is_monotonic(
             message: str = (f"I received {expression.free_symbols = }, which has"
                 f" {len(free)} free symbols, but this function does not yet accept"
                 " more than one free symbol (a multivariate expression).")
-            raise NotImplementedError(message)
+            raise NotImplementedError(filldedent('''
+                %s''' % message))
         elif free:
             free_symbol = free.pop()
             if not isinstance(free_symbol, Symbol):
                 message = (f"I received `expression` with {free_symbol = }, which"
                     f" is a `{type(free_symbol).__name__}` `type`, but this function"
                     " needs a `Symbol` `type`.")
-                raise TypeError(message)
+                raise TypeError(filldedent('''
+                    %s''' % message))
             variable = free_symbol
         else:
             variable = Symbol('x')
