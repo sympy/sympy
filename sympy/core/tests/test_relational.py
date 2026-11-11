@@ -1,9 +1,6 @@
-        fix-ambiguous-infinities
 from sympy.core.symbol import Symbol
 from sympy.core.relational import LessThan, GreaterThan, StrictLessThan, StrictGreaterThan
-
 from __future__ import annotations
-        master
 from sympy.core.logic import fuzzy_and
 from sympy.core.sympify import _sympify
 from sympy.multipledispatch import dispatch
@@ -1437,7 +1434,6 @@ def test_rewrite_Add():
         fix-ambiguous-infinities
         
 
-        79c225d7f96e3b0ec4b004a2fa092a5d2c943524
 def test_infinite_symbol_relational():
     # f can be oo or -oo
     f = Symbol('f', extended_real=True, finite=False)
@@ -1480,4 +1476,3 @@ def test_issue_21429():
     assert ceiling(1/p) == 1
     assert floor(1/n) == -1
     assert ceiling(-1/n) == 1
-        master
