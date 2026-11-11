@@ -1964,6 +1964,7 @@ def test_Mod():
     assert (x + 1) % x == 1 % x
     assert (x + y) % x == y % x
     assert (x + y + 2) % x == (y + 2) % x
+    # A Float nested inside Mod must not block reducing other exact terms.
     assert (a + 3*x + 1) % (2*x) == Mod(a + x + 1, 2*x)
     assert (12*x + 18*y) % (3*x) == 3*Mod(6*y, x)
 

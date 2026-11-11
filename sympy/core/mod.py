@@ -213,9 +213,12 @@ class Mod(DefinedFunction):
         # simplify terms
         # (x + y + 2) % x -> Mod(y + 2, x)
         if p.is_Add:
-            # Reducing separate terms modulo q can discard Float terms or
-            # round them before the remaining symbols are substituted.
-            if not (p.has(Float) or q.has(Float)):
+            # Reducing Float terms modulo q can introduce rounding errors.
+            # A Float within an already constructed Mod, however, should
+            # not prevent the reduction of other exact terms in the sum.
+            if not (q.has(Float) or any(
+                    arg.has(Float) and not isinstance(arg, cls)
+                    for arg in p.args)):
                 args = []
                 for i in p.args:
                     a = cls(i, q)
