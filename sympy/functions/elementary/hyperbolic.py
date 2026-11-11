@@ -21,6 +21,7 @@ from sympy.polys.specialpolys import symmetric_poly
 
 if TYPE_CHECKING:
     from typing import ClassVar
+    from sympy.core.expr import Expr
 
 
 def _rewrite_hyperbolics_as_exp(expr):
@@ -197,7 +198,7 @@ class sinh(HyperbolicFunction):
         return asinh
 
     @classmethod
-    def eval(cls, arg):
+    def eval(cls, arg: Expr) -> Expr | None:
         if arg.is_Number:
             if arg is S.NaN:
                 return S.NaN
@@ -230,20 +231,22 @@ class sinh(HyperbolicFunction):
             if arg.is_zero:
                 return S.Zero
 
-            if arg.func == asinh:
+            if isinstance(arg, asinh):
                 return arg.args[0]
 
-            if arg.func == acosh:
+            if isinstance(arg, acosh):
                 x = arg.args[0]
                 return sqrt(x - 1) * sqrt(x + 1)
 
-            if arg.func == atanh:
+            if isinstance(arg, atanh):
                 x = arg.args[0]
                 return x/sqrt(1 - x**2)
 
-            if arg.func == acoth:
+            if isinstance(arg, acoth):
                 x = arg.args[0]
                 return 1/(sqrt(x - 1) * sqrt(x + 1))
+
+        return None
 
     @staticmethod
     @cacheit
@@ -411,7 +414,7 @@ class cosh(HyperbolicFunction):
             raise ArgumentIndexError(self, argindex)
 
     @classmethod
-    def eval(cls, arg):
+    def eval(cls, arg: Expr) -> Expr | None:
         from sympy.functions.elementary.trigonometric import cos
         if arg.is_Number:
             if arg is S.NaN:
@@ -443,18 +446,20 @@ class cosh(HyperbolicFunction):
             if arg.is_zero:
                 return S.One
 
-            if arg.func == asinh:
+            if isinstance(arg, asinh):
                 return sqrt(1 + arg.args[0]**2)
 
-            if arg.func == acosh:
+            if isinstance(arg, acosh):
                 return arg.args[0]
 
-            if arg.func == atanh:
+            if isinstance(arg, atanh):
                 return 1/sqrt(1 - arg.args[0]**2)
 
-            if arg.func == acoth:
+            if isinstance(arg, acoth):
                 x = arg.args[0]
                 return x/(sqrt(x - 1) * sqrt(x + 1))
+
+        return None
 
     @staticmethod
     @cacheit
@@ -672,7 +677,7 @@ class tanh(HyperbolicFunction):
         return atanh
 
     @classmethod
-    def eval(cls, arg):
+    def eval(cls, arg: Expr) -> Expr | None:
         if arg.is_Number:
             if arg is S.NaN:
                 return S.NaN
@@ -710,19 +715,21 @@ class tanh(HyperbolicFunction):
             if arg.is_zero:
                 return S.Zero
 
-            if arg.func == asinh:
+            if isinstance(arg, asinh):
                 x = arg.args[0]
                 return x/sqrt(1 + x**2)
 
-            if arg.func == acosh:
+            if isinstance(arg, acosh):
                 x = arg.args[0]
                 return sqrt(x - 1) * sqrt(x + 1) / x
 
-            if arg.func == atanh:
+            if isinstance(arg, atanh):
                 return arg.args[0]
 
-            if arg.func == acoth:
+            if isinstance(arg, acoth):
                 return 1/arg.args[0]
+
+        return None
 
     @staticmethod
     @cacheit
@@ -887,7 +894,7 @@ class coth(HyperbolicFunction):
         return acoth
 
     @classmethod
-    def eval(cls, arg):
+    def eval(cls, arg: Expr) -> Expr | None:
         if arg.is_Number:
             if arg is S.NaN:
                 return S.NaN
@@ -925,19 +932,21 @@ class coth(HyperbolicFunction):
             if arg.is_zero:
                 return S.ComplexInfinity
 
-            if arg.func == asinh:
+            if isinstance(arg, asinh):
                 x = arg.args[0]
                 return sqrt(1 + x**2)/x
 
-            if arg.func == acosh:
+            if isinstance(arg, acosh):
                 x = arg.args[0]
                 return x/(sqrt(x - 1) * sqrt(x + 1))
 
-            if arg.func == atanh:
+            if isinstance(arg, atanh):
                 return 1/arg.args[0]
 
-            if arg.func == acoth:
+            if isinstance(arg, acoth):
                 return arg.args[0]
+
+        return None
 
     @staticmethod
     @cacheit
@@ -1035,7 +1044,7 @@ class ReciprocalHyperbolicFunction(HyperbolicFunction):
     _is_odd: FuzzyBool = None
 
     @classmethod
-    def eval(cls, arg):
+    def eval(cls, arg: Expr) -> Expr | None:
         if arg.could_extract_minus_sign():
             if cls._is_even:
                 return cls(-arg)
@@ -1043,7 +1052,7 @@ class ReciprocalHyperbolicFunction(HyperbolicFunction):
                 return -cls(-arg)
 
         t = cls._reciprocal_of.eval(arg)
-        if hasattr(arg, 'inverse') and arg.inverse() == cls:
+        if isinstance(arg, (asech, acsch)) and arg.inverse() == cls:
             return arg.args[0]
         return 1/t if t is not None else t
 
@@ -1276,7 +1285,7 @@ class asinh(InverseHyperbolicFunction):
             raise ArgumentIndexError(self, argindex)
 
     @classmethod
-    def eval(cls, arg):
+    def eval(cls, arg: Expr) -> Expr | None:
         if arg.is_Number:
             if arg is S.NaN:
                 return S.NaN
@@ -1320,6 +1329,8 @@ class asinh(InverseHyperbolicFunction):
                     return m
                 elif even is False:
                     return -m
+
+        return None
 
     @staticmethod
     @cacheit
@@ -1457,7 +1468,7 @@ class acosh(InverseHyperbolicFunction):
             raise ArgumentIndexError(self, argindex)
 
     @classmethod
-    def eval(cls, arg):
+    def eval(cls, arg: Expr) -> Expr | None:
         if arg.is_Number:
             if arg is S.NaN:
                 return S.NaN
@@ -1508,6 +1519,8 @@ class acosh(InverseHyperbolicFunction):
                         return -m
                     elif r.is_positive:
                         return m
+
+        return None
 
     @staticmethod
     @cacheit
@@ -1642,7 +1655,7 @@ class atanh(InverseHyperbolicFunction):
             raise ArgumentIndexError(self, argindex)
 
     @classmethod
-    def eval(cls, arg):
+    def eval(cls, arg: Expr) -> Expr | None:
         if arg.is_Number:
             if arg is S.NaN:
                 return S.NaN
@@ -1688,6 +1701,8 @@ class atanh(InverseHyperbolicFunction):
                         return m
                     elif even is False:
                         return m - I*pi/2
+
+        return None
 
     @staticmethod
     @cacheit
@@ -1810,7 +1825,7 @@ class acoth(InverseHyperbolicFunction):
             raise ArgumentIndexError(self, argindex)
 
     @classmethod
-    def eval(cls, arg):
+    def eval(cls, arg: Expr) -> Expr | None:
         if arg.is_Number:
             if arg is S.NaN:
                 return S.NaN
@@ -1838,6 +1853,8 @@ class acoth(InverseHyperbolicFunction):
 
         if arg.is_zero:
             return pi*I*S.Half
+
+        return None
 
     @staticmethod
     @cacheit
@@ -1977,7 +1994,7 @@ class asech(InverseHyperbolicFunction):
             raise ArgumentIndexError(self, argindex)
 
     @classmethod
-    def eval(cls, arg):
+    def eval(cls, arg: Expr) -> Expr | None:
         if arg.is_Number:
             if arg is S.NaN:
                 return S.NaN
@@ -2004,6 +2021,8 @@ class asech(InverseHyperbolicFunction):
 
         if arg.is_zero:
             return S.Infinity
+
+        return None
 
     @staticmethod
     @cacheit
@@ -2171,7 +2190,7 @@ class acsch(InverseHyperbolicFunction):
             raise ArgumentIndexError(self, argindex)
 
     @classmethod
-    def eval(cls, arg):
+    def eval(cls, arg: Expr) -> Expr | None:
         if arg.is_Number:
             if arg is S.NaN:
                 return S.NaN
@@ -2201,6 +2220,8 @@ class acsch(InverseHyperbolicFunction):
 
         if arg.could_extract_minus_sign():
             return -cls(-arg)
+
+        return None
 
     @staticmethod
     @cacheit
