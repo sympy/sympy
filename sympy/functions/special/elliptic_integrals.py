@@ -1,5 +1,6 @@
 """ Elliptic Integrals. """
 from __future__ import annotations
+from typing import TYPE_CHECKING
 
 from sympy.core import S, pi, I, Rational
 from sympy.core.function import DefinedFunction, ExprFunction1Arg, ArgumentIndexError
@@ -10,6 +11,9 @@ from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.functions.elementary.trigonometric import sin, tan
 from sympy.functions.special.gamma_functions import gamma
 from sympy.functions.special.hyper import hyper, meijerg
+
+if TYPE_CHECKING:
+    from sympy.core.expr import Expr
 
 class elliptic_k(ExprFunction1Arg):
     r"""
@@ -57,7 +61,7 @@ class elliptic_k(ExprFunction1Arg):
     """
 
     @classmethod
-    def eval(cls, m):
+    def eval(cls, m: Expr) -> Expr | None:
         if m.is_zero:
             return pi*S.Half
         elif m is S.Half:
@@ -69,6 +73,8 @@ class elliptic_k(ExprFunction1Arg):
         elif m in (S.Infinity, S.NegativeInfinity, I*S.Infinity,
                    I*S.NegativeInfinity, S.ComplexInfinity):
             return S.Zero
+
+        return None
 
     def fdiff(self, argindex=1):
         m = self.args[0]

@@ -1465,7 +1465,7 @@ class airyai(AiryBase):
     unbranched = True
 
     @classmethod
-    def eval(cls, arg):
+    def eval(cls, arg: Expr) -> Expr | None:
         if arg.is_Number:
             if arg is S.NaN:
                 return S.NaN
@@ -1475,6 +1475,8 @@ class airyai(AiryBase):
                 return S.One / (3**Rational(2, 3) * gamma(Rational(2, 3)))
         if arg.is_zero:
             return S.One / (3**Rational(2, 3) * gamma(Rational(2, 3)))
+
+        return None
 
     def fdiff(self, argindex=1):
         if argindex == 1:
@@ -1636,7 +1638,7 @@ class airybi(AiryBase):
     unbranched = True
 
     @classmethod
-    def eval(cls, arg):
+    def eval(cls, arg: Expr) -> Expr | None:
         if arg.is_Number:
             if arg is S.NaN:
                 return S.NaN
@@ -1649,6 +1651,8 @@ class airybi(AiryBase):
 
         if arg.is_zero:
             return S.One / (3**Rational(1, 6) * gamma(Rational(2, 3)))
+
+        return None
 
     def fdiff(self, argindex=1):
         if argindex == 1:
@@ -1803,7 +1807,7 @@ class airyaiprime(AiryBase):
     unbranched = True
 
     @classmethod
-    def eval(cls, arg):
+    def eval(cls, arg: Expr) -> Expr | None:
         if arg.is_Number:
             if arg is S.NaN:
                 return S.NaN
@@ -1812,6 +1816,8 @@ class airyaiprime(AiryBase):
 
         if arg.is_zero:
             return S.NegativeOne / (3**Rational(1, 3) * gamma(Rational(1, 3)))
+
+        return None
 
     def fdiff(self, argindex=1):
         if argindex == 1:
@@ -1961,7 +1967,7 @@ class airybiprime(AiryBase):
     unbranched = True
 
     @classmethod
-    def eval(cls, arg):
+    def eval(cls, arg: Expr) -> Expr | None:
         if arg.is_Number:
             if arg is S.NaN:
                 return S.NaN
@@ -1974,6 +1980,8 @@ class airybiprime(AiryBase):
 
         if arg.is_zero:
             return 3**Rational(1, 6) / gamma(Rational(1, 3))
+
+        return None
 
 
     def fdiff(self, argindex=1):
