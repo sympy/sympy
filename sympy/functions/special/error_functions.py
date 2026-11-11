@@ -1,7 +1,7 @@
 """ This module contains various functions that are special cases
     of incomplete gamma functions. It should probably be renamed. """
 from __future__ import annotations
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, ClassVar
 
 from sympy.core import EulerGamma # Must be imported from core, not core.numbers
 from sympy.core.add import Add
@@ -1200,7 +1200,7 @@ class Ei(ExprFunction1Arg):
 
 
     @classmethod
-    def eval(cls, z):
+    def eval(cls, z: Expr) -> Expr | None:
         if z.is_zero:
             return S.NegativeInfinity
         elif z is S.Infinity:
@@ -1214,6 +1214,8 @@ class Ei(ExprFunction1Arg):
         nz, n = z.extract_branch_factor()
         if n:
             return Ei(nz) + 2*I*pi*n
+
+        return None
 
     def fdiff(self, argindex=1):
         arg = unpolarify(self.args[0])
@@ -1622,7 +1624,7 @@ class li(ExprFunction1Arg):
 
 
     @classmethod
-    def eval(cls, z):
+    def eval(cls, z: Expr) -> Expr | None:
         if z.is_zero:
             return S.Zero
         elif z is S.One:
@@ -1631,6 +1633,8 @@ class li(ExprFunction1Arg):
             return S.Infinity
         if z.is_zero:
             return S.Zero
+
+        return None
 
     def fdiff(self, argindex=1):
         arg = self.args[0]
@@ -1754,11 +1758,13 @@ class Li(ExprFunction1Arg):
 
 
     @classmethod
-    def eval(cls, z):
+    def eval(cls, z: Expr) -> Expr | None:
         if z is S.Infinity:
             return S.Infinity
         elif z == S(2):
             return S.Zero
+
+        return None
 
     def fdiff(self, argindex=1):
         arg = self.args[0]
@@ -1787,9 +1793,25 @@ class Li(ExprFunction1Arg):
 class TrigonometricIntegral(ExprFunction1Arg):
     """ Base class for trigonometric integrals. """
 
+    _atzero: ClassVar[Expr]
+    _trigfunc: ClassVar[type[ExprFunction1Arg]]
+
+    if TYPE_CHECKING:
+        @classmethod
+        def _atinf(cls) -> Expr: ...
+
+        @classmethod
+        def _atneginf(cls) -> Expr: ...
+
+        @classmethod
+        def _Ifactor(cls, z: Expr, sign: int) -> Expr: ...
+
+        @classmethod
+        def _minusfactor(cls, z: Expr) -> Expr: ...
+
 
     @classmethod
-    def eval(cls, z):
+    def eval(cls, z: Expr) -> Expr | None:
         if z is S.Zero:
             return cls._atzero
         elif z is S.Infinity:
@@ -1817,7 +1839,7 @@ class TrigonometricIntegral(ExprFunction1Arg):
 
         nz, n = z.extract_branch_factor()
         if n == 0 and nz == z:
-            return
+            return None
         return 2*pi*I*n*cls._trigfunc(0) + cls(nz)
 
     def fdiff(self, argindex=1):
@@ -2348,10 +2370,13 @@ class Chi(TrigonometricIntegral):
 class FresnelIntegral(ExprFunction1Arg):
     """ Base class for the Fresnel integrals."""
 
+    _sign: ClassVar[Expr]
+    _trigfunc: ClassVar[type[ExprFunction1Arg]]
+
     unbranched = True
 
     @classmethod
-    def eval(cls, z):
+    def eval(cls, z: Expr) -> Expr | None:
         # Values at positive infinities signs
         # if any were extracted automatically
         if z is S.Infinity:
@@ -2362,7 +2387,7 @@ class FresnelIntegral(ExprFunction1Arg):
             return S.Zero
 
         # Try to pull out factors of -1 and I
-        prefact = S.One
+        prefact: Expr = S.One
         newarg = z
         changed = False
 
@@ -2380,6 +2405,8 @@ class FresnelIntegral(ExprFunction1Arg):
 
         if changed:
             return prefact*cls(newarg)
+
+        return None
 
     def fdiff(self, argindex=1):
         if argindex == 1:
