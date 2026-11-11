@@ -3,7 +3,7 @@ from functools import reduce
 
 from sympy.core import S, sympify, Dummy, Mod
 from sympy.core.cache import cacheit
-from sympy.core.function import DefinedFunction, ArgumentIndexError, PoleError
+from sympy.core.function import DefinedFunction, ExprFunction1Arg, ArgumentIndexError, PoleError
 from sympy.core.logic import fuzzy_and
 from sympy.core.numbers import Integer, pi, I
 from sympy.core.relational import Eq
@@ -33,7 +33,7 @@ class CombinatorialFunction(DefinedFunction):
 ###############################################################################
 
 
-class factorial(CombinatorialFunction):
+class factorial(ExprFunction1Arg, CombinatorialFunction):
     r"""Implementation of factorial function over nonnegative integers.
        By convention (consistent with the gamma function and the binomial
        coefficients), factorial of a negative integer is complex infinity.
@@ -282,7 +282,7 @@ class MultiFactorial(CombinatorialFunction):
     pass
 
 
-class subfactorial(CombinatorialFunction):
+class subfactorial(ExprFunction1Arg, CombinatorialFunction):
     r"""The subfactorial counts the derangements of $n$ items and is
     defined for non-negative integers as:
 
@@ -380,7 +380,7 @@ class subfactorial(CombinatorialFunction):
             return True
 
 
-class factorial2(CombinatorialFunction):
+class factorial2(ExprFunction1Arg, CombinatorialFunction):
     r"""The double factorial `n!!`, not to be confused with `(n!)!`
 
     The double factorial is defined for nonnegative integers and for odd

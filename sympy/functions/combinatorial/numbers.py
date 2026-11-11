@@ -16,7 +16,7 @@ from sympy.core import S, Symbol, Add, Dummy
 from sympy.core.cache import cacheit
 from sympy.core.containers import Dict
 from sympy.core.expr import Expr
-from sympy.core.function import ArgumentIndexError, DefinedFunction, expand_mul
+from sympy.core.function import ArgumentIndexError, DefinedFunction, ExprFunction1Arg, expand_mul
 from sympy.core.logic import fuzzy_not
 from sympy.core.mul import Mul
 from sympy.core.numbers import E, I, pi, oo, Rational, Integer
@@ -284,7 +284,7 @@ class fibonacci(DefinedFunction):
 #----------------------------------------------------------------------------#
 
 
-class lucas(DefinedFunction):
+class lucas(ExprFunction1Arg):
     """
     Lucas numbers
 
@@ -1253,7 +1253,7 @@ class euler(DefinedFunction):
 #----------------------------------------------------------------------------#
 
 
-class catalan(DefinedFunction):
+class catalan(ExprFunction1Arg):
     r"""
     Catalan numbers
 
@@ -1539,7 +1539,7 @@ class genocchi(DefinedFunction):
 #----------------------------------------------------------------------------#
 
 
-class andre(DefinedFunction):
+class andre(ExprFunction1Arg):
     r"""
     Andre numbers / Andre function
 
@@ -1654,7 +1654,7 @@ class andre(DefinedFunction):
 #                                                                            #
 #----------------------------------------------------------------------------#
 
-class partition(DefinedFunction):
+class partition(ExprFunction1Arg):
     r"""
     Partition numbers
 
@@ -2009,7 +2009,7 @@ class kronecker_symbol(DefinedFunction):
             return S(kronecker(as_int(a), as_int(n)))
 
 
-class mobius(DefinedFunction):
+class mobius(ExprFunction1Arg):
     """
     Mobius function maps natural number to {-1, 0, 1}
 
@@ -2089,7 +2089,7 @@ class mobius(DefinedFunction):
         return result
 
 
-class primenu(DefinedFunction):
+class primenu(ExprFunction1Arg):
     r"""
     Calculate the number of distinct prime factors for a positive integer n.
 
@@ -2141,7 +2141,7 @@ class primenu(DefinedFunction):
             return S(len(factorint(n)))
 
 
-class primeomega(DefinedFunction):
+class primeomega(ExprFunction1Arg):
     r"""
     Calculate the number of prime factors counting multiplicities for a
     positive integer n.
@@ -2302,7 +2302,7 @@ class reduced_totient(DefinedFunction):
             return S(lcm(t, *((p-1)*p**(k-1) for p, k in factorint(n).items())))
 
 
-class primepi(DefinedFunction):
+class primepi(ExprFunction1Arg):
     r""" Represents the prime counting function pi(n) = the number
     of prime numbers less than or equal to n.
 

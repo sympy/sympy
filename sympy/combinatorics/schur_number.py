@@ -6,11 +6,11 @@ from __future__ import annotations
 import math
 from sympy.core import S
 from sympy.core.basic import Basic
-from sympy.core.function import DefinedFunction
+from sympy.core.function import ExprFunction1Arg
 from sympy.core.numbers import Integer
 
 
-class SchurNumber(DefinedFunction):
+class SchurNumber(ExprFunction1Arg):
     r"""
     This function creates a SchurNumber object
     which is evaluated for `k \le 5` otherwise only
