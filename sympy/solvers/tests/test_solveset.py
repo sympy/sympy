@@ -3387,24 +3387,39 @@ def test_solve_modular():
     # a.is_Pow tests
     assert dumeq(solveset(Mod(7**x, 41) - 15, x, S.Integers),
             ImageSet(Lambda(n, 40*n + 3), S.Naturals0))
-    # 12 and 21 share a factor so this is left unevaluated
-    assert solveset(Mod(12**x, 21) - 18, x, S.Integers).dummy_eq(
-        ConditionSet(x, Eq(Mod(12**x, 21) - 18, 0), S.Integers))
+    assert dumeq(solveset(Mod(12**x, 21) - 18, x, S.Integers),
+            ImageSet(Lambda(n, 6*n + 2), S.Naturals0))
     assert dumeq(solveset(Mod(3**x, 4) - 3, x, S.Integers),
             ImageSet(Lambda(n, 2*n + 1), S.Naturals0))
     assert dumeq(solveset(Mod(2**x, 7) - 2 , x, S.Integers),
             ImageSet(Lambda(n, 3*n + 1), S.Naturals0))
-    # base and modulus share a factor, issue 30996: the result is left
-    # unevaluated rather than being wrong
-    for expr in [Mod(2**x, 42), Mod(2**x - 1, 42), Mod(2**x - 22, 42),
-            Mod(2*2**x - 1, 42), Mod(2**x, 12) - 8, Mod(6**x, 12)]:
-        assert solveset(expr, x, S.Integers).dummy_eq(
-            ConditionSet(x, Eq(expr, 0), S.Integers))
+    # Small concrete modular powers can be solved by detecting the
+    # preperiod and the cycle of their residues.
+    assert solveset(Mod(2**x, 42), x, S.Integers) is S.EmptySet
+    assert solveset(Mod(2**x - 1, 42), x, S.Integers) == FiniteSet(0)
+    assert dumeq(solveset(Mod(2**x - 22, 42), x, S.Integers),
+            ImageSet(Lambda(n, 6*n + 6), S.Naturals0))
+    assert dumeq(solveset(Mod(2**x, 12) - 8, x, S.Integers),
+            ImageSet(Lambda(n, 2*n + 3), S.Naturals0))
+    assert dumeq(solveset(Mod(6**x, 12), x, S.Integers),
+            ImageSet(Lambda(n, n + 2), S.Naturals0))
+    assert solveset(Mod(6**x, 12) - 6, x, S.Integers) == FiniteSet(1)
+    assert solveset(Mod(2**x, 15) - 3, x, S.Integers) is S.EmptySet
+    # The residual non-Pow case still falls back safely.
+    expr = Mod(2*2**x - 1, 42)
+    assert solveset(expr, x, S.Integers).dummy_eq(
+        ConditionSet(x, Eq(expr, 0), S.Integers))
     assert dumeq(solveset(Mod(2*2**x - 2, 42), x, S.Integers),
             ImageSet(Lambda(n, 6*n), S.Naturals0))
-    assert dumeq(solveset(Mod(3**(3**x), 4) - 3, x, S.Integers),
-            Intersection(ImageSet(Lambda(n, Intersection({log(2*n + 1)/log(3)},
-            S.Integers)), S.Naturals0), S.Integers))
+    # Do not use discrete logarithms for fractional exponents or unit bases.
+    for expr in (Mod(4**(x/2), 7) - 2, Mod((S.Half)**x, 4) - 2,
+                 Mod((-1)**x, 5) - 4):
+        assert solveset(expr, x, S.Integers).dummy_eq(
+            ConditionSet(x, Eq(expr, 0), S.Integers))
+    # The exponent is not known to be integer-valued over all Integers.
+    expr = Mod(3**(3**x), 4) - 3
+    assert solveset(expr, x, S.Integers).dummy_eq(
+        ConditionSet(x, Eq(expr, 0), S.Integers))
     # Implemented for m without primitive root
     assert solveset(Mod(x**3, 7) - 2, x, S.Integers) is S.EmptySet
     assert dumeq(solveset(Mod(x**3, 8) - 1, x, S.Integers),
