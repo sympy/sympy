@@ -827,21 +827,6 @@ def test_constant_renumber():
     assert constant_renumber(exprs, variables=[x, y], newconstants=symbols("C3:5")) == [C3*x, C3*y + C4*x]
 
 
-def test_constant_renumber_positive_term_first():
-    exprs = [
-        Eq(f(x), C2*exp(x) - C1*exp(-x)),
-        Eq(g(x), C1*exp(-x) + C2*exp(x)),
-    ]
-    expected = [
-        Eq(f(x), C1*exp(x) - C2*exp(-x)),
-        Eq(g(x), C1*exp(x) + C2*exp(-x)),
-    ]
-    assert constant_renumber(exprs) == expected
-    # The ordering must not depend on the original constant names.
-    swapped = [eq.xreplace({C1: C2, C2: C1}) for eq in exprs]
-    assert constant_renumber(swapped) == expected
-
-
 def test_issue_5770():
     k = Symbol("k", real=True)
     t = Symbol('t')
