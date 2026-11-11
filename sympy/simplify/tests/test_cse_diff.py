@@ -11,11 +11,12 @@ from sympy.functions.elementary.exponential import exp
 from sympy.matrices.immutable import ImmutableDenseMatrix
 from sympy.physics.mechanics import dynamicsymbols
 from sympy.simplify._cse_diff import (_forward_jacobian,
-                                      _remove_cse_from_derivative,
                                       _forward_jacobian_cse,
                                       _forward_jacobian_norm_in_cse_out)
+from sympy.simplify.cse_main import (remove_cse_from_derivative
+                                    as _remove_cse_from_derivative)
 from sympy.simplify.simplify import simplify
-from sympy.matrices import Matrix, eye
+from sympy.matrices import Matrix, SparseMatrix, ImmutableSparseMatrix, eye
 
 from sympy.testing.pytest import raises
 from sympy.functions.elementary.trigonometric import (cos, sin, tan)
@@ -92,6 +93,25 @@ def test_process_cse():
 
     assert p_repl == expected_output[0], f"Expected {expected_output[0]}, but got {p_repl}"
     assert p_reduced == expected_output[1], f"Expected {expected_output[1]}, but got {p_reduced}"
+
+
+
+def test_remove_cse_from_derivative_postprocess():
+    g = Function('g')(x)
+    d = Derivative(g, x)
+    x0 = Symbol('x0')
+
+    assert cse(g + d, postprocess=_remove_cse_from_derivative) == (
+        [(x0, g)], [x0 + d])
+
+    for matrix_type in (
+            Matrix, ImmutableDenseMatrix, SparseMatrix, ImmutableSparseMatrix):
+        expr = matrix_type([[g + d, g], [g, g**2]])
+        replacements, [reduced] = cse(
+            expr, postprocess=_remove_cse_from_derivative)
+        assert replacements == [(x0, g)]
+        assert type(reduced) is type(expr)
+        assert reduced == matrix_type([[x0 + d, x0], [x0, x0**2]])
 
 
 def test_io_matrix_type():
