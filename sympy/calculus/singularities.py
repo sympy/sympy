@@ -136,11 +136,13 @@ def singularities(
             roots: Set = solveset(i.base, symbol, domain)
             negative: Set = solveset(i.exp < 0, symbol, domain)
             sings += roots.intersect(negative)
-    for i in expression.atoms(log, asech, acsch):
-        sings += solveset(i.args[0], symbol, domain)
-    for i in expression.atoms(atanh, acoth):
-        sings += solveset(i.args[0] - 1, symbol, domain)
-        sings += solveset(i.args[0] + 1, symbol, domain)
+    for logarithm in expression.atoms(log):
+        sings += solveset(logarithm.args[0], symbol, domain)
+    for function in expression.atoms(asech, acsch):
+        sings += solveset(function.args[0], symbol, domain)
+    for function in expression.atoms(atanh, acoth):
+        sings += solveset(function.args[0] - 1, symbol, domain)
+        sings += solveset(function.args[0] + 1, symbol, domain)
     return sings
 
 
