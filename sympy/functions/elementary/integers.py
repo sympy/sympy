@@ -1,4 +1,5 @@
 from __future__ import annotations
+from typing import TYPE_CHECKING, ClassVar
 
 from sympy.core.basic import Basic
 from sympy.core.expr import Expr
@@ -21,8 +22,14 @@ from sympy.multipledispatch import dispatch
 class RoundFunction(ExprFunction1Arg):
     """Abstract base class for rounding functions."""
 
+    _dir: ClassVar[int]
+
+    if TYPE_CHECKING:
+        @classmethod
+        def _eval_const_number(cls, arg: Expr) -> Expr | None: ...
+
     @classmethod
-    def eval(cls, arg):
+    def eval(cls, arg: Expr) -> Expr | None:
         if (v := cls._eval_number(arg)) is not None:
             return v
         if (v := cls._eval_const_number(arg)) is not None:
@@ -43,10 +50,10 @@ class RoundFunction(ExprFunction1Arg):
         intof = lambda x: int(x) if int_valued(x) else (
             x if x.is_integer else None)
         for t in Add.make_args(arg):
-            if t.is_imaginary and (i := intof(im(t))) is not None:
-                ipart += i*S.ImaginaryUnit
-            elif (i := intof(t)) is not None:
-                ipart += i
+            if t.is_imaginary and (integer_part := intof(im(t))) is not None:
+                ipart += integer_part*S.ImaginaryUnit
+            elif (integer_part := intof(t)) is not None:
+                ipart += integer_part
             elif t.is_number:
                 npart += t
             else:
@@ -61,9 +68,9 @@ class RoundFunction(ExprFunction1Arg):
             npart.is_real and (spart.is_imaginary or (S.ImaginaryUnit*spart).is_real) or
                 npart.is_imaginary and spart.is_real):
             try:
-                r, i = get_integer_part(
+                real_int, imag_int = get_integer_part(
                     npart, cls._dir, {}, return_ints=True)
-                ipart += Integer(r) + Integer(i)*S.ImaginaryUnit
+                ipart += Integer(real_int) + Integer(imag_int)*S.ImaginaryUnit
                 npart = S.Zero
             except (PrecisionExhausted, NotImplementedError):
                 pass
@@ -77,6 +84,8 @@ class RoundFunction(ExprFunction1Arg):
             return ipart + spart
         else:
             return ipart + cls(spart, evaluate=False)
+
+        return None
 
     @classmethod
     def _eval_number(cls, arg):
@@ -541,7 +550,7 @@ class frac(ExprFunction1Arg):
 
     """
     @classmethod
-    def eval(cls, arg):
+    def eval(cls, arg: Expr) -> Expr | None:
         from sympy.calculus.accumulationbounds import AccumBounds
 
         def _eval(arg):

@@ -342,9 +342,9 @@ class sign(ExprFunction1Arg):
         return s
 
     @classmethod
-    def eval(cls, arg):
+    def eval(cls, arg: Expr) -> Expr | None:
         # handle what we can
-        if arg.is_Mul:
+        if isinstance(arg, Mul):
             c, args = arg.as_coeff_mul()
             unk = []
             s = sign(c)
@@ -381,7 +381,7 @@ class sign(ExprFunction1Arg):
             if isinstance(arg, sign):
                 return arg
         if arg.is_imaginary:
-            if arg.is_Pow and arg.exp is S.Half:
+            if isinstance(arg, Pow) and arg.exp is S.Half:
                 # we catch this because non-trivial sqrt args are not expanded
                 # e.g. sqrt(1-sqrt(2)) --x-->  to I*sqrt(sqrt(2) - 1)
                 return I
@@ -390,6 +390,8 @@ class sign(ExprFunction1Arg):
                 return I
             if arg2.is_extended_negative:
                 return -I
+
+        return None
 
     def _eval_Abs(self):
         if fuzzy_not(self.args[0].is_zero):
@@ -533,7 +535,7 @@ class Abs(ExprFunction1Arg):
             raise ArgumentIndexError(self, argindex)
 
     @classmethod
-    def eval(cls, arg):
+    def eval(cls, arg: Expr) -> Expr | None:
         from sympy.simplify.simplify import signsimp
 
         if hasattr(arg, '_eval_Abs'):
@@ -549,11 +551,11 @@ class Abs(ExprFunction1Arg):
         if d.free_symbols and not n.free_symbols:
             return cls(n)/cls(d)
 
-        if arg.is_Mul:
-            known = []
-            unk = []
+        if isinstance(arg, Mul):
+            known: list[Expr] = []
+            unk: list[Expr] = []
             for t in arg.args:
-                if t.is_Pow and t.exp.is_integer and t.exp.is_negative:
+                if isinstance(t, Pow) and t.exp.is_integer and t.exp.is_negative:
                     bnew = cls(t.base)
                     if isinstance(bnew, cls):
                         unk.append(t)
@@ -565,9 +567,9 @@ class Abs(ExprFunction1Arg):
                         unk.append(t)
                     else:
                         known.append(tnew)
-            known = Mul(*known)
-            unk = cls(Mul(*unk), evaluate=False) if unk else S.One
-            return known*unk
+            known_product = Mul(*known)
+            unknown_product = cls(Mul(*unk), evaluate=False) if unk else S.One
+            return known_product*unknown_product
         if arg is S.NaN:
             return S.NaN
         if arg is S.ComplexInfinity:
@@ -587,7 +589,7 @@ class Abs(ExprFunction1Arg):
                     return base**re(exponent)
                 if base.is_extended_negative:
                     return (-base)**re(exponent)*exp(-pi*im(exponent))
-                return
+                return None
             elif not base.has(Symbol): # complex base
                 # express base**exponent as exp(exponent*log(base))
                 a, b = log(base).as_real_imag()
@@ -600,7 +602,7 @@ class Abs(ExprFunction1Arg):
                 return arg
             elif arg.is_negative:
                 return -arg
-            return
+            return None
         if arg.is_Add and arg.has(oo, S.NegativeInfinity):
             if any(a.is_infinite for a in arg.as_real_imag()):
                 return oo
@@ -615,19 +617,21 @@ class Abs(ExprFunction1Arg):
             if arg2.is_extended_nonnegative:
                 return arg2
         if arg.is_extended_real:
-            return
+            return None
         # reject result if all new conjugates are just wrappers around
         # an expression that was already in the arg
         conj = signsimp(arg.conjugate(), evaluate=False)
         new_conj = conj.atoms(conjugate) - arg.atoms(conjugate)
         if new_conj and all(arg.has(i.args[0]) for i in new_conj):
-            return
+            return None
         if arg != conj and arg != -conj:
             ignore = arg.atoms(Abs)
             abs_free_arg = arg.xreplace({i: Dummy(real=True) for i in ignore})
             unk = [a for a in abs_free_arg.free_symbols if a.is_extended_real is None]
             if not unk or not all(conj.has(conjugate(u)) for u in unk):
                 return sqrt(expand_mul(arg*conj))
+
+        return None
 
     def _eval_is_real(self):
         if self.args[0].is_finite:
@@ -760,7 +764,7 @@ class arg(ExprFunction1Arg):
     _singularities = True  # non-holomorphic
 
     @classmethod
-    def eval(cls, arg):
+    def eval(cls, arg: Expr) -> Expr | None:
         a = arg
         for i in range(3):
             if isinstance(a, cls):
@@ -784,14 +788,14 @@ class arg(ExprFunction1Arg):
 
         if not arg.is_Atom:
             c, arg_ = factor_terms(arg).as_coeff_Mul()
-            if arg_.is_Mul:
+            if isinstance(arg_, Mul):
                 arg_ = Mul(*[a if (sign(a) not in (-1, 1)) else
                     sign(a) for a in arg_.args])
             arg_ = sign(c)*arg_
         else:
             arg_ = arg
         if any(i.is_extended_positive is None for i in arg_.atoms(AppliedUndef)):
-            return
+            return None
         from sympy.functions.elementary.trigonometric import atan2
         x, y = arg_.as_real_imag()
         rv = atan2(y, x)
@@ -799,6 +803,8 @@ class arg(ExprFunction1Arg):
             return rv
         if arg_ != arg:
             return cls(arg_, evaluate=False)
+
+        return None
 
     def _eval_derivative(self, t):
         x, y = self.args[0].as_real_imag()
@@ -1081,7 +1087,7 @@ class polar_lift(ExprFunction1Arg):
     is_comparable = False  # Cannot be evalf'd.
 
     @classmethod
-    def eval(cls, arg):
+    def eval(cls, arg: Expr) -> Expr | None:
         from sympy.functions.elementary.complexes import arg as argument
         if arg.is_number:
             ar = argument(arg)
@@ -1093,20 +1099,20 @@ class polar_lift(ExprFunction1Arg):
                 from sympy.functions.elementary.exponential import exp_polar
                 return exp_polar(I*ar)*abs(arg)
 
-        if arg.is_Mul:
+        if isinstance(arg, Mul):
             args = arg.args
         else:
-            args = [arg]
+            args = (arg,)
         included = []
         excluded = []
         positive = []
-        for arg in args:
-            if arg.is_polar:
-                included += [arg]
-            elif arg.is_positive:
-                positive += [arg]
+        for factor in args:
+            if factor.is_polar:
+                included += [factor]
+            elif factor.is_positive:
+                positive += [factor]
             else:
-                excluded += [arg]
+                excluded += [factor]
         if len(excluded) < len(args):
             if excluded:
                 return Mul(*(included + positive))*polar_lift(Mul(*excluded))
@@ -1115,6 +1121,8 @@ class polar_lift(ExprFunction1Arg):
             else:
                 from sympy.functions.elementary.exponential import exp_polar
                 return Mul(*positive)*exp_polar(0)
+
+        return None
 
     def _eval_evalf(self, prec):
         """ Careful! any evalf of polar numbers is flaky """

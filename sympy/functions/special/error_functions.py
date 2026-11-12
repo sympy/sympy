@@ -2997,9 +2997,11 @@ class _erfs(ExprFunction1Arg):
 
     """
     @classmethod
-    def eval(cls, arg):
+    def eval(cls, arg: Expr) -> Expr | None:
         if arg.is_zero:
             return S.One
+
+        return None
 
     def _eval_aseries(self, n, args0, x, logx):
         from sympy.series.order import Order
