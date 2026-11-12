@@ -44,19 +44,9 @@ dev = [
   { include-group = "test" },
   { include-group = "typing" },
 ]
-benchmark = [
-  "asv",
-  "packaging",
-  "virtualenv",
-]
-build = [
-  "build",
-  "wheel",
-]
-coverage = [
-  "coverage",
-  { include-group = "test" },
-]
+benchmark = ["asv", "packaging", "virtualenv"]
+build = ["build", "wheel"]
+coverage = ["coverage", { include-group = "test" }]
 docs = [
   "Sphinx",
   "furo",
@@ -120,9 +110,7 @@ multi_line_output = 4
 # Global mypy settings:
 [tool.mypy]
 warn_unused_configs = true
-exclude = [
-  "sympy/parsing/autolev/test-examples",
-]
+exclude = ["sympy/parsing/autolev/test-examples"]
 
 # Per module settings:
 [[tool.mypy.overrides]]
@@ -147,7 +135,34 @@ ignore_missing_imports = true
 
 # Third-party untyped code:
 [[tool.mypy.overrides]]
-module = ["antlr4.*", "Cython.*", "flint.*", "gmpy2.*", "IPython.*", "lxml.*", "matchpy.*", "matplotlib.*", "mpmath.*", "numpy.*", "PIL.*", "pycosat.*", "pyglet.*", "pymc.*", "pymc3.*", "pytest.*", "_pytest.*", "sage.*", "scipy.*", "symengine.*", "aesara.*", "xml.*", "theano.*", "multiset.*", "pysat.*", "bpython.*"]
+module = [
+  "antlr4.*",
+  "Cython.*",
+  "flint.*",
+  "gmpy2.*",
+  "IPython.*",
+  "lxml.*",
+  "matchpy.*",
+  "matplotlib.*",
+  "mpmath.*",
+  "numpy.*",
+  "PIL.*",
+  "pycosat.*",
+  "pyglet.*",
+  "pymc.*",
+  "pymc3.*",
+  "pytest.*",
+  "_pytest.*",
+  "sage.*",
+  "scipy.*",
+  "symengine.*",
+  "aesara.*",
+  "xml.*",
+  "theano.*",
+  "multiset.*",
+  "pysat.*",
+  "bpython.*",
+]
 ignore_missing_imports = true
 
 # pyright type checker settings:
@@ -176,10 +191,7 @@ filterwarnings = [
 
 # Only run tests under the sympy/ directory. Otherwise pytest will attempt to
 # collect tests from e.g. the bin/ directory as well.
-testpaths = [
-  "sympy",
-  "doc/src",
-]
+testpaths = ["sympy", "doc/src"]
 
 # Normalise output of doctests.
 doctest_optionflags = [
