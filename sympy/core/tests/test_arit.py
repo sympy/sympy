@@ -1880,9 +1880,12 @@ def test_Mod():
     # Exact dividend, Float modulus: extracting an integer factor
     # changes which side of the remainder boundary is reached.
     assert unchanged(Mod, 3*x, 6.0*y)
-    vals = Tuple(Mod(3*x, 6.0*y), 3*Mod(x, 2.0*y, evaluate=False)).subs(
-        {x: Rational(-9, 10), y: Float('0.15')})
-    assert vals[0] > S.Half and vals[1] == 0
+    vals = Tuple(
+        Mod(3*x, 6.0*y),
+            3*Mod(x, 2.0*y),
+    ).subs({x: Rational(21, 10), y: Float('0.21')})
+    assert vals[0] > 1
+    assert abs(vals[1]) < 1e-12
 
     # Float dividend and modulus: extracting 0.1 changes the remainder.
     assert unchanged(Mod, 5.0*x, 0.1*y)
@@ -1925,12 +1928,15 @@ def test_Mod():
 
     # Known negative ratios must use floor, not truncation toward zero.
     # The sign of the modulus can be unknown even though p/q is rational.
+    assert unchanged(Mod, 6.0*x, 0.2*x)
+    assert unchanged(Mod, 6*x, 0.2*x)
+    assert Mod(6*x, 0.2*x, evaluate=False).subs(x, -7) != 0.0
     assert Mod(-x, 2*x) == x
     assert Mod(x, -2*x) == -x
     assert Mod(-x, 3*x) == 2*x
     assert Mod(-x**2, 2*x**2) == x**2
-    a, b = symbols('a b', integer=True)
-    t = a*x + b
+    a, b, i = symbols('a b i', integer=True)
+    t = a*i + b
     expr = Mod(-t**2, 2*t**2)
     assert expr == t**2
     params = {a: 0, b: 1}
@@ -1952,6 +1958,21 @@ def test_Mod():
 
     # known difference
     assert Mod(5*sqrt(2), sqrt(5)) == 5*sqrt(2) - 3*sqrt(5)
+    assert Mod(5.*sqrt(2), sqrt(5)) == 5.*sqrt(2) - 3*sqrt(5)
+    assert unchanged(Mod, 3.0*x + 1, 2.0*x + 1)
+    u, v = symbols('u v', positive=True)
+    p = 3.0*u + 1.0*v
+    q = 2.0*u + 1.0*v
+    assert unchanged(Mod, p, q)
+    # don't guess at what the user wants: a test of float limits (answer 0)
+    # or protection from that (answer 1/2**60)
+    assert Mod(p, q, evaluate=False).subs({u: Rational(1, 2**60), v: 1}) == 0
+    a = Mod(Float('2e-16')*y, 1)
+    assert unchanged(Mod, 3*x + a, 2*x)
+    m1 = Mod(x + a, 2*x)
+    m2 = Mod(3*x + a, 2*x)
+    assert m1 != m2
+    assert m1.xreplace({x: 1, y: 1}) != m2.xreplace({x: 1, y: 1})
     p = symbols('p', positive=True)
     assert Mod(2, p + 3) == 2
     assert Mod(-2, p + 3) == p + 1
@@ -1983,9 +2004,12 @@ def test_Mod():
     assert (x + 1) % x == 1 % x
     assert (x + y) % x == y % x
     assert (x + y + 2) % x == (y + 2) % x
-    # A Float nested inside Mod must not block reducing other exact terms.
-    assert (a + 3*x + 1) % (2*x) == Mod(a + x + 1, 2*x)
     assert (12*x + 18*y) % (3*x) == 3*Mod(6*y, x)
+    # Exact terms can still be reduced in a Float-free expression.
+    assert (y + 3*x + 1) % (2*x) == Mod(y + x + 1, 2*x)
+
+    # A nested Float-containing Mod prevents outer simplification.
+    assert unchanged(Mod, a + 3*x + 1, 2*x)
 
     # gcd extraction
     assert (-3*x) % (-2*y) == -Mod(3*x, 2*y)

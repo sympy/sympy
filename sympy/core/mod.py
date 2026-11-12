@@ -76,6 +76,10 @@ class Mod(DefinedFunction):
                     elif p.is_odd:
                         return S.One
 
+            if (p.has(Float) or q.has(Float)) and not (
+                    p.is_number and q.is_number):
+                return
+
             if hasattr(p, '_eval_Mod'):
                 rv = getattr(p, '_eval_Mod')(q)
                 if rv is not None:
@@ -121,6 +125,10 @@ class Mod(DefinedFunction):
         rv = number_eval(p, q)
         if rv is not None:
             return rv
+
+        if (p.has(Float) or q.has(Float)) and not (
+                p.is_number and q.is_number):
+            return
 
         # denest
         if isinstance(p, cls):
@@ -206,7 +214,14 @@ class Mod(DefinedFunction):
                     arg.has(Float) and not isinstance(arg, cls)
                     for arg in p.args)):
                 args = []
+                exact_coeffs = q.is_Rational and not p.has(Float)
+
                 for i in p.args:
+                    if exact_coeffs:
+                        c, term = i.as_coeff_Mul()
+                        if c.is_Rational and term.is_integer:
+                            i = (c % q)*term
+
                     a = cls(i, q)
                     if a.count(cls) > i.count(cls):
                         args.append(i)
@@ -217,6 +232,13 @@ class Mod(DefinedFunction):
 
         else:
             # handle non-Rational coefficients that factor_terms cannot
+            if q.is_Rational and not p.has(Float):
+                c, term = p.as_coeff_Mul()
+                if c.is_Rational and term.is_integer:
+                    p = (c % q)*term
+            # handle coefficients if they are not Rational
+            # since those are not handled by factor_terms
+            # e.g. Mod(.6*x, .3*y) -> 0.3*Mod(2*x, y)
             cp, p = p.as_coeff_Mul()
             cq, q = q.as_coeff_Mul()
             ok = False
