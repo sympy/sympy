@@ -122,6 +122,19 @@ exclude_lines = [
 
 [tool.ruff]
 target-version = "py310"
+# Generated code and test inputs
+exclude = [
+    "sympy/assumptions/*generated.py",
+    "sympy/core/*_generated.py",
+    "sympy/parsing/latex/_antlr/*",
+    "sympy/parsing/autolev/_antlr/*",
+    "sympy/parsing/autolev/test-examples/*",
+]
+
+# Black default, although irrelevant with E501 ignored
+line-length = 88
+
+# Allow unused variables when underscore-prefixed.
 # Enable Pyflakes `E` and `F` codes by default.
 lint.select = [
     "W191",  # indentation contains tabs
@@ -171,19 +184,6 @@ lint.ignore = [
     "FURB187",  # Use of assignment of `reversed` on list `{name}`
 ]
 
-# Generated code and test inputs
-exclude = [
-    "sympy/assumptions/*generated.py",
-    "sympy/core/*_generated.py",
-    "sympy/parsing/latex/_antlr/*",
-    "sympy/parsing/autolev/_antlr/*",
-    "sympy/parsing/autolev/test-examples/*",
-]
-
-# Black default, although irrelevant with E501 ignored
-line-length = 88
-
-# Allow unused variables when underscore-prefixed.
 lint.dummy-variable-rgx = "^(_+|(_+[a-zA-Z0-9_]*[a-zA-Z0-9]+?))$"
 
 # Add to all files
