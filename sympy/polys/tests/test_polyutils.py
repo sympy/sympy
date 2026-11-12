@@ -2,9 +2,9 @@
 from __future__ import annotations
 
 from sympy.core.add import Add
+from sympy.core.function import Function
 from sympy.core.mul import Mul
-from sympy.core.power import Pow
-from sympy.core.numbers import (Integer, pi)
+from sympy.core.numbers import (Float, I, Integer, Rational, pi)
 from sympy.core.relational import Eq
 from sympy.core.singleton import S
 from sympy.core.symbol import (Symbol, symbols)
@@ -21,10 +21,10 @@ from sympy.polys.polyutils import (
     _analyze_gens,
     _sort_factors,
     _parallel_dict_from_expr,
+    _parallel_dict_from_expr_if_gens,
     _parallel_dict_from_expr_no_gens,
     _dict_from_expr,
     _dict_from_expr_no_gens,
-    _is_expanded_poly,
     parallel_dict_from_expr,
     dict_from_expr,
 )
@@ -328,28 +328,37 @@ def test_dict_from_expr():
     raises(PolynomialError, lambda: dict_from_expr(S.true))
 
 
-def test__is_expanded_poly():
-    assert _is_expanded_poly(x**2*y - 3*x/2 + z + 1) is True
-    assert _is_expanded_poly(x) is True
-    assert _is_expanded_poly(Integer(2)) is True
-    assert _is_expanded_poly((x + 1)**2) is False
-    assert _is_expanded_poly(x*(y + 1)) is False
-    assert _is_expanded_poly(1/x + y) is False
-    assert _is_expanded_poly(sqrt(2)*x + y) is False
-    assert _is_expanded_poly(1.5*x) is False
-    assert _is_expanded_poly(sin(x) + y) is False
-    assert _is_expanded_poly(A*x) is False
-    assert _is_expanded_poly(Eq(x, 1)) is False
-    assert _is_expanded_poly(Add(x, x, evaluate=False)) is False
-    assert _is_expanded_poly(Add(x, -x, y, evaluate=False)) is False
-    assert _is_expanded_poly(Mul(x, x, evaluate=False)) is False
-    assert _is_expanded_poly(Add(Mul(0, x, evaluate=False), y,
-                                 evaluate=False)) is False
-    assert _is_expanded_poly(Mul(2, 3, x, evaluate=False)) is False
-    assert _is_expanded_poly(Mul(Pow(2, 3, evaluate=False), x,
-                                 evaluate=False)) is False
+def test_dict_from_expr_expand_on_demand():
+    f = Function('f')
+    opt, opt_x = build_options({}), build_options({'gens': (x,)})
 
-    e = Add(Mul(y, 2, x, evaluate=False), Pow(x, 2, evaluate=False), 1,
-            evaluate=False)
-    assert _is_expanded_poly(e) is True
-    assert dict_from_expr(e) == dict_from_expr(e.expand())
+    for e in (3*x**2 + 2*x + 1, sqrt(2)*x + pi, x*y/2 - 1.5*z + I*y,
+              Rational(2, 3)*x**5*y - x*z**2, sin(z)*x + f(y)**2*x**3):
+        for convert, o in ((_parallel_dict_from_expr_no_gens, opt),
+                           (_parallel_dict_from_expr_if_gens, opt_x)):
+            assert convert([e], o, expanded=True) == convert([e], o)
+
+    for e in (x*(y + 1), (x + y)**3, exp(x + y), Mul(y, x, evaluate=False)):
+        e = Add(z, e, evaluate=False)
+        assert _parallel_dict_from_expr_no_gens([e], opt, expanded=True) is None
+        assert _parallel_dict_from_expr_if_gens([e], opt_x, expanded=True) is None
+
+    xn, n = Symbol('x', nonnegative=True), Symbol('n', negative=True)
+    for e in (Mul(Rational(3, 7), Float(0.1), x, evaluate=False),
+              Add(Mul(z, y, evaluate=False), 2*xn, 3*x, evaluate=False),
+              Add(Float(0.7), Mul(n, Rational(-5, 11), Float('0.1', 30), x,
+                                  evaluate=False),
+                  Mul(n, xn**2, y**3, x, evaluate=False), evaluate=False),
+              Add(Mul(y, x, evaluate=False), -x*y, z, evaluate=False),
+              Add(Mul(2.0, x, evaluate=False), -2.0*x, evaluate=False),
+              S.Half**(I*pi)*x + y):
+        assert dict_from_expr(e) == dict_from_expr(e.expand(), expand=False)
+
+    e = 2**((x*(y + 1) + 1)**2)
+    assert e.expand().expand() != e.expand()
+    assert dict_from_expr(e) == dict_from_expr(e.expand(), expand=False)
+    rep, o = _dict_from_expr(e, opt, twice=True)
+    assert (rep, o.gens) == dict_from_expr(e.expand().expand(), expand=False)
+    reps, o = _parallel_dict_from_expr([e, e], opt, twice=[1])
+    assert (reps, o.gens) == parallel_dict_from_expr(
+        [e.expand(), e.expand().expand()], expand=False)

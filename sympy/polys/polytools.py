@@ -50,7 +50,6 @@ from sympy.polys.polyutils import (
     _unify_gens,
     _dict_reorder,
     _dict_from_expr,
-    _is_expanded_poly,
     _parallel_dict_from_expr,
 )
 from sympy.polys.rationaltools import together
@@ -4856,6 +4855,7 @@ def poly_from_expr(expr, *gens, **args):
 def _poly_from_expr(expr, opt):
     """Construct a polynomial from an expression. """
     orig, expr = expr, sympify(expr)
+    twice = False
 
     if not isinstance(expr, Basic):
         raise PolificationFailed(opt, orig, expr)
@@ -4869,12 +4869,15 @@ def _poly_from_expr(expr, opt):
             opt.polys = True
 
         return poly, opt
-    elif opt.expand and not _is_expanded_poly(expr):
-        expr = expr.expand()
+    elif opt.expand:
+        if isinstance(expr, Expr) and expr.is_commutative:
+            twice = True
+        else:
+            expr = expr.expand()
 
-    rep, opt = _dict_from_expr(expr, opt)
+    rep, opt = _dict_from_expr(expr, opt, twice)
     if not opt.gens:
-        raise PolificationFailed(opt, orig, expr)
+        raise PolificationFailed(opt, orig, expr.expand() if twice else expr)
 
     monoms, coeffs = list(zip(*list(rep.items())))
     domain = opt.domain
@@ -4898,6 +4901,14 @@ def parallel_poly_from_expr(exprs, *gens, **args):
     """Construct polynomials from expressions. """
     opt = options.build_options(gens, args)
     return _parallel_poly_from_expr(exprs, opt)
+
+
+def _expand_items(exprs, indices, opt):
+    """Expand the expressions at ``indices`` if ``opt.expand`` is set. """
+    if opt.expand:
+        exprs = [expr.expand() if i in indices else expr
+                 for i, expr in enumerate(exprs)]
+    return exprs
 
 
 def _parallel_poly_from_expr(exprs, opt):
@@ -4932,25 +4943,22 @@ def _parallel_poly_from_expr(exprs, opt):
                 _polys.append(i)
             else:
                 _exprs.append(i)
-
-                if opt.expand and not _is_expanded_poly(expr):
-                    expr = expr.expand()
         else:
             failed = True
 
         exprs.append(expr)
 
     if failed:
-        raise PolificationFailed(opt, origs, exprs, True)
+        raise PolificationFailed(opt, origs, _expand_items(exprs, _exprs, opt), True)
 
     if _polys:
         # XXX: this is a temporary solution
         for i in _polys:
             exprs[i] = exprs[i].as_expr()
 
-    reps, opt = _parallel_dict_from_expr(exprs, opt)
+    reps, opt = _parallel_dict_from_expr(exprs, opt, _exprs)
     if not opt.gens:
-        raise PolificationFailed(opt, origs, exprs, True)
+        raise PolificationFailed(opt, origs, _expand_items(exprs, _exprs, opt), True)
 
     from sympy.functions.elementary.piecewise import Piecewise
     for k in opt.gens:
