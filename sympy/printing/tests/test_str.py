@@ -315,6 +315,17 @@ def test_Mul():
     assert str(cc1*Rational(2)*cc2) == '2*CustomClass1()*CustomClass2()'
 
 
+def test_issue_18788():
+    denominator = Pow(x*y, -1, evaluate=False)
+    assert str(Mul(2, denominator, evaluate=False)) == '2/(x*y)'
+    assert str(Mul(-2, z, denominator, evaluate=False)) == '-2*z/(x*y)'
+    denominator = Pow(Mul(x, x, evaluate=False), -1, evaluate=False)
+    assert str(Mul(2, denominator, evaluate=False)) == '2/(x*x)'
+    assert str(Mul(-2, z, denominator, evaluate=False)) == '-2*z/(x*x)'
+    denominator = Pow(x**y, -1, evaluate=False)
+    assert str(Mul(2, denominator, evaluate=False)) == '2/(x**y)'
+
+
 def test_numeric_factors_first():
     # Numeric functions need not be Number instances. Ordering them is
     # a printer preference and should not evaluate their values.

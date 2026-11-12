@@ -381,7 +381,7 @@ class StrPrinter(Printer):
         # To parenthesize Pow with exp = -1 and having more than one Symbol
         for item in pow_paren:
             if item.base in b:
-                b_str[b.index(item.base)] = "(%s)" % b_str[b.index(item.base)]
+                b_str[b.index(item.base)] = "(%s)" % self._print(item.base)
 
         if not b:
             return sign + '*'.join(a_str)
