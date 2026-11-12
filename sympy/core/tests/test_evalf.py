@@ -877,3 +877,25 @@ def test_issue_13365():
     t = Symbol('t', integer=True, nonnegative=True)
     s2 = Sum(1.9**t * t / factorial(t), (t, 0, oo))
     assert abs((s2 - 19*exp(Rational(19, 10))/10).evalf()) < 1e-12
+
+def test_evalf_mul_infinity_sign():
+    from sympy import Mul, oo, nan, zoo, I, Float, Rational
+
+    assert Mul(-1, oo, evaluate=False).evalf() == -oo
+    assert Mul(-1, -oo, evaluate=False).evalf() == oo
+
+    assert Mul(2, oo, evaluate=False).evalf() == oo
+    assert Mul(-2, oo, evaluate=False).evalf() == -oo
+    assert Mul(-1, -1, oo, evaluate=False).evalf() == oo
+
+    assert Mul(0, oo, evaluate=False).evalf() == nan
+
+    # Additional edge cases
+    assert Mul(oo, oo, evaluate=False).evalf() == oo
+    assert Mul(-oo, oo, evaluate=False).evalf() == -oo
+    assert Mul(-1, zoo, evaluate=False).evalf() == zoo
+     # Complex finite factors
+    assert Mul(1 + I, oo, evaluate=False).evalf() == oo
+    assert Mul(1 + I, -oo, evaluate=False).evalf() == -oo
+    assert Mul(Float(1) + I*Float(1), oo, evaluate=False).evalf() == oo
+    assert Mul(Rational(1, 2) + I, oo, evaluate=False).evalf() == oo
