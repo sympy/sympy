@@ -988,8 +988,42 @@ def solve(f, *symbols, **flags):
         f[i] = f[i].replace(lambda w: isinstance(w, HyperbolicFunction) and \
             w.has_free(*symbols), lambda w: w.rewrite(exp))
 
-        # if we have a Matrix, we need to iterate over its elements again
         if f[i].is_Matrix:
+            from sympy.matrices.expressions.matexpr import MatrixExpr
+
+            matrix_symbols = [
+                symbol for symbol in symbols
+                if isinstance(symbol, MatrixExpr)
+            ]
+
+            if matrix_symbols:
+                if (
+                    len(matrix_symbols) != 1
+                    or len(symbols) != 1
+                    or len(f) != 1
+                ):
+                    raise NotImplementedError(
+                        "solve currently supports one matrix unknown at a time."
+                    )
+
+                from sympy.matrices.expressions.matadd import MatAdd
+                from sympy.matrices.expressions.matmul import MatMul
+
+                matrix_symbol = matrix_symbols[0]
+                terms = f[i].args if isinstance(f[i], MatAdd) else (f[i],)
+
+                # Only dispatch expressions where the unknown is a direct
+                # factor of a matrix product (or is itself a term).
+                directly_occurs = any(
+                    term == matrix_symbol or
+                    (isinstance(term, MatMul) and matrix_symbol in term.args)
+                    for term in terms
+                )
+
+                if directly_occurs:
+                    from sympy.matrices.expressions.mat_solve import matrix_solve
+                    return matrix_solve(f[i], matrix_symbol)
+
             try:
                 f[i] = f[i].as_explicit()
             except ValueError:
