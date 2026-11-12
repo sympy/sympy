@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from sympy import Eq, Matrix, MatrixSymbol, Symbol, solve
 from sympy.matrices.expressions.mat_solve import matrix_solve
 from sympy.matrices.expressions.special import Identity
