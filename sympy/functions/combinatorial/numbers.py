@@ -317,12 +317,14 @@ class lucas(ExprFunction1Arg):
     """
 
     @classmethod
-    def eval(cls, n):
+    def eval(cls, n: Expr) -> Expr | None:
         if n is S.Infinity:
             return S.Infinity
 
         if n.is_Integer:
             return fibonacci(n + 1) + fibonacci(n - 1)
+
+        return None
 
     def _eval_rewrite_as_sqrt(self, n, **kwargs):
         from sympy.functions.elementary.miscellaneous import sqrt
@@ -1334,7 +1336,7 @@ class catalan(ExprFunction1Arg):
     """
 
     @classmethod
-    def eval(cls, n):
+    def eval(cls, n: Expr) -> Expr | None:
         from sympy.functions.special.gamma_functions import gamma
         if (n.is_Integer and n.is_nonnegative) or \
            (n.is_noninteger and n.is_negative):
@@ -1345,6 +1347,8 @@ class catalan(ExprFunction1Arg):
                 return S.Zero
             if (n + 1).is_zero:
                 return Rational(-1, 2)
+
+        return None
 
     def fdiff(self, argindex=1):
         from sympy.functions.elementary.exponential import log
@@ -1598,7 +1602,7 @@ class andre(ExprFunction1Arg):
     """
 
     @classmethod
-    def eval(cls, n):
+    def eval(cls, n: Expr) -> Expr | None:
         if n is S.NaN:
             return S.NaN
         elif n is S.Infinity:
@@ -1616,6 +1620,8 @@ class andre(ExprFunction1Arg):
                 from sympy.functions.special.zeta_functions import zeta
                 m = -n-1
                 return I**m * Rational(1-2**m, 4**m) * zeta(-n)
+
+        return None
 
     def _eval_rewrite_as_zeta(self, s, **kwargs):
         from sympy.functions.elementary.trigonometric import cos
@@ -1690,15 +1696,17 @@ class partition(ExprFunction1Arg):
     is_nonnegative = True
 
     @classmethod
-    def eval(cls, n):
+    def eval(cls, n: Expr) -> Expr | None:
         if n.is_integer is False:
             raise TypeError("n should be an integer")
         if n.is_negative is True:
             return S.Zero
         if n.is_zero is True or n is S.One:
             return S.One
-        if n.is_Integer is True:
+        if isinstance(n, Integer):
             return S(_partition(as_int(n)))
+
+        return None
 
     def _eval_is_positive(self):
         if self.args[0].is_nonnegative is True:
@@ -2058,7 +2066,7 @@ class mobius(ExprFunction1Arg):
     is_prime = False
 
     @classmethod
-    def eval(cls, n):
+    def eval(cls, n: Expr) -> Expr | None:
         if n.is_integer is False:
             raise TypeError("n should be an integer")
         if n.is_positive is False:
@@ -2067,7 +2075,7 @@ class mobius(ExprFunction1Arg):
             return S.NegativeOne
         if n is S.One:
             return S.One
-        result = None
+        result: Expr | None = None
         for m, e in (_.as_base_exp() for _ in Mul.make_args(n)):
             if m.is_integer is True and m.is_positive is True and \
                e.is_integer is True and e.is_positive is True:
@@ -2085,7 +2093,7 @@ class mobius(ExprFunction1Arg):
                         else:
                             result *= s
             else:
-                return
+                return None
         return result
 
 
@@ -2128,7 +2136,7 @@ class primenu(ExprFunction1Arg):
     is_nonnegative = True
 
     @classmethod
-    def eval(cls, n):
+    def eval(cls, n: Expr) -> Expr | None:
         if n.is_integer is False:
             raise TypeError("n should be an integer")
         if n.is_positive is False:
@@ -2139,6 +2147,8 @@ class primenu(ExprFunction1Arg):
             return S.Zero
         if n.is_Integer is True:
             return S(len(factorint(n)))
+
+        return None
 
 
 class primeomega(ExprFunction1Arg):
@@ -2181,7 +2191,7 @@ class primeomega(ExprFunction1Arg):
     is_nonnegative = True
 
     @classmethod
-    def eval(cls, n):
+    def eval(cls, n: Expr) -> Expr | None:
         if n.is_integer is False:
             raise TypeError("n should be an integer")
         if n.is_positive is False:
@@ -2192,6 +2202,8 @@ class primeomega(ExprFunction1Arg):
             return S.Zero
         if n.is_Integer is True:
             return S(sum(factorint(n).values()))
+
+        return None
 
 
 class totient(DefinedFunction):
@@ -2342,7 +2354,7 @@ class primepi(ExprFunction1Arg):
     is_nonnegative = True
 
     @classmethod
-    def eval(cls, n):
+    def eval(cls, n: Expr) -> Expr | None:
         if n is S.Infinity:
             return S.Infinity
         if n is S.NegativeInfinity:
@@ -2352,10 +2364,10 @@ class primepi(ExprFunction1Arg):
         if is_lt(n, S(2)) is True:
             return S.Zero
         try:
-            n = int(n)
+            n_int = int(n)
         except TypeError:
-            return
-        return S(_primepi(n))
+            return None
+        return S(_primepi(n_int))
 
 
 #######################################################################

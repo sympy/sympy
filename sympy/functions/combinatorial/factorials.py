@@ -1,4 +1,5 @@
 from __future__ import annotations
+from typing import TYPE_CHECKING
 from functools import reduce
 
 from sympy.core import S, sympify, Dummy, Mod
@@ -13,6 +14,9 @@ from sympy.ntheory.residue_ntheory import binomial_mod
 from sympy.polys.polytools import Poly
 
 from math import factorial as _factorial, prod, sqrt as _sqrt
+
+if TYPE_CHECKING:
+    from sympy.core.expr import Expr
 
 class CombinatorialFunction(DefinedFunction):
     """Base class for combinatorial functions. """
@@ -136,7 +140,7 @@ class factorial(ExprFunction1Arg, CombinatorialFunction):
             return (cls._recursive(n//2)**2)*cls._swing(n)
 
     @classmethod
-    def eval(cls, n):
+    def eval(cls, n: Expr) -> Expr | None:
         n = sympify(n)
 
         if n.is_Number:
@@ -144,19 +148,19 @@ class factorial(ExprFunction1Arg, CombinatorialFunction):
                 return S.One
             elif n is S.Infinity:
                 return S.Infinity
-            elif n.is_Integer:
+            elif isinstance(n, Integer):
                 if n.is_negative:
                     return S.ComplexInfinity
                 else:
-                    n = n.p
+                    n_int = n.p
 
-                    if n < 20:
+                    if n_int < 20:
                         if not cls._small_factorials:
                             result = 1
                             for i in range(1, 20):
                                 result *= i
                                 cls._small_factorials.append(result)
-                        result = cls._small_factorials[n-1]
+                        result = cls._small_factorials[n_int-1]
 
                     # GMPY factorial is faster, use it when available
                     #
@@ -168,13 +172,15 @@ class factorial(ExprFunction1Arg, CombinatorialFunction):
                     # fallback used here (perhaps the fallback here should be
                     # moved to sympy.external.ntheory).
                     elif _gmpy is not None:
-                        result = _gmpy.fac(n)
+                        result = _gmpy.fac(n_int)
 
                     else:
-                        bits = n.bit_count()
-                        result = cls._recursive(n)*2**(n - bits)
+                        bits = n_int.bit_count()
+                        result = cls._recursive(n_int)*2**(n_int - bits)
 
                     return Integer(result)
+
+        return None
 
     def _facmod(self, n, q):
         res, N = 1, int(_sqrt(n))
@@ -338,7 +344,7 @@ class subfactorial(ExprFunction1Arg, CombinatorialFunction):
             return z2
 
     @classmethod
-    def eval(cls, arg):
+    def eval(cls, arg: Expr) -> Expr | None:
         if arg.is_Number:
             if arg.is_Integer and arg.is_nonnegative:
                 return cls._eval(arg)
@@ -346,6 +352,8 @@ class subfactorial(ExprFunction1Arg, CombinatorialFunction):
                 return S.NaN
             elif arg is S.Infinity:
                 return S.Infinity
+
+        return None
 
     def _eval_is_even(self):
         if self.args[0].is_odd and self.args[0].is_nonnegative:
@@ -419,7 +427,7 @@ class factorial2(ExprFunction1Arg, CombinatorialFunction):
     """
 
     @classmethod
-    def eval(cls, arg):
+    def eval(cls, arg: Expr) -> Expr | None:
         # TODO: extend this to complex numbers?
 
         if arg.is_Number:
@@ -440,6 +448,8 @@ class factorial2(ExprFunction1Arg, CombinatorialFunction):
                 return arg*(S.NegativeOne)**((1 - arg)/2) / factorial2(-arg)
             raise ValueError("argument must be nonnegative integer "
                                 "or negative odd integer")
+
+        return None
 
 
     def _eval_is_even(self):

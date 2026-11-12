@@ -3,11 +3,15 @@ The Schur number S(k) is the largest integer n for which the interval [1,n]
 can be partitioned into k sum-free sets.(https://mathworld.wolfram.com/SchurNumber.html)
 """
 from __future__ import annotations
+from typing import TYPE_CHECKING
 import math
 from sympy.core import S
 from sympy.core.basic import Basic
 from sympy.core.function import ExprFunction1Arg
 from sympy.core.numbers import Integer
+
+if TYPE_CHECKING:
+    from sympy.core.expr import Expr
 
 
 class SchurNumber(ExprFunction1Arg):
@@ -38,7 +42,7 @@ class SchurNumber(ExprFunction1Arg):
     """
 
     @classmethod
-    def eval(cls, k):
+    def eval(cls, k: Expr) -> Expr | None:
         if k.is_Number:
             if k is S.Infinity:
                 return S.Infinity
@@ -48,7 +52,9 @@ class SchurNumber(ExprFunction1Arg):
                 raise ValueError("k should be a positive integer")
             first_known_schur_numbers = {1: 1, 2: 4, 3: 13, 4: 44, 5: 160}
             if k <= 5:
-                return Integer(first_known_schur_numbers[k])
+                return Integer(first_known_schur_numbers[int(k)])
+
+        return None
 
     def lower_bound(self):
         f_ = self.args[0]
