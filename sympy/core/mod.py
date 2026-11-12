@@ -5,7 +5,7 @@ from .function import DefinedFunction
 from .kind import NumberKind
 from .logic import fuzzy_and, fuzzy_not
 from .mul import Mul
-from .numbers import equal_valued
+from .numbers import Float, equal_valued
 from .relational import is_le, is_lt, is_ge, is_gt
 from .singleton import S
 
@@ -191,14 +191,16 @@ class Mod(DefinedFunction):
         # (x + y + 2) % x -> Mod(y + 2, x)
         if p.is_Add:
             args = []
+            exact_coeffs = q.is_Rational and not p.has(Float)
             for i in p.args:
-                if q.is_Integer:
+                if exact_coeffs:
                     c, term = i.as_coeff_Mul()
-                    if c.is_Integer and term.is_integer:
+                    if c.is_Rational and term.is_integer:
                         # Integer-valued terms can have their coefficients
-                        # reduced modulo q, even if p is not an integer.
-                        # Use q's sign so negative moduli preserve the
-                        # remainder convention and parity simplifications.
+                        # reduced modulo an exact rational modulus even
+                        # when the entire dividend is not integer-valued.
+                        # Do not rearrange sums containing Floats: doing so
+                        # can change the rounding points after substitution.
                         i = (c % q)*term
                 a = cls(i, q)
                 if a.count(cls) > i.count(cls):
@@ -209,6 +211,10 @@ class Mod(DefinedFunction):
                 p = Add(*args)
 
         else:
+            if q.is_Rational and not p.has(Float):
+                c, term = p.as_coeff_Mul()
+                if c.is_Rational and term.is_integer:
+                    p = (c % q)*term
             # handle coefficients if they are not Rational
             # since those are not handled by factor_terms
             # e.g. Mod(.6*x, .3*y) -> 0.3*Mod(2*x, y)

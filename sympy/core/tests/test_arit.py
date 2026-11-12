@@ -2064,6 +2064,20 @@ def test_Mod_integer_terms():
     xr = Symbol('xr', real=True)
     assert Mod(3*floor(xr) + u, 2) == Mod(floor(xr) + u, 2)
 
+    # Rational coefficients and moduli can be reduced in the same way.
+    # The difference between 4*i/3 and 2*i/15 is 6*i/5, an integer
+    # multiple of the modulus 1/5 when i is integer.
+    fifth = Rational(1, 5)
+    assert Mod(4*i/3, fifth) == Mod(2*i/15, fifth)
+    assert Mod(4*i/3 + u, fifth) == Mod(2*i/15 + u, fifth)
+    assert Mod(4*i/3 + 2*j/5 + u, fifth) == Mod(2*i/15 + u, fifth)
+    assert Mod(-4*i/3 + u, fifth) == Mod(i/15 + u, fifth)
+    assert Mod(4*i/3 + u, -fifth) == Mod(-i/15 + u, -fifth)
+    assert unchanged(Mod, 4*u/3, fifth)
+
+    # The exact coefficient reduction must not alter sums with Floats.
+    assert Mod(4*i/3 + Float('0.1')*u, fifth).has(Float)
+
 
 def test_Mod_Pow():
     # modular exponentiation
