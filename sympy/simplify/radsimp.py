@@ -1108,7 +1108,8 @@ def fraction(expr: Expr | complex, exact: bool = False) -> tuple[Expr, Expr]:
     """
     expr = sympify(expr)
 
-    numer, denom = [], []
+    numer: list[Expr | int] = []
+    denom: list[Expr | int] = []
 
     for term in Mul.make_args(expr):
         if term.is_commutative and (term.is_Pow or isinstance(term, exp)):
