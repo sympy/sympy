@@ -893,6 +893,9 @@ class PrettyPrinter(Printer):
         pform = pform**dag
         return pform
 
+    def _print_Conjugate(self, expr):
+        return self._print_conjugate(expr)
+
     def _print_BlockMatrix(self, B):
         if B.blocks.shape == (1, 1):
             return self._print(B.blocks[0, 0])

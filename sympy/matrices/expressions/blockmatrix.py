@@ -191,6 +191,11 @@ class BlockMatrix(MatrixExpr):
             Matrix(self.blockshape[0], self.blockshape[1], self.blocks).adjoint()
         )
 
+    def _eval_conjugate(self):
+        return BlockMatrix(
+            Matrix(self.blockshape[0], self.blockshape[1], self.blocks).conjugate()
+        )
+
     def _eval_trace(self):
         if self.rowblocksizes == self.colblocksizes:
             blocks = [self.blocks[i, i] for i in range(self.blockshape[0])]

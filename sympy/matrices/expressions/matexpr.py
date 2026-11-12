@@ -184,8 +184,8 @@ class MatrixExpr(Expr):
         return None
 
     def _eval_conjugate(self):
-        from sympy.matrices.expressions.adjoint import Adjoint
-        return Adjoint(Transpose(self))
+        from sympy.matrices.expressions.conjugate import Conjugate
+        return Conjugate(self)
 
     def as_real_imag(self, deep=True, **hints):
         return self._eval_as_real_imag()
