@@ -207,12 +207,8 @@ class Mod(DefinedFunction):
         # simplify terms
         # (x + y + 2) % x -> Mod(y + 2, x)
         if p.is_Add:
-            # Reducing Float terms modulo q can introduce rounding errors.
-            # A Float within an already constructed Mod, however, should
-            # not prevent the reduction of other exact terms in the sum.
-            if not (q.has(Float) or any(
-                    arg.has(Float) and not isinstance(arg, cls)
-                    for arg in p.args)):
+            # Do not rearrange Float-containing sums.
+            if not (p.has(Float) or q.has(Float)):
                 args = []
                 exact_coeffs = q.is_Rational and not p.has(Float)
 
@@ -231,14 +227,12 @@ class Mod(DefinedFunction):
                     p = Add(*args)
 
         else:
-            # handle non-Rational coefficients that factor_terms cannot
+            # Reduce exact coefficients of integer-valued factors.
             if q.is_Rational and not p.has(Float):
                 c, term = p.as_coeff_Mul()
                 if c.is_Rational and term.is_integer:
                     p = (c % q)*term
-            # handle coefficients if they are not Rational
-            # since those are not handled by factor_terms
-            # e.g. Mod(.6*x, .3*y) -> 0.3*Mod(2*x, y)
+            # Handle non-Rational coefficients not handled by factor_terms.
             cp, p = p.as_coeff_Mul()
             cq, q = q.as_coeff_Mul()
             ok = False
