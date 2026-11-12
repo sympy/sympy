@@ -182,32 +182,18 @@ class Mod(DefinedFunction):
         from sympy.polys.polyerrors import PolynomialError
         from sympy.polys.polytools import gcd
 
-        # extract gcd; any further simplification should be done by the user
-        try:
-            G = gcd(p, q)
-            # gcd can contain a Float coefficient (even 1.0). Extract
-            # only Float-free factors so inexact coefficients remain
-            # inside Mod, where substitution will respect their precision.
-            if G.has(Float):
-                G = Mul(*[g for g in Mul.make_args(G) if not g.has(Float)])
-            if not equal_valued(G, 1):
-                p, q = [gcd_terms(i/G, clear=False, fraction=False)
-                        for i in (p, q)]
-        except PolynomialError:  # issue 21373
-            G = S.One
-
-        # gcd treats Float coefficients as units, so it misses exact
-        # integer factors in cases like Mod(2*x, 4.0). When the modulus
-        # has an integer-valued Float coefficient, extract only a common
-        # Integer factor and keep the Float on the modulus.
-        cp, _ = p.as_coeff_Mul()
-        cq, _ = q.as_coeff_Mul()
-        if cp.is_Integer and cq.is_Float and cq.is_finite and (cq % 1).is_zero:
-            g = gcd(cp, int(cq))
-            if g > 1:
-                G *= g
-                p, q = [gcd_terms(i/g, clear=False, fraction=False)
-                        for i in (p, q)]
+        # Extract common factors only for exact operands. With Floats,
+        # even exact common factors can change the rounding points after
+        # substitution, producing a different numerical remainder.
+        G = S.One
+        if not (p.has(Float) or q.has(Float)):
+            try:
+                G = gcd(p, q)
+                if not equal_valued(G, 1):
+                    p, q = [gcd_terms(i/G, clear=False, fraction=False)
+                            for i in (p, q)]
+            except PolynomialError:  # issue 21373
+                pass
         pwas, qwas = p, q
 
         # simplify terms

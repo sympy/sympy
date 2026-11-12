@@ -1859,18 +1859,35 @@ def test_Mod():
     assert k**m % k == 0
     assert (-2*k)**m % k == 0
 
-    # Float handling: keep inexact factors inside Mod even when
-    # a common exact factor can be extracted.
+    # Float handling: do not extract even exact common factors from
+    # symbolic operands containing Floats. Rounding after substitution
+    # is not necessarily invariant under algebraically valid rescaling.
     assert unchanged(Mod, x, Float(1))
     assert unchanged(Mod, x, Float('3.3'))
     assert unchanged(Mod, x, Float('0.5'))
-    # Extract exact common factors despite an inexact modulus, so
-    # equivalent Mod terms are normalized and can combine.
-    assert Mod(2*x, 4.0) == 2*Mod(x, 2.0)
-    assert Mod(2*x, 4.0) + Mod(x, 2.0) == 3*Mod(x, 2.0)
-    assert Mod(6*x, 4.0*y) == 2*Mod(3*x, 2.0*y)
-    assert Mod(3*x, -6.0) == 3*Mod(x, -2.0)
+    assert unchanged(Mod, 2*x, 4.0)
+    assert unchanged(Mod, 6*x, 4.0*y)
+    assert unchanged(Mod, 3*x, -6.0)
     assert unchanged(Mod, 2*x, Float('0.3'))
+
+    # Float dividend, exact modulus: reducing 5.0 to 1.0 loses parity
+    # after rounding a large integer product.
+    assert unchanged(Mod, 5.0*k, 2)
+    assert Tuple(Mod(5.0*k, 2), Mod(1.0*k, 2, evaluate=False)).subs(
+        k, 2**51 + 1) == (0, 1.0)
+
+    # Exact dividend, Float modulus: extracting an integer factor
+    # changes which side of the remainder boundary is reached.
+    assert unchanged(Mod, 3*x, 6.0*y)
+    vals = Tuple(Mod(3*x, 6.0*y), 3*Mod(x, 2.0*y, evaluate=False)).subs(
+        {x: Rational(-9, 10), y: Float('0.15')})
+    assert vals[0] > S.Half and vals[1] == 0
+
+    # Float dividend and modulus: extracting 0.1 changes the remainder.
+    assert unchanged(Mod, 5.0*x, 0.1*y)
+    assert Tuple(Mod(5.0*x, 0.1*y),
+                 0.1*Mod(50*x, y, evaluate=False)).subs(
+        {x: Float('0.1'), y: Float('0.2')}) == (0.02, 0)
     delta = Rational(1, 10**20)
     assert Mod(x, Float(1)).subs(x, 1 + delta) == Float(delta)
     assert Mod(x, Float('0.5')).subs(x, 1 + delta) == Float(delta)
@@ -1970,15 +1987,14 @@ def test_Mod():
 
     # gcd extraction
     assert (-3*x) % (-2*y) == -Mod(3*x, 2*y)
-    # The Float coefficient of the gcd (1.0*pi) must not be extracted,
-    # but the exact factor pi must still be taken outside.
-    assert Mod(6*pi, Float('0.3')*x*pi) == pi*Mod(6, Float('0.3')*x)
-    assert Mod(6*pi, Float('0.3')*x*pi).has(Float)
-    assert (.6*pi) % (.3*x*pi) == pi*Mod(.6, .3*x)
-    assert (.6*pi) % (.31*x*pi) == pi*Mod(.6, .31*x)
-    assert (6*pi) % (.3*x*pi) == pi*Mod(6, .3*x)
-    assert (6*pi) % (.31*x*pi) == pi*Mod(6, .31*x)
-    assert (6*pi) % (.42*x*pi) == pi*Mod(6, .42*x)
+    # Even extracting an exact symbolic factor (pi) can move the
+    # floating-point rounding boundary when the operands have Floats.
+    assert unchanged(Mod, 6*pi, Float('0.3')*x*pi)
+    assert unchanged(Mod, .6*pi, .3*x*pi)
+    assert unchanged(Mod, .6*pi, .31*x*pi)
+    assert unchanged(Mod, 6*pi, .3*x*pi)
+    assert unchanged(Mod, 6*pi, .31*x*pi)
+    assert unchanged(Mod, 6*pi, .42*x*pi)
     assert (12*x) % (2*y) == 2*Mod(6*x, y)
     assert (12*x) % (3*5*y) == 3*Mod(4*x, 5*y)
     assert (12*x) % (15*x*y) == 3*x*Mod(4, 5*y)
