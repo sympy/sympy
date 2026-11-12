@@ -9,6 +9,7 @@ from collections.abc import MutableMapping
 import math
 
 from sympy.core.containers import Dict
+from sympy.core.expr import Expr
 from sympy.core.mul import Mul
 from sympy.core.numbers import Rational, Integer
 from sympy.core.intfunc import num_digits
@@ -1649,8 +1650,29 @@ def factorint(n, limit=None, use_trial=True, use_rho=True, use_pm1=True,
         num_curves *= 4
 
 
-def factorrat(rat, limit=None, use_trial=True, use_rho=True, use_pm1=True,
-              verbose=False, visual=None, multiple=False):
+@overload
+def factorrat(
+    rat: Rational, limit: int | None = None,
+    use_trial: bool = True, use_rho: bool = True,
+    use_pm1: bool = True, verbose: bool = False,
+    visual: Literal[False] | None = None,
+    multiple: Literal[False] = False,
+) -> dict[int, int]: ...
+
+@overload
+def factorrat(
+    rat: Rational, limit: int | None = None,
+    use_trial: bool = True, use_rho: bool = True,
+    use_pm1: bool = True, verbose: bool = False,
+    visual: bool | None = None, multiple: bool = False,
+) -> dict[int, int] | list[int | Rational] | Expr: ...
+
+def factorrat(
+    rat: Rational, limit: int | None = None,
+    use_trial: bool = True, use_rho: bool = True,
+    use_pm1: bool = True, verbose: bool = False,
+    visual: bool | None = None, multiple: bool = False,
+) -> dict[int, int] | list[int | Rational] | Expr:
     r"""
     Given a Rational ``r``, ``factorrat(r)`` returns a dict containing
     the prime factors of ``r`` as keys and their respective multiplicities
@@ -1677,7 +1699,8 @@ def factorrat(rat, limit=None, use_trial=True, use_rho=True, use_pm1=True,
         fac = factorrat(rat, limit=limit, use_trial=use_trial,
                   use_rho=use_rho, use_pm1=use_pm1,
                   verbose=verbose, visual=False, multiple=False)
-        factorlist = sum(([p] * fac[p] if fac[p] > 0 else [S.One/p]*(-fac[p])
+        factorlist: list[int | Rational]
+        factorlist = sum(([p] * fac[p] if fac[p] > 0 else [Rational(1, p)]*(-fac[p])
                                for p, _ in sorted(fac.items(),
                                                         key=lambda elem: elem[0]
                                                         if elem[1] > 0
@@ -1702,7 +1725,7 @@ def factorrat(rat, limit=None, use_trial=True, use_rho=True, use_pm1=True,
     else:
         if -1 in f:
             f.pop(-1)
-            args = [S.NegativeOne]
+            args: list[Expr] = [S.NegativeOne]
         else:
             args = []
         args.extend([Pow(*i, evaluate=False)
