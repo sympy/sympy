@@ -25,6 +25,8 @@ Useful functions:
 - ``find_unit``: easily lookup pre-defined units.
 - ``convert_to(expr, newunit)``: converts an expression into the same
     expression expressed in another unit.
+- ``convert_unit_system(expr, dimensions, source, target)``: converts an
+    expression or an equation into the form it has in another unit system.
 
 """
 
@@ -166,6 +168,7 @@ from .definitions import (
     von_klitzing_constant,
     Da, dalton, amu, amus, atomic_mass_unit, atomic_mass_constant,
     me, electron_rest_mass,
+    mp, proton_rest_mass,
     gee, gees, acceleration_due_to_gravity,
     u0, magnetic_constant, vacuum_permeability,
     e0, electric_constant, vacuum_permittivity,
@@ -215,6 +218,8 @@ from .definitions import (
 from .systems import (
     mks, mksa, si
 )
+
+from .unit_system_conversion import convert_unit_system
 
 
 def find_unit(quantity, unit_system="SI"):
@@ -275,6 +280,7 @@ __all__ = [
     'Dimension', 'DimensionSystem',
     'UnitSystem',
     'convert_to',
+    'convert_unit_system',
     'Quantity',
 
     'amount_of_substance', 'acceleration', 'action', 'area',
@@ -404,6 +410,7 @@ __all__ = [
     'von_klitzing_constant',
     'Da', 'dalton', 'amu', 'amus', 'atomic_mass_unit', 'atomic_mass_constant',
     'me', 'electron_rest_mass',
+    'mp', 'proton_rest_mass',
     'gee', 'gees', 'acceleration_due_to_gravity',
     'u0', 'magnetic_constant', 'vacuum_permeability',
     'e0', 'electric_constant', 'vacuum_permittivity',

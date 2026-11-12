@@ -119,3 +119,4 @@ astrophysical system, but we wanted to show how to create a unit that one needs.
 We can see in this example that intermediate dimensions can be ill-defined,
 such as sqrt(G), but one should check that the final result - when all
 dimensions are combined - is well defined.
+
