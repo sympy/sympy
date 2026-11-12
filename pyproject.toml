@@ -37,9 +37,74 @@ Source = "https://github.com/sympy/sympy"
 
 [project.optional-dependencies]
 dev = ["pytest>=7.1.0", "hypothesis>=6.70.0"]
+flint = ["python-flint"]
 
 [project.scripts]
 isympy = "isympy:main"
+
+[dependency-groups]
+test = [
+    "mpmath>=1.1.0",
+    "pytest>=7.1.0",
+    "pytest-xdist",
+    "pytest-timeout",
+    "pytest-split",
+    "pytest-doctestplus",
+    "pytest-run-parallel",
+    "hypothesis>=6.70.0",
+]
+lint = [
+    "ruff",
+    "isort",
+    "sphinx-lint",
+    "slotscheck",
+    "tombi",
+]
+typing = [
+    "mypy; platform_python_implementation != 'PyPy'",
+    "pyright",
+]
+coverage = [
+    {include-group = "test"},
+    "coverage",
+]
+docs = [
+    "furo",
+    "intersphinx-registry",
+    "linkify-it-py",
+    "matplotlib",
+    "matplotlib-inline",
+    "mpmath>=1.1.0",
+    "myst-parser",
+    "scipy",
+    "Sphinx",
+    "sphinx-autobuild",
+    "sphinx-copybutton",
+    "sphinx-math-dollar",
+    "sphinx-reredirects",
+    "sphinxcontrib-applehelp",
+    "sphinxcontrib-devhelp",
+    "sphinxcontrib-htmlhelp",
+    "sphinxcontrib-jsmath",
+    "sphinxcontrib-jquery",
+    "sphinxcontrib-qthelp",
+    "sphinxcontrib-serializinghtml",
+]
+build = [
+    "build",
+    "wheel",
+]
+benchmark = [
+    "asv",
+    "virtualenv",
+    "packaging",
+]
+workflow = ["zizmor"]
+dev = [
+    {include-group = "test"},
+    {include-group = "lint"},
+    {include-group = "typing"},
+]
 
 [tool.isort]
 known_first_party = "sympy"
