@@ -119,7 +119,6 @@ def test_trace_as_explicit():
 
 def test_trace_derivative():
     from sympy.core.symbol import Symbol
-    from sympy.core.function import Derivative
     from sympy.matrices.expressions.inverse import Inverse
     x = Symbol('x')
     X = MatrixSymbol('X', 3, 3)
