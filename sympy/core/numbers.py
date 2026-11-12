@@ -73,7 +73,7 @@ from .parameters import global_parameters
 if TYPE_CHECKING:
     from typing import TypeAlias
     from sympy.logic.boolalg import Boolean
-    _PositiveInteger: TypeAlias = Literal[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25]
+    _NonNegativeInteger: TypeAlias = Literal[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25]
 
 
 _LOG2 = math.log(2)
@@ -2054,7 +2054,7 @@ class Integer(Rational):
         return Rational.__rmod__(self, other)
 
     @overload
-    def __pow__(self, other: _PositiveInteger, mod: None = None) -> Integer: ...
+    def __pow__(self, other: _NonNegativeInteger, mod: None = None) -> Integer: ...
     @overload
     def __pow__(self, other: Expr | complex, mod: None = None) -> Expr: ...
     @overload
@@ -2262,11 +2262,18 @@ class Integer(Rational):
         if not isinstance(other, Expr):
             return NotImplemented
         if isinstance(other, Integer):
-            return Integer(self.p // other)
+            return Integer(self.p // other.p)
         return divmod(self, other)[0]
 
-    def __rfloordiv__(self, other: Expr | float) -> Integer:
-        return Integer(Integer(other).p // self.p)
+    @overload
+    def __rfloordiv__(self, other: int) -> Integer: ...
+    @overload
+    def __rfloordiv__(self, other: Expr | complex) -> Expr: ...
+
+    def __rfloordiv__(self, other: Expr | complex) -> Expr:
+        if isinstance(other, int):
+            return Integer(other // self.p)
+        return super().__rfloordiv__(other)
 
     # These bitwise operations (__lshift__, __rlshift__, ..., __invert__) are defined
     # for Integer only and not for general SymPy expressions. This is to achieve

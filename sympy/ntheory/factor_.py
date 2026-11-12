@@ -2,14 +2,13 @@
 Integer factorization
 """
 from __future__ import annotations
-from typing import Any, Iterator, Literal, overload, SupportsIndex
+from typing import Any, Iterator, Literal, overload, SupportsIndex, TYPE_CHECKING
 from bisect import bisect_left
 from collections import defaultdict, OrderedDict
 from collections.abc import MutableMapping
 import math
 
 from sympy.core.containers import Dict
-from sympy.core.expr import Expr
 from sympy.core.mul import Mul
 from sympy.core.numbers import Rational, Integer
 from sympy.core.intfunc import num_digits
@@ -25,6 +24,9 @@ from sympy.utilities.decorator import deprecated
 from sympy.utilities.iterables import flatten
 from sympy.utilities.misc import as_int, filldedent
 from .ecm import _ecm_one_factor
+
+if TYPE_CHECKING:
+    from sympy.core.expr import Expr
 
 
 def smoothness(n: SupportsIndex) -> tuple[int, int]:
