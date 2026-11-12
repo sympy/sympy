@@ -988,14 +988,24 @@ def test_latex_derivatives():
     for mul_symbol in (None, 'dot'):
         assert latex(Derivative(f(x) + g(x), x), mul_symbol=mul_symbol) == \
             r"\frac{d}{d x} \left(f{\left(x \right)} + g{\left(x \right)}\right)"
-    # multiplication parenthesized only if mul_symbol isn't None
     assert latex(Derivative(f(x) * g(x), x)) == \
-        r"\frac{d}{d x} f{\left(x \right)} g{\left(x \right)}"
+        r"\frac{d}{d x} \left(f{\left(x \right)} g{\left(x \right)}\right)"
     assert latex(Derivative(f(x) * g(x), x), mul_symbol='dot') == \
         r"\frac{d}{d x} \left(f{\left(x \right)} \cdot g{\left(x \right)}\right)"
 
     # set diff operator
     assert latex(diff(f(x), x), diff_operator="rd") == r'\frac{\mathrm{d}}{\mathrm{d} x} f{\left(x \right)}'
+
+
+def test_latex_derivative_product_scope():
+    f = Function('f')
+    g = Function('g', commutative=False)
+    assert latex(Derivative(f(x)*g(x), x)) == \
+        r"\frac{d}{d x} \left(f{\left(x \right)} g{\left(x \right)}\right)"
+    assert latex(Derivative(f(x), x)*g(x)) == \
+        r"\frac{d}{d x} f{\left(x \right)} g{\left(x \right)}"
+    assert latex(Derivative(f(x, y)*g(x, y), x, y)) == \
+        r"\frac{\partial^{2}}{\partial y\partial x} \left(f{\left(x,y \right)} g{\left(x,y \right)}\right)"
 
 
 def test_latex_subs():

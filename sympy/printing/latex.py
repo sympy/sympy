@@ -855,7 +855,7 @@ class LatexPrinter(Printer):
             tex = r"\frac{%s^{%s}}{%s}" % (diff_symbol, self._print(dim), tex)
 
         precedence = PRECEDENCE["Mul"]
-        if self._settings['mul_symbol']:
+        if self._settings['mul_symbol'] or expr.expr.is_Mul:
             # Nudge up the precedence so d/dx (f(x) * g(x)) also gets parenthesized
             precedence += 1
         if any(i.could_extract_minus_sign() for i in expr.args):
