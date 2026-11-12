@@ -22,11 +22,13 @@ from sympy.external.mpmath import prec_to_dps, giant_steps as _giant_steps, mpf_
 
 
 if TYPE_CHECKING:
-    from typing import Any, Hashable
+    from typing import Any, Hashable, TypeVar
     from typing_extensions import Self
     from .numbers import Number
     from sympy.core.basic import Tbasic
     from sympy.logic.boolalg import Boolean
+
+    Texpr = TypeVar("Texpr", bound='Expr')
 
 from collections import defaultdict
 

@@ -36,6 +36,7 @@ from sympy.utilities.misc import func_name, filldedent
 if TYPE_CHECKING:
     from collections.abc import Mapping, Iterable
     from sympy.core.basic import Tbasic
+    from sympy.core.expr import Texpr
 
 
 tfn: dict[bool | Boolean | None, Boolean | None] = defaultdict(lambda: None, {
@@ -114,7 +115,9 @@ class Set(Basic, EvalfMixin):
             ...
 
         @overload
-        def xreplace(self, rule: Mapping[Tbasic, Expr | Set]) -> Set: ...
+        def xreplace(self, rule: Mapping[Texpr, Expr]) -> Set: ...
+        @overload
+        def xreplace(self, rule: Mapping[Tbasic, Set]) -> Set: ...
         @overload
         def xreplace(self, rule: Mapping[Tbasic, Basic]) -> Basic: ...
 
