@@ -48,11 +48,6 @@ from sympy.logic.boolalg import And, BooleanTrue
 from sympy.sets import (FiniteSet, imageset, Interval, Intersection,
                         Union, ConditionSet, ImageSet, Complement, Contains)
 from sympy.sets.sets import Set, ProductSet
-
-from typing import TYPE_CHECKING, cast
-
-if TYPE_CHECKING:
-    from sympy.logic.boolalg import Boolean
 from sympy.matrices import zeros, Matrix, MatrixBase
 from sympy.ntheory.factor_ import divisors
 from sympy.ntheory.generate import cycle_length
@@ -74,6 +69,12 @@ from sympy.calculus.util import periodicity, continuous_domain, function_range
 
 
 from types import GeneratorType
+
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from sympy import Basic
+    from sympy.logic.boolalg import Boolean
 
 
 def _masked(f, *atoms):
@@ -2400,7 +2401,7 @@ def _transolve(f, symbol, domain):
 
 
 def solveset(f: Expr | Boolean,
-             symbol: Expr | None = None, domain: Set = S.Complexes) -> Set:
+             symbol: Expr | Symbol | None = None, domain: Set = S.Complexes) -> Set:
     r"""Solves a given inequality or equation with set as output
 
     Parameters
@@ -2520,7 +2521,7 @@ def solveset(f: Expr | Boolean,
     if not isinstance(domain, Set):
         raise ValueError("%s is not a valid domain" %(domain))
 
-    free_symbols = f.free_symbols
+    free_symbols: tuple[Basic, ...] = tuple(f.free_symbols)
 
     if f.has(Piecewise):
         f = piecewise_fold(f)
@@ -2536,8 +2537,9 @@ def solveset(f: Expr | Boolean,
                 relationship between value and 0 is unknown: %s''' % b))
 
     if symbol is None:
-        if len(free_symbols) == 1:
-            symbol = cast(Symbol, free_symbols.pop())
+        # After 2027, remove `and isinstance(free_symbols[0], Symbol)` if the dynamic typing is ready.
+        if len(free_symbols) == 1 and isinstance(free_symbols[0], Symbol):
+            symbol = free_symbols[0]
         else:
             raise ValueError(filldedent('''
                 The independent variable must be specified for a
