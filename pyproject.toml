@@ -76,7 +76,7 @@ version_scheme = "release-branch-semver"
 
 [tool.setuptools_scm.scm.git]
 pre_parse = "fetch_on_shallow"
-describe_command = "git describe --dirty --tags --long --match sympy-*"
+describe_command = ["git", "describe", "--dirty", "--tags", "--long", "--match", "sympy-*"]
 
 [tool.pytest.ini_options]
 # Don't run the tests marked as slow by default.
