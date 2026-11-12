@@ -1,114 +1,280 @@
-[build-system]
-requires = ["setuptools>=77.0.3", "setuptools-scm>=10.1"]
-build-backend = "setuptools.build_meta"
-
 [project]
 name = "sympy"
-dynamic = ["version"]
 description = "Computer algebra system (CAS) in Python"
 readme = "README.md"
-authors = [{name = "SymPy development team", email = "sympy@googlegroups.com"}]
-license = "BSD-3-Clause AND MIT"
-license-files = ["LICENSE", "LICENSES_BUNDLED.txt"]
-keywords = ["Math", "CAS"]
 # Keep in sync with sympy/__init__.py.
 requires-python = ">=3.10"
+license = "BSD-3-Clause AND MIT"
+license-files = ["LICENSE", "LICENSES_BUNDLED.txt"]
+authors = [{ name = "SymPy development team", email = "sympy@googlegroups.com" }]
+keywords = ["CAS", "Math"]
+classifiers = [
+  "Operating System :: OS Independent",
+  "Programming Language :: Python",
+  "Programming Language :: Python :: 3",
+  "Programming Language :: Python :: 3 :: Only",
+  "Programming Language :: Python :: 3.10",
+  "Programming Language :: Python :: 3.11",
+  "Programming Language :: Python :: 3.12",
+  "Programming Language :: Python :: 3.13",
+  "Programming Language :: Python :: Implementation :: CPython",
+  "Programming Language :: Python :: Implementation :: PyPy",
+  "Topic :: Scientific/Engineering",
+  "Topic :: Scientific/Engineering :: Mathematics",
+  "Topic :: Scientific/Engineering :: Physics",
+]
 # Set upper bound when making the release branch.
 dependencies = ["mpmath>=1.1.0"]
-classifiers = [
-    "Operating System :: OS Independent",
-    "Programming Language :: Python",
-    "Topic :: Scientific/Engineering",
-    "Topic :: Scientific/Engineering :: Mathematics",
-    "Topic :: Scientific/Engineering :: Physics",
-    "Programming Language :: Python :: 3",
-    "Programming Language :: Python :: 3.10",
-    "Programming Language :: Python :: 3.11",
-    "Programming Language :: Python :: 3.12",
-    "Programming Language :: Python :: 3.13",
-    "Programming Language :: Python :: 3 :: Only",
-    "Programming Language :: Python :: Implementation :: CPython",
-    "Programming Language :: Python :: Implementation :: PyPy",
-]
+dynamic = ["version"]
 
 [project.urls]
 Homepage = "https://sympy.org"
 Source = "https://github.com/sympy/sympy"
 
+[project.scripts]
+isympy = "isympy:main"
+
 [project.optional-dependencies]
 dev = ["pytest>=7.1.0", "hypothesis>=6.70.0"]
 flint = ["python-flint"]
 
-[project.scripts]
-isympy = "isympy:main"
-
 [dependency-groups]
-test = [
-    "mpmath>=1.1.0",
-    "pytest>=7.1.0",
-    "pytest-xdist",
-    "pytest-timeout",
-    "pytest-split",
-    "pytest-doctestplus",
-    "pytest-run-parallel",
-    "hypothesis>=6.70.0",
-]
-lint = [
-    "ruff",
-    "isort",
-    "sphinx-lint",
-    "slotscheck",
-    "tombi",
-]
-typing = [
-    "mypy; platform_python_implementation != 'PyPy'",
-    "pyright",
-]
-coverage = [
-    {include-group = "test"},
-    "coverage",
-]
-docs = [
-    "furo",
-    "intersphinx-registry",
-    "linkify-it-py",
-    "matplotlib",
-    "matplotlib-inline",
-    "mpmath>=1.1.0",
-    "myst-parser",
-    "scipy",
-    "Sphinx",
-    "sphinx-autobuild",
-    "sphinx-copybutton",
-    "sphinx-math-dollar",
-    "sphinx-reredirects",
-    "sphinxcontrib-applehelp",
-    "sphinxcontrib-devhelp",
-    "sphinxcontrib-htmlhelp",
-    "sphinxcontrib-jsmath",
-    "sphinxcontrib-jquery",
-    "sphinxcontrib-qthelp",
-    "sphinxcontrib-serializinghtml",
-]
-build = [
-    "build",
-    "wheel",
+dev = [
+  { include-group = "lint" },
+  { include-group = "test" },
+  { include-group = "typing" },
 ]
 benchmark = [
-    "asv",
-    "virtualenv",
-    "packaging",
+  "asv",
+  "packaging",
+  "virtualenv",
+]
+build = [
+  "build",
+  "wheel",
+]
+coverage = [
+  "coverage",
+  { include-group = "test" },
+]
+docs = [
+  "Sphinx",
+  "furo",
+  "intersphinx-registry",
+  "linkify-it-py",
+  "matplotlib",
+  "matplotlib-inline",
+  "mpmath>=1.1.0",
+  "myst-parser",
+  "scipy",
+  "sphinx-autobuild",
+  "sphinx-copybutton",
+  "sphinx-math-dollar",
+  "sphinx-reredirects",
+  "sphinxcontrib-applehelp",
+  "sphinxcontrib-devhelp",
+  "sphinxcontrib-htmlhelp",
+  "sphinxcontrib-jquery",
+  "sphinxcontrib-jsmath",
+  "sphinxcontrib-qthelp",
+  "sphinxcontrib-serializinghtml",
+]
+lint = [
+  "isort",
+  "ruff",
+  "slotscheck",
+  "sphinx-lint",
+  "tombi",
+]
+test = [
+  "hypothesis>=6.70.0",
+  "mpmath>=1.1.0",
+  "pytest>=7.1.0",
+  "pytest-doctestplus",
+  "pytest-run-parallel",
+  "pytest-split",
+  "pytest-timeout",
+  "pytest-xdist",
+]
+typing = [
+  "mypy; platform_python_implementation != 'PyPy'",
+  "pyright",
 ]
 workflow = ["zizmor"]
-dev = [
-    {include-group = "test"},
-    {include-group = "lint"},
-    {include-group = "typing"},
+
+[build-system]
+requires = ["setuptools>=77.0.3", "setuptools-scm>=10.1"]
+build-backend = "setuptools.build_meta"
+
+[tool.coverage.report]
+exclude_lines = [
+  "pragma: no cover",
+  "if TYPE_CHECKING:",
+  "assert False",
 ]
 
 [tool.isort]
 known_first_party = "sympy"
 multi_line_output = 4
+
+# Global mypy settings:
+[tool.mypy]
+warn_unused_configs = true
+exclude = [
+  "sympy/parsing/autolev/test-examples",
+]
+
+# Per module settings:
+[[tool.mypy.overrides]]
+module = [
+  "sympy.parsing.latex._antlr.*",
+  "sympy.parsing.autolev._antlr.*",
+  "sympy.benchmarks.*",
+  "sympy.plotting.pygletplot.*",
+]
+ignore_errors = true
+
+# sympy.release imports names that are declared before the optional import.
+[[tool.mypy.overrides]]
+module = ["sympy.release"]
+disable_error_code = ["no-redef"]
+
+# Compatibility with installations created before release.py became the
+# setuptools-scm-generated version file.
+[[tool.mypy.overrides]]
+module = ["sympy._version"]
+ignore_missing_imports = true
+
+# Third-party untyped code:
+[[tool.mypy.overrides]]
+module = ["antlr4.*", "Cython.*", "flint.*", "gmpy2.*", "IPython.*", "lxml.*", "matchpy.*", "matplotlib.*", "mpmath.*", "numpy.*", "PIL.*", "pycosat.*", "pyglet.*", "pymc.*", "pymc3.*", "pytest.*", "_pytest.*", "sage.*", "scipy.*", "symengine.*", "aesara.*", "xml.*", "theano.*", "multiset.*", "pysat.*", "bpython.*"]
+ignore_missing_imports = true
+
+# pyright type checker settings:
+[tool.pyright]
+include = ["sympy"]
+exclude = [
+  "sympy/matrices/common.py",
+  "sympy/matrices/matrices.py",
+  "sympy/matrices/tests/test_matrices.py",
+  "sympy/matrices/tests/test_commonmatrix.py",
+  "sympy/matrices/benchmarks",
+]
+
+# This complains when self or cls is not used as the parameter name for an
+# instance method or class method. Since this is used a lot in SymPy we disable
+# this check.
+reportSelfClsParameterName = false
+
+[tool.pytest.ini_options]
+# Don't run the tests marked as slow by default.
+addopts = "-m 'not slow and not tooslow'"
+filterwarnings = [
+  "ignore:More than 20 figures have been opened.*:RuntimeWarning",
+  "ignore:FigureCanvasAgg is non-interactive, and thus cannot be shown:UserWarning",
+]
+
+# Only run tests under the sympy/ directory. Otherwise pytest will attempt to
+# collect tests from e.g. the bin/ directory as well.
+testpaths = [
+  "sympy",
+  "doc/src",
+]
+
+# Normalise output of doctests.
+doctest_optionflags = [
+  "NORMALIZE_WHITESPACE",
+  "IGNORE_EXCEPTION_DETAIL",
+  "ELLIPSIS",
+  "FLOAT_CMP",
+]
+
+norecursedirs = [
+  ".*",
+  "sympy/parsing/autolev/test-examples",
+]
+
+markers = [
+  "nocache_fail",
+  "tooslow",
+  "thread_unsafe: tests that cannot safely run concurrently in threads",
+]
+
+[tool.ruff]
+target-version = "py310"
+# Generated code and test inputs
+exclude = [
+  "sympy/assumptions/*generated.py",
+  "sympy/core/*_generated.py",
+  "sympy/parsing/latex/_antlr/*",
+  "sympy/parsing/autolev/_antlr/*",
+  "sympy/parsing/autolev/test-examples/*",
+]
+
+# Black default, although irrelevant with E501 ignored
+line-length = 88
+
+# Allow unused variables when underscore-prefixed.
+# Enable Pyflakes `E` and `F` codes by default.
+lint.select = [
+  "W191",  # indentation contains tabs
+  "W291",  # trailing whitespace
+  "W292",  # missing newline at EOF
+  "W293",  # blank line contains whitespace
+  "B015",  # Useless comparison: a == b rather than a = b.
+  "I002",  # missing required import
+  "C4",
+  "E",
+  "F",
+  "FURB",
+  "LOG",
+  "PIE810",
+  "PLE",
+  "PLR1736",
+  "PLW0602",  # Global statement used but no assignment
+  "SIM101",
+  "SLOT",
+  "TC001",
+  "TC002",
+  "TC003",
+  "TC004",
+  "TC005",
+  "TRY002",
+  "BLE001",  # except Exception or except BaseException
+  "UP006",  # pyupgrade - non-pep585-annotation
+  "UP007",  # pyupgrade - non-pep604-annotation-union
+  "UP045",  # pyupgrade - non-pep604-annotation-optional
+]
+
+# Ignore rules that currently fail on the SymPy codebase
+lint.ignore = [
+  "E401",  # Multiple imports on one line
+  "E402",  # Module level import not at top of file
+  "E501",  # Line too long (<LENGTH> > 88 characters)
+  "E701",  # Multiple statements on one line (colon)
+  "E702",  # Multiple statements on one line (semicolon)
+  "E712",  # Comparison to `<BOOL>` should be `cond is <BOOL>`
+  "E713",  # Test for membership should be `not in`
+  "E714",  # Test for object identity should be `is not`
+  "E721",  # Do not compare types, use `isinstance()`
+  "E731",  # Do not assign a `lambda` expression, use a `def`
+  "E741",  # Ambiguous variable name: `<VARIABLE>`
+  "E743",  # Ambiguous function name: `<FUNCTION>`
+  "FURB110",  # Replace ternary `if` expression with `or` operator
+  "FURB187",  # Use of assignment of `reversed` on list `{name}`
+]
+
+lint.dummy-variable-rgx = "^(_+|(_+[a-zA-Z0-9_]*[a-zA-Z0-9]+?))$"
+
+# Add to all files
+lint.isort.required-imports = ["from __future__ import annotations"]
+
+[tool.ruff.lint.per-file-ignores]
+"sympy/interactive/session.py" = ["F821"]
+"sympy/core/benchmarks/*" = ["B015"]
+"sympy/plotting/pygletplot/*" = ["BLE001"]
+"sympy/parsing/latex/_parse_latex_antlr.py" = ["BLE001"]
+"sympy/parsing/autolev/_listener_autolev_antlr.py" = ["BLE001"]
 
 [tool.setuptools]
 py-modules = ["isympy"]
@@ -123,12 +289,12 @@ namespaces = false
 "sympy.utilities.mathml.data" = ["*.xsl"]
 "sympy.logic.benchmarks" = ["input/*.cnf"]
 "sympy.parsing.autolev" = [
-    "*.g4",
-    "test-examples/*.al",
-    "test-examples/*.py",
-    "test-examples/pydy-example-repo/*.al",
-    "test-examples/pydy-example-repo/*.py",
-    "test-examples/README.txt",
+  "*.g4",
+  "test-examples/*.al",
+  "test-examples/*.py",
+  "test-examples/pydy-example-repo/*.al",
+  "test-examples/pydy-example-repo/*.py",
+  "test-examples/README.txt",
 ]
 "sympy.parsing.latex" = ["*.txt", "*.g4", "lark/grammar/*.lark"]
 "sympy.parsing.smtlib" = ["lark/grammar/*.lark"]
@@ -146,200 +312,6 @@ version_scheme = "release-branch-semver"
 [tool.setuptools_scm.scm.git]
 pre_parse = "fetch_on_shallow"
 describe_command = ["git", "describe", "--dirty", "--tags", "--long", "--match", "sympy-*"]
-
-[tool.pytest.ini_options]
-# Don't run the tests marked as slow by default.
-addopts = "-m 'not slow and not tooslow'"
-filterwarnings = [
-    'ignore:More than 20 figures have been opened.*:RuntimeWarning',
-    'ignore:FigureCanvasAgg is non-interactive, and thus cannot be shown:UserWarning',
-]
-
-# Only run tests under the sympy/ directory. Otherwise pytest will attempt to
-# collect tests from e.g. the bin/ directory as well.
-testpaths = [
-    "sympy",
-    "doc/src",
-]
-
-# Normalise output of doctests.
-doctest_optionflags = [
-    "NORMALIZE_WHITESPACE",
-    "IGNORE_EXCEPTION_DETAIL",
-    "ELLIPSIS",
-    "FLOAT_CMP",
-]
-
-norecursedirs = [
-    ".*",
-    "sympy/parsing/autolev/test-examples",
-]
-
-markers = [
-    "nocache_fail",
-    "tooslow",
-    "thread_unsafe: tests that cannot safely run concurrently in threads",
-]
-
-[tool.coverage.report]
-
-exclude_lines = [
-    "pragma: no cover",
-    "if TYPE_CHECKING:",
-    "assert False",
-]
-
-[tool.ruff]
-target-version = "py310"
-# Generated code and test inputs
-exclude = [
-    "sympy/assumptions/*generated.py",
-    "sympy/core/*_generated.py",
-    "sympy/parsing/latex/_antlr/*",
-    "sympy/parsing/autolev/_antlr/*",
-    "sympy/parsing/autolev/test-examples/*",
-]
-
-# Black default, although irrelevant with E501 ignored
-line-length = 88
-
-# Allow unused variables when underscore-prefixed.
-# Enable Pyflakes `E` and `F` codes by default.
-lint.select = [
-    "W191",  # indentation contains tabs
-    "W291",  # trailing whitespace
-    "W292",  # missing newline at EOF
-    "W293",  # blank line contains whitespace
-    "B015",  # Useless comparison: a == b rather than a = b.
-    "I002",  # missing required import
-    "C4",
-    "E",
-    "F",
-    "FURB",
-    "LOG",
-    "PIE810",
-    "PLE",
-    "PLR1736",
-    "PLW0602", # Global statement used but no assignment
-    "SIM101",
-    "SLOT",
-    "TC001",
-    "TC002",
-    "TC003",
-    "TC004",
-    "TC005",
-    "TRY002",
-    "BLE001", # except Exception or except BaseException
-    "UP006", # pyupgrade - non-pep585-annotation
-    "UP007", # pyupgrade - non-pep604-annotation-union
-    "UP045", # pyupgrade - non-pep604-annotation-optional
-]
-
-# Ignore rules that currently fail on the SymPy codebase
-lint.ignore = [
-    "E401",  # Multiple imports on one line
-    "E402",  # Module level import not at top of file
-    "E501",  # Line too long (<LENGTH> > 88 characters)
-    "E701",  # Multiple statements on one line (colon)
-    "E702",  # Multiple statements on one line (semicolon)
-    "E712",  # Comparison to `<BOOL>` should be `cond is <BOOL>`
-    "E713",  # Test for membership should be `not in`
-    "E714",  # Test for object identity should be `is not`
-    "E721",  # Do not compare types, use `isinstance()`
-    "E731",  # Do not assign a `lambda` expression, use a `def`
-    "E741",  # Ambiguous variable name: `<VARIABLE>`
-    "E743",  # Ambiguous function name: `<FUNCTION>`
-    "FURB110",  # Replace ternary `if` expression with `or` operator
-    "FURB187",  # Use of assignment of `reversed` on list `{name}`
-]
-
-lint.dummy-variable-rgx = "^(_+|(_+[a-zA-Z0-9_]*[a-zA-Z0-9]+?))$"
-
-# Add to all files
-lint.isort.required-imports = ["from __future__ import annotations"]
-
-[tool.ruff.lint.per-file-ignores]
-"sympy/interactive/session.py" = ["F821"]
-"sympy/core/benchmarks/*" = ["B015"]
-"sympy/plotting/pygletplot/*" = ["BLE001"]
-"sympy/parsing/latex/_parse_latex_antlr.py" = ["BLE001"]
-"sympy/parsing/autolev/_listener_autolev_antlr.py" = ["BLE001"]
-
-# Global mypy settings:
-[tool.mypy]
-warn_unused_configs = true
-exclude = [
-    "sympy/parsing/autolev/test-examples",
-]
-
-# Per module settings:
-[[tool.mypy.overrides]]
-module = [
-    "sympy.parsing.latex._antlr.*",
-    "sympy.parsing.autolev._antlr.*",
-    "sympy.benchmarks.*",
-    "sympy.plotting.pygletplot.*",
-]
-ignore_errors = true
-
-# sympy.release imports names that are declared before the optional import.
-[[tool.mypy.overrides]]
-module = ["sympy.release"]
-disable_error_code = ["no-redef"]
-
-# Compatibility with installations created before release.py became the
-# setuptools-scm-generated version file.
-[[tool.mypy.overrides]]
-module = ["sympy._version"]
-ignore_missing_imports = true
-
-# Third-party untyped code:
-[[tool.mypy.overrides]]
-module = [
-    "antlr4.*",
-    "Cython.*",
-    "flint.*",
-    "gmpy2.*",
-    "IPython.*",
-    "lxml.*",
-    "matchpy.*",
-    "matplotlib.*",
-    "mpmath.*",
-    "numpy.*",
-    "PIL.*",
-    "pycosat.*",
-    "pyglet.*",
-    "pymc.*",
-    "pymc3.*",
-    "pytest.*",
-    "_pytest.*",
-    "sage.*",
-    "scipy.*",
-    "symengine.*",
-    "aesara.*",
-    "xml.*",
-    "theano.*",
-    "multiset.*",
-    "pysat.*",
-    "bpython.*"
-]
-ignore_missing_imports = true
-
-# pyright type checker settings:
-[tool.pyright]
-include = ["sympy"]
-exclude = [
-    "sympy/matrices/common.py",
-    "sympy/matrices/matrices.py",
-    "sympy/matrices/tests/test_matrices.py",
-    "sympy/matrices/tests/test_commonmatrix.py",
-    "sympy/matrices/benchmarks",
-]
-
-# This complains when self or cls is not used as the parameter name for an
-# instance method or class method. Since this is used a lot in SymPy we disable
-# this check.
-reportSelfClsParameterName = false
 
 [tool.slotscheck]
 strict-imports = true
