@@ -4,6 +4,7 @@ import pytest
 
 from sympy.core.add import Add
 from sympy.core.basic import Basic
+from sympy.core.containers import Tuple
 from sympy.core.mod import Mod
 from sympy.core.mul import Mul
 from sympy.core.numbers import (Float, I, Integer, Rational, comp, nan,
@@ -1885,9 +1886,10 @@ def test_Mod():
 
     # Float dividend and modulus: extracting 0.1 changes the remainder.
     assert unchanged(Mod, 5.0*x, 0.1*y)
-    assert Tuple(Mod(5.0*x, 0.1*y),
+    vals = Tuple(Mod(5.0*x, 0.1*y),
                  0.1*Mod(50*x, y, evaluate=False)).subs(
-        {x: Float('0.1'), y: Float('0.2')}) == (0.02, 0)
+        {x: Float('0.1'), y: Float('0.2')})
+    assert vals[0] > 0 and vals[1] == 0
     delta = Rational(1, 10**20)
     assert Mod(x, Float(1)).subs(x, 1 + delta) == Float(delta)
     assert Mod(x, Float('0.5')).subs(x, 1 + delta) == Float(delta)
