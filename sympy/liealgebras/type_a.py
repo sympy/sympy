@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from sympy.liealgebras.cartan_type import Standard_Cartan
+from .cartan_type import Standard_Cartan
 from sympy.core.backend import eye, Matrix
 
 
