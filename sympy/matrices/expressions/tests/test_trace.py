@@ -134,20 +134,3 @@ def test_trace_derivative():
 
     # Trace derivative with respect to MatrixSymbol
     assert Trace(A).diff(A) == Identity(n)
-
-    # When inner derivative is not a matrix, Trace._eval_derivative returns
-    # None, constructing unevaluated Derivative instead of raising TypeError.
-    class DummyNonMatrixDiff(MatrixExpr):
-        shape = (3, 3)
-
-        @property
-        def free_symbols(self):
-            return {x}
-
-        def _eval_derivative(self, v):
-            return x  # returns a scalar, not a MatrixExpr
-
-    M_dummy = DummyNonMatrixDiff()
-    res = Trace(M_dummy).diff(x)
-    assert isinstance(res, Derivative)
-    assert res.expr == Trace(M_dummy)

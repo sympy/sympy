@@ -51,16 +51,7 @@ class Trace(Expr):
         from .matexpr import MatrixElement
         if isinstance(v, MatrixElement):
             return self.rewrite(Sum).diff(v)
-        expr = self.doit()
-        if isinstance(expr, Trace):
-            # Avoid looping infinitely:
-            darg = expr.arg.diff(v)
-            if darg == 0:
-                return S.Zero
-            if darg.is_Matrix:
-                return trace(darg)
-            return None
-        return expr._eval_derivative(v)
+        return trace(self.arg.diff(v))
 
     @property
     def arg(self):
