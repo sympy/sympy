@@ -20,7 +20,7 @@ from sympy.logic.boolalg import (
     truth_table, as_Boolean, to_anf, is_anf, distribute_xor_over_and,
     anf_coeffs, ANFform, bool_minterm, bool_maxterm, bool_monomial,
     _check_pair, _convert_to_varsSOP, _convert_to_varsPOS, Exclusive,
-    gateinputcount)
+    gateinputcount, _sympify_Boolean)
 from sympy.assumptions.cnf import CNF
 
 from sympy.testing.pytest import raises, XFAIL, slow
@@ -989,6 +989,18 @@ def test_expand_relational():
 def test_issue_12717():
     assert S.true.is_Atom == True
     assert S.false.is_Atom == True
+
+
+def test_sympify_Boolean():
+    for value, expected in ((True, true), (False, false), (true, true),
+                            (false, false), (x, x), (x < 0, x < 0),
+                            ('True', true), ('False', false), ('x', x),
+                            ('x & y', x & y), ('x < 0', x < 0)):
+        result = _sympify_Boolean(value)
+        assert isinstance(result, Boolean)
+        assert result == expected
+    for value in ('x + y', '0', '1', '[]', 'None'):
+        raises(TypeError, lambda: _sympify_Boolean(value))
 
 
 def test_as_Boolean():

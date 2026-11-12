@@ -17,7 +17,7 @@ from sympy.utilities.iterables import (
     iproduct, kbins, minlex, multiset, multiset_combinations,
     multiset_partitions, multiset_permutations, necklaces, numbered_symbols,
     partitions, permutations, postfixes,
-    prefixes, reshape, rotate_left, rotate_right, runs, sift,
+    prefixes, reshape, rotate_left, rotate_right, runs, sift, _group_by_key, _sift_type,
     strongly_connected_components, subsets, take, topological_sort, unflatten,
     uniq, variations, ordered_partitions, rotations, is_palindromic, iterable,
     NotIterable, multiset_derangements, signed_permutations,
@@ -216,6 +216,19 @@ def test_sift():
         [1], [0, 2, 3])
     raises(ValueError, lambda:
         sift([0, 1, 2, 3], lambda x: x % 3, binary=True))
+
+
+def test_group_by_key():
+    groups = _group_by_key(iter(range(5)), lambda n: n % 2)
+    assert groups == {0: [0, 2, 4], 1: [1, 3]}
+    assert groups[2] == []
+    assert _group_by_key([], lambda n: n) == {}
+
+
+def test_sift_type():
+    assert _sift_type(iter([1, 'a', 2, 'b']), int) == ([1, 2], ['a', 'b'])
+    assert _sift_type([True, 1, False, 'a'], int) == ([True, 1, False], ['a'])
+    assert _sift_type([], int) == ([], [])
 
 
 def test_take():
