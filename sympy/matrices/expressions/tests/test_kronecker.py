@@ -210,3 +210,19 @@ def test_KroneckerProduct_singletons():
     assert KroneckerProduct(A, P, B, Q).doit() == KroneckerProduct(A, P, B, Q)
     assert KroneckerProduct(A, P, B, A1).doit() == KroneckerProduct(A, P, B, A1)
     assert KroneckerProduct(P, A1, A, B1).doit() == KroneckerProduct(P, A, A1*B1)
+
+
+def test_issue_30860():
+    A = MatrixSymbol("A", 2, 2)
+    B = MatrixSymbol("B", 2, 2)
+    C = MatrixSymbol("C", 4, 4)
+    D = MatrixSymbol("D", 4, 4)
+
+    expr1 = 2 * KroneckerProduct(A, B) + C
+    assert combine_kronecker(expr1) == 2 * KroneckerProduct(A, B) + C
+
+    expr2 = KroneckerProduct(A, B) + C
+    assert combine_kronecker(expr2) == KroneckerProduct(A, B) + C
+
+    expr3 = 2 * KroneckerProduct(A, B) + 3 * KroneckerProduct(A, B) + C + D
+    assert combine_kronecker(expr3) == 5 * KroneckerProduct(A, B) + C + D
