@@ -1683,10 +1683,10 @@ def test_suppressed_evaluation():
 
 
 def test_AssocOp_doit():
-    a = Add(x,x, evaluate=False)
-    b = Mul(y,y, evaluate=False)
-    c = Add(b,b, evaluate=False)
-    d = Mul(a,a, evaluate=False)
+    a = Add(x, x, evaluate=False)
+    b = Mul(y, y, evaluate=False)
+    c = Add(b, b, evaluate=False)
+    d = Mul(a, a, evaluate=False)
     assert c.doit(deep=False).func == Mul
     assert c.doit(deep=False).args == (2,y,y)
     assert c.doit().func == Mul
@@ -2111,6 +2111,52 @@ def test_Mod():
 
     assert Mod(3 * Mod(x1_int, 7), 7) == Mod(3 * x1_int, 7)
     assert Mod(5 * Mod(x1_int, 3), 3) == Mod(2 * x1_int, 3)
+
+
+def test_Mod_integer_terms():
+    i, j = symbols('i j', integer=True)
+    u = Symbol('u')
+    r = Symbol('r', rational=True)
+
+    # Integer-valued terms may be reduced even when the whole sum is
+    # not integer-valued.
+    assert Mod(3*i + 4*u, 2) == Mod(i + 4*u, 2)
+    assert Mod(7*i + 4*u, 3) == Mod(i + 4*u, 3)
+    assert Mod(6*i + u, 3) == Mod(u, 3)
+    assert Mod(3*i + u, 1) == Mod(u, 1)
+    assert Mod(3*i + 4*j, 2) == Mod(i, 2)
+    assert Mod(3*i + 4*r, 2) == Mod(i + 4*r, 2)
+    assert Mod(3*i + u, -2) == Mod(-i + u, -2)
+    # Keep negative remainders decidable for odd integer symbols.
+    o = Symbol('o', integer=True, odd=True)
+    assert Mod(8 - o, -2) == -1
+    assert Mod(9 - o, -2) == 0
+    assert Mod(-i + u, 5) == Mod(4*i + u, 5)
+
+    # The same canonical form allows expressions to combine.
+    assert Mod(3*i + 4*u, 2) + Mod(i + 4*u, 2) == 2*Mod(i + 4*u, 2)
+
+    # Without the integer assumption, coefficients cannot be reduced.
+    assert unchanged(Mod, 3*x + 4*y, 2)
+
+    # The integer-valued factor need not itself be a Symbol.
+    xr = Symbol('xr', real=True)
+    assert Mod(3*floor(xr) + u, 2) == Mod(floor(xr) + u, 2)
+
+    # Rational coefficients and moduli can be reduced in the same way.
+    # The difference between 4*i/3 and 2*i/15 is 6*i/5, an integer
+    # multiple of the modulus 1/5 when i is integer.
+    fifth = Rational(1, 5)
+    assert Mod(4*i/3, fifth) == Mod(2*i/15, fifth)
+    assert Mod(4*i/3 + u, fifth) == Mod(2*i/15 + u, fifth)
+    assert Mod(4*i/3 + 2*j/5 + u, fifth) == Mod(2*i/15 + u, fifth)
+    assert Mod(-4*i/3 + u, fifth) == Mod(i/15 + u, fifth)
+    assert Mod(4*i/3 + u, -fifth) == Mod(-i/15 + u, -fifth)
+    assert unchanged(Mod, 4*u/3, fifth)
+
+    # The exact coefficient reduction must not alter sums with Floats.
+    assert unchanged(Mod, 4*i/3 + Float('0.1')*u, fifth)
+
 
 def test_Mod_Pow():
     # modular exponentiation
