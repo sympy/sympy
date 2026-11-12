@@ -41,6 +41,10 @@ dev = ["pytest>=7.1.0", "hypothesis>=6.70.0"]
 [project.scripts]
 isympy = "isympy:main"
 
+[tool.isort]
+known_first_party = "sympy"
+multi_line_output = 4
+
 [tool.setuptools]
 py-modules = ["isympy"]
 zip-safe = false
