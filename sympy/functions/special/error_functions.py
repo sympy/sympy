@@ -1028,7 +1028,7 @@ class erf2inv(DefinedFunction):
 
     >>> from sympy import diff
     >>> diff(erf2inv(x, y), x)
-    exp(-x**2 + erf2inv(x, y)**2)
+    exp(erf2inv(x, y)**2 - x**2)
     >>> diff(erf2inv(x, y), y)
     sqrt(pi)*exp(erf2inv(x, y)**2)/2
 
@@ -1355,7 +1355,7 @@ class expint(DefinedFunction):
 
     >>> from sympy import exp_polar, pi, I
     >>> expint(4, z*exp_polar(2*pi*I))
-    I*pi*z**3/3 + expint(4, z)
+    expint(4, z) + I*pi*z**3/3
     >>> expint(nu, z*exp_polar(2*pi*I))
     z**(nu - 1)*(exp(2*I*pi*nu) - 1)*gamma(1 - nu) + expint(nu, z)
 
@@ -1873,8 +1873,7 @@ class Si(TrigonometricIntegral):
 
     >>> from sympy import expint
     >>> Si(z).rewrite(expint)
-    -I*(-expint(1, z*exp_polar(-I*pi/2))/2 +
-         expint(1, z*exp_polar(I*pi/2))/2) + pi/2
+    pi/2 - I*(expint(1, z*exp_polar(I*pi/2))/2 - expint(1, z*exp_polar(-I*pi/2))/2)
 
     It can be rewritten in the form of sinc function (by definition):
 
@@ -2150,7 +2149,7 @@ class Shi(TrigonometricIntegral):
 
     >>> from sympy import expint
     >>> Shi(z).rewrite(expint)
-    expint(1, z)/2 - expint(1, z*exp_polar(I*pi))/2 - I*pi/2
+    -I*pi/2 + expint(1, z)/2 - expint(1, z*exp_polar(I*pi))/2
 
     See Also
     ========
@@ -2267,7 +2266,7 @@ class Chi(TrigonometricIntegral):
 
     >>> from sympy import expint
     >>> Chi(z).rewrite(expint)
-    -expint(1, z)/2 - expint(1, z*exp_polar(I*pi))/2 - I*pi/2
+    -I*pi/2 - expint(1, z)/2 - expint(1, z*exp_polar(I*pi))/2
 
     See Also
     ========

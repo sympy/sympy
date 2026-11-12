@@ -1276,7 +1276,7 @@ class Interval(Set):
 
     @property
     def _measure(self):
-        return self.end - self.start
+        return Max(0, self.end - self.start)
 
     def _kind(self):
         return SetKind(NumberKind)
@@ -2465,10 +2465,10 @@ def imageset(*args):
     Interval(0, 4)
 
     >>> imageset(Lambda(x, sin(x)), Interval(-2, 1))
-    ImageSet(Lambda(x, sin(x)), Interval(-2, 1))
+    Interval(-1, sin(1))
 
     >>> imageset(sin, Interval(-2, 1))
-    ImageSet(Lambda(x, sin(x)), Interval(-2, 1))
+    Interval(-1, sin(1))
     >>> imageset(lambda y: x + y, Interval(-2, 1))
     ImageSet(Lambda(y, x + y), Interval(-2, 1))
 

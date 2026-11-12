@@ -269,8 +269,8 @@ def get_abs(expr: Expr, prec: int, options: OPT_DICT) -> TMP_RES:
         re, re_acc, im, im_acc = im, im_acc, re, re_acc
     if im:
         if expr.is_number:
-            abs_expr, _, acc, _ = evalf(abs(N(expr, prec + 2)),
-                                        prec + 2, options)
+            abs_expr = mpc_abs((mpf_abs(re), mpf_abs(im)), prec, rnd)
+            acc = min(prec, complex_accuracy(result))
             return abs_expr, None, acc, None
         else:
             if 'subs' in options:
@@ -868,7 +868,12 @@ def evalf_pow(v: 'Pow', prec: int, options) -> TMP_RES:
 
     # Pure square root
     if exp is S.Half:
-        xre, xim, _, _ = result
+        xre, xim, re_acc, im_acc = result
+        if (xim and xre and mpf_lt(xre, fzero)
+                and im_acc is not None and im_acc < 2):
+            if base.as_real_imag()[1].is_zero:
+                # ^ or base.expand(complex=True).as_real_imag()[1].is_zero?
+                return None, mpf_sqrt(mpf_neg(xre), prec), None, prec
         # General complex square root
         if xim:
             re, im = mpc_sqrt((xre or fzero, xim), prec)

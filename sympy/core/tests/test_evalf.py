@@ -94,6 +94,16 @@ def test_evalf_complex():
     assert NS('I*(2+I)', 15) == '-1.00000000000000 + 2.00000000000000*I'
 
 
+def test_evalf_abs_evaluate_false():
+    for z, expected in (
+        (1 + I, sqrt(2)),
+        (10**20 + I, sqrt(10**40 + 1)),
+    ):
+        with evaluate(False):
+            result = Abs(z, evaluate=False).evalf(50)
+        assert result == expected.evalf(50)
+
+
 @XFAIL
 def test_evalf_complex_bug():
     assert NS('(pi+E*I)*(E+pi*I)', 15) in ('0.e-15 + 17.25866050002*I',
@@ -272,6 +282,56 @@ def test_evalf_bugs():
 
     #issue 18516
     assert NS(log(S(3273390607896141870013189696827599152216642046043064789483291368096133796404674554883270092325904157150886684127560071009217256545885393053328527589376)/36360291795869936842385267079543319118023385026001623040346035832580600191583895484198508262979388783308179702534403855752855931517013066142992430916562025780021771247847643450125342836565813209972590371590152578728008385990139795377610001).evalf(15, chop=True)) == '-oo'
+
+
+
+def test_issue_5461():
+    f = x**4 - 3*x + 4
+    _r0 = Rational(1, 144)
+    _r1 = Rational(1, 3)
+    _r2 = Rational(1, 2)
+    _r3 = Rational(9, 16)
+    _r4 = Rational(8, 3)
+    x0 = (42591**_r2*I*_r0 + _r3)**_r1
+    x1 = 2*x0
+    x2 = _r4/x0
+    x3 = (x1 + x2)**_r2
+    x4 = _r2*x3
+    x5 = -x4
+    x6 = -x1
+    x7 = -x2
+    x8 = 6/x3
+    x9 = _r2*(x6 + x7 - x8)**_r2
+    x10 = _r2*(x6 + x7 + x8)**_r2
+    roots = [
+    x5 + x9,
+    x10 + x4,
+    x5 - x9,
+    -x10 + x4]
+    # Symbolic substitution used to give residuals of +/-8*I
+    # for two valid quartic roots.
+    for root in roots:
+        for dps in (15, 30, 50):
+            assert abs(f.subs(x, root).evalf(dps)) < 10**(2 - dps)
+
+
+def test_issue_6137():
+    # The principal cube root is 5/6 + I.
+    c = (-Rational(415, 216) + 13*I/12)**Rational(1, 3)
+    u = 2*c + Rational(61, 18)/c
+    v = sqrt(u - Rational(7, 3))
+
+    # The radicand is exactly -12, so its principal
+    # square root is +2*sqrt(3)*I.
+    w = sqrt(-Rational(14, 3) - u - 4/v)
+    root = Rational(3, 2) - v/2 + w/2
+
+    expected_w = 2*sqrt(3)*I
+    expected_root = 1 + sqrt(3)*I
+
+    for dps in (3, 7, 13, 25, 30):
+        assert abs(w.evalf(dps) - expected_w.evalf(dps)) < 10**(2 - dps)
+        assert abs(root.evalf(dps) - expected_root.evalf(dps)) < 10**(2 - dps)
 
 
 def test_evalf_integer_parts():

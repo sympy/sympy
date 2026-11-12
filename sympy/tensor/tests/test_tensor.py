@@ -538,6 +538,14 @@ def test_TensorHead():
     assert A.symmetry == TensorSymmetry.no_symmetry(2)
     assert A.comm == 0
 
+    B = TensorHead('B', [Lorentz], comm=None)
+    assert B.args[3] == 2
+    assert isinstance(B.args[3], Integer)
+    assert B == TensorHead('B', [Lorentz], comm=2)
+    assert B.comm == 2
+    assert B.commutes_with(B) is None
+    assert B.commutes_with(A) == 0
+
 
 def test_add1():
     assert TensAdd().args == ()

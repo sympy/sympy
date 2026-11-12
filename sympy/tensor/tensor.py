@@ -1820,6 +1820,8 @@ class TensorHead(Basic):
         else:
             assert symmetry.rank == len(index_types)
 
+        if comm is None:
+            comm = Integer(2)
         obj = Basic.__new__(cls, name_symbol, Tuple(*index_types), symmetry, sympify(comm))
         return obj
 
@@ -2341,13 +2343,13 @@ class TensExpr(Expr, ABC):
         >>> expr = H(i, j)/2 - H(j, i)/2
         >>> repl = {H(i, j): [[a, b], [c, d]]}
         >>> expr.replace_with_arrays(repl)
-        [[0, b/2 - c/2], [-b/2 + c/2, 0]]
+        [[0, b/2 - c/2], [c/2 - b/2, 0]]
 
         The same expression can be read as the transpose by inverting ``i`` and
         ``j``:
 
         >>> expr.replace_with_arrays(repl, [j, i])
-        [[0, -b/2 + c/2], [b/2 - c/2, 0]]
+        [[0, c/2 - b/2], [b/2 - c/2, 0]]
         """
         from .array import Array
 

@@ -493,15 +493,8 @@ class Basic(Printable):
 
         """
 
-        # XXX: remove this when issue 5169 is fixed
-        def inner_key(arg):
-            if isinstance(arg, Basic):
-                return arg.sort_key(order)
-            else:
-                return arg
-
         args = self._sorted_args
-        args = len(args), tuple([inner_key(arg) for arg in args])
+        args = len(args), tuple([arg.sort_key(order) for arg in args])
         return self.class_key(), args, S.One.sort_key(), S.One
 
     def _do_eq_sympify(self, other):
@@ -1076,9 +1069,9 @@ class Basic(Printable):
         >>> (1 + x*y).subs(x, pi)
         pi*y + 1
         >>> (1 + x*y).subs({x:pi, y:2})
-        1 + 2*pi
+        2*pi + 1
         >>> (1 + x*y).subs([(x, pi), (y, 2)])
-        1 + 2*pi
+        2*pi + 1
         >>> reps = [(y, x**2), (x, 2)]
         >>> (x + y).subs(reps)
         6
@@ -1337,8 +1330,6 @@ class Basic(Printable):
             hit = False
             args = list(self.args)
             for i, arg in enumerate(args):
-                if not hasattr(arg, '_eval_subs'):
-                    continue
                 arg = arg._subs(old, new, **hints)
                 if not _aresame(arg, args[i]):
                     hit = True
@@ -1404,7 +1395,7 @@ class Basic(Printable):
         >>> (1 + x*y).xreplace({x: pi})
         pi*y + 1
         >>> (1 + x*y).xreplace({x: pi, y: 2})
-        1 + 2*pi
+        2*pi + 1
 
         Replacements occur only if an entire node in the expression tree is
         matched:
@@ -1458,20 +1449,15 @@ class Basic(Printable):
             args = []
             changed = False
             for a in self.args:
-                _xreplace = getattr(a, '_xreplace', None)
-                if _xreplace is not None:
-                    a_xr = _xreplace(rule)
-                    args.append(a_xr[0])
-                    changed |= a_xr[1]
-                else:
-                    args.append(a)
-            args = tuple(args)
+                a, achanged = a._xreplace(rule)
+                changed |= achanged
+                args.append(a)
             if changed:
                 return self.func(*args), True
         return self, False
 
     @cacheit
-    def has(self, *patterns):
+    def has(self, *patterns) -> bool:
         """
         Test whether any subexpression matches any of the patterns.
 
@@ -1851,21 +1837,19 @@ class Basic(Printable):
         def walk(rv, F):
             """Apply ``F`` to args and then to result.
             """
-            args = getattr(rv, 'args', None)
-            if args is not None:
-                if args:
-                    newargs = tuple([walk(a, F) for a in args])
-                    if args != newargs:
-                        rv = rv.func(*newargs)
-                        if simultaneous:
-                            # if rv is something that was already
-                            # matched (that was changed) then skip
-                            # applying F again
-                            for i, e in enumerate(args):
-                                if rv == e and e != newargs[i]:
-                                    return rv
-                rv = F(rv)
-            return rv
+            args = rv.args
+            if args:
+                newargs = tuple([walk(a, F) for a in args])
+                if args != newargs:
+                    rv = rv.func(*newargs)
+                    if simultaneous:
+                        # if rv is something that was already
+                        # matched (that was changed) then skip
+                        # applying F again
+                        for i, e in enumerate(args):
+                            if rv == e and e != newargs[i]:
+                                return rv
+            return F(rv)
 
         mapping = {}  # changes that took place
 
@@ -2103,8 +2087,7 @@ class Basic(Printable):
 
         """
         if hints.get('deep', True):
-            terms = [term.doit(**hints) if isinstance(term, Basic) else term
-                                         for term in self.args]
+            terms = [term.doit(**hints) for term in self.args]
             return self.func(*terms)
         else:
             return self
@@ -2180,9 +2163,9 @@ class Basic(Printable):
         Pattern can be a type or an iterable of types.
 
         >>> expr.rewrite(sin, exp)
-        exp(I*x)/2 + cos(x) - exp(-I*x)/2
+        -exp(-I*x)/2 + exp(I*x)/2 + cos(x)
         >>> expr.rewrite([cos,], exp)
-        exp(I*x)/2 + I*sin(x) + exp(-I*x)/2
+        exp(-I*x)/2 + exp(I*x)/2 + I*sin(x)
         >>> expr.rewrite([cos, sin], exp)
         exp(I*x)
 
@@ -2198,7 +2181,7 @@ class Basic(Printable):
         ...         if rule == sqrt:
         ...             return sqrt(1 - cos(x)**2)
         >>> MySin(MySin(x)).rewrite(cos)
-        cos(-cos(-x + pi/2) + pi/2)
+        cos(pi/2 - cos(pi/2 - x))
         >>> MySin(x).rewrite(sqrt)
         sqrt(1 - cos(x)**2)
 
@@ -2211,7 +2194,7 @@ class Basic(Printable):
         ...         x, = args
         ...         return cos(pi/2 - x, evaluate=False)
         >>> MySin(x).rewrite(cos)
-        cos(-x + pi/2)
+        cos(pi/2 - x)
 
         """
         if not args:
@@ -2363,18 +2346,24 @@ class Basic(Printable):
         False
 
         """
+        if approx is None:
+            if a is b:
+                return True
+            if a.__class__ != b.__class__:
+                return False
+            if isinstance(a, Basic) and not a.args and not b.args:
+                return a == b
         from .numbers import Number
         from .traversal import postorder_traversal as pot
-        for t in zip_longest(pot(a), pot(b)):
-            if None in t:
+        for a, b in zip_longest(pot(a), pot(b)):
+            if a is None or b is None:
                 return False
-            a, b = t
             if isinstance(a, Number):
                 if not isinstance(b, Number):
                     return False
                 if approx:
                     return approx(a, b)
-            if not (a == b and a.__class__ == b.__class__):
+            if not (a is b or a == b and a.__class__ == b.__class__):
                 return False
         return True
 

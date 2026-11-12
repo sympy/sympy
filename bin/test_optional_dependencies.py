@@ -131,6 +131,7 @@ try:
     doctest_list.extend([
         'doc/src/explanation/modules/physics/biomechanics/biomechanics.rst',
         'doc/src/tutorials/physics/biomechanics/biomechanical-model-example.rst',
+        'doc/src/guides/solving/solve-ode.md',
     ])
 except ImportError:
     pass

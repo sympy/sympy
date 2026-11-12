@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import builtins
 from typing import TYPE_CHECKING, overload, cast
 from collections import Counter, defaultdict, OrderedDict
 from itertools import (
@@ -21,9 +22,10 @@ from sympy.utilities.decorator import deprecated
 
 if TYPE_CHECKING:
     from typing import (
-        Any, Iterable, Callable, Literal, Sequence, Iterator, TypeVar,
+        Any, Iterable, Callable, Literal, Sequence, Iterator,
+        TypeVar, SupportsIndex,
     )
-    from typing_extensions import TypeIs
+    from typing_extensions import TypeGuard, TypeIs
     T = TypeVar("T")
     T1 = TypeVar("T1")
     T2 = TypeVar("T2")
@@ -335,42 +337,39 @@ def multiset(seq: Sequence[T]) -> dict[T, int]:
 
 @overload
 def ibin(
-    n: int,
-    bits: int | None,
-    str: Literal[False],
- ) -> list[int]: ...
-
+    n: SupportsIndex,
+    bits: SupportsIndex | None = None,
+    *,
+    str: Literal[False] = False,
+) -> list[int]: ...
 @overload
 def ibin(
-    n: int,
-    bits: int,
+    n: SupportsIndex,
+    bits: SupportsIndex | None = None,
+    *,
     str: Literal[True],
 ) -> str: ...
-
 @overload
 def ibin(
-    n: int,
-    bits: None = None,
-    str: Literal[False]=False,
-) -> Iterator[tuple[int, ...]]: ...
-
+    n: SupportsIndex,
+    bits: str,
+    *,
+    str: Literal[False] = False,
+) -> Iterable[tuple[int, ...]]: ...
 @overload
 def ibin(
-    n: int,
-    bits: None,
+    n: SupportsIndex,
+    bits: str,
+    *,
     str: Literal[True],
-) -> Iterator[str]: ...
+) -> Iterable[str]: ...
+
 
 def ibin(
-    n: int,
-    bits: int | None = None,
+    n: SupportsIndex,
+    bits: SupportsIndex | str | None = None,
     str: bool = False,
-) ->(
-    list[int]
-    | str
-    | Iterator[tuple[int, ...]]
-    | Iterator[str]
-):
+) -> list[int] | str | Iterable[tuple[int, ...]] | Iterable[str]:
     """Return a list of length ``bits`` corresponding to the binary value
     of ``n`` with small bits to the right (last). If bits is omitted, the
     length will be the number required to represent ``n``. If the bits are
@@ -414,12 +413,14 @@ def ibin(
     ['000', '001', '010', '011', '100', '101', '110', '111']
 
     """
+    n = as_int(n)
     if n < 0:
         raise ValueError("negative numbers are not allowed")
-    n = as_int(n)
 
     if bits is None:
         bits = 0
+    elif isinstance(bits, builtins.str):
+        bits = -1
     else:
         try:
             bits = as_int(bits)
@@ -3105,7 +3106,10 @@ class NotIterable:
     __slots__ = ()
 
 
-def iterable(i, exclude=(str, dict, NotIterable)):
+def iterable(
+    i: Any,
+    exclude: tuple[type, ...] | type | None = (str, dict, NotIterable),
+) -> TypeGuard[Iterable[Any]]:
     """
     Return a boolean indicating whether ``i`` is SymPy iterable.
     True also indicates that the iterator is finite, e.g. you can
