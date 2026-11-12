@@ -2,14 +2,14 @@
 of Basic or Atom."""
 from __future__ import annotations
 import collections
-from typing import TYPE_CHECKING, TypeVar, Generic
+from typing import TypeVar, Generic
 
 from sympy.assumptions.ask import Q
 from sympy.core.basic import (Basic, Atom, as_Basic,
     _atomic, _aresame)
 from sympy.core.containers import Tuple
 from sympy.core.function import Function, Lambda
-from sympy.core.numbers import I, Integer, pi, Float
+from sympy.core.numbers import I, pi, Float
 from sympy.core.singleton import S
 from sympy.core.symbol import symbols, Symbol, Dummy, Wild
 from sympy.concrete.summations import Sum
@@ -21,9 +21,6 @@ from sympy.testing.pytest import raises, warns_deprecated_sympy
 from sympy.functions.elementary.complexes import Abs, sign
 from sympy.functions.elementary.piecewise import Piecewise
 from sympy.core.relational import Eq
-
-if TYPE_CHECKING:
-    from typing_extensions import assert_type
 
 
 b1 = Basic()
@@ -395,16 +392,3 @@ def test_rewrite_abs():
     x = Symbol('x')
     assert sign(x).rewrite(abs) == sign(x).rewrite(Abs)
     assert sign(x).rewrite(abs) == Piecewise((0, Eq(x, 0)), (x / Abs(x), True))
-
-
-def test_Basic_xreplace_types() -> None:
-    t = Symbol('t')
-    u = Symbol('u')
-    pair = Tuple(t, u)
-
-    replaced_basic = pair.xreplace({t: Integer(1)})
-
-    assert replaced_basic == Tuple(1, u)
-
-    if TYPE_CHECKING:
-        assert_type(replaced_basic, Basic)

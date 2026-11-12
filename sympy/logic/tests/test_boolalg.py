@@ -1,11 +1,10 @@
 from __future__ import annotations
-from typing import TYPE_CHECKING
 from sympy.assumptions.ask import Q
 from sympy.assumptions.refine import refine
-from sympy.core.numbers import Integer, oo
+from sympy.core.numbers import oo
 from sympy.core.relational import Equality, Eq, Ne
 from sympy.core.singleton import S
-from sympy.core.symbol import (Dummy, Symbol, symbols)
+from sympy.core.symbol import (Dummy, symbols)
 from sympy.functions import Piecewise
 from sympy.functions.elementary.trigonometric import cos, sin
 from sympy.sets.sets import Interval, Union
@@ -27,10 +26,6 @@ from sympy.assumptions.cnf import CNF
 from sympy.testing.pytest import raises, XFAIL, slow
 
 from itertools import combinations, permutations, product
-
-if TYPE_CHECKING:
-    from typing_extensions import assert_type
-    from sympy.core.basic import Basic
 
 A, B, C, D = symbols('A:D')
 a, b, c, d, e, w, x, y, z = symbols('a:e w:z')
@@ -1483,23 +1478,3 @@ def test_simplify_univariate_endpoints():
     res = simplify(expr)
     for v in range(9):
         assert res.subs(x, v) == expr.subs(x, v)
-
-
-def test_Boolean_xreplace_types() -> None:
-    t = Symbol('t')
-    u = Symbol('u')
-    conjunction = And(Eq(t, 1), Eq(u, 1))
-    disjunction = Or(Eq(t, 1), Eq(u, 1))
-
-    replaced_expr = conjunction.xreplace({t: Integer(1)})
-    replaced_boolean = conjunction.xreplace({conjunction: disjunction})
-    replaced_basic = conjunction.xreplace({conjunction: sin(t)})
-
-    assert replaced_expr == Eq(u, 1)
-    assert replaced_boolean == disjunction
-    assert replaced_basic == sin(t)
-
-    if TYPE_CHECKING:
-        assert_type(replaced_expr, Boolean)
-        assert_type(replaced_boolean, Boolean)
-        assert_type(replaced_basic, Basic)

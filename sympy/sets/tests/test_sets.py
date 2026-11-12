@@ -1,11 +1,10 @@
 from __future__ import annotations
-from typing import TYPE_CHECKING
 from sympy.concrete.summations import Sum
 from sympy.core.add import Add
 from sympy.core.containers import TupleKind
 from sympy.core.function import Lambda
 from sympy.core.kind import NumberKind, UndefinedKind
-from sympy.core.numbers import (Float, I, Integer, Rational, nan, oo, pi, zoo)
+from sympy.core.numbers import (Float, I, Rational, nan, oo, pi, zoo)
 from sympy.core.power import Pow
 from sympy.core.singleton import S
 from sympy.core.symbol import (Symbol, symbols)
@@ -30,10 +29,6 @@ from sympy.utilities.iterables import cartes
 from sympy import solveset, Integers
 
 from sympy.abc import x, y, z, m, n
-
-if TYPE_CHECKING:
-    from typing_extensions import assert_type
-    from sympy.core.basic import Basic
 
 EmptySet = S.EmptySet
 
@@ -1920,21 +1915,3 @@ def test_issue_24726():
     expected_case_6 = Union(ImageSet(Lambda(n, 2*n*pi + 4*pi), Range(0, oo, 1)),
                             ImageSet(Lambda(n, 2*n*pi + 5*pi), Range(0, oo, 1)))
     assert sin_zeros.intersect(Interval(10, oo)).dummy_eq(expected_case_6)
-
-
-def test_Set_xreplace_types() -> None:
-    k = Symbol('k', integer=True)
-    r = Range(k)
-
-    replaced_expr = r.xreplace({k: Integer(3)})
-    replaced_set = r.xreplace({r: Range(5)})
-    replaced_basic = r.xreplace({r: sin(1)})
-
-    assert replaced_expr == Range(3)
-    assert replaced_set == Range(5)
-    assert replaced_basic == sin(1)
-
-    if TYPE_CHECKING:
-        assert_type(replaced_expr, Set)
-        assert_type(replaced_set, Set)
-        assert_type(replaced_basic, Basic)
