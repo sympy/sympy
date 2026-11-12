@@ -91,8 +91,55 @@ def test_KroneckerProduct_determinant():
 
 
 def test_KroneckerProduct_trace():
+    from sympy.matrices.expressions.trace import Trace
+    from sympy.matrices.exceptions import NonSquareMatrixError
+    from sympy.testing.pytest import raises
+
+    # Square factors evaluate to product of individual traces
     kp = kronecker_product(W, Z)
     assert trace(kp) == trace(W)*trace(Z)
+
+    # Rectangular factors producing square KroneckerProduct
+    C_rect = MatrixSymbol('C_rect', 2, 3)
+    D_rect = MatrixSymbol('D_rect', 3, 2)
+    kp_sq = KroneckerProduct(C_rect, D_rect)
+    assert kp_sq.shape == (6, 6)
+    assert kp_sq.is_square is True
+    assert isinstance(trace(kp_sq), Trace)
+    assert Trace(kp_sq).doit() == Trace(kp_sq)
+
+    # Numerical equivalence with explicit matrix trace
+    A_num = Matrix([[1, 2, 3], [4, 5, 6]])
+    B_num = Matrix([[7, 8], [9, 10], [11, 12]])
+    explicit_val = trace(kronecker_product(A_num, B_num))
+    assert Trace(kp_sq).as_explicit().subs({C_rect: A_num, D_rect: B_num}).doit() == explicit_val
+
+    # Reversed rectangular factors
+    kp_rev = KroneckerProduct(D_rect, C_rect)
+    assert Trace(kp_rev).as_explicit().subs({C_rect: A_num, D_rect: B_num}).doit() == trace(kronecker_product(B_num, A_num))
+
+    # Multi-factor KroneckerProduct with rectangular arguments
+    Y_sq = MatrixSymbol('Y_sq', 2, 2)
+    kp_multi = KroneckerProduct(Y_sq, C_rect, D_rect)
+    assert kp_multi.shape == (12, 12)
+    assert kp_multi.is_square is True
+    assert isinstance(trace(kp_multi), Trace)
+
+    # Multi-factor all square
+    kp_all_sq = KroneckerProduct(Y_sq, W, Z)
+    assert trace(kp_all_sq) == trace(Y_sq) * trace(W) * trace(Z)
+
+    # Known rectangular KroneckerProduct raises NonSquareMatrixError
+    kp_non_sq = KroneckerProduct(C_rect, Y_sq)
+    assert kp_non_sq.shape == (4, 6)
+    assert kp_non_sq.is_square is False
+    raises(NonSquareMatrixError, lambda: trace(kp_non_sq))
+    raises(NonSquareMatrixError, lambda: Trace(kp_non_sq))
+
+    # Indeterminate symbolic dimensions leave Trace unevaluated
+    kp_indet = KroneckerProduct(C_rect, W)
+    assert kp_indet.is_square is None
+    assert isinstance(trace(kp_indet), Trace)
 
 
 def test_KroneckerProduct_isnt_commutative():
