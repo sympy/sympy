@@ -142,7 +142,7 @@ lint.select = [
     "W292",  # missing newline at EOF
     "W293",  # blank line contains whitespace
     "B015",  # Useless comparison: a == b rather than a = b.
-    "I002",  # `import` statement not at top of file
+    "I002",  # missing required import
     "C4",
     "E",
     "F",
