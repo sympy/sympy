@@ -1,5 +1,6 @@
 """Tests for user-friendly public interface to polynomial functions. """
 from __future__ import annotations
+from typing import TYPE_CHECKING
 
 import pickle
 
@@ -86,6 +87,10 @@ from sympy.testing.pytest import (
 )
 
 from sympy.abc import a, b, c, d, p, q, t, w, x, y, z, s
+
+if TYPE_CHECKING:
+    from typing_extensions import assert_type
+    from sympy.core.basic import Basic
 
 
 def _epsilon_eq(a, b):
@@ -4455,3 +4460,24 @@ def test_PurePoly_without_generator_from_coefficients():
 
     # Poly continues to require an explicit generator for coefficient lists.
     raises(GeneratorsNeeded, lambda: Poly([1, 0]))
+
+
+def test_Poly_xreplace_types() -> None:
+    u = Symbol('u')
+    v = Symbol('v')
+    polynomial = Poly(u**2 + v, u)
+    pure_polynomial = PurePoly(u**2 + v, u)
+
+    replaced_poly = polynomial.xreplace({v: Integer(1)})
+    replaced_pure_poly = pure_polynomial.xreplace({v: Integer(1)})
+    replaced_basic = polynomial.xreplace({polynomial: sin(1)})
+
+    assert replaced_poly == Poly(u**2 + 1, u)
+    assert isinstance(replaced_pure_poly, PurePoly)
+    assert replaced_pure_poly == PurePoly(u**2 + 1, u)
+    assert replaced_basic == sin(1)
+
+    if TYPE_CHECKING:
+        assert_type(replaced_poly, Poly)
+        assert_type(replaced_pure_poly, PurePoly)
+        assert_type(replaced_basic, Basic)

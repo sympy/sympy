@@ -1,4 +1,5 @@
 from __future__ import annotations
+from typing import TYPE_CHECKING
 
 from sympy.assumptions.refine import refine
 from sympy.concrete.summations import Sum
@@ -51,6 +52,9 @@ import sys
 from sympy.testing.pytest import raises, slow, XFAIL
 
 from sympy.abc import a, b, c, n, t, u, x, y, z
+
+if TYPE_CHECKING:
+    from typing_extensions import assert_type
 
 
 f, g, h = symbols('f,g,h', cls=Function)
@@ -2478,3 +2482,18 @@ def test__unevaluated_Mul():
 def test_Float_zero_division_error():
     # issue 27165
     assert Float('1.7567e-1417').round(15) == Float(0)
+
+
+def test_Expr_xreplace_types() -> None:
+    v = Symbol('v')
+    sine = sin(v)
+
+    replaced_expr = sine.xreplace({v: Integer(2)})
+    replaced_basic = sine.xreplace({sine: Tuple(v)})
+
+    assert replaced_expr == sin(2)
+    assert replaced_basic == Tuple(v)
+
+    if TYPE_CHECKING:
+        assert_type(replaced_expr, Expr)
+        assert_type(replaced_basic, Basic)

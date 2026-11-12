@@ -1,4 +1,5 @@
 from __future__ import annotations
+from typing import TYPE_CHECKING
 import concurrent.futures
 import random
 from collections.abc import Hashable
@@ -27,6 +28,9 @@ from sympy.testing.pytest import (
     warns_deprecated_sympy)
 from sympy.utilities.iterables import capture, iterable
 from importlib.metadata import version
+
+if TYPE_CHECKING:
+    from typing_extensions import assert_type
 
 all_classes = (Matrix, SparseMatrix, ImmutableMatrix, ImmutableSparseMatrix)
 mutable_classes = (Matrix, SparseMatrix)
@@ -3824,3 +3828,22 @@ def test_issue_23276():
 def test_issue_27225():
     # https://github.com/sympy/sympy/issues/27225
     raises(TypeError, lambda : floor(Matrix([1, 1, 0])))
+
+
+def test_MatrixBase_xreplace_types() -> None:
+    u = Symbol('u')
+    v = Symbol('v')
+    mutable = Matrix([u, v])
+    immutable = ImmutableMatrix([u, v])
+
+    replaced_mutable = mutable.xreplace({u: Integer(1)})
+    replaced_immutable = immutable.xreplace({u: Integer(1)})
+
+    assert isinstance(replaced_mutable, MutableDenseMatrix)
+    assert replaced_mutable == Matrix([1, v])
+    assert isinstance(replaced_immutable, ImmutableDenseMatrix)
+    assert replaced_immutable == ImmutableMatrix([1, v])
+
+    if TYPE_CHECKING:
+        assert_type(replaced_mutable, MutableDenseMatrix)
+        assert_type(replaced_immutable, ImmutableDenseMatrix)

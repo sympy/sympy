@@ -1,4 +1,5 @@
 from __future__ import annotations
+from typing import TYPE_CHECKING
 from sympy.concrete.summations import Sum
 from sympy.core.function import expand
 from sympy.core.numbers import Integer
@@ -15,11 +16,14 @@ from sympy.tensor.array import Array
 from sympy.tensor.tensor import TensorIndexType, tensor_indices, TensorSymmetry, \
     get_symmetric_group_sgs, TensorIndex, tensor_mul, TensAdd, \
     riemann_cyclic_replace, riemann_cyclic, TensMul, tensor_heads, \
-    TensorManager, TensExpr, TensorHead, canon_bp, \
+    TensorManager, TensExpr, TensorHead, Tensor, canon_bp, \
     tensorhead, tensorsymmetry, TensorType, substitute_indices, \
     WildTensorIndex, WildTensorHead, _WildTensExpr
 from sympy.testing.pytest import raises, XFAIL, warns_deprecated_sympy
 from sympy.matrices import diag
+
+if TYPE_CHECKING:
+    from typing_extensions import assert_type
 
 def _is_equal(arg1, arg2):
     if isinstance(arg1, TensExpr):
@@ -2328,3 +2332,24 @@ def test_TensMul_nocoeff():
 
     expr = TensMul(2, K(i), P(j))
     assert expr.coeff * expr.nocoeff == expr
+
+
+def test_TensExpr_xreplace_types() -> None:
+    Lorentz = TensorIndexType('Lorentz', dim=4, dummy_name='L')
+    i = TensorIndex('i', Lorentz)
+    j = TensorIndex('j', Lorentz)
+    A = TensorHead('A', [Lorentz])
+    tensor = Tensor(A, [i])
+
+    replaced_tensor = tensor.xreplace({i: j})
+    replaced_expr = tensor.xreplace({tensor: Integer(2)})
+    replaced_basic = tensor.xreplace({tensor: Tuple(Integer(2))})
+
+    assert replaced_tensor == Tensor(A, [j])
+    assert replaced_expr == Integer(2)
+    assert replaced_basic == Tuple(Integer(2))
+
+    if TYPE_CHECKING:
+        assert_type(replaced_tensor, TensExpr)
+        assert_type(replaced_expr, Expr)
+        assert_type(replaced_basic, Basic)

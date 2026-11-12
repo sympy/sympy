@@ -65,6 +65,7 @@ from sympy.external.mpmath import local_workdps, NoConvergence
 
 if TYPE_CHECKING:
     from sympy.core.basic import Tbasic
+    from sympy.core.expr import Texpr
     from sympy.polys.domains.domain import Domain
     from collections.abc import Iterator, Mapping
     from typing import Self
@@ -230,7 +231,12 @@ class Poly(Basic):
 
     if TYPE_CHECKING:
 
-        def xreplace(self, rule: Mapping[Tbasic, Basic]) -> Self:
+        @overload
+        def xreplace(self, rule: Mapping[Texpr, Expr]) -> Self: ...
+        @overload
+        def xreplace(self, rule: Mapping[Tbasic, Basic]) -> Basic: ...
+
+        def xreplace(self, rule: Mapping[Tbasic, Basic]) -> Basic:
             ...
 
     @classmethod
