@@ -9,6 +9,7 @@ from sympy.core.add import Add
 from sympy.core.containers import (Dict, Tuple)
 from sympy.core.expr import UnevaluatedExpr, Expr
 from sympy.core.function import (Derivative, Function, Lambda, Subs, WildFunction)
+from sympy.core.mod import Mod
 from sympy.core.mul import Mul
 from sympy.core import (Catalan, EulerGamma, GoldenRatio, TribonacciConstant)
 from sympy.core.numbers import (E, Float, I, Integer, Rational, nan, oo, pi, zoo)
@@ -1360,3 +1361,15 @@ def test_printing_stats():
 def test_issue_30343():
     f = Function('f')
     assert str(f(nan) + f(1)) == "f(nan) + f(1)"
+
+
+def test_Mod():
+    m = Mod(x, y, evaluate=False)
+    assert str(3*m) == "3*Mod(x, y)"
+    assert str(m*sin(x)) == "sin(x)*Mod(x, y)"
+    assert str(m**2) == "Mod(x, y)**2"
+    assert str(1/m) == "1/Mod(x, y)"
+    assert str(m*Mod(x + 1, y, evaluate=False)) == \
+        "Mod(x, y)*Mod(x + 1, y)"
+    assert str(Mod(12**(x + 1), 21)) == \
+        "3*Mod(12**(x + 1)/3, 7)"
