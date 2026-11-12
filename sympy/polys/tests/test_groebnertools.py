@@ -555,4 +555,3 @@ def test_groebner_zero_polynomial():
     assert groebner([RZ.zero, xz], RZ) == [xz]
     assert groebner([xz, RZ.zero, yz], RZ) == [xz, yz]
     assert groebner([RZ.zero], RZ) == []
-
