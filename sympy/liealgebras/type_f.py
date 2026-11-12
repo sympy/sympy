@@ -28,7 +28,7 @@ class TypeF(Standard_Cartan):
         return 4
 
 
-    def basic_root(self, i, j):
+    def basic_root(self, i: int, j: int) -> list[int]:
         """Generate roots with 1 in ith position and -1 in jth position
 
         """

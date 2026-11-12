@@ -1,10 +1,21 @@
 # -*- coding: utf-8 -*-
 from __future__ import annotations
 
+from math import factorial as fac
+from typing import TYPE_CHECKING
+
 from .cartan_type import CartanType
-from sympy.external.mpmath import fac
 from sympy.core.backend import Matrix, eye, Rational, igcd
 from sympy.core.basic import Atom
+
+if TYPE_CHECKING:
+    from .type_a import TypeA
+    from .type_b import TypeB
+    from .type_c import TypeC
+    from .type_d import TypeD
+    from .type_e import TypeE
+    from .type_f import TypeF
+    from .type_g import TypeG
 
 class WeylGroup(Atom):
 
@@ -16,13 +27,14 @@ class WeylGroup(Atom):
     group is a finite Coxeter group.
 
     """
+    cartan_type: TypeA | TypeB | TypeC | TypeD | TypeE | TypeF | TypeG
 
-    def __new__(cls, cartantype):
+    def __new__(cls, cartantype: str | list[str | int]):
         obj = Atom.__new__(cls)
         obj.cartan_type = CartanType(cartantype)
         return obj
 
-    def generators(self):
+    def generators(self) -> list[str]:
         """
         This method creates the generating reflections of the Weyl group for
         a given Lie algebra.  For a Lie algebra of rank n, there are n
@@ -38,13 +50,13 @@ class WeylGroup(Atom):
         ['r1', 'r2', 'r3', 'r4']
         """
         n = self.cartan_type.rank()
-        generators = []
+        generators: list[str] = []
         for i in range(1, n+1):
             reflection = "r"+str(i)
             generators.append(reflection)
         return generators
 
-    def group_order(self):
+    def group_order(self) -> int:
         """
         This method returns the order of the Weyl group.
         For types A, B, C, D, and E the order depends on
@@ -82,7 +94,7 @@ class WeylGroup(Atom):
         if self.cartan_type.series == "G":
             return 12
 
-    def group_name(self):
+    def group_name(self) -> str:
         """
         This method returns some general information about the Weyl group for
         a given Lie algebra.  It returns the name of the group and the elements
@@ -114,7 +126,7 @@ class WeylGroup(Atom):
         if self.cartan_type.series == "G":
             return "D6, the dihedral group of order 12, and symmetry group of the hexagon."
 
-    def element_order(self, weylelt):
+    def element_order(self, weylelt: str) -> int | float:
         """
         This method returns the order of a given Weyl group element, which should
         be specified by the user in the form of products of the generating
@@ -197,7 +209,7 @@ class WeylGroup(Atom):
                 order += 1
             return order
 
-    def delete_doubles(self, reflections):
+    def delete_doubles(self, reflections: list[str]) -> list[str]:
         """
         This is a helper method for determining the order of an element in the
         Weyl group of G2.  It takes a Weyl element and if repeated simple reflections
@@ -212,7 +224,7 @@ class WeylGroup(Atom):
         return copy
 
 
-    def matrix_form(self, weylelt):
+    def matrix_form(self, weylelt: str) -> Matrix:
         """
         This method takes input from the user in the form of products of the
         generating reflections, and returns the matrix corresponding to the
@@ -361,7 +373,7 @@ class WeylGroup(Atom):
 
 
 
-    def coxeter_diagram(self):
+    def coxeter_diagram(self) -> str:
         """
         This method returns the Coxeter diagram corresponding to a Weyl group.
         The Coxeter diagram can be obtained from a Lie algebra's Dynkin diagram
