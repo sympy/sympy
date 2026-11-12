@@ -223,6 +223,19 @@ class MatMul(MatrixExpr, Mul):
             ).doit()
         return Inverse(self)
 
+    def _eval_derivative(self, x):
+        from .matadd import MatAdd
+        args = self.args
+        terms = []
+        for i, arg in enumerate(args):
+            d_arg = arg.diff(x)
+            term = MatMul(*(args[:i] + (d_arg,) + args[i + 1:])).doit()
+            if not term.is_ZeroMatrix:
+                terms.append(term)
+        if not terms:
+            return ZeroMatrix(*self.shape)
+        return MatAdd(*terms).doit()
+
     def doit(self, **hints):
         deep = hints.get('deep', True)
         if deep:
