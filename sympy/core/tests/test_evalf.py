@@ -894,7 +894,7 @@ def test_evalf_mul_infinity_sign():
     assert Mul(oo, oo, evaluate=False).evalf() == oo
     assert Mul(-oo, oo, evaluate=False).evalf() == -oo
     assert Mul(-1, zoo, evaluate=False).evalf() == zoo
-     # Complex finite factors
+    # Complex finite factors
     assert Mul(1 + I, oo, evaluate=False).evalf() == oo
     assert Mul(1 + I, -oo, evaluate=False).evalf() == -oo
     assert Mul(Float(1) + I*Float(1), oo, evaluate=False).evalf() == oo
