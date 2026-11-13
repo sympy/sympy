@@ -1365,16 +1365,13 @@ class Expr(Basic, EvalfMixin):
         >>> (-oo).args_cnc() # -oo is a singleton
         [[-1, oo], []]
         """
-        args = list(Mul.make_args(self))
-
-        for i, mi in enumerate(args):
-            if not mi.is_commutative:
-                c = args[:i]
-                nc = args[i:]
-                break
-        else:
-            c = args
-            nc = []
+        c = []
+        nc = []
+        for arg in Mul.make_args(self):
+            if arg.is_commutative:
+                c.append(arg)
+            else:
+                nc.append(arg)
 
         if c and split_1 and (
             c[0].is_Number and

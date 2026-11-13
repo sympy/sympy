@@ -1636,6 +1636,22 @@ def test_args_cnc():
     assert (-1.*x).args_cnc() == [[-1, 1.0, x], []]
 
 
+def test_args_cnc_unevaluated():
+    A, B = symbols('A B', commutative=False)
+    assert Mul(A, x, y, evaluate=False).args_cnc() == [[x, y], [A]]
+    assert Mul(y, B, x, A, evaluate=False).args_cnc() == [[y, x], [B, A]]
+    assert Mul(B, A, evaluate=False).args_cnc() == [[], [B, A]]
+
+    repeated = Mul(A, x, B, x, evaluate=False)
+    assert repeated.args_cnc() == [[x, x], [A, B]]
+    raises(ValueError, lambda: repeated.args_cnc(cset=True))
+    assert repeated.args_cnc(cset=True, warn=False) == [{x}, [A, B]]
+
+    negative = Mul(A, -2, x, evaluate=False)
+    assert negative.args_cnc() == [[-1, 2, x], [A]]
+    assert negative.args_cnc(split_1=False) == [[-2, x], [A]]
+
+
 def test_new_rawargs():
     n = Symbol('n', commutative=False)
     a = x + n
