@@ -498,6 +498,12 @@ EVALUATED_SUM_EXPRESSION_PAIRS = [
     (r"\sum_{n = 0}^{\infty} \frac{1}{n!}", Sum(1 / factorial(n), (n, 0, oo)))
 ]
 
+UNSUPPORTED_SUM_EXPRESSION_PAIRS = [
+    (r"\sum_{k = 0}^{k = n} k", Sum(k, (k, 0, n))),
+    (r"\sum^{k = n}_{k = 0} k", Sum(k, (k, 0, n))),
+    (r"\prod_{k = 1}^{k = n} k", Product(k, (k, 1, n)))
+]
+
 UNEVALUATED_PRODUCT_EXPRESSION_PAIRS = [
     (r"\prod_{a = b}^{c} x", Product(x, (a, b, c))),
     (r"\prod_{a = b}^c x", Product(x, (a, b, c))),
@@ -986,6 +992,12 @@ def test_sum_expressions():
             assert parse_latex_lark(latex_str) == sympy_expr, latex_str
 
     for latex_str, sympy_expr in EVALUATED_SUM_EXPRESSION_PAIRS:
+        assert parse_latex_lark(latex_str) == sympy_expr, latex_str
+
+
+@XFAIL
+def test_unsupported_sum_expressions():
+    for latex_str, sympy_expr in UNSUPPORTED_SUM_EXPRESSION_PAIRS:
         assert parse_latex_lark(latex_str) == sympy_expr, latex_str
 
 
