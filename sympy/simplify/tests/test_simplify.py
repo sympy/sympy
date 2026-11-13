@@ -176,6 +176,11 @@ def test_simplify_other():
     assert simplify(2**(2 + x)/4) == 2**x
 
 
+def test_issue_25705():
+    tiny = Rational(1, 10**120)
+    assert simplify(cos(2)**2 + sin(2)**2 + tiny) == 1 + tiny
+
+
 @_both_exp_pow
 def test_simplify_complex():
     cosAsExp = cos(x)._eval_rewrite_as_exp(x)
