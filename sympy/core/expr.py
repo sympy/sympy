@@ -27,6 +27,8 @@ if TYPE_CHECKING:
     from .numbers import Number
     from sympy.core.basic import Tbasic
     from sympy.logic.boolalg import Boolean
+    from .symbol import Symbol
+    from sympy.polys.orderings import MonomKey
 
     Texpr = TypeVar("Texpr", bound='Expr')
 
@@ -1190,7 +1192,7 @@ class Expr(Basic, EvalfMixin):
             # CoercionFailed is caught for e.g. pi.as_poly(x, domain='QQ')
             return None
 
-    def as_ordered_terms(self, order=None, data: Literal[False] = False) -> list[Expr]:
+    def as_ordered_terms(self, order: str | Symbol | MonomKey | None = None, data: Literal[False] = False) -> list[Expr]:
         """
         Transform an expression to an ordered list of terms.
 
