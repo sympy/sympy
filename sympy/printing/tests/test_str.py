@@ -324,6 +324,20 @@ def test_issue_18788():
     assert str(Mul(-2, z, denominator, evaluate=False)) == '-2*z/(x*x)'
     denominator = Pow(x**y, -1, evaluate=False)
     assert str(Mul(2, denominator, evaluate=False)) == '2/(x**y)'
+    d = Pow(x*y, -1, evaluate=False)
+    e = Mul(2, d, Pow(z, -1, evaluate=False), evaluate=False)
+    assert str(e) == '2/(z*(x*y))'
+
+
+def test_unevaluated_reciprocal_denominator():
+    for coefficient, base, expected in [
+            (1, 1/y, '1/(1/y)'), (1, 1/sqrt(y), '1/(1/sqrt(y))'),
+            (1, Rational(2, 3), '1/(2/3)'),
+            (-2, Rational(2, 3), '-2/(2/3)')]:
+        d = Pow(base, -1, evaluate=False)
+        e = Mul(coefficient, d, evaluate=False)
+        assert str(e) == expected
+        assert S(str(e)).equals(e)
 
 
 def test_numeric_factors_first():
