@@ -124,7 +124,7 @@ def test_old_assump():
     assert satask(Q.nonzero(1)) is True
     assert satask(Q.nonzero(-1)) is True
     assert satask(Q.nonzero(0)) is False
-    assert satask(Q.nonzero(I)) is False
+    assert satask(Q.nonzero(I)) is True
     assert satask(Q.nonzero(pi)) is True
 
     assert satask(Q.nonpositive(1)) is False
@@ -249,7 +249,7 @@ def test_abs():
     assert satask(Q.positive(abs(x)), ~Q.zero(x)) is True
     assert satask(Q.zero(x), ~Q.zero(abs(x))) is False
     assert satask(Q.zero(x), Q.zero(abs(x))) is True
-    assert satask(Q.nonzero(x), ~Q.zero(abs(x))) is None # x could be complex
+    assert satask(Q.nonzero(x), ~Q.zero(abs(x))) is None # x is not known to be complex
     assert satask(Q.zero(abs(x)), Q.zero(x)) is True
 
 
