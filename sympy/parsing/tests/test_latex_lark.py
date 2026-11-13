@@ -15,10 +15,11 @@ from sympy.core.symbol import Symbol
 from sympy.functions.combinatorial.factorials import binomial, factorial
 from sympy.functions.elementary.complexes import Abs, conjugate
 from sympy.functions.elementary.exponential import exp, log
-from sympy.functions.elementary.hyperbolic import asinh, atanh, cosh, coth, sinh, tanh
+from sympy.functions.elementary.hyperbolic import (acosh, acoth, acsch, asech, asinh, atanh, cosh, coth, csch,
+    sech, sinh, tanh)
 from sympy.functions.elementary.integers import ceiling, floor
 from sympy.functions.elementary.miscellaneous import root, sqrt, Min, Max
-from sympy.functions.elementary.trigonometric import asin, cos, csc, sec, sin, tan
+from sympy.functions.elementary.trigonometric import acos, acot, acsc, asec, asin, atan, cos, csc, sec, sin, tan
 from sympy.integrals.integrals import Integral
 from sympy.series.limits import Limit
 from sympy import Matrix, MatAdd, MatMul, Transpose, Trace
@@ -69,7 +70,6 @@ SYMBOL_EXPRESSION_PAIRS = [
     (r"x_{b}", Symbol('x_{b}')),
     (r"h_\theta", Symbol('h_{theta}')),
     (r"h_{\theta}", Symbol('h_{theta}')),
-    (r"y''_1", Symbol("y''_{1}")),
     (r"y_1''", Symbol("y_{1}''")),
     (r"\mathit{x}", Symbol('x')),
     (r"\mathit{test}", Symbol('test')),
@@ -167,6 +167,39 @@ SYMBOL_EXPRESSION_PAIRS = [
     (r"\alpha''_{\beta'}''", Symbol("alpha''_{beta'}''")),
     (r"\alpha''_{\beta''}''", Symbol("alpha''_{beta''}''"))
 
+]
+
+# primes written after or before the subscript render the same,
+# so the two lists give the same symbols
+PRIMES_AFTER_SUBSCRIPT_PAIRS = [
+    (r"y_1'", Symbol("y_{1}'")),
+    (r"y_1''", Symbol("y_{1}''")),
+    (r"y_{1}''", Symbol("y_{1}''")),
+    (r"\theta_1'", Symbol("theta_{1}'")),
+    (r"y_\theta'", Symbol("y_{theta}'")),
+    (r"y_{\theta}'", Symbol("y_{theta}'")),
+]
+
+PRIMES_BEFORE_SUBSCRIPT_PAIRS = [
+    (r"y'_1", Symbol("y_{1}'")),
+    (r"y''_1", Symbol("y_{1}''")),
+    (r"y''_{1}", Symbol("y_{1}''")),
+    (r"\theta'_1", Symbol("theta_{1}'")),
+    (r"y'_\theta", Symbol("y_{theta}'")),
+    (r"y'_{\theta}", Symbol("y_{theta}'")),
+]
+
+SUBSCRIPT_EXPRESSION_PAIRS = [
+    (r"a_{2n}", Symbol("a_{2n}")),
+    (r"a_{2 n}", Symbol("a_{2n}")),
+    (r"a_{n-1}", Symbol("a_{n-1}"))
+]
+
+UNSUPPORTED_SUBSCRIPT_EXPRESSION_PAIRS = [
+    (r"a_{n^2}", Symbol("a_{n^2}")),
+    (r"a_{n/2}", Symbol("a_{n/2}")),
+    (r"a_{\alpha+1}", Symbol("a_{alpha+1}")),
+    (r"a_{i_j}", Symbol("a_{i_j}"))
 ]
 
 UNEVALUATED_SIMPLE_EXPRESSION_PAIRS = [
@@ -343,6 +376,11 @@ DERIVATIVE_EXPRESSION_PAIRS = [
     (r"\frac{d\theta(x)}{dx}", Derivative(Function('theta')(x), x))
 ]
 
+# read as ambiguous, although the superscript of the argument binds tighter than the function
+AMBIGUOUS_TRIGONOMETRIC_EXPRESSION_PAIRS = [
+    (r"\sin^2 x^2", sin(x ** 2) ** 2)
+]
+
 TRIGONOMETRIC_EXPRESSION_PAIRS = [
     (r"\sin \theta", sin(theta)),
     (r"\sin(\theta)", sin(theta)),
@@ -351,7 +389,36 @@ TRIGONOMETRIC_EXPRESSION_PAIRS = [
     (r"\sin \cos \theta", sin(cos(theta))),
     (r"\sin(\cos \theta)", sin(cos(theta))),
     (r"(\csc x)(\sec y)", csc(x) * sec(y)),
-    (r"\frac{\sin{x}}2", _Mul(sin(x), _Pow(2, -1)))
+    (r"\frac{\sin{x}}2", _Mul(sin(x), _Pow(2, -1))),
+    (r"\sin^{2} x", _Pow(sin(x), 2)),
+    (r"\sin^n x", _Pow(sin(x), n)),
+    (r"\sin^{-2} x", _Pow(sin(x), -2)),
+    (r"\cos^2(x)", _Pow(cos(x), 2))
+]
+
+INVERSE_TRIGONOMETRIC_EXPRESSION_PAIRS = [
+    (r"\arcsin x", asin(x)),
+    (r"\arccos x", acos(x)),
+    (r"\arctan x", atan(x)),
+    (r"\arccsc x", acsc(x)),
+    (r"\arcsec x", asec(x)),
+    (r"\arccot x", acot(x))
+]
+
+HYPERBOLIC_EXPRESSION_PAIRS = [
+    (r"\sech x", sech(x)),
+    (r"\csch x", csch(x)),
+    (r"\arsinh x", asinh(x)),
+    (r"\arcosh x", acosh(x)),
+    (r"\artanh x", atanh(x)),
+    (r"\arcsinh x", asinh(x)),
+    (r"\arccosh x", acosh(x))
+]
+
+UNSUPPORTED_HYPERBOLIC_EXPRESSION_PAIRS = [
+    (r"\arcoth x", acoth(x)),
+    (r"\arsech x", asech(x)),
+    (r"\arcsch x", acsch(x))
 ]
 
 UNEVALUATED_LIMIT_EXPRESSION_PAIRS = [
@@ -431,6 +498,12 @@ EVALUATED_SUM_EXPRESSION_PAIRS = [
     (r"\sum_{n = 0}^{\infty} \frac{1}{n!}", Sum(1 / factorial(n), (n, 0, oo)))
 ]
 
+UNSUPPORTED_SUM_EXPRESSION_PAIRS = [
+    (r"\sum_{k = 0}^{k = n} k", Sum(k, (k, 0, n))),
+    (r"\sum^{k = n}_{k = 0} k", Sum(k, (k, 0, n))),
+    (r"\prod_{k = 1}^{k = n} k", Product(k, (k, 1, n)))
+]
+
 UNEVALUATED_PRODUCT_EXPRESSION_PAIRS = [
     (r"\prod_{a = b}^{c} x", Product(x, (a, b, c))),
     (r"\prod_{a = b}^c x", Product(x, (a, b, c))),
@@ -472,6 +545,7 @@ UNEVALUATED_COMMON_FUNCTION_EXPRESSION_PAIRS = [
     (r"\overline{\overline{z}}", _Conjugate(_Conjugate(z))),
     (r"\overline{x + y}", _Conjugate(_Add(x, y))),
     (r"\overline{x} + \overline{y}", _Conjugate(x) + _Conjugate(y)),
+    (r"\overline1", _Conjugate(1)),
     (r"\min(a, b)", _Min(a, b)),
     (r"\min(a, b, c - d, xy)", _Min(a, b, c - d, x * y)),
     (r"\max(a, b)", _Max(a, b)),
@@ -506,6 +580,7 @@ EVALUATED_COMMON_FUNCTION_EXPRESSION_PAIRS = [
     (r"\overline{\overline{z}}", conjugate(conjugate(z))),
     (r"\overline{x + y}", conjugate(x + y)),
     (r"\overline{x} + \overline{y}", conjugate(x) + conjugate(y)),
+    (r"\overline1", 1),
     (r"\min(a, b)", Min(a, b)),
     (r"\min(a, b, c - d, xy)", Min(a, b, c - d, x * y)),
     (r"\max(a, b)", Max(a, b)),
@@ -513,6 +588,11 @@ EVALUATED_COMMON_FUNCTION_EXPRESSION_PAIRS = [
     (r"\langle x |", Bra('x')),
     (r"| x \rangle", Ket('x')),
     (r"\langle x | y \rangle", InnerProduct(Bra('x'), Ket('y'))),
+]
+
+UNSUPPORTED_CONJUGATE_EXPRESSION_PAIRS = [
+    (r"\overline x", _Conjugate(x)),
+    (r"\overline12", _Mul(_Conjugate(1), 2))
 ]
 
 SPACING_RELATED_EXPRESSION_PAIRS = [
@@ -535,7 +615,12 @@ UNEVALUATED_BINOMIAL_EXPRESSION_PAIRS = [
     (r"\tbinom{n}{k}", _binomial(n, k)),
     (r"\dbinom{n}{k}", _binomial(n, k)),
     (r"\binom{n}{0}", _binomial(n, 0)),
-    (r"x^\binom{n}{k}", _Pow(x, _binomial(n, k)))
+    (r"x^\binom{n}{k}", _Pow(x, _binomial(n, k))),
+    (r"\binom1k", _binomial(1, k)),
+    (r"\binom12", _binomial(1, 2)),
+    (r"\binom{n}2", _binomial(n, 2)),
+    (r"\binom n{k}", _binomial(n, k)),
+    (r"\binom\alpha\beta", _binomial(Symbol("alpha"), Symbol("beta")))
 ]
 
 EVALUATED_BINOMIAL_EXPRESSION_PAIRS = [
@@ -543,7 +628,12 @@ EVALUATED_BINOMIAL_EXPRESSION_PAIRS = [
     (r"\tbinom{n}{k}", binomial(n, k)),
     (r"\dbinom{n}{k}", binomial(n, k)),
     (r"\binom{n}{0}", binomial(n, 0)),
-    (r"x^\binom{n}{k}", x ** binomial(n, k))
+    (r"x^\binom{n}{k}", x ** binomial(n, k)),
+    (r"\binom1k", binomial(1, k)),
+    (r"\binom12", 0),
+    (r"\binom{n}2", binomial(n, 2)),
+    (r"\binom n{k}", binomial(n, k)),
+    (r"\binom\alpha\beta", binomial(Symbol("alpha"), Symbol("beta")))
 ]
 
 MISCELLANEOUS_EXPRESSION_PAIRS = [
@@ -743,25 +833,39 @@ EVALUATED_MATRIX_EXPRESSION_PAIRS = [
 
 
 def test_symbol_expressions():
-    expected_failures = {6, 7}
-    for i, (latex_str, sympy_expr) in enumerate(SYMBOL_EXPRESSION_PAIRS):
-        if i in expected_failures:
-            continue
+    for latex_str, sympy_expr in SYMBOL_EXPRESSION_PAIRS:
         with evaluate(False):
             assert parse_latex_lark(latex_str) == sympy_expr, latex_str
+
+
+def test_primes_after_subscript():
+    for latex_str, sympy_expr in PRIMES_AFTER_SUBSCRIPT_PAIRS:
+        assert parse_latex_lark(latex_str) == sympy_expr, latex_str
+
+
+@XFAIL
+def test_primes_before_subscript():
+    for latex_str, sympy_expr in PRIMES_BEFORE_SUBSCRIPT_PAIRS:
+        assert parse_latex_lark(latex_str) == sympy_expr, latex_str
+
+
+def test_subscript_expressions():
+    for latex_str, sympy_expr in SUBSCRIPT_EXPRESSION_PAIRS:
+        assert parse_latex_lark(latex_str) == sympy_expr, latex_str
+
+
+@XFAIL
+def test_unsupported_subscript_expressions():
+    for latex_str, sympy_expr in UNSUPPORTED_SUBSCRIPT_EXPRESSION_PAIRS:
+        assert parse_latex_lark(latex_str) == sympy_expr, latex_str
 
 
 def test_simple_expressions():
-    expected_failures = {20}
-    for i, (latex_str, sympy_expr) in enumerate(UNEVALUATED_SIMPLE_EXPRESSION_PAIRS):
-        if i in expected_failures:
-            continue
+    for latex_str, sympy_expr in UNEVALUATED_SIMPLE_EXPRESSION_PAIRS:
         with evaluate(False):
             assert parse_latex_lark(latex_str) == sympy_expr, latex_str
 
-    for i, (latex_str, sympy_expr) in enumerate(EVALUATED_SIMPLE_EXPRESSION_PAIRS):
-        if i in expected_failures:
-            continue
+    for latex_str, sympy_expr in EVALUATED_SIMPLE_EXPRESSION_PAIRS:
         assert parse_latex_lark(latex_str) == sympy_expr, latex_str
 
 
@@ -827,8 +931,33 @@ def test_derivative_expressions():
         assert parse_latex_lark(latex_str) == sympy_expr, latex_str
 
 
+@XFAIL
+def test_ambiguous_trigonometric_expressions():
+    for latex_str, sympy_expr in AMBIGUOUS_TRIGONOMETRIC_EXPRESSION_PAIRS:
+        assert parse_latex_lark(latex_str) == sympy_expr, latex_str
+
+
 def test_trigonometric_expressions():
     for latex_str, sympy_expr in TRIGONOMETRIC_EXPRESSION_PAIRS:
+        with evaluate(False):
+            assert parse_latex_lark(latex_str) == sympy_expr, latex_str
+
+
+def test_inverse_trigonometric_expressions():
+    for latex_str, sympy_expr in INVERSE_TRIGONOMETRIC_EXPRESSION_PAIRS:
+        with evaluate(False):
+            assert parse_latex_lark(latex_str) == sympy_expr, latex_str
+
+
+def test_hyperbolic_expressions():
+    for latex_str, sympy_expr in HYPERBOLIC_EXPRESSION_PAIRS:
+        with evaluate(False):
+            assert parse_latex_lark(latex_str) == sympy_expr, latex_str
+
+
+@XFAIL
+def test_unsupported_hyperbolic_expressions():
+    for latex_str, sympy_expr in UNSUPPORTED_HYPERBOLIC_EXPRESSION_PAIRS:
         with evaluate(False):
             assert parse_latex_lark(latex_str) == sympy_expr, latex_str
 
@@ -866,6 +995,12 @@ def test_sum_expressions():
         assert parse_latex_lark(latex_str) == sympy_expr, latex_str
 
 
+@XFAIL
+def test_unsupported_sum_expressions():
+    for latex_str, sympy_expr in UNSUPPORTED_SUM_EXPRESSION_PAIRS:
+        assert parse_latex_lark(latex_str) == sympy_expr, latex_str
+
+
 def test_product_expressions():
     for latex_str, sympy_expr in UNEVALUATED_PRODUCT_EXPRESSION_PAIRS:
         with evaluate(False):
@@ -889,6 +1024,13 @@ def test_common_function_expressions():
 
     for latex_str, sympy_expr in EVALUATED_COMMON_FUNCTION_EXPRESSION_PAIRS:
         assert parse_latex_lark(latex_str) == sympy_expr, latex_str
+
+
+@XFAIL
+def test_unsupported_conjugate_expressions():
+    for latex_str, sympy_expr in UNSUPPORTED_CONJUGATE_EXPRESSION_PAIRS:
+        with evaluate(False):
+            assert parse_latex_lark(latex_str) == sympy_expr, latex_str
 
 
 def test_spacing():
