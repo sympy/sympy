@@ -18,7 +18,7 @@ from sympy.functions.elementary.exponential import exp, log
 from sympy.functions.elementary.hyperbolic import asinh, atanh, cosh, coth, sinh, tanh
 from sympy.functions.elementary.integers import ceiling, floor
 from sympy.functions.elementary.miscellaneous import root, sqrt, Min, Max
-from sympy.functions.elementary.trigonometric import asin, cos, csc, sec, sin, tan
+from sympy.functions.elementary.trigonometric import acos, acot, acsc, asec, asin, atan, cos, csc, sec, sin, tan
 from sympy.integrals.integrals import Integral
 from sympy.series.limits import Limit
 from sympy import Matrix, MatAdd, MatMul, Transpose, Trace
@@ -380,6 +380,15 @@ TRIGONOMETRIC_EXPRESSION_PAIRS = [
     (r"\sin^n x", _Pow(sin(x), n)),
     (r"\sin^{-2} x", _Pow(sin(x), -2)),
     (r"\cos^2(x)", _Pow(cos(x), 2))
+]
+
+INVERSE_TRIGONOMETRIC_EXPRESSION_PAIRS = [
+    (r"\arcsin x", asin(x)),
+    (r"\arccos x", acos(x)),
+    (r"\arctan x", atan(x)),
+    (r"\arccsc x", acsc(x)),
+    (r"\arcsec x", asec(x)),
+    (r"\arccot x", acot(x))
 ]
 
 UNEVALUATED_LIMIT_EXPRESSION_PAIRS = [
@@ -866,6 +875,12 @@ def test_ambiguous_trigonometric_expressions():
 
 def test_trigonometric_expressions():
     for latex_str, sympy_expr in TRIGONOMETRIC_EXPRESSION_PAIRS:
+        with evaluate(False):
+            assert parse_latex_lark(latex_str) == sympy_expr, latex_str
+
+
+def test_inverse_trigonometric_expressions():
+    for latex_str, sympy_expr in INVERSE_TRIGONOMETRIC_EXPRESSION_PAIRS:
         with evaluate(False):
             assert parse_latex_lark(latex_str) == sympy_expr, latex_str
 
