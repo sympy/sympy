@@ -16,7 +16,7 @@ from sympy.polys.orderings import lex, grlex
 from sympy.polys.rings import ring, xring
 from sympy.polys.domains import ZZ, QQ
 
-from sympy.testing.pytest import slow
+from sympy.testing.pytest import slow, raises
 from sympy.polys import polyconfig as config
 
 def _do_test_groebner():
@@ -555,3 +555,7 @@ def test_groebner_zero_polynomial():
     assert groebner([RZ.zero, xz], RZ) == [xz]
     assert groebner([xz, RZ.zero, yz], RZ) == [xz, yz]
     assert groebner([RZ.zero], RZ) == []
+
+    # test contract enforcement against non-polynomial types
+    raises(AttributeError, lambda: groebner([0, x], R))
+    raises(AttributeError, lambda: groebner([None, x], R))
