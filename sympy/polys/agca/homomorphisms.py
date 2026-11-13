@@ -177,7 +177,7 @@ class ModuleHomomorphism:
 
     def restrict_codomain(self, sm):
         """
-        Return ``self``, with codomain restricted to to ``sm``.
+        Return ``self``, with codomain restricted to ``sm``.
 
         Here ``sm`` has to be a submodule of ``self.codomain`` containing the
         image.
