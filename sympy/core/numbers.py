@@ -2054,11 +2054,11 @@ class Integer(Rational):
         return Rational.__rmod__(self, other)
 
     @overload
+    def __pow__(self, other: Integer | int, mod: Integer | int) -> Integer: ...
+    @overload
     def __pow__(self, other: _NonNegativeInteger, mod: None = None) -> Integer: ...
     @overload
     def __pow__(self, other: Expr | complex, mod: None = None) -> Expr: ...
-    @overload
-    def __pow__(self, other: Integer | int, mod: Integer | int) -> Integer: ...
 
     def __pow__(self, other: Expr | complex, mod: Integer | int | None = None) -> Expr:
         if mod is not None:
