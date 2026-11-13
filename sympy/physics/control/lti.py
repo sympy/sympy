@@ -1581,7 +1581,7 @@ class TransferFunctionBase(SISOLinearTimeInvariant, ABC):
         1/((b - p)*(3*b + p))
         >>> tf3 = TransferFunction((s - 2)*(s - 3), (s - 1)*(s - 2)*(s - 3), s)
         >>> tf3.to_expr()
-        ((s - 3)*(s - 2))/(((s - 3)*(s - 2)*(s - 1)))
+        ((s - 3)*(s - 2))/((s - 3)*(s - 2)*(s - 1))
 
         """
 
