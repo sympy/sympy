@@ -69,7 +69,6 @@ SYMBOL_EXPRESSION_PAIRS = [
     (r"x_{b}", Symbol('x_{b}')),
     (r"h_\theta", Symbol('h_{theta}')),
     (r"h_{\theta}", Symbol('h_{theta}')),
-    (r"y''_1", Symbol("y''_{1}")),
     (r"y_1''", Symbol("y_{1}''")),
     (r"\mathit{x}", Symbol('x')),
     (r"\mathit{test}", Symbol('test')),
@@ -167,6 +166,26 @@ SYMBOL_EXPRESSION_PAIRS = [
     (r"\alpha''_{\beta'}''", Symbol("alpha''_{beta'}''")),
     (r"\alpha''_{\beta''}''", Symbol("alpha''_{beta''}''"))
 
+]
+
+# primes written after or before the subscript render the same,
+# so the two lists give the same symbols
+PRIMES_AFTER_SUBSCRIPT_PAIRS = [
+    (r"y_1'", Symbol("y_{1}'")),
+    (r"y_1''", Symbol("y_{1}''")),
+    (r"y_{1}''", Symbol("y_{1}''")),
+    (r"\theta_1'", Symbol("theta_{1}'")),
+    (r"y_\theta'", Symbol("y_{theta}'")),
+    (r"y_{\theta}'", Symbol("y_{theta}'")),
+]
+
+PRIMES_BEFORE_SUBSCRIPT_PAIRS = [
+    (r"y'_1", Symbol("y_{1}'")),
+    (r"y''_1", Symbol("y_{1}''")),
+    (r"y''_{1}", Symbol("y_{1}''")),
+    (r"\theta'_1", Symbol("theta_{1}'")),
+    (r"y'_\theta", Symbol("y_{theta}'")),
+    (r"y'_{\theta}", Symbol("y_{theta}'")),
 ]
 
 UNEVALUATED_SIMPLE_EXPRESSION_PAIRS = [
@@ -743,25 +762,28 @@ EVALUATED_MATRIX_EXPRESSION_PAIRS = [
 
 
 def test_symbol_expressions():
-    expected_failures = {6, 7}
-    for i, (latex_str, sympy_expr) in enumerate(SYMBOL_EXPRESSION_PAIRS):
-        if i in expected_failures:
-            continue
+    for latex_str, sympy_expr in SYMBOL_EXPRESSION_PAIRS:
         with evaluate(False):
             assert parse_latex_lark(latex_str) == sympy_expr, latex_str
+
+
+def test_primes_after_subscript():
+    for latex_str, sympy_expr in PRIMES_AFTER_SUBSCRIPT_PAIRS:
+        assert parse_latex_lark(latex_str) == sympy_expr, latex_str
+
+
+@XFAIL
+def test_primes_before_subscript():
+    for latex_str, sympy_expr in PRIMES_BEFORE_SUBSCRIPT_PAIRS:
+        assert parse_latex_lark(latex_str) == sympy_expr, latex_str
 
 
 def test_simple_expressions():
-    expected_failures = {20}
-    for i, (latex_str, sympy_expr) in enumerate(UNEVALUATED_SIMPLE_EXPRESSION_PAIRS):
-        if i in expected_failures:
-            continue
+    for latex_str, sympy_expr in UNEVALUATED_SIMPLE_EXPRESSION_PAIRS:
         with evaluate(False):
             assert parse_latex_lark(latex_str) == sympy_expr, latex_str
 
-    for i, (latex_str, sympy_expr) in enumerate(EVALUATED_SIMPLE_EXPRESSION_PAIRS):
-        if i in expected_failures:
-            continue
+    for latex_str, sympy_expr in EVALUATED_SIMPLE_EXPRESSION_PAIRS:
         assert parse_latex_lark(latex_str) == sympy_expr, latex_str
 
 
