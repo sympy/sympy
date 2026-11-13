@@ -317,6 +317,14 @@ def test_numexpr_printer():
         assert f(*(1, )*nargs) is not None
 
 
+def test_cmath_float():
+    f = lambdify(x, x + 2.5, 'cmath')
+    assert f(1) == 3.5
+    assert f(1j) == 2.5 + 1j
+    g = lambdify(x, sqrt(x + 2.5), 'cmath')
+    assert g(-6.5) == 2j
+
+
 def test_cmath_sqrt():
     f = lambdify(x, sqrt(x), "cmath")
     assert f(0) == 0

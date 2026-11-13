@@ -762,9 +762,6 @@ class CmathPrinter(PythonCodePrinter):
     def _print_Pow(self, expr, rational=False):
         return self._hprint_Pow(expr, rational=rational, sqrt='cmath.sqrt')
 
-    def _print_Float(self, e):
-        return '{func}({val})'.format(func=self._module_format('cmath.mpf'), val=self._print(e))
-
     def _print_known_func(self, expr):
         func_name = expr.func.__name__
         if func_name in self._kf:
