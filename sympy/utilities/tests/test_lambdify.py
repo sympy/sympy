@@ -230,6 +230,17 @@ def test_number_precision():
     prec = 1e-49  # mpmath precision is around 50 decimal places
     assert -prec < f(0) - sin02 < prec
 
+def test_mpmath_log2_precedence():
+    expressions = (log2(x), log2(x)**2, 1/log2(x), x/log2(x))
+    functions = [lambdify(x, expr, 'mpmath') for expr in expressions]
+    with mpmath.workdps(50):
+        for value in (mpmath.mpf(8), mpmath.mpf('0.25'), mpmath.mpc(2, 3)):
+            logarithm = mpmath.log(value, 2)
+            expected = (logarithm, logarithm**2, 1/logarithm, value/logarithm)
+            for function, result in zip(functions, expected):
+                assert mpmath.almosteq(function(value), result)
+
+
 @conserve_mpmath_dps
 def test_mpmath_precision():
     mpmath.mp.dps = 100
