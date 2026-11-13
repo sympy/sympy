@@ -609,7 +609,12 @@ UNEVALUATED_BINOMIAL_EXPRESSION_PAIRS = [
     (r"\tbinom{n}{k}", _binomial(n, k)),
     (r"\dbinom{n}{k}", _binomial(n, k)),
     (r"\binom{n}{0}", _binomial(n, 0)),
-    (r"x^\binom{n}{k}", _Pow(x, _binomial(n, k)))
+    (r"x^\binom{n}{k}", _Pow(x, _binomial(n, k))),
+    (r"\binom1k", _binomial(1, k)),
+    (r"\binom12", _binomial(1, 2)),
+    (r"\binom{n}2", _binomial(n, 2)),
+    (r"\binom n{k}", _binomial(n, k)),
+    (r"\binom\alpha\beta", _binomial(Symbol("alpha"), Symbol("beta")))
 ]
 
 EVALUATED_BINOMIAL_EXPRESSION_PAIRS = [
@@ -617,7 +622,12 @@ EVALUATED_BINOMIAL_EXPRESSION_PAIRS = [
     (r"\tbinom{n}{k}", binomial(n, k)),
     (r"\dbinom{n}{k}", binomial(n, k)),
     (r"\binom{n}{0}", binomial(n, 0)),
-    (r"x^\binom{n}{k}", x ** binomial(n, k))
+    (r"x^\binom{n}{k}", x ** binomial(n, k)),
+    (r"\binom1k", binomial(1, k)),
+    (r"\binom12", 0),
+    (r"\binom{n}2", binomial(n, 2)),
+    (r"\binom n{k}", binomial(n, k)),
+    (r"\binom\alpha\beta", binomial(Symbol("alpha"), Symbol("beta")))
 ]
 
 MISCELLANEOUS_EXPRESSION_PAIRS = [
