@@ -101,8 +101,10 @@ unevaluated Rational like ``Rational(2, 4, gcd=1)`` in which the numerator and
 denominator are not reduced. This is now deprecated and unevaluated rationals
 will be removed entirely in a future version of SymPy. This is needed so that
 more efficient implementations of rational numbers can be used internally.
-Instead use something like ``Mul(2, Rational(1, 4), evaluate=False)`` or
-``Symbol('2')/Symbol('4')`` depending on what exactly is wanted.
+For a display-only alternative and its limitations, see the
+{class}`~sympy.core.numbers.Rational` documentation. These unevaluated forms
+are expressions rather than ``Rational`` objects, so use ``Rational`` for
+arithmetic.
 
 (deprecated-tensorproduct-simp)=
 ### Deprecated tensor_product_simp from physics.quantum
