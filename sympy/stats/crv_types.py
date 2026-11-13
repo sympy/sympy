@@ -46,6 +46,7 @@ RaisedCosine
 Rayleigh
 Reciprocal
 ShiftedGompertz
+SkewNormal
 StudentT
 Trapezoidal
 Triangular
@@ -80,7 +81,7 @@ from sympy.functions.elementary.integers import floor
 from sympy.functions.elementary.miscellaneous import sqrt, Max, Min
 from sympy.functions.elementary.piecewise import Piecewise
 from sympy.functions.elementary.trigonometric import asin
-from sympy.functions.special.error_functions import (erf, erfc, erfi, erfinv, expint)
+from sympy.functions.special.error_functions import (erf, erfc, erfi, erfinv, expint, owens_t)
 from sympy.functions.special.gamma_functions import (gamma, lowergamma, uppergamma)
 from sympy.functions.special.zeta_functions import zeta
 from sympy.functions.special.hyper import hyper
@@ -137,6 +138,7 @@ __all__ = ['ContinuousRV',
 'RaisedCosine',
 'Rayleigh',
 'Reciprocal',
+'SkewNormal',
 'StudentT',
 'ShiftedGompertz',
 'Trapezoidal',
@@ -295,12 +297,10 @@ def Arcsin(name, a=0, b=1):
     >>> X = Arcsin("x", a, b)
 
     >>> density(X)(z)
-    1/(pi*sqrt((-a + z)*(b - z)))
+    1/(pi*sqrt((z - a)*(b - z)))
 
     >>> cdf(X)(z)
-    Piecewise((0, a > z),
-            (2*asin(sqrt((-a + z)/(-a + b)))/pi, b >= z),
-            (1, True))
+    Piecewise((0, a > z), (2*asin(sqrt((z - a)/(b - a)))/pi, b >= z), (1, True))
 
 
     References
@@ -694,7 +694,7 @@ def BoundedPareto(name, alpha, left, right):
     >>> density(X)(x)
     2*L**2/(x**3*(1 - L**2/H**2))
     >>> cdf(X)(x)
-    Piecewise((-H**2*L**2/(x**2*(H**2 - L**2)) + H**2/(H**2 - L**2), L <= x), (0, True))
+    Piecewise((H**2/(H**2 - L**2) - H**2*L**2/(x**2*(H**2 - L**2)), L <= x), (0, True))
     >>> E(X).simplify()
     2*H*L/(H + L)
 
@@ -774,7 +774,7 @@ def Cauchy(name, x0, gamma):
     >>> X = Cauchy("x", x0, gamma)
 
     >>> density(X)(z)
-    1/(pi*gamma*(1 + (-x0 + z)**2/gamma**2))
+    1/(pi*gamma*(1 + (z - x0)**2/gamma**2))
 
     References
     ==========
@@ -1099,7 +1099,7 @@ def Dagum(name, p, a, b):
     a*p*(z/b)**(a*p)*((z/b)**a + 1)**(-p - 1)/z
 
     >>> cdf(X)(z)
-    Piecewise(((1 + (z/b)**(-a))**(-p), z >= 0), (0, True))
+    Piecewise((((z/b)**(-a) + 1)**(-p), z >= 0), (0, True))
 
 
     References
@@ -1171,7 +1171,7 @@ def Davis(name, b, n, mu):
     >>> z = Symbol("z")
     >>> X = Davis("x", b, n, mu)
     >>> density(X)(z)
-    b**n*(-mu + z)**(-n - 1)/((exp(b/(-mu + z)) - 1)*gamma(n)*zeta(n))
+    b**n*(z - mu)**(-n - 1)/((exp(b/(z - mu)) - 1)*gamma(n)*zeta(n))
 
     References
     ==========
@@ -1313,7 +1313,7 @@ def ExGaussian(name, mean, std, rate):
 
     .. math::
         f(x) := \frac{\lambda}{2}e^{\frac{\lambda}{2}(2\mu+\lambda\sigma^2-2x)}
-            \text{erfc}(\frac{\mu + \lambda\sigma^2 - x}{\sqrt{2}\sigma})
+            \text{erfc}\left(\frac{\mu + \lambda\sigma^2 - x}{\sqrt{2}\sigma}\right)
 
     with $x > 0$. Note that the expected value is `1/\lambda`.
 
@@ -1356,7 +1356,7 @@ def ExGaussian(name, mean, std, rate):
                                          2
 
     >>> cdf(X)(z)
-    -(erf(sqrt(2)*(-lamda**2*sigma**2 + lamda*(-mu + z))/(2*lamda*sigma))/2 + 1/2)*exp(lamda**2*sigma**2/2 - lamda*(-mu + z)) + erf(sqrt(2)*(-mu + z)/(2*sigma))/2 + 1/2
+    -(erf(sqrt(2)*(lamda*(z - mu) - lamda**2*sigma**2)/(2*lamda*sigma))/2 + 1/2)*exp(lamda**2*sigma**2/2 - lamda*(z - mu)) + erf(sqrt(2)*(z - mu)/(2*sigma))/2 + 1/2
 
     >>> E(X)
     (lamda*mu + 1)/lamda
@@ -1563,7 +1563,7 @@ def ExponentialPower(name, mu, alpha, beta):
      2*alpha*Gamma|----|
                   \beta/
     >>> cdf(X)(z)
-    1/2 + lowergamma(1/beta, (Abs(mu - z)/alpha)**beta)*sign(-mu + z)/(2*gamma(1/beta))
+    1/2 + lowergamma(1/beta, (Abs(mu - z)/alpha)**beta)*sign(z - mu)/(2*gamma(1/beta))
 
     References
     ==========
@@ -1808,10 +1808,10 @@ def Frechet(name, a, s=1, m=0):
     >>> X = Frechet("x", a, s, m)
 
     >>> density(X)(z)
-    a*((-m + z)/s)**(-a - 1)*exp(-1/((-m + z)/s)**a)/s
+    a*((z - m)/s)**(-a - 1)*exp(-1/((z - m)/s)**a)/s
 
     >>> cdf(X)(z)
-    Piecewise((exp(-1/((-m + z)/s)**a), m <= z), (0, True))
+    Piecewise((exp(-1/((z - m)/s)**a), m <= z), (0, True))
 
     References
     ==========
@@ -2103,9 +2103,9 @@ def Gumbel(name, beta, mu, minimum=False):
     >>> beta = Symbol("beta", positive=True)
     >>> X = Gumbel("x", beta, mu)
     >>> density(X)(x)
-    exp(-exp(-(-mu + x)/beta) - (-mu + x)/beta)/beta
+    exp(-exp(-(x - mu)/beta) - (x - mu)/beta)/beta
     >>> cdf(X)(x)
-    exp(-exp(-(-mu + x)/beta))
+    exp(-exp(-(x - mu)/beta))
 
     References
     ==========
@@ -2343,7 +2343,7 @@ def Laplace(name, mu, b):
     exp(-Abs(mu - z)/b)/(2*b)
 
     >>> cdf(X)(z)
-    Piecewise((exp((-mu + z)/b)/2, mu > z), (1 - exp((mu - z)/b)/2, True))
+    Piecewise((exp((z - mu)/b)/2, mu > z), (1 - exp((mu - z)/b)/2, True))
 
     >>> L = Laplace('L', [1, 2], [[1, 0], [0, 1]])
     >>> pprint(density(L)(1, 2), use_unicode=False)
@@ -2405,7 +2405,8 @@ def Levy(name, mu, c):
     The density of the Levy distribution is given by
 
     .. math::
-        f(x) := \sqrt(\frac{c}{2 \pi}) \frac{\exp -\frac{c}{2 (x - \mu)}}{(x - \mu)^{3/2}}
+        f(x) := \sqrt{\frac{c}{2 \pi}} \frac{\exp\left(-\frac{c}{2 (x - \mu)}\right)}
+                                            {(x - \mu)^{3/2}}
 
     Parameters
     ==========
@@ -2433,10 +2434,10 @@ def Levy(name, mu, c):
     >>> X = Levy("x", mu, c)
 
     >>> density(X)(z)
-    sqrt(2)*sqrt(c)*exp(-c/(-2*mu + 2*z))/(2*sqrt(pi)*(-mu + z)**(3/2))
+    sqrt(2)*sqrt(c)*exp(-c/(2*z - 2*mu))/(2*sqrt(pi)*(z - mu)**(3/2))
 
     >>> cdf(X)(z)
-    erfc(sqrt(c)*sqrt(1/(-2*mu + 2*z)))
+    erfc(sqrt(c)*sqrt(1/(2*z - 2*mu)))
 
     References
     ==========
@@ -2512,7 +2513,7 @@ def LogCauchy(name, mu, sigma):
     1/(5*pi*z*((log(z) - 2)**2 + 1/25))
 
     >>> cdf(X)(z)
-    atan(5*log(z) - 10)/pi + 1/2
+    1/2 + atan(5*log(z) - 10)/pi
 
     References
     ==========
@@ -2686,7 +2687,7 @@ def LogLogistic(name, alpha, beta):
           \\alpha/        /
 
     >>> cdf(X)(z)
-    1/(1 + (z/alpha)**(-beta))
+    1/((z/alpha)**(-beta) + 1)
 
     >>> quantile(X)(p)
     alpha*(p/(1 - p))**(1/beta)
@@ -2757,23 +2758,23 @@ def LogitNormal(name, mu, s):
 
     >>> D = density(X)(z)
     >>> pprint(D, use_unicode=False)
-                              2
-            /         /  z  \\
-           -|-mu + log|-----||
-            \         \1 - z//
-           ---------------------
-                       2
-      ___           2*s
+                             2
+            /   /  z  \     \
+           -|log|-----| - mu|
+            \   \1 - z/     /
+           --------------------
+                      2
+      ___          2*s
     \/ 2 *e
-    ----------------------------
-            ____
-        2*\/ pi *s*z*(1 - z)
+    ---------------------------
+           ____
+       2*\/ pi *s*z*(1 - z)
 
     >>> density(X)(z)
-    sqrt(2)*exp(-(-mu + log(z/(1 - z)))**2/(2*s**2))/(2*sqrt(pi)*s*z*(1 - z))
+    sqrt(2)*exp(-(log(z/(1 - z)) - mu)**2/(2*s**2))/(2*sqrt(pi)*s*z*(1 - z))
 
     >>> cdf(X)(z)
-    erf(sqrt(2)*(-mu + log(z/(1 - z)))/(2*s))/2 + 1/2
+    erf(sqrt(2)*(log(z/(1 - z)) - mu)/(2*s))/2 + 1/2
 
 
     References
@@ -2855,15 +2856,15 @@ def LogNormal(name, mean, std):
 
     >>> D = density(X)(z)
     >>> pprint(D, use_unicode=False)
-                          2
-           -(-mu + log(z))
-           -----------------
+                         2
+           -(log(z) - mu)
+           ----------------
                       2
       ___      2*sigma
     \/ 2 *e
-    ------------------------
-            ____
-        2*\/ pi *sigma*z
+    -----------------------
+           ____
+       2*\/ pi *sigma*z
 
 
     >>> X = LogNormal('x', 0, 1) # Mean 0, standard deviation 1
@@ -3014,7 +3015,7 @@ def Maxwell(name, a):
     2*sqrt(2)*a/sqrt(pi)
 
     >>> simplify(variance(X))
-    a**2*(-8 + 3*pi)/pi
+    a**2*(3*pi - 8)/pi
 
     References
     ==========
@@ -3065,7 +3066,8 @@ def Moyal(name, mu, sigma):
     The density of the Moyal distribution is given by
 
     .. math::
-        f(x) := \frac{\exp-\frac{1}{2}\exp-\frac{x-\mu}{\sigma}-\frac{x-\mu}{2\sigma}}{\sqrt{2\pi}\sigma}
+        f(x) := \frac{\exp\left(-\frac{1}{2}\left(\frac{x-\mu}{\sigma}+\exp\left(\frac{x-\mu}{\sigma}\right)\right)\right)}
+                     {\sqrt{2\pi}\sigma}
 
     with :math:`x \in \mathbb{R}`.
 
@@ -3092,7 +3094,7 @@ def Moyal(name, mu, sigma):
     >>> z = Symbol("z")
     >>> X = Moyal("x", mu, sigma)
     >>> density(X)(z)
-    sqrt(2)*exp(-exp((mu - z)/sigma)/2 - (-mu + z)/(2*sigma))/(2*sqrt(pi)*sigma)
+    sqrt(2)*exp(-exp((mu - z)/sigma)/2 - (z - mu)/(2*sigma))/(2*sqrt(pi)*sigma)
     >>> simplify(cdf(X)(z))
     1 - erf(sqrt(2)*exp((mu - z)/(2*sigma))/2)
 
@@ -3271,16 +3273,16 @@ def Normal(name, mean, std):
     >>> X = Normal("x", mu, sigma)
 
     >>> density(X)(z)
-    sqrt(2)*exp(-(-mu + z)**2/(2*sigma**2))/(2*sqrt(pi)*sigma)
+    sqrt(2)*exp(-(z - mu)**2/(2*sigma**2))/(2*sqrt(pi)*sigma)
 
     >>> C = simplify(cdf(X))(z) # it needs a little more help...
     >>> pprint(C, use_unicode=False)
-       /  ___          \
-       |\/ 2 *(-mu + z)|
-    erf|---------------|
-       \    2*sigma    /   1
-    -------------------- + -
-             2             2
+       /  ___         \
+       |\/ 2 *(z - mu)|
+    erf|--------------|
+       \   2*sigma    /   1
+    ------------------- + -
+             2            2
 
     >>> quantile(X)(p)
     mu + sqrt(2)*sigma*erfinv(2*p - 1)
@@ -3405,15 +3407,15 @@ def GaussianInverse(name, mean, shape):
 
     >>> D = density(X)(z)
     >>> pprint(D, use_unicode=False)
-                                       2
-                      -lambda*(-mu + z)
-                      -------------------
-                                2
-      ___   ________        2*mu *z
+                                      2
+                      -lambda*(z - mu)
+                      ------------------
+                               2
+      ___   ________       2*mu *z
     \/ 2 *\/ lambda *e
-    -------------------------------------
-                    ____  3/2
-                2*\/ pi *z
+    ------------------------------------
+                   ____  3/2
+               2*\/ pi *z
 
     >>> E(X)
     mu
@@ -3585,7 +3587,7 @@ def PowerFunction(name, alpha, a, b):
     >>> X = PowerFunction("X", 2, a, b)
 
     >>> density(X)(z)
-    (-2*a + 2*z)/(-a + b)**2
+    (2*z - 2*a)/(b - a)**2
 
     >>> cdf(X)(z)
     Piecewise((a**2/(a**2 - 2*a*b + b**2) - 2*a*z/(a**2 - 2*a*b + b**2) +
@@ -3688,8 +3690,8 @@ def QuadraticU(name, a, b):
     |12*|- - - - + z|
     |   \  2   2    /
     <-----------------  for And(b >= z, a <= z)
-    |            3
-    |    (-a + b)
+    |           3
+    |    (b - a)
     |
     \        0                 otherwise
 
@@ -3772,13 +3774,13 @@ def RaisedCosine(name, mu, s):
 
     >>> D = density(X)(z)
     >>> pprint(D, use_unicode=False)
-    /   /pi*(-mu + z)\
-    |cos|------------| + 1
-    |   \     s      /
-    <---------------------  for And(z >= mu - s, z <= mu + s)
-    |         2*s
+    /   /pi*(z - mu)\
+    |cos|-----------| + 1
+    |   \     s     /
+    <--------------------  for And(z >= mu - s, z <= mu + s)
+    |        2*s
     |
-    \          0                        otherwise
+    \         0                        otherwise
 
     References
     ==========
@@ -3861,7 +3863,7 @@ def Rayleigh(name, sigma):
     sqrt(2)*sqrt(pi)*sigma/2
 
     >>> variance(X)
-    -pi*sigma**2/2 + 2*sigma**2
+    2*sigma**2 - pi*sigma**2/2
 
     References
     ==========
@@ -3918,7 +3920,7 @@ def Reciprocal(name, a, b):
     >>> R = Reciprocal('R', a, b)
 
     >>> density(R)(x)
-    1/(x*(-log(a) + log(b)))
+    1/(x*(log(b) - log(a)))
     >>> cdf(R)(x)
     Piecewise((log(a)/(log(a) - log(b)) - log(x)/(log(a) - log(b)), a <= x), (0, True))
 
@@ -3959,7 +3961,7 @@ def ShiftedGompertz(name, b, eta):
     The density of the Shifted Gompertz distribution is given by
 
     .. math::
-        f(x) := b e^{-b x} e^{-\eta \exp(-b x)} \left[1 + \eta(1 - e^(-bx)) \right]
+        f(x) := b e^{-b x} e^{-\eta \exp(-b x)} \left[1 + \eta(1 - e^{-bx}) \right]
 
     with :math:`x \in [0, \infty)`.
 
@@ -3995,6 +3997,93 @@ def ShiftedGompertz(name, b, eta):
 
     """
     return rv(name, ShiftedGompertzDistribution, (b, eta))
+
+#-------------------------------------------------------------------------------
+# SkewNormal distribution -------------------------------------------------------
+
+
+class SkewNormalDistribution(SingleContinuousDistribution):
+    _argnames = ('xi', 'omega', 'alpha')
+
+    @staticmethod
+    def check(xi, omega, alpha):
+        _value_check(omega > 0, "Scale parameter must be positive")
+        _value_check(alpha.is_real != False, "Shape parameter alpha must be real.")
+
+    def pdf(self, x):
+        xi, omega, alpha = self.xi, self.omega, self.alpha
+        z = (x - xi)/omega
+        return exp(-z**2/2)*(1 + erf(alpha*z/sqrt(2)))/(sqrt(2*pi)*omega)
+
+    def _cdf(self, x):
+        xi, omega, alpha = self.xi, self.omega, self.alpha
+        z = (x - xi)/omega
+        return erf(sqrt(2)*z/2)/2 + S.Half - 2*owens_t(z, alpha)
+
+
+def SkewNormal(name, xi, omega, alpha):
+    r"""
+    Create a continuous random variable with a Skew Normal distribution.
+
+    Explanation
+    ===========
+
+    The density of the Skew Normal distribution is given by
+
+    .. math::
+        f(x) := \frac{2}{\omega} \phi\left(\frac{x-\xi}{\omega}\right)
+                \Phi\left(\alpha\frac{x-\xi}{\omega}\right)
+
+    where $\phi$ and $\Phi$ are the standard normal PDF and CDF,
+    respectively.
+
+    Parameters
+    ==========
+
+    xi : Real number, the location
+    omega : Real number, `\omega > 0`, a scale
+    alpha : Real number, the shape parameter
+
+    Returns
+    =======
+
+    RandomSymbol
+
+    Examples
+    ========
+
+    >>> from sympy.stats import SkewNormal, density, cdf
+    >>> from sympy import Symbol
+
+    >>> xi = Symbol("xi")
+    >>> omega = Symbol("omega", positive=True)
+    >>> alpha = Symbol("alpha")
+    >>> x = Symbol("x")
+
+    >>> X = SkewNormal("x", xi, omega, alpha)
+
+    >>> density(X)(x)
+    sqrt(2)*(erf(sqrt(2)*alpha*(x - xi)/(2*omega)) + 1)*exp(-(x - xi)**2/(2*omega**2))/(2*sqrt(pi)*omega)
+
+    >>> cdf(X)(x)
+    erf(sqrt(2)*(x - xi)/(2*omega))/2 - 2*owens_t((x - xi)/omega, alpha) + 1/2
+
+    Setting :math:`\alpha = 0` reduces to a Normal distribution:
+
+    >>> from sympy.stats import Normal
+    >>> density(SkewNormal("x", xi, omega, 0))(x) == density(Normal("x", xi, omega))(x)
+    True
+
+    References
+    ==========
+
+    .. [1] https://en.wikipedia.org/wiki/Skew_normal_distribution
+    .. [2] Azzalini, A. (1985). A class of distributions which includes
+           the normal ones. Scandinavian Journal of Statistics, 171-178.
+
+    """
+
+    return rv(name, SkewNormalDistribution, (xi, omega, alpha))
 
 #-------------------------------------------------------------------------------
 # StudentT distribution --------------------------------------------------------
@@ -4059,21 +4148,20 @@ def StudentT(name, nu):
 
     >>> D = density(X)(z)
     >>> pprint(D, use_unicode=False)
-               nu   1
-             - -- - -
-               2    2
-     /     2\
-     |    z |
-     |1 + --|
-     \    nu/
+              nu   1
+            - -- - -
+              2    2
+    /     2\
+    |    z |
+    |1 + --|
+    \    nu/
     -----------------
       ____  /     nu\
     \/ nu *B|1/2, --|
             \     2 /
 
     >>> cdf(X)(z)
-    1/2 + z*gamma(nu/2 + 1/2)*hyper((1/2, nu/2 + 1/2), (3/2,),
-                                -z**2/nu)/(sqrt(pi)*sqrt(nu)*gamma(nu/2))
+    z*gamma(nu/2 + 1/2)*hyper((1/2, nu/2 + 1/2), (3/2,), -z**2/nu)/(sqrt(pi)*sqrt(nu)*gamma(nu/2)) + 1/2
 
 
     References
@@ -4160,19 +4248,19 @@ def Trapezoidal(name, a, b, c, d):
     >>> X = Trapezoidal("x", a,b,c,d)
 
     >>> pprint(density(X)(z), use_unicode=False)
-    /        -2*a + 2*z
-    |-------------------------  for And(a <= z, b > z)
-    |(-a + b)*(-a - b + c + d)
+    /       2*z - 2*a
+    |------------------------  for And(a <= z, b > z)
+    |(b - a)*(-a - b + c + d)
     |
     |           2
-    |     --------------        for And(b <= z, c > z)
+    |     --------------       for And(b <= z, c > z)
     <     -a - b + c + d
     |
-    |        2*d - 2*z
-    |-------------------------  for And(d >= z, c <= z)
-    |(-c + d)*(-a - b + c + d)
+    |       2*d - 2*z
+    |------------------------  for And(d >= z, c <= z)
+    |(d - c)*(-a - b + c + d)
     |
-    \            0                     otherwise
+    \           0                     otherwise
 
     References
     ==========
@@ -4261,19 +4349,19 @@ def Triangular(name, a, b, c):
     >>> X = Triangular("x", a,b,c)
 
     >>> pprint(density(X)(z), use_unicode=False)
-    /    -2*a + 2*z
-    |-----------------  for And(a <= z, c > z)
-    |(-a + b)*(-a + c)
+    /   2*z - 2*a
+    |---------------  for And(a <= z, c > z)
+    |(b - a)*(c - a)
     |
     |       2
-    |     ------              for c = z
-    <     -a + b
+    |     -----             for c = z
+    <     b - a
     |
     |   2*b - 2*z
-    |----------------   for And(b >= z, c < z)
-    |(-a + b)*(b - c)
+    |---------------  for And(b >= z, c < z)
+    |(b - a)*(b - c)
     |
-    \        0                otherwise
+    \       0               otherwise
 
     References
     ==========
@@ -4374,10 +4462,10 @@ def Uniform(name, left, right):
     >>> X = Uniform("x", a, b)
 
     >>> density(X)(z)
-    Piecewise((1/(-a + b), (b >= z) & (a <= z)), (0, True))
+    Piecewise((1/(b - a), (b >= z) & (a <= z)), (0, True))
 
     >>> cdf(X)(z)
-    Piecewise((0, a > z), ((-a + z)/(-a + b), b >= z), (1, True))
+    Piecewise((0, a > z), ((z - a)/(b - a), b >= z), (1, True))
 
     >>> E(X)
     a/2 + b/2
@@ -4473,17 +4561,16 @@ def UniformSum(name, n):
     floor(z)
       ___
       \  `
-       \         k         n - 1 /n\
-        )    (-1) *(-k + z)     *| |
-       /                         \k/
+       \         k        n - 1 /n\
+        )    (-1) *(z - k)     *| |
+       /                        \k/
       /__,
      k = 0
-    --------------------------------
-                (n - 1)!
+    -------------------------------
+               (n - 1)!
 
     >>> cdf(X)(z)
-    Piecewise((0, z < 0), (Sum((-1)**_k*(-_k + z)**n*binomial(n, _k),
-                    (_k, 0, floor(z)))/factorial(n), n >= z), (1, True))
+    Piecewise((0, z < 0), (Sum((-1)**_k*(z - _k)**n*binomial(n, _k), (_k, 0, floor(z)))/factorial(n), n >= z), (1, True))
 
 
     Compute cdf with specific 'x' and 'n' values as follows :
@@ -4642,7 +4729,7 @@ def Weibull(name, alpha, beta):
     lambda*gamma(1 + 1/k)
 
     >>> simplify(variance(X))
-    lambda**2*(-gamma(1 + 1/k)**2 + gamma(1 + 2/k))
+    lambda**2*(gamma(1 + 2/k) - gamma(1 + 1/k)**2)
 
     References
     ==========

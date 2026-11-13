@@ -1456,17 +1456,19 @@ class MathMLPresentationPrinter(MathMLPrinterBase):
         return self._print_LogOp(args, '&#x21D4;')
 
     def _print_Not(self, e):
+        from sympy.sets.contains import Contains
         mrow = self.dom.createElement('mrow')
         mo = self.dom.createElement('mo')
         mo.appendChild(self.dom.createTextNode('&#xAC;'))
         mrow.appendChild(mo)
-        if (e.args[0].is_Boolean):
+        arg = e.args[0]
+        if (arg.is_Boolean or arg.is_Relational or isinstance(arg, Contains)) and not arg.is_Not:
             x = self.dom.createElement('mrow')
             x.appendChild(self._l_paren())
-            x.appendChild(self._print(e.args[0]))
+            x.appendChild(self._print(arg))
             x.appendChild(self._r_paren())
         else:
-            x = self._print(e.args[0])
+            x = self._print(arg)
         mrow.appendChild(x)
         return mrow
 

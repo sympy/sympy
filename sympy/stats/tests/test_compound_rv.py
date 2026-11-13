@@ -19,7 +19,7 @@ from sympy.stats.compound_rv import CompoundDistribution, CompoundPSpace
 from sympy.stats.crv_types import NormalDistribution
 from sympy.stats.drv_types import PoissonDistribution
 from sympy.stats.frv_types import BernoulliDistribution
-from sympy.testing.pytest import raises, ignore_warnings
+from sympy.testing.pytest import raises, ignore_warnings, slow
 from sympy.stats.joint_rv_types import MultivariateNormalDistribution
 
 from sympy.abc import x
@@ -33,6 +33,7 @@ assert streq(x, 'x')
 assert not streq(x, x + 1)
 
 
+@slow
 def test_normal_CompoundDist():
     X = Normal('X', 1, 2)
     Y = Normal('X', X, 4)
@@ -80,9 +81,10 @@ def test_unevaluated_CompoundDist():
     R = Rayleigh('R', 4)
     X = Normal('X', 3, R)
     ans = '''
-        Piecewise(((-sqrt(pi)*sinh(x/4 - 3/4) + sqrt(pi)*cosh(x/4 - 3/4))/(
-        8*sqrt(pi)), Abs(arg(x - 3)) <= pi/4), (Integral(sqrt(2)*exp(-(x - 3)
-        **2/(2*R**2))*exp(-R**2/32)/(32*sqrt(pi)), (R, 0, oo)), True))'''
+        Piecewise(((sqrt(pi)*cosh(x/4 - 3/4) - sqrt(pi)*sinh(x/4 -
+        3/4))/(8*sqrt(pi)), Abs(arg(x - 3)) <= pi/4),
+        (Integral(sqrt(2)*exp(-(x -
+        3)**2/(2*R**2))*exp(-R**2/32)/(32*sqrt(pi)), (R, 0, oo)), True))'''
     assert streq(density(X)(x), ans)
 
     expre = '''

@@ -5,7 +5,7 @@ signatures common to SymPy objects. For general use of logic constructs
 please refer to sympy.logic classes And, Or, Not, etc.
 """
 from __future__ import annotations
-from itertools import combinations, product, zip_longest
+from itertools import combinations, zip_longest
 from sympy.assumptions.assume import AppliedPredicate, Predicate
 from sympy.core.relational import Eq, Ne, Gt, Lt, Ge, Le
 from sympy.core.singleton import S
@@ -173,6 +173,13 @@ def to_NNF(expr, composite_map=None):
     if composite_map is None:
         composite_map = {}
 
+    if expr == S.true:
+        # Use sympy.assumptions.cnf.AND() because an empty conjunction represents True
+        return AND()
+    if expr == S.false:
+        # Use sympy.assumptions.cnf.OR() because an empty disjunction represents False
+        return OR()
+
 
     binrelpreds = {Eq: Q.eq, Ne: Q.ne, Gt: Q.gt, Lt: Q.lt, Ge: Q.ge, Le: Q.le}
     if type(expr) in binrelpreds:
@@ -322,17 +329,10 @@ class CNF:
         return self
 
     def all_predicates(self):
-        predicates = set()
-        for c in self.clauses:
-            predicates |= {arg.lit for arg in c}
-        return predicates
+        return {arg.lit for clause in self.clauses for arg in clause}
 
     def _or(self, cnf):
-        clauses = set()
-        for a, b in product(self.clauses, cnf.clauses):
-            tmp = set(a)
-            tmp.update(b)
-            clauses.add(frozenset(tmp))
+        clauses = {a | b for a in self.clauses for b in cnf.clauses}
         return CNF(clauses)
 
     def _and(self, cnf):
@@ -359,6 +359,8 @@ class CNF:
 
     @classmethod
     def all_or(cls, *cnfs):
+        if not cnfs:
+            return CNF({frozenset()})
         b = cnfs[0].copy()
         for rest in cnfs[1:]:
             b = b._or(rest)
@@ -366,10 +368,8 @@ class CNF:
 
     @classmethod
     def all_and(cls, *cnfs):
-        b = cnfs[0].copy()
-        for rest in cnfs[1:]:
-            b = b._and(rest)
-        return b
+        clauses = {clause for cnf in cnfs for clause in cnf.clauses}
+        return CNF(clauses)
 
     @classmethod
     def to_CNF(cls, expr):
@@ -426,6 +426,13 @@ class EncodedCNF:
     def add_from_cnf(self, cnf):
         clauses = [self.encode(clause) for clause in cnf.clauses]
         self.data += clauses
+
+    def new_auxiliary_variable(self):
+        token = object()
+        value = len(self._symbols) + 1
+        self._symbols.append(token)
+        self.encoding[token] = value
+        return value
 
     def encode_arg(self, arg):
         literal = arg.lit

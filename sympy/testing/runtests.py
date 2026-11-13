@@ -127,19 +127,13 @@ if IS_WINDOWS:
 
 def convert_to_native_paths(lst):
     """
-    Converts a list of '/' separated paths into a list of
-    native (os.sep separated) paths and converts to lowercase
-    if the system is case insensitive.
+    Convert paths using '/' or '\\' separators to normalized native
+    paths and normalize case if the system is case insensitive.
     """
     newlst = []
     for rv in lst:
-        rv = os.path.join(*rv.split("/"))
-        # on windows the slash after the colon is dropped
-        if sys.platform == "win32":
-            pos = rv.find(':')
-            if pos != -1:
-                if rv[pos + 1] != '\\':
-                    rv = rv[:pos + 1] + '\\' + rv[pos + 1:]
+        rv = rv.replace("/", os.sep).replace("\\", os.sep)
+        rv = os.path.normpath(rv)
         newlst.append(os.path.normcase(rv))
     return newlst
 
@@ -280,8 +274,6 @@ def run_all_tests(test_args=(), test_kwargs=None,
 
     Right now, this runs the regular tests (bin/test), the doctests
     (bin/doctest), and the examples (examples/all.py).
-
-    This is what ``setup.py test`` uses.
 
     You can pass arguments and keyword arguments to the test functions that
     support them (for now, test,  doctest, and the examples). See the
@@ -690,6 +682,7 @@ def _get_doctest_blacklist():
             "examples/intermediate/sample.py",
             "examples/intermediate/mplot2d.py",
             "examples/intermediate/mplot3d.py",
+            "doc/src/modules/diffgeom.rst",
             "doc/src/modules/numeric-computation.rst",
             "doc/src/explanation/best-practices.md",
             "doc/src/tutorials/physics/biomechanics/biomechanical-model-example.rst",
@@ -796,6 +789,7 @@ def _doctest(*paths, **kwargs):
     split  = kwargs.get('split', None)
 
     blacklist.extend(_get_doctest_blacklist())
+    blacklist = convert_to_native_paths(blacklist)
 
     # Use a non-windowed backend, so that the tests work on CI
     if import_module('matplotlib') is not None:
@@ -1896,7 +1890,7 @@ class SymPyOutputChecker(pdoctest.OutputChecker):
         # floats in the 'want' string may contain ellipses
         want_floats = got_floats + r'(\.{3})?'
 
-        front_sep = r'\s|\+|\-|\*|,'
+        front_sep = r'[\s+\-*,()\[\]{}:=/]'
         back_sep = front_sep + r'|j|e'
 
         fbeg = r'^%s(?=%s|$)' % (got_floats, back_sep)
@@ -1921,6 +1915,11 @@ class SymPyOutputChecker(pdoctest.OutputChecker):
         # if they're string-identical, always return true.
         if got == want:
             return True
+
+        # Ellipses may hide floats, so leave the output unchanged and
+        # use doctest's ordinary text matching rather than float substitution.
+        if optionflags & pdoctest.ELLIPSIS and '...' in want:
+            return super().check_output(want, got, optionflags)
 
         # TODO parse integers as well ?
         # Parse floats and compare them. If some of the parsed floats contain

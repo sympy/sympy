@@ -12,8 +12,8 @@ base_dir = path_hack()
 def test_executable(path):
     if not os.path.isdir(path):
         if os.access(path, os.X_OK):
-            with open(path, 'r') as f:
-                if f.readline()[:2] != "#!":
+            with open(path, 'rb') as f:
+                if f.read(2) != b'#!':
                     exn_msg = "File at " + path + " either should not be executable or should have a shebang line"
                     raise OSError(exn_msg)
     else:

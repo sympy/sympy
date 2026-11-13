@@ -43,6 +43,20 @@ def test_prufer():
     assert b.rank == 1
 
 
+def test_prufer_repr_aliasing():
+    p = Prufer([[0, 1], [1, 2], [1, 3]])
+    code = p.prufer_repr
+    code.append(99)
+    assert p.prufer_repr == [1, 1]
+
+
+def test_tree_repr_aliasing():
+    p = Prufer([1, 1])
+    tree = p.tree_repr
+    tree[0].append(99)
+    assert p.tree_repr == [[0, 1], [1, 2], [1, 3]]
+
+
 def test_round_trip():
     def doit(t, b):
         e, n = Prufer.edges(*t)

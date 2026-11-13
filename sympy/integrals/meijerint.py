@@ -36,7 +36,7 @@ from sympy.core.cache import cacheit
 from sympy.core.containers import Tuple
 from sympy.core.exprtools import factor_terms
 from sympy.core.function import (expand, expand_mul, expand_power_base,
-                                 expand_trig, Function)
+                                 expand_trig, DefinedFunction, Function)
 from sympy.core.mul import Mul
 from sympy.core.intfunc import ilcm
 from sympy.core.numbers import Rational, pi
@@ -106,7 +106,7 @@ def _create_lookup_table(table):
     table[()] = [(a, constant(a), True, True)]
 
     # [P], Section 8.
-    class IsNonPositiveInteger(Function):
+    class IsNonPositiveInteger(DefinedFunction):
 
         @classmethod
         def eval(cls, arg):
@@ -411,21 +411,18 @@ def _find_splitting_points(expr, x):
     {-3, 0}
     """
     p, q = [Wild(n, exclude=[x]) for n in 'pq']
-
-    def compute_innermost(expr, res):
+    res = set()
+    stack = [expr]
+    while stack:
+        expr = stack.pop()
         if not isinstance(expr, Expr):
-            return
+            continue
         m = expr.match(p*x + q)
         if m and m[p] != 0:
             res.add(-m[q]/m[p])
-            return
-        if expr.is_Atom:
-            return
-        for argument in expr.args:
-            compute_innermost(argument, res)
-    innermost = set()
-    compute_innermost(expr, innermost)
-    return innermost
+        elif not expr.is_Atom:
+            stack.extend(expr.args)
+    return res
 
 
 def _split_mul(f, x):

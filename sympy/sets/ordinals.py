@@ -1,6 +1,9 @@
 from __future__ import annotations
-from sympy.core import Basic, Integer
-import operator
+
+from operator import lt
+from typing import Callable, cast
+
+from sympy.core import Basic, Integer, S
 
 
 class OmegaPower(Basic):
@@ -9,7 +12,9 @@ class OmegaPower(Basic):
     building blocks of the :class:`Ordinal` class.
     In ``OmegaPower(a, b)``, ``a`` represents exponent and ``b`` represents multiplicity.
     """
-    def __new__(cls, a, b):
+    args: tuple[Ordinal, Integer]
+
+    def __new__(cls, a: Ordinal | Integer | int, b: Integer | int):
         if isinstance(b, int):
             b = Integer(b)
         if not isinstance(b, Integer) or b <= 0:
@@ -21,37 +26,36 @@ class OmegaPower(Basic):
         return Basic.__new__(cls, a, b)
 
     @property
-    def exp(self):
+    def exp(self) -> Ordinal:
         return self.args[0]
 
     @property
-    def mult(self):
+    def mult(self) -> Integer:
         return self.args[1]
 
-    def _compare_term(self, other, op):
+    def _compare_term(self, other: OmegaPower, op: Callable) -> bool:
         if self.exp == other.exp:
             return op(self.mult, other.mult)
         else:
             return op(self.exp, other.exp)
 
-    def __eq__(self, other):
+    def __eq__(self, other: object) -> bool:
         if not isinstance(other, OmegaPower):
-            try:
-                other = OmegaPower(0, other)
-            except TypeError:
+            if not isinstance(other, (Integer, int)):
                 return NotImplemented
+            other = OmegaPower(0, other)
         return self.args == other.args
 
-    def __hash__(self):
+    def __hash__(self) -> int:
         return Basic.__hash__(self)
 
-    def __lt__(self, other):
+    def __lt__(self, other: OmegaPower | Integer | int) -> bool:
         if not isinstance(other, OmegaPower):
             try:
                 other = OmegaPower(0, other)
             except TypeError:
                 return NotImplemented
-        return self._compare_term(other, operator.lt)
+        return self._compare_term(other, lt)
 
 
 class Ordinal(Basic):
@@ -79,7 +83,9 @@ class Ordinal(Basic):
 
     .. [1] https://en.wikipedia.org/wiki/Ordinal_arithmetic
     """
-    def __new__(cls, *terms):
+    args: tuple[OmegaPower, ...]
+
+    def __new__(cls, *terms: OmegaPower):
         obj = super().__new__(cls, *terms)
         powers = [i.exp for i in obj.args]
         if not all(powers[i] >= powers[i+1] for i in range(len(powers) - 1)):
@@ -87,57 +93,57 @@ class Ordinal(Basic):
         return obj
 
     @property
-    def terms(self):
+    def terms(self) -> tuple[OmegaPower, ...]:
         return self.args
 
     @property
-    def leading_term(self):
+    def leading_term(self) -> OmegaPower:
         if self == ord0:
             raise ValueError("ordinal zero has no leading term")
         return self.terms[0]
 
     @property
-    def trailing_term(self):
+    def trailing_term(self) -> OmegaPower:
         if self == ord0:
             raise ValueError("ordinal zero has no trailing term")
         return self.terms[-1]
 
     @property
-    def is_successor_ordinal(self):
+    def is_successor_ordinal(self) -> bool:
         try:
             return self.trailing_term.exp == ord0
         except ValueError:
             return False
 
     @property
-    def is_limit_ordinal(self):
+    def is_limit_ordinal(self) -> bool:
         try:
             return not self.trailing_term.exp == ord0
         except ValueError:
             return False
 
     @property
-    def degree(self):
+    def degree(self) -> Ordinal:
         return self.leading_term.exp
 
     @classmethod
-    def convert(cls, integer_value):
+    def convert(cls, integer_value: Integer | int) -> Ordinal:
         if integer_value == 0:
             return ord0
         return Ordinal(OmegaPower(0, integer_value))
 
-    def __eq__(self, other):
+    def __eq__(self, other: object) -> bool:
         if not isinstance(other, Ordinal):
-            try:
-                other = Ordinal.convert(other)
-            except TypeError:
+            if not isinstance(other, (Integer, int)):
                 return NotImplemented
+            other = Ordinal.convert(other)
+
         return self.terms == other.terms
 
-    def __hash__(self):
+    def __hash__(self) -> int:
         return hash(self.args)
 
-    def __lt__(self, other):
+    def __lt__(self, other: Ordinal | Integer | int) -> bool:
         if not isinstance(other, Ordinal):
             try:
                 other = Ordinal.convert(other)
@@ -148,16 +154,16 @@ class Ordinal(Basic):
                 return term_self < term_other
         return len(self.terms) < len(other.terms)
 
-    def __le__(self, other):
+    def __le__(self, other: Ordinal | Integer | int) -> bool:
         return (self == other or self < other)
 
-    def __gt__(self, other):
+    def __gt__(self, other: Ordinal | Integer | int) -> bool:
         return not self <= other
 
-    def __ge__(self, other):
+    def __ge__(self, other: Ordinal | Integer | int) -> bool:
         return not self < other
 
-    def __str__(self):
+    def __str__(self) -> str:
         net_str = ""
         if self == ord0:
             return 'ord0'
@@ -180,7 +186,7 @@ class Ordinal(Basic):
 
     __repr__ = __str__
 
-    def __add__(self, other):
+    def __add__(self, other: Ordinal | Integer | int) -> Ordinal:
         if not isinstance(other, Ordinal):
             try:
                 other = Ordinal.convert(other)
@@ -203,7 +209,7 @@ class Ordinal(Basic):
             terms = a_terms[:r+1] + b_terms
         return Ordinal(*terms)
 
-    def __radd__(self, other):
+    def __radd__(self, other: Ordinal | Integer | int) -> Ordinal:
         if not isinstance(other, Ordinal):
             try:
                 other = Ordinal.convert(other)
@@ -211,7 +217,7 @@ class Ordinal(Basic):
                 return NotImplemented
         return other + self
 
-    def __mul__(self, other):
+    def __mul__(self, other: Ordinal | Integer | int) -> Ordinal:
         if not isinstance(other, Ordinal):
             try:
                 other = Ordinal.convert(other)
@@ -234,7 +240,7 @@ class Ordinal(Basic):
             summation += list(self.terms[1:])
         return Ordinal(*summation)
 
-    def __rmul__(self, other):
+    def __rmul__(self, other: Ordinal | Integer | int) -> Ordinal:
         if not isinstance(other, Ordinal):
             try:
                 other = Ordinal.convert(other)
@@ -242,10 +248,77 @@ class Ordinal(Basic):
                 return NotImplemented
         return other * self
 
-    def __pow__(self, other):
-        if not self == omega:
-            return NotImplemented
-        return Ordinal(OmegaPower(other, 1))
+    def _pow(self, other: Ordinal) -> Ordinal:
+        if other == ord0:
+            return Ordinal.convert(1)
+        if self == ord0:
+            return ord0
+        if self == Ordinal.convert(1):
+            return self
+
+        if other.is_limit_ordinal:
+            infinite_terms = other.terms
+            finite_part = Integer(0)
+        else:
+            infinite_terms = other.terms[:-1]
+            finite_part = other.trailing_term.mult
+
+        # finite self to arbitrary other
+        if self.degree == ord0:
+            exponent_terms = []
+            for term in infinite_terms:
+                if term.exp >= omega:
+                    exponent_terms.append(term)
+                else:
+                    exponent_terms.append(
+                        OmegaPower(
+                            term.exp.leading_term.mult - 1,
+                            term.mult,
+                            )
+                        )
+            new_degree = Ordinal(*exponent_terms)
+            if finite_part == ord0:
+                mult: Integer = S.One
+            else:
+                mult = cast(Integer, self.leading_term.mult ** finite_part)
+            return Ordinal(OmegaPower(new_degree, mult))
+
+        # infinite self to limit ordinal other
+        if other.is_limit_ordinal:
+            return Ordinal(OmegaPower(self.degree*other,1))
+
+        # infinite self to successor ordinal
+        # other = beta + m
+        m = other.trailing_term.mult
+        beta = Ordinal(*other.terms[:-1])
+        first_term = Ordinal(OmegaPower(self.degree*(beta + (m-1)),1))
+        if self.is_limit_ordinal:
+            return first_term * self
+        else:
+            # self = alpha + k
+            k = self.trailing_term.mult
+            alpha = Ordinal(*self.terms[:-1])
+            out = first_term*alpha
+            for i in reversed(range(m-1)):
+                out += Ordinal(OmegaPower(self.degree*(beta + i),1))*alpha*k
+            out += Ordinal(OmegaPower(self.degree*beta,k))
+            return out
+
+    def __pow__(self, other: Ordinal | Integer | int) -> Ordinal:
+        if not isinstance(other, Ordinal):
+            try:
+                other = Ordinal.convert(other)
+            except TypeError:
+                return NotImplemented
+        return self._pow(other)
+
+    def __rpow__(self, other: Ordinal | Integer | int) -> Ordinal:
+        if not isinstance(other, Ordinal):
+            try:
+                other = Ordinal.convert(other)
+            except TypeError:
+                return NotImplemented
+        return other._pow(self)
 
 
 class OrdinalZero(Ordinal):
@@ -253,7 +326,8 @@ class OrdinalZero(Ordinal):
 
     OrdinalZero can be imported as ``ord0``.
     """
-    pass
+    def __new__(cls):
+        return Ordinal.__new__(cls)
 
 
 class OrdinalOmega(Ordinal):
@@ -272,7 +346,7 @@ class OrdinalOmega(Ordinal):
         return Ordinal.__new__(cls)
 
     @property
-    def terms(self):
+    def terms(self) -> tuple[OmegaPower]:
         return (OmegaPower(1, 1),)
 
 

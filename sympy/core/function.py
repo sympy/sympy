@@ -134,19 +134,37 @@ def arity(cls):
     Examples
     ========
 
-    >>> from sympy import arity, log
+    >>> from sympy import S, Range, oo, arity, log
     >>> arity(lambda x: x)
     1
     >>> arity(log)
     (1, 2)
     >>> arity(lambda *x: sum(x)) is None
     True
+
+    When the function takes a variable number of arguments, the arity
+    begins at the number of required arguments (``1`` in the example
+    below) and extends without bound:
+
+    >>> arity(lambda x, *args: x) == S.Naturals
+    True
+    >>> arity(lambda x, y, z, *args: x) == Range(3, oo)
+    True
     """
     eval_ = getattr(cls, 'eval', cls)
 
     parameters = inspect.signature(eval_).parameters.items()
-    if [p for _, p in parameters if p.kind == p.VAR_POSITIONAL]:
-        return
+    if any(p.kind == p.VAR_POSITIONAL for _, p in parameters):
+        # the number of arguments is at least the number of required
+        # positional arguments
+        required = [p for _, p in parameters
+            if p.kind == p.POSITIONAL_OR_KEYWORD and p.default == p.empty]
+        if not required:
+            return
+        from sympy.sets.fancysets import Range
+        if len(required) == 1:
+            return S.Naturals
+        return Range(len(required), S.Infinity)
     p_or_k = [p for _, p in parameters if p.kind == p.POSITIONAL_OR_KEYWORD]
     # how many have no default and how many have a default value
     no, yes = map(len, sift(p_or_k,
@@ -175,7 +193,11 @@ class FunctionClass(type):
                     continue
 
         # Canonicalize nargs here; change to set in nargs.
-        if is_sequence(nargs):
+        if getattr(nargs, 'sup', None) is S.Infinity and hasattr(nargs, 'is_FiniteSet'):
+            # an unbounded set of integers, e.g. Naturals or Range(3, oo),
+            # is kept as-is (importing it here would cause a cyclic import)
+            pass
+        elif is_sequence(nargs):
             if not nargs:
                 raise ValueError(filldedent('''
                     Incorrectly specified nargs as %s:
@@ -248,6 +270,15 @@ class FunctionClass(type):
         >>> Function('f', nargs=(2, 1)).nargs
         {1, 2}
 
+        If the function can take a minimum number of arguments, an
+        unbounded set of integers is returned:
+
+        >>> class f(Function):
+        ...     @classmethod
+        ...     def eval(cls, x, *args): pass
+        >>> f.nargs
+        Naturals
+
         The undefined function, after application, also has the nargs
         attribute; the actual number of arguments is always available by
         checking the ``args`` attribute:
@@ -258,9 +289,12 @@ class FunctionClass(type):
         >>> len(f(1).args)
         1
         """
+        from sympy.sets.fancysets import Range, Naturals
         from sympy.sets.sets import FiniteSet
         # XXX it would be nice to handle this in __init__ but there are import
         # problems with trying to import FiniteSet there
+        if isinstance(self._nargs, (Range, Naturals)):
+            return self._nargs
         return FiniteSet(*self._nargs) if self._nargs else S.Naturals0
 
     def _valid_nargs(self, n : int) -> bool:
@@ -333,8 +367,12 @@ class Application(Basic, metaclass=FunctionClass):
             #  - WildFunction('f').nargs
             #  - AppliedUndef with no nargs like Function('f')(1).nargs
             nargs = obj._nargs  # note the underscore here
-        # convert to FiniteSet
-        obj.nargs = FiniteSet(*nargs) if nargs else Naturals0()
+        # convert to a Set
+        from sympy.sets.fancysets import Range, Naturals
+        if isinstance(nargs, (Range, Naturals)):
+            obj.nargs = nargs
+        else:
+            obj.nargs = FiniteSet(*nargs) if nargs else Naturals0()
         return obj
 
     @classmethod
@@ -462,11 +500,19 @@ class Function(Application, Expr):
             # the exception and change NumPy to take advantage of this.
             temp = ('%(name)s takes %(qual)s %(args)s '
                    'argument%(plural)s (%(given)s given)')
+            from sympy.sets.fancysets import Range, Naturals
+            if isinstance(cls.nargs, (Range, Naturals)):
+                qual = 'at least'
+            elif len(cls.nargs) == 1:
+                qual = 'exactly'
+            else:
+                qual = 'at least'
+            minarg = cls.nargs.inf
             raise TypeError(temp % {
                 'name': cls,
-                'qual': 'exactly' if len(cls.nargs) == 1 else 'at least',
-                'args': min(cls.nargs),
-                'plural': 's'*(min(cls.nargs) != 1),
+                'qual': qual,
+                'args': minarg,
+                'plural': 's'*(minarg != 1),
                 'given': n})
 
         evaluate = options.get('evaluate', global_parameters.evaluate)
@@ -1111,7 +1157,7 @@ class Derivative(Expr):
 
         >>> e = sqrt((x + 1)**2 + x)
         >>> diff(e, (x, 5), simplify=False).count_ops()
-        136
+        139
         >>> diff(e, (x, 5)).count_ops()
         30
 
@@ -1374,6 +1420,19 @@ class Derivative(Expr):
         # good way to unambiguously print this.
         if len(variable_count) == 0:
             return expr
+
+        # If the expression or a variable of differentiation is a matrix or
+        # array object, delegate to ArrayDerivative so that every
+        # construction path (not just ``.diff()``, which routes through
+        # ``_derivative_dispatch``) uses the matrix/array-aware evaluation.
+        if cls is Derivative:
+            from sympy.matrices.matrixbase import MatrixBase
+            from sympy.matrices.expressions.matexpr import MatrixExpr
+            array_types = (MatrixBase, MatrixExpr, NDimArray)
+            if isinstance(expr, array_types) or any(
+                    isinstance(v, array_types) for v, _ in variable_count):
+                from sympy.tensor.array.array_derivatives import ArrayDerivative
+                return ArrayDerivative(expr, *variable_count, **kwargs)
 
         evaluate = kwargs.get('evaluate', False)
 
@@ -1868,14 +1927,14 @@ class Derivative(Expr):
         >>> x, h = symbols('x h')
         >>> f = Function('f')
         >>> f(x).diff(x).as_finite_difference()
-        -f(x - 1/2) + f(x + 1/2)
+        f(x + 1/2) - f(x - 1/2)
 
         The default step size and number of points are 1 and
         ``order + 1`` respectively. We can change the step size by
         passing a symbol as a parameter:
 
         >>> f(x).diff(x).as_finite_difference(h)
-        -f(-h/2 + x)/h + f(h/2 + x)/h
+        f(h/2 + x)/h - f(x - h/2)/h
 
         We can also specify the discretized values to be used in a
         sequence:
@@ -1890,7 +1949,7 @@ class Derivative(Expr):
         >>> e, sq2 = exp(1), sqrt(2)
         >>> xl = [x-h, x+h, x+e*h]
         >>> f(x).diff(x, 1).as_finite_difference(xl, x+h*sq2)  # doctest: +ELLIPSIS
-        2*h*((h + sqrt(2)*h)/(2*h) - (-sqrt(2)*h + h)/(2*h))*f(E*h + x)/...
+        2*h*((sqrt(2)*h + h)/(2*h) - (h - sqrt(2)*h)/(2*h))*f(E*h + x)/...
 
         To approximate ``Derivative`` around ``x0`` using a non-equidistant
         spacing step, the algorithm supports assignment of undefined
@@ -1898,21 +1957,21 @@ class Derivative(Expr):
 
         >>> dx = Function('dx')
         >>> f(x).diff(x).as_finite_difference(points=dx(x), x0=x-h)
-        -f(-h + x - dx(-h + x)/2)/dx(-h + x) + f(-h + x + dx(-h + x)/2)/dx(-h + x)
+        f(-h + x + dx(x - h)/2)/dx(x - h) - f(-h + x - dx(x - h)/2)/dx(x - h)
 
         Partial derivatives are also supported:
 
         >>> y = Symbol('y')
         >>> d2fdxdy=f(x,y).diff(x,y)
         >>> d2fdxdy.as_finite_difference(wrt=x)
-        -Derivative(f(x - 1/2, y), y) + Derivative(f(x + 1/2, y), y)
+        Derivative(f(x + 1/2, y), y) - Derivative(f(x - 1/2, y), y)
 
         We can apply ``as_finite_difference`` to ``Derivative`` instances in
         compound expressions using ``replace``:
 
         >>> (1 + 42**f(x).diff(x)).replace(lambda arg: arg.is_Derivative,
         ...     lambda arg: arg.as_finite_difference())
-        42**(-f(x - 1/2) + f(x + 1/2)) + 1
+        42**(f(x + 1/2) - f(x - 1/2)) + 1
 
 
         See also
@@ -2106,8 +2165,87 @@ class Lambda(Expr):
         """Return ``True`` if this ``Lambda`` is an identity function. """
         return self.signature == self.expr
 
+    def curry(self):
+        """
+        Return a curried Lambda: any multi-variable Lambda becomes a
+        nest of single-argument Lambdas, e.g ``f(x,y)`` is rewritten as ``f(x)(y)``.
+
+
+        Examples
+        ========
+
+        >>> from sympy import Lambda
+        >>> from sympy.abc import x, y, z
+        >>> Lambda((x, y), x + y).curry()
+        Lambda(x, Lambda(y, x + y))
+        >>> Lambda((x, y, z), x*y + z).curry()
+        Lambda(x, Lambda(y, Lambda(z, x*y + z)))
+        >>> Lambda(x, x**2).curry()
+        Lambda(x, x**2)
+
+        Nested tuples in the signature are flattened into their component
+        variables:
+
+        >>> Lambda(((x, y), z), x + y + z).curry()
+        Lambda(x, Lambda(y, Lambda(z, x + y + z)))
+
+        References
+        ==========
+
+        .. [1] https://en.wikipedia.org/wiki/Currying
+        """
+        variables = self.variables
+        if len(variables) <= 1 and self.signature == variables:
+            return self
+        expr = self.expr
+        for v in reversed(variables):
+            expr = Lambda(v, expr)
+        return expr
+
     def _eval_evalf(self, prec):
         return self.func(self.args[0], self.args[1].evalf(n=prec_to_dps(prec)))
+
+
+
+    def _subs(self, old, new, **hints):
+        from .symbol import Dummy
+        from .traversal import preorder_traversal
+
+        capture_new = hints.get('original_new', new)
+
+        if not old.free_symbols.isdisjoint(self.variables):
+            return self
+
+        if old.is_Symbol and old not in self.free_symbols:
+            return self
+
+        if not capture_new.free_symbols or not self.has(*capture_new.free_symbols):
+            return super()._subs(old, new, **hints)
+
+        # Probe where substitution actually takes place.
+        probe = Dummy('probe', commutative=new.is_commutative is not False)
+        inner_hints = {k: v for k, v in hints.items()
+                       if k != 'original_new'}
+        marked = super()._subs(old, probe, **inner_hints)
+
+        if not marked.has(probe):
+            return super()._subs(old, new, **hints)
+
+        # Give every binding a unique identity.
+        f, restore = marked._bound_dummies()
+
+        # Protect bindings whose scopes contain the replacement.
+        for node in preorder_traversal(f):
+            if not hasattr(node, 'bound_symbols') or not node.has(probe):
+                continue
+            for d in node.bound_symbols:
+                if d in restore and restore[d] in capture_new.free_symbols:
+                    v = restore[d]
+                    restore[d] = Dummy(v.name, commutative=v.is_commutative)
+
+        # Restore safe bindings before inserting the replacement.
+        return f.xreplace(restore).xreplace({probe: new})
+
 
 
 class Subs(Expr):
@@ -2647,7 +2785,7 @@ def expand(e, deep=True, modulus=None, power_base=True, power_exp=True,
     >>> (x + y).expand(complex=True)
     re(x) + re(y) + I*im(x) + I*im(y)
     >>> cos(x).expand(complex=True)
-    -I*sin(re(x))*sinh(im(x)) + cos(re(x))*cosh(im(x))
+    cos(re(x))*cosh(im(x)) - I*sin(re(x))*sinh(im(x))
 
     Note that this is just a wrapper around ``as_real_imag()``.  Most objects
     that wish to redefine ``_eval_expand_complex()`` should consider
@@ -2668,7 +2806,7 @@ def expand(e, deep=True, modulus=None, power_base=True, power_exp=True,
     Do trigonometric expansions.
 
     >>> cos(x + y).expand(trig=True)
-    -sin(x)*sin(y) + cos(x)*cos(y)
+    cos(x)*cos(y) - sin(x)*sin(y)
     >>> sin(2*x).expand(trig=True)
     2*sin(x)*cos(x)
 
@@ -2875,7 +3013,7 @@ def _mexpand(expr, recursive=False):
 # These are simple wrappers around single hints.
 
 
-def expand_mul(expr, deep=True):
+def expand_mul(expr: Expr, deep: bool = True) -> Expr:
     """
     Wrapper around expand that only uses the mul hint.  See the expand
     docstring for more information.
@@ -3003,7 +3141,7 @@ def expand_complex(expr, deep=True):
     >>> from sympy import expand_complex, exp, sqrt, I
     >>> from sympy.abc import z
     >>> expand_complex(exp(z))
-    I*exp(re(z))*sin(im(z)) + exp(re(z))*cos(im(z))
+    exp(re(z))*cos(im(z)) + I*exp(re(z))*sin(im(z))
     >>> expand_complex(sqrt(I))
     sqrt(2)/2 + sqrt(2)*I/2
 
@@ -3188,7 +3326,7 @@ def count_ops(expr, visual=False):
 
     >>> eq=x*(1 + x*(2 + x*(3 + x)))
     >>> count_ops(eq.expand(), visual=True) - count_ops(eq, visual=True)
-    -MUL + 3*POW
+    3*POW - MUL
 
     The count_ops function also handles iterables:
 
@@ -3238,7 +3376,7 @@ def count_ops(expr, visual=False):
                         a = a.as_two_terms()[1]
                     else:
                         a = -a
-                n, d = fraction(a)
+                n, d = fraction(a, exact=True)
                 if n.is_Integer:
                     ops.append(DIV)
                     if n < 0:

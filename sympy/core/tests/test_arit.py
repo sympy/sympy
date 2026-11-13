@@ -1,4 +1,7 @@
 from __future__ import annotations
+
+import pytest
+
 from sympy.core.add import Add
 from sympy.core.basic import Basic
 from sympy.core.mod import Mod
@@ -1693,6 +1696,9 @@ def test_AssocOp_doit():
     assert d.doit().args == (4*S.One, Pow(x,2))
 
 
+@pytest.mark.thread_unsafe(
+    reason="expects warning side effects from cached constructors"
+)
 def test_Add_Mul_Expr_args():
     nonexpr = [Basic(), Poly(x, x), FiniteSet(x)]
     for typ in [Add, Mul]:
@@ -1880,6 +1886,19 @@ def test_Mod():
             reps = [(x, _x), (y, _y)]
             assert Mod(3*x + y, 9).subs(reps) == (3*_x + _y) % 9
 
+    # Known negative ratios must use floor, not truncation toward zero.
+    # The sign of the modulus can be unknown even though p/q is rational.
+    assert Mod(-x, 2*x) == x
+    assert Mod(x, -2*x) == -x
+    assert Mod(-x, 3*x) == 2*x
+    assert Mod(-x**2, 2*x**2) == x**2
+    a, b = symbols('a b', integer=True)
+    t = a*x + b
+    expr = Mod(-t**2, 2*t**2)
+    assert expr == t**2
+    params = {a: 0, b: 1}
+    assert expr.subs(params) == Mod((-t**2).subs(params), (2*t**2).subs(params)) == 1
+
     # denesting
     t = Symbol('t', real=True)
     assert Mod(Mod(x, t), t) == Mod(x, t)
@@ -2022,6 +2041,11 @@ def test_Mod():
     expr_int = 8*Mod(floor(x1_int/64), 4).xreplace({x1_int: x1})
     assert expr == expr_int
 
+    # from issue 29757: Mod(n * Mod(x, q), q) should simplify to Mod(n*x, q)
+    x1_int = Symbol('x1_int', integer=True)
+
+    assert Mod(3 * Mod(x1_int, 7), 7) == Mod(3 * x1_int, 7)
+    assert Mod(5 * Mod(x1_int, 3), 3) == Mod(2 * x1_int, 3)
 
 def test_Mod_Pow():
     # modular exponentiation

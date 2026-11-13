@@ -1,8 +1,14 @@
 from __future__ import annotations
+
+import pytest
+
 from sympy.core.basic import Basic
 from sympy.core.numbers import Rational
 from sympy.core.singleton import S, Singleton
 
+@pytest.mark.thread_unsafe(
+    reason="registers temporary classes in the process-global singleton registry"
+)
 def test_Singleton():
 
     class MySingleton(Basic, metaclass=Singleton):
@@ -20,6 +26,9 @@ def test_Singleton():
     assert MySingleton_sub() is not MySingleton()
     assert MySingleton_sub() is MySingleton_sub()
 
+@pytest.mark.thread_unsafe(
+    reason="registers temporary classes in the process-global singleton registry"
+)
 def test_singleton_redefinition():
     class TestSingleton(Basic, metaclass=Singleton):
         pass

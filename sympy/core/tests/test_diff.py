@@ -13,7 +13,7 @@ from sympy.functions.elementary.miscellaneous import Max
 from sympy.functions.elementary.piecewise import Piecewise
 from sympy.functions.elementary.trigonometric import (cos, cot, sin, tan)
 from sympy.tensor.array.ndim_array import NDimArray
-from sympy.testing.pytest import raises
+from sympy.testing.pytest import raises, slow
 from sympy.abc import a, b, c, x, y, z
 
 def test_diff():
@@ -113,6 +113,7 @@ def test_deriv_noncommutative():
     assert A*f(x).diff(x)*A == f(x).diff(x) * A**2
 
 
+@slow
 def test_diff_nth_derivative():
     f =  Function("f")
     n = Symbol("n", integer=True)

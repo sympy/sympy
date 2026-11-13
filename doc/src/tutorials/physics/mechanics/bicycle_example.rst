@@ -120,15 +120,15 @@ again are calculated automatically when first needed. ::
   >>> WR_mc.v2pt_theory(WR_cont, N, WR)
   WRrad*(u1*sin(q2) + u3 + u4)*R.x - WRrad*u2*R.y
   >>> Steer.v2pt_theory(WR_mc, N, Frame)
-  WRrad*(u1*sin(q2) + u3 + u4)*R.x - WRrad*u2*R.y + framelength*(u1*sin(q2) + u4)*Frame.x - framelength*(-u1*sin(htangle + q4)*cos(q2) + u2*cos(htangle + q4))*Frame.y
+  WRrad*(u1*sin(q2) + u3 + u4)*R.x - WRrad*u2*R.y + framelength*(u1*sin(q2) + u4)*Frame.x - framelength*(u2*cos(htangle + q4) - u1*sin(htangle + q4)*cos(q2))*Frame.y
   >>> Frame_mc.v2pt_theory(WR_mc, N, Frame)
-  WRrad*(u1*sin(q2) + u3 + u4)*R.x - WRrad*u2*R.y + framecg3*(u1*sin(q2) + u4)*Frame.x + (-framecg1*(u1*cos(htangle + q4)*cos(q2) + u2*sin(htangle + q4)) - framecg3*(-u1*sin(htangle + q4)*cos(q2) + u2*cos(htangle + q4)))*Frame.y + framecg1*(u1*sin(q2) + u4)*Frame.z
+  WRrad*(u1*sin(q2) + u3 + u4)*R.x - WRrad*u2*R.y + framecg3*(u1*sin(q2) + u4)*Frame.x + (-framecg1*(u1*cos(htangle + q4)*cos(q2) + u2*sin(htangle + q4)) - framecg3*(u2*cos(htangle + q4) - u1*sin(htangle + q4)*cos(q2)))*Frame.y + framecg1*(u1*sin(q2) + u4)*Frame.z
   >>> Fork_mc.v2pt_theory(Steer, N, Fork)
-  WRrad*(u1*sin(q2) + u3 + u4)*R.x - WRrad*u2*R.y + framelength*(u1*sin(q2) + u4)*Frame.x - framelength*(-u1*sin(htangle + q4)*cos(q2) + u2*cos(htangle + q4))*Frame.y + forkcg3*((sin(q2)*cos(q5) + sin(q5)*cos(htangle + q4)*cos(q2))*u1 + u2*sin(htangle + q4)*sin(q5) + u4*cos(q5))*Fork.x + (-forkcg1*((-sin(q2)*sin(q5) + cos(htangle + q4)*cos(q2)*cos(q5))*u1 + u2*sin(htangle + q4)*cos(q5) - u4*sin(q5)) - forkcg3*(-u1*sin(htangle + q4)*cos(q2) + u2*cos(htangle + q4) + u5))*Fork.y + forkcg1*((sin(q2)*cos(q5) + sin(q5)*cos(htangle + q4)*cos(q2))*u1 + u2*sin(htangle + q4)*sin(q5) + u4*cos(q5))*Fork.z
+  WRrad*(u1*sin(q2) + u3 + u4)*R.x - WRrad*u2*R.y + framelength*(u1*sin(q2) + u4)*Frame.x - framelength*(u2*cos(htangle + q4) - u1*sin(htangle + q4)*cos(q2))*Frame.y + forkcg3*((sin(q2)*cos(q5) + sin(q5)*cos(htangle + q4)*cos(q2))*u1 + u2*sin(htangle + q4)*sin(q5) + u4*cos(q5))*Fork.x + (-forkcg1*((cos(htangle + q4)*cos(q2)*cos(q5) - sin(q2)*sin(q5))*u1 + u2*sin(htangle + q4)*cos(q5) - u4*sin(q5)) - forkcg3*(-u1*sin(htangle + q4)*cos(q2) + u2*cos(htangle + q4) + u5))*Fork.y + forkcg1*((sin(q2)*cos(q5) + sin(q5)*cos(htangle + q4)*cos(q2))*u1 + u2*sin(htangle + q4)*sin(q5) + u4*cos(q5))*Fork.z
   >>> WF_mc.v2pt_theory(Steer, N, Fork)
-  WRrad*(u1*sin(q2) + u3 + u4)*R.x - WRrad*u2*R.y + framelength*(u1*sin(q2) + u4)*Frame.x - framelength*(-u1*sin(htangle + q4)*cos(q2) + u2*cos(htangle + q4))*Frame.y + forkoffset*((sin(q2)*cos(q5) + sin(q5)*cos(htangle + q4)*cos(q2))*u1 + u2*sin(htangle + q4)*sin(q5) + u4*cos(q5))*Fork.x + (forklength*((-sin(q2)*sin(q5) + cos(htangle + q4)*cos(q2)*cos(q5))*u1 + u2*sin(htangle + q4)*cos(q5) - u4*sin(q5)) - forkoffset*(-u1*sin(htangle + q4)*cos(q2) + u2*cos(htangle + q4) + u5))*Fork.y - forklength*((sin(q2)*cos(q5) + sin(q5)*cos(htangle + q4)*cos(q2))*u1 + u2*sin(htangle + q4)*sin(q5) + u4*cos(q5))*Fork.z
+  WRrad*(u1*sin(q2) + u3 + u4)*R.x - WRrad*u2*R.y + framelength*(u1*sin(q2) + u4)*Frame.x - framelength*(u2*cos(htangle + q4) - u1*sin(htangle + q4)*cos(q2))*Frame.y + forkoffset*((sin(q2)*cos(q5) + sin(q5)*cos(htangle + q4)*cos(q2))*u1 + u2*sin(htangle + q4)*sin(q5) + u4*cos(q5))*Fork.x + (forklength*((cos(htangle + q4)*cos(q2)*cos(q5) - sin(q2)*sin(q5))*u1 + u2*sin(htangle + q4)*cos(q5) - u4*sin(q5)) - forkoffset*(-u1*sin(htangle + q4)*cos(q2) + u2*cos(htangle + q4) + u5))*Fork.y - forklength*((sin(q2)*cos(q5) + sin(q5)*cos(htangle + q4)*cos(q2))*u1 + u2*sin(htangle + q4)*sin(q5) + u4*cos(q5))*Fork.z
   >>> WF_cont.v2pt_theory(WF_mc, N, WF)
-  - WFrad*((-sin(q2)*sin(q5)*cos(htangle + q4) + cos(q2)*cos(q5))*u6 + u4*cos(q2) + u5*sin(htangle + q4)*sin(q2))/sqrt((-sin(q2)*cos(q5) - sin(q5)*cos(htangle + q4)*cos(q2))*(sin(q2)*cos(q5) + sin(q5)*cos(htangle + q4)*cos(q2)) + 1)*Y.x + WFrad*(u2 + u5*cos(htangle + q4) + u6*sin(htangle + q4)*sin(q5))/sqrt((-sin(q2)*cos(q5) - sin(q5)*cos(htangle + q4)*cos(q2))*(sin(q2)*cos(q5) + sin(q5)*cos(htangle + q4)*cos(q2)) + 1)*Y.y + WRrad*(u1*sin(q2) + u3 + u4)*R.x - WRrad*u2*R.y + framelength*(u1*sin(q2) + u4)*Frame.x - framelength*(-u1*sin(htangle + q4)*cos(q2) + u2*cos(htangle + q4))*Frame.y + (-WFrad*(sin(q2)*cos(q5) + sin(q5)*cos(htangle + q4)*cos(q2))*((-sin(q2)*sin(q5) + cos(htangle + q4)*cos(q2)*cos(q5))*u1 + u2*sin(htangle + q4)*cos(q5) - u4*sin(q5))/sqrt((-sin(q2)*cos(q5) - sin(q5)*cos(htangle + q4)*cos(q2))*(sin(q2)*cos(q5) + sin(q5)*cos(htangle + q4)*cos(q2)) + 1) + forkoffset*((sin(q2)*cos(q5) + sin(q5)*cos(htangle + q4)*cos(q2))*u1 + u2*sin(htangle + q4)*sin(q5) + u4*cos(q5)))*Fork.x + (forklength*((-sin(q2)*sin(q5) + cos(htangle + q4)*cos(q2)*cos(q5))*u1 + u2*sin(htangle + q4)*cos(q5) - u4*sin(q5)) - forkoffset*(-u1*sin(htangle + q4)*cos(q2) + u2*cos(htangle + q4) + u5))*Fork.y + (WFrad*(sin(q2)*cos(q5) + sin(q5)*cos(htangle + q4)*cos(q2))*(-u1*sin(htangle + q4)*cos(q2) + u2*cos(htangle + q4) + u5)/sqrt((-sin(q2)*cos(q5) - sin(q5)*cos(htangle + q4)*cos(q2))*(sin(q2)*cos(q5) + sin(q5)*cos(htangle + q4)*cos(q2)) + 1) - forklength*((sin(q2)*cos(q5) + sin(q5)*cos(htangle + q4)*cos(q2))*u1 + u2*sin(htangle + q4)*sin(q5) + u4*cos(q5)))*Fork.z
+  - WFrad*((cos(q2)*cos(q5) - sin(q2)*sin(q5)*cos(htangle + q4))*u6 + u4*cos(q2) + u5*sin(htangle + q4)*sin(q2))/sqrt((-sin(q2)*cos(q5) - sin(q5)*cos(htangle + q4)*cos(q2))*(sin(q2)*cos(q5) + sin(q5)*cos(htangle + q4)*cos(q2)) + 1)*Y.x + WFrad*(u2 + u5*cos(htangle + q4) + u6*sin(htangle + q4)*sin(q5))/sqrt((-sin(q2)*cos(q5) - sin(q5)*cos(htangle + q4)*cos(q2))*(sin(q2)*cos(q5) + sin(q5)*cos(htangle + q4)*cos(q2)) + 1)*Y.y + WRrad*(u1*sin(q2) + u3 + u4)*R.x - WRrad*u2*R.y + framelength*(u1*sin(q2) + u4)*Frame.x - framelength*(u2*cos(htangle + q4) - u1*sin(htangle + q4)*cos(q2))*Frame.y + (forkoffset*((sin(q2)*cos(q5) + sin(q5)*cos(htangle + q4)*cos(q2))*u1 + u2*sin(htangle + q4)*sin(q5) + u4*cos(q5)) - WFrad*(sin(q2)*cos(q5) + sin(q5)*cos(htangle + q4)*cos(q2))*((cos(htangle + q4)*cos(q2)*cos(q5) - sin(q2)*sin(q5))*u1 + u2*sin(htangle + q4)*cos(q5) - u4*sin(q5))/sqrt((-sin(q2)*cos(q5) - sin(q5)*cos(htangle + q4)*cos(q2))*(sin(q2)*cos(q5) + sin(q5)*cos(htangle + q4)*cos(q2)) + 1))*Fork.x + (forklength*((cos(htangle + q4)*cos(q2)*cos(q5) - sin(q2)*sin(q5))*u1 + u2*sin(htangle + q4)*cos(q5) - u4*sin(q5)) - forkoffset*(-u1*sin(htangle + q4)*cos(q2) + u2*cos(htangle + q4) + u5))*Fork.y + (WFrad*(sin(q2)*cos(q5) + sin(q5)*cos(htangle + q4)*cos(q2))*(-u1*sin(htangle + q4)*cos(q2) + u2*cos(htangle + q4) + u5)/sqrt((-sin(q2)*cos(q5) - sin(q5)*cos(htangle + q4)*cos(q2))*(sin(q2)*cos(q5) + sin(q5)*cos(htangle + q4)*cos(q2)) + 1) - forklength*((sin(q2)*cos(q5) + sin(q5)*cos(htangle + q4)*cos(q2))*u1 + u2*sin(htangle + q4)*sin(q5) + u4*cos(q5)))*Fork.z
 
 The kinematic differential equations are as follows. Each entry in this list is
 equal to zero. ::
@@ -139,18 +139,14 @@ Setup the constraints
 ---------------------
 
 The nonholonomic constraints are the velocity of the front wheel contact point
-dotted into the X, Y, and Z directions; the yaw frame is used as it is "closer"
-to the front wheel (one fewer direction cosine matrix connecting them). These
-constraints force the velocity of the front wheel contact point to be zero in
-the inertial frame; the X and Y direction constraints enforce a "no-slip"
-condition, and the Z direction constraint forces the front wheel contact point
-to not move away from the ground frame, essentially replicating the holonomic
-constraint which does not allow the frame pitch to change in an invalid
-fashion. ::
+dotted into the X and Y directions; the yaw frame is used as it is closest in
+adjacency to the front wheel (one fewer direction cosine matrix connecting
+them). These constraints force the velocity of the front wheel contact point to
+be zero in the inertial frame; the X and Y direction constraints enforce a
+"no-slip" condition. ::
 
   >>> conlist_speed = [me.dot(WF_cont.vel(N), Y.x),
-  ...                  me.dot(WF_cont.vel(N), Y.y),
-  ...                  me.dot(WF_cont.vel(N), Y.z)]
+  ...                  me.dot(WF_cont.vel(N), Y.y)]
 
 The holonomic constraint is that the position from the rear wheel contact point
 to the front wheel contact point when dotted into the normal-to-ground plane
@@ -218,7 +214,7 @@ linearization to correctly work. ::
   ...     configuration_constraints=conlist_coord,
   ...     u_ind=[u2, u3, u5],
   ...     u_dependent=[u1, u4, u6],
-  ...     velocity_constraints=conlist_speed,
+  ...     nonholonomic_constraints=conlist_speed,
   ...     kd_eqs=kd,
   ...     constraint_solver='CRAMER')
   >>> fr, frstar = kane.kanes_equations(bodies, loads=forces)
@@ -342,7 +338,7 @@ columns for lean, steer, lean rate, and steer rate.
   >>> print('v = 1')
   v = 1
   >>> print(A.subs(v, 1).eigenvals())
-  {-3.13423125066578 - 1.05503732448615e-65*I: 1, 3.52696170990069 - 0.807740275199311*I: 1, 3.52696170990069 + 0.807740275199311*I: 1, -7.11008014637441: 1}
+  {-3.13423125066578 - 7.27862159457081e-65*I: 1, 3.52696170990069 - 0.807740275199311*I: 1, 3.52696170990069 + 0.807740275199311*I: 1, -7.11008014637441: 1}
   >>> print('v = 2')
   v = 2
   >>> print(A.subs(v, 2).eigenvals())
@@ -354,11 +350,11 @@ columns for lean, steer, lean rate, and steer rate.
   >>> print('v = 4')
   v = 4
   >>> print(A.subs(v, 4).eigenvals())
-  {0.413253315211239 - 3.07910818603205*I: 1, 0.413253315211239 + 3.07910818603205*I: 1, -1.42944427361326 + 1.65070329233125e-64*I: 1, -12.1586142657644: 1}
+  {0.413253315211237 - 3.07910818603205*I: 1, 0.413253315211237 + 3.07910818603205*I: 1, -1.42944427361325 - 1.84306188338934e-64*I: 1, -12.1586142657644: 1}
   >>> print('v = 5')
   v = 5
   >>> print(A.subs(v, 5).eigenvals())
-  {-0.775341882195845 - 4.46486771378823*I: 1, -0.322866429004087 + 3.32140410564766e-64*I: 1, -0.775341882195845 + 4.46486771378823*I: 1, -14.0783896927982: 1}
+  {-0.775341882195847 - 4.46486771378823*I: 1, -0.322866429004085 - 5.80197307773222e-65*I: 1, -0.775341882195847 + 4.46486771378823*I: 1, -14.0783896927982: 1}
 
 The eigenvalues shown above match those in Table 2 on pg. 1971 of
 [Meijaard2007]_. This concludes the bicycle example.

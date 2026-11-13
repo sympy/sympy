@@ -7,11 +7,12 @@ from typing import Any
 
 from sympy.core import S, Rational, Pow, Basic, Mul, Number, UnevaluatedExpr
 from sympy.core.function import Lambda
+from sympy.core.mod import Mod
 from sympy.core.mul import _keep_coeff
 from sympy.core.numbers import Integer
 from sympy.core.relational import Relational
 from sympy.core.sorting import default_sort_key
-from sympy.core.symbol import Symbol
+from sympy.core.symbol import Dummy, Symbol
 from sympy.external.mpmath import prec_to_dps, to_str as mlib_to_str
 from sympy.utilities.iterables import sift
 from .precedence import precedence, PRECEDENCE
@@ -24,6 +25,9 @@ _rootsum_w = Symbol('w')
 
 class StrPrinter(Printer):
     printmethod = "_sympystr"
+
+    _mod_precedence = PRECEDENCE["Func"]
+
     _default_settings: dict[str, Any] = {
         "order": None,
         "full_prec": "auto",
@@ -38,7 +42,8 @@ class StrPrinter(Printer):
     _relationals: dict[str, str] = {}
 
     def parenthesize(self, item, level, strict=False):
-        if (precedence(item) < level) or ((not strict) and precedence(item) <= level):
+        prec = self._mod_precedence if isinstance(item, Mod) else precedence(item)
+        if prec < level or (not strict and prec <= level):
             return "(%s)" % self._print(item)
         else:
             return self._print(item)
@@ -402,6 +407,10 @@ class StrPrinter(Printer):
             [self.parenthesize(arg, precedence(expr)) for arg in expr.args]
         )
 
+    def _print_CharacterTable(self, P):
+        return "CharacterTable(%s, %s)" % (
+            self._print(P._rep), self._print(P._conjugacy_class_reps))
+
     def _print_ElementwiseApplyFunction(self, expr):
         return "{}.({})".format(
             expr.function,
@@ -538,6 +547,21 @@ class StrPrinter(Printer):
             denom = self.parenthesize(frac.denom, PRECEDENCE["Atom"], strict=True)
             return numer + "/" + denom
 
+    def _print_composite_domain(self, domain):
+        """Print a domain using constructors that preserve its generators."""
+        if domain.is_PolynomialRing or domain.is_FractionField:
+            base = self._print_composite_domain(domain.domain)
+            method = 'poly_ring' if domain.is_PolynomialRing else 'frac_field'
+            symbols = ', '.join(self._print(s) for s in domain.symbols)
+            if not domain.order.is_default:
+                symbols += ", order=%r" % str(domain.order)
+            return "%s.%s(%s)" % (base, method, symbols)
+        if domain.is_AlgebraicField:
+            base = self._print_composite_domain(domain.dom)
+            extensions = ', '.join(self._print(s) for s in domain.orig_ext)
+            return "%s.algebraic_field(%s)" % (base, extensions)
+        return str(domain)
+
     def _print_Poly(self, expr):
         ATOM_PREC = PRECEDENCE["Atom"] - 1
         terms, gens = [], [ self.parenthesize(s, ATOM_PREC) for s in expr.gens ]
@@ -594,7 +618,36 @@ class StrPrinter(Printer):
         try:
             format += ", modulus=%s" % expr.get_modulus()
         except PolynomialError:
-            format += ", domain='%s'" % expr.get_domain()
+            domain = expr.get_domain()
+            domain_str = repr(str(domain))
+            if domain.is_PolynomialRing or domain.is_FractionField:
+                # Abbreviated domain strings can lose assumptions, parse names
+                # as SymPy functions, or omit nesting and monomial order.
+                from sympy.core.sympify import SympifyError
+                from sympy.polys.polyoptions import Domain
+                from sympy.polys.polyerrors import BasePolynomialError
+                try:
+                    parsed = Domain.preprocess(str(domain))
+                    safe = parsed == domain
+                    if not safe and any(isinstance(s, Dummy) for s in domain.symbols):
+                        # Domain strings cannot preserve Dummy identity.
+                        # Accept its Symbol equivalent when all other
+                        # domain properties survive parsing.
+                        symbols = tuple(
+                            Symbol(str(s)) if isinstance(s, Dummy) else s
+                            for s in domain.symbols)
+                        if domain.is_PolynomialRing:
+                            normalized = domain.domain.poly_ring(
+                                *symbols, order=domain.order)
+                        else:
+                            normalized = domain.domain.frac_field(
+                                *symbols, order=domain.order)
+                        safe = parsed == normalized
+                except (BasePolynomialError, SympifyError, ValueError, TypeError):
+                    safe = False
+                if not safe:
+                    domain_str = self._print_composite_domain(domain)
+            format += ", domain=%s" % domain_str
 
         format += ")"
 
@@ -885,6 +938,11 @@ class StrPrinter(Printer):
         return "Uniform(%s, %s)" % (self._print(expr.a), self._print(expr.b))
 
     def _print_Quantity(self, expr):
+        if self._settings.get("abbrev", False):
+            return "%s" % expr.abbrev
+        return "%s" % expr.name
+
+    def _print_Prefix(self, expr):
         if self._settings.get("abbrev", False):
             return "%s" % expr.abbrev
         return "%s" % expr.name

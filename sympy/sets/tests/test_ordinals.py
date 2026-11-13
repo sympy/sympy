@@ -1,5 +1,5 @@
 from __future__ import annotations
-from sympy.sets.ordinals import Ordinal, OmegaPower, ord0, omega
+from sympy.sets.ordinals import Ordinal, OrdinalOmega, OrdinalZero, OmegaPower, ord0, omega
 from sympy.testing.pytest import raises
 
 def test_string_ordinals():
@@ -52,6 +52,11 @@ def test_multiplication():
 
 def test_exponentiation():
     w = omega
+    assert ord0**ord0 == Ordinal(OmegaPower(0, 1))
+    assert 1**w == Ordinal(OmegaPower(0, 1))
+    assert 2**(w**w+w**2+w*3+4) == w**w**w * w**w * w**3 * 16
+    assert (w**w*2+1)**w == w**(w**2)
+    assert (w**2*3+2)**3==(w**2*3+2)*(w**2*3+2)*(w**2*3+2)
     assert w**2 == w*w
     assert w**3 == w*w*w
     assert w**(w + 1) == Ordinal(OmegaPower(omega + 1, 1))
@@ -66,3 +71,7 @@ def test_comapre_not_instance():
 def test_is_successort():
     w = Ordinal(OmegaPower(5, 1))
     assert not w.is_successor_ordinal
+
+def test_atomic_classes():
+    raises(TypeError, lambda: OrdinalZero(OmegaPower(0,1)))
+    raises(TypeError, lambda: OrdinalOmega(OmegaPower(0,1)))

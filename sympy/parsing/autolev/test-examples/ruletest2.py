@@ -1,7 +1,5 @@
 import sympy.physics.mechanics as _me
 import sympy as _sm
-import math as m
-import numpy as _np
 
 x1, x2 = _me.dynamicsymbols('x1 x2')
 f1 = x1*x2+3*x1**2

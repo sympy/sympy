@@ -20,7 +20,8 @@ from sympy.solvers.ode import (classify_ode,
 
 from sympy.solvers.ode.subscheck import checkodesol
 from sympy.solvers.ode.ode import (classify_sysode,
-    constant_renumber, constantsimp, get_numbered_constants, solve_ics)
+    constant_renumber, constantsimp, get_numbered_constants, solve_ics,
+    _get_constant_solutions)
 
 from sympy.solvers.ode.nonhomogeneous import _undetermined_coefficients_match
 from sympy.solvers.ode.single import LinearCoefficients
@@ -573,6 +574,18 @@ def test_solve_ics():
     assert dsolve(f(x).diff(x, x) + f(x), f(x), ics=ics) == \
         Eq(f(x), f(0)*cos(x) + f(x).diff(x).subs(x, 0)*sin(x))
 
+
+def test_get_constant_solutions():
+    eq = Derivative(f(x), (x, 2)) - f(x)*(f(x) - 1)
+    assert _get_constant_solutions(eq, f(x),
+        {f(0): 1, Derivative(f(x), x).subs(x, 0): 0}) == [Eq(f(x), 1)]
+    assert _get_constant_solutions(eq, f(x),
+        {f(0): 0, Derivative(f(x), x).subs(x, 0): 0}) == [Eq(f(x), 0)]
+    assert _get_constant_solutions(eq, f(x),
+        {f(0): 1, Derivative(f(x), x).subs(x, 0): 1}) == []
+    assert _get_constant_solutions(eq, f(x), {f(0): 2}) == []
+
+
 def test_ode_order():
     f = Function('f')
     g = Function('g')
@@ -1039,6 +1052,17 @@ def test_dsolve_remove_redundant_solutions():
     assert dsolve(eq) == sol
 
 
+def test_dsolve_ics_redundant_constant_solution():
+    t = symbols('t')
+    y = Function('y')(t)
+    C2 = symbols('C2')
+
+    eq = y.diff(t, 2) + 2*y.diff(t) + y
+    ics = {y.subs(t, 0): 0}
+
+    assert dsolve(eq, y, ics=ics) == Eq(y, C2*t*exp(-t))
+
+
 def test_issue_13060():
     A, B = symbols("A B", cls=Function)
     t = Symbol("t")
@@ -1081,11 +1105,11 @@ def test_issue_22604():
     assert x1sol == Eq(x1(t), (-sqrt(5) + 3 + 3*sqrt(2)*sqrt(3 - sqrt(5)))
                        *cos(sqrt(2)*t*sqrt(3 - sqrt(5))/2)/10 - sqrt(sqrt(5) + 3)
                        *(-sqrt(3 - sqrt(5)) + 2*sqrt(2))*cos(sqrt(2)*t*sqrt(sqrt(5) + 3)/2)/10)
-    assert x2sol == Eq(x2(t), (-2 + 3*sqrt(2)*sqrt(3 - sqrt(5))
+    assert x2sol.equals(Eq(x2(t), (-2 + 3*sqrt(2)*sqrt(3 - sqrt(5))
                         + 2*sqrt(5) + 3*sqrt(10)*sqrt(3 - sqrt(5)))*cos(sqrt(2)
                         *t*sqrt(3 - sqrt(5))/2)/20 + sqrt(sqrt(5) + 3)*(-2*sqrt(2) - sqrt(5)
                         *sqrt(3 - sqrt(5)) + sqrt(3 - sqrt(5)) + 2*sqrt(10))
-                        *cos(sqrt(2)*t*sqrt(sqrt(5) + 3)/2)/20)
+                        *cos(sqrt(2)*t*sqrt(sqrt(5) + 3)/2)/20))
 
 def test_issue_22462():
     for de in [
@@ -1149,3 +1173,15 @@ def test_issue_28438():
     expected3 = Eq(y(x), sqrt(x)*(C1*besselj(S(1)/4, x**2/2) +
                                    C2*bessely(S(1)/4, x**2/2)))
     assert sol3 == expected3
+
+
+def test_issue_29827():
+    ode = Eq(Derivative(f(x), x), log(f(x)))
+    result = dsolve(ode, func=f(x), ics={f(1): 1})
+    # `result` should basically match `Eq(f(x), 1)`.
+    # However, with the current implementation, when `x` is real,
+    # the solution includes `Eq(li(f(x)), -oo)`.
+    assert result == Eq(f(x), 1) or Eq(f(x), 1) in result
+
+    ode = Eq(Derivative(f(x), x), f(x)*(1 - f(x)))
+    assert dsolve(ode, f(x), ics={f(0): 0}) == Eq(f(x), 0)

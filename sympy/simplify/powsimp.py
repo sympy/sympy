@@ -522,8 +522,8 @@ def powdenest(eq, force=False, polar=False):
     negative behave as though they are positive, resulting in more
     denesting.
 
-    Setting ``polar`` to ``True`` will do simplifications on the Riemann surface of
-    the logarithm, also resulting in more denestings.
+    Setting ``polar`` to ``True`` will do simplifications on the
+    Riemann surface of the logarithm, also resulting in more denestings.
 
     When there are sums of logs in exp() then a product of powers may be
     obtained e.g. ``exp(3*(log(a) + 2*log(b)))`` - > ``a**3*b**6``.
@@ -534,30 +534,53 @@ def powdenest(eq, force=False, polar=False):
     >>> from sympy.abc import a, b, x, y, z
     >>> from sympy import Symbol, exp, log, sqrt, symbols, powdenest
 
-    >>> powdenest((x**(2*a/3))**(3*x))
-    (x**(2*a/3))**(3*x)
-    >>> powdenest(exp(3*x*log(2)))
-    2**(3*x)
+    >>> p, q = symbols('p q', positive=True)
+    >>> i, j = symbols('i, j', integer=True)
+    >>> expr = (p**(2*i)*q**(4*i))**j
+    >>> expr
+    (p**(2*i)*q**(4*i))**j
+    >>> powdenest(expr)
+    (p*q**2)**(2*i*j)
 
-    Assumptions may prevent expansion:
+    In the following example, ``x`` is a generic symbol with no assumptions
+    and powdenest is unable to denest the powers of the provided expression:
 
-    >>> powdenest(sqrt(x**2))
+    >>> expr = sqrt(x**2)
+    >>> powdenest(expr)
     sqrt(x**2)
 
-    >>> p = symbols('p', positive=True)
-    >>> powdenest(sqrt(p**2))
-    p
+    We can still force a denesting, in which case x is considered non-negative,
+    thus the result won't contain an absolute value:
 
-    No other expansion is done.
+    >>> powdenest(sqrt(x**2), force=True)
+    x
 
-    >>> i, j = symbols('i,j', integer=True)
-    >>> powdenest((x**x)**(i + j)) # -X-> (x**x)**i*(x**x)**j
-    x**(x*(i + j))
+    Another similar example:
 
-    But exp() will be denested by moving all non-log terms outside of
-    the function; this may result in the collapsing of the exp to a power
-    with a different base:
+    >>> expr = (x**(2*i)*y**(4*i))**z
+    >>> powdenest(expr)
+    (x**(2*i)*y**(4*i))**z
+    >>> powdenest(expr, force=True)
+    (x*y**2)**(2*i*z)
 
+    However, assumptions on symbols may prevent denesting. In the following
+    example, the base is set to be negative, hence the simplification can't
+    be applied:
+
+    >>> n = Symbol('n', negative=True)
+    >>> expr = (n**i)**x
+    >>> powdenest(expr)
+    (n**i)**x
+    >>> powdenest(expr, force=True)
+    (n**i)**x
+
+    exp() will be denested by applying logarithmic identities. In particular,
+    expressions of the form exp(k*log(x)) are rewritten as x**k, and
+    logarithmic sums/products inside exponents are combined where possible
+    to produce a single power:
+
+    >>> powdenest(exp(3*x*log(2)))
+    2**(3*x)
     >>> powdenest(exp(3*y*log(x)))
     x**(3*y)
     >>> powdenest(exp(y*(log(a) + log(b))))
@@ -565,25 +588,15 @@ def powdenest(eq, force=False, polar=False):
     >>> powdenest(exp(3*(log(a) + log(b))))
     a**3*b**3
 
-    If assumptions allow, symbols can also be moved to the outermost exponent:
+    Sometime, more denesting can be achieved by setting ``polar=True``:
 
-    >>> i = Symbol('i', integer=True)
-    >>> powdenest(((x**(2*i))**(3*y))**x)
-    ((x**(2*i))**(3*y))**x
-    >>> powdenest(((x**(2*i))**(3*y))**x, force=True)
-    x**(6*i*x*y)
-
-    >>> powdenest(((x**(2*a/3))**(3*y/i))**x)
-    ((x**(2*a/3))**(3*y/i))**x
-    >>> powdenest((x**(2*i)*y**(4*i))**z, force=True)
-    (x*y**2)**(2*i*z)
-
-    >>> n = Symbol('n', negative=True)
-
-    >>> powdenest((x**i)**y, force=True)
-    x**(i*y)
-    >>> powdenest((n**i)**x, force=True)
-    (n**i)**x
+    >>> expr = (x*y*z)**a
+    >>> powdenest(expr)
+    (x*y*z)**a
+    >>> powdenest(expr, force=True)
+    (x*y*z)**a
+    >>> powdenest(expr, polar=True)
+    x**a*y**a*z**a
 
     """
     from sympy.simplify.simplify import posify

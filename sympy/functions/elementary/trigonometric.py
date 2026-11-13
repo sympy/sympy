@@ -23,8 +23,10 @@ from sympy.ntheory import factorint
 from sympy.polys.specialpolys import symmetric_poly
 from sympy.utilities.iterables import numbered_symbols
 from typing import TYPE_CHECKING
+from typing import cast
 
 if TYPE_CHECKING:
+    from typing import ClassVar
     from sympy.core.expr import Expr
 
 
@@ -47,6 +49,11 @@ def _imaginary_unit_as_coefficient(arg):
 
 class TrigonometricFunction(DefinedFunction):
     """Base class for trigonometric functions. """
+
+    if TYPE_CHECKING:
+        @property
+        def args(self) -> tuple[Expr]:
+            ...
 
     unbranched = True
     _singularities = (S.ComplexInfinity,)
@@ -272,7 +279,7 @@ class sin(TrigonometricFunction):
     >>> sin(pi/6)
     1/2
     >>> sin(pi/12)
-    -sqrt(2)/4 + sqrt(6)/4
+    sqrt(6)/4 - sqrt(2)/4
 
 
     See Also
@@ -871,7 +878,7 @@ class cos(TrigonometricFunction):
         apart = ipartfrac(*denoms)
         decomp = (pi_coeff.p * Rational(n, d) for n, d in zip(apart, denoms))
         X = [(x[1], x[0]*pi) for x in zip(decomp, numbered_symbols('z'))]
-        pcls = cos(sum(x[0] for x in X))._eval_expand_trig().subs(X)
+        pcls = cast('cos', cos(sum(x[0] for x in X)))._eval_expand_trig().subs(X)
 
         if not FC or len(FC) == 1:
             return pcls
@@ -986,7 +993,7 @@ class tan(TrigonometricFunction):
     >>> tan(1).diff(x)
     0
     >>> tan(pi/8).expand()
-    -1 + sqrt(2)
+    sqrt(2) - 1
 
     See Also
     ========
@@ -1645,8 +1652,11 @@ class cot(TrigonometricFunction):
 class ReciprocalTrigonometricFunction(TrigonometricFunction):
     """Base class for reciprocal functions of trigonometric functions. """
 
-    _reciprocal_of = None       # mandatory, to be defined in subclass
+    # mandatory, to be defined in subclass
+    _reciprocal_of: ClassVar[type[TrigonometricFunction]]
     _singularities = (S.ComplexInfinity,)
+
+    is_zero = False # Assuming that the subclasses are sec and csc
 
     # _is_even and _is_odd are used for correct evaluation of csc(-x), sec(-x)
     # TODO refactor into TrigonometricFunction common parts of
@@ -1760,6 +1770,30 @@ class ReciprocalTrigonometricFunction(TrigonometricFunction):
 
     def _eval_nseries(self, x, n, logx, cdir=0):
         return (1/self._reciprocal_of(self.args[0]))._eval_nseries(x, n, logx)
+
+    def _eval_is_positive(self):
+        return self._reciprocal_of(self.args[0]).is_positive
+
+    def _eval_is_extended_positive(self):
+        return self._reciprocal_of(self.args[0]).is_positive
+
+    def _eval_is_nonnegative(self):
+        return self._reciprocal_of(self.args[0]).is_positive
+
+    def _eval_is_extended_nonnegative(self):
+        return self._reciprocal_of(self.args[0]).is_positive
+
+    def _eval_is_negative(self):
+        return self._reciprocal_of(self.args[0]).is_negative
+
+    def _eval_is_extended_negative(self):
+        return self._reciprocal_of(self.args[0]).is_negative
+
+    def _eval_is_nonpositive(self):
+        return self._reciprocal_of(self.args[0]).is_negative
+
+    def _eval_is_extended_nonpositive(self):
+        return self._reciprocal_of(self.args[0]).is_negative
 
 
 class sec(ReciprocalTrigonometricFunction):
@@ -2088,8 +2122,8 @@ class sinc(DefinedFunction):
                 return S.NegativeOne**(pi_coeff - S.Half)/arg
 
     def _eval_nseries(self, x, n, logx, cdir=0):
-        x = self.args[0]
-        return (sin(x)/x)._eval_nseries(x, n, logx)
+        arg = self.args[0]
+        return (sin(arg)/arg)._eval_nseries(x, n, logx)
 
     def _eval_rewrite_as_jn(self, arg, **kwargs):
         from sympy.functions.special.bessel import jn
@@ -2923,7 +2957,7 @@ class acot(InverseTrigonometricFunction):
     A purely imaginary argument will lead to an ``acoth`` expression.
 
     ``acot(x)`` has a branch cut along $(-i, i)$, hence it is discontinuous
-    at 0. Its range for real $x$ is $(-\frac{\pi}{2}, \frac{\pi}{2}]$.
+    at 0. Its range for real $x$ is $(-\frac{\pi}{2}, 0) \cup (0, \frac{\pi}{2}]$.
 
     Examples
     ========
@@ -3001,7 +3035,7 @@ class acot(InverseTrigonometricFunction):
         if arg is S.ComplexInfinity:
             return S.Zero
 
-        if arg.could_extract_minus_sign():
+        if arg.is_nonzero and arg.could_extract_minus_sign():
             return -cls(-arg)
 
         if arg.is_number:
@@ -3248,7 +3282,7 @@ class asec(InverseTrigonometricFunction):
             ang = narg.args[0]
             if ang.is_comparable:
                 if minus:
-                    pi/2 + acsc(narg)
+                    return pi/2 + acsc(narg)
                 return pi/2 - acsc(narg)
 
     def fdiff(self, argindex=1):

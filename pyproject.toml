@@ -1,3 +1,83 @@
+[build-system]
+requires = ["setuptools>=77.0.3", "setuptools-scm>=10"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "sympy"
+dynamic = ["version"]
+description = "Computer algebra system (CAS) in Python"
+readme = "README.md"
+authors = [{name = "SymPy development team", email = "sympy@googlegroups.com"}]
+license = "BSD-3-Clause AND MIT"
+license-files = ["LICENSE", "LICENSES_BUNDLED.txt"]
+keywords = ["Math", "CAS"]
+# Keep in sync with sympy/__init__.py.
+requires-python = ">=3.10"
+# Set upper bound when making the release branch.
+dependencies = ["mpmath>=1.1.0"]
+classifiers = [
+    "Operating System :: OS Independent",
+    "Programming Language :: Python",
+    "Topic :: Scientific/Engineering",
+    "Topic :: Scientific/Engineering :: Mathematics",
+    "Topic :: Scientific/Engineering :: Physics",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Programming Language :: Python :: 3 :: Only",
+    "Programming Language :: Python :: Implementation :: CPython",
+    "Programming Language :: Python :: Implementation :: PyPy",
+]
+
+[project.urls]
+Homepage = "https://sympy.org"
+Source = "https://github.com/sympy/sympy"
+
+[project.optional-dependencies]
+dev = ["pytest>=7.1.0", "hypothesis>=6.70.0"]
+
+[project.scripts]
+isympy = "isympy:main"
+
+[tool.setuptools]
+py-modules = ["isympy"]
+zip-safe = false
+include-package-data = false
+
+[tool.setuptools.packages.find]
+include = ["sympy", "sympy.*"]
+namespaces = false
+
+[tool.setuptools.package-data]
+"sympy.utilities.mathml.data" = ["*.xsl"]
+"sympy.logic.benchmarks" = ["input/*.cnf"]
+"sympy.parsing.autolev" = [
+    "*.g4",
+    "test-examples/*.al",
+    "test-examples/*.py",
+    "test-examples/pydy-example-repo/*.al",
+    "test-examples/pydy-example-repo/*.py",
+    "test-examples/README.txt",
+]
+"sympy.parsing.latex" = ["*.txt", "*.g4", "lark/grammar/*.lark"]
+"sympy.parsing.smtlib" = ["lark/grammar/*.lark"]
+"sympy.plotting.tests" = ["test_region_*.png"]
+"sympy" = ["py.typed"]
+
+[tool.setuptools.data-files]
+"share/man/man1" = ["doc/man/isympy.1"]
+
+[tool.setuptools_scm]
+version_file = "sympy/release.py"
+write_to_source = false
+version_scheme = "release-branch-semver"
+
+[tool.setuptools_scm.scm.git]
+pre_parse = "fetch_on_shallow"
+describe_command = "git describe --dirty --tags --long --match sympy-*"
+
 [tool.pytest.ini_options]
 # Don't run the tests marked as slow by default.
 addopts = "-m 'not slow and not tooslow'"
@@ -29,6 +109,7 @@ norecursedirs = [
 markers = [
     "nocache_fail",
     "tooslow",
+    "thread_unsafe: tests that cannot safely run concurrently in threads",
 ]
 
 [tool.coverage.report]
@@ -43,6 +124,10 @@ exclude_lines = [
 target-version = "py310"
 # Enable Pyflakes `E` and `F` codes by default.
 lint.select = [
+    "W191",  # indentation contains tabs
+    "W291",  # trailing whitespace
+    "W292",  # missing newline at EOF
+    "W293",  # blank line contains whitespace
     "B015",  # Useless comparison: a == b rather than a = b.
     "I002",  # `import` statement not at top of file
     "C4",
@@ -86,18 +171,13 @@ lint.ignore = [
     "FURB187",  # Use of assignment of `reversed` on list `{name}`
 ]
 
-# Exclude paths currently excluded in the flake8 configuration
+# Generated code and test inputs
 exclude = [
     "sympy/assumptions/*generated.py",
     "sympy/core/*_generated.py",
-    "sympy/core/benchmarks/",
     "sympy/parsing/latex/_antlr/*",
     "sympy/parsing/autolev/_antlr/*",
     "sympy/parsing/autolev/test-examples/*",
-    "sympy/plotting/pygletplot/*",
-    "sympy/parsing/latex/_parse_latex_antlr.py",
-    "sympy/parsing/autolev/_listener_autolev_antlr.py",
-    "sympy/integrals/rubi/*",
 ]
 
 # Black default, although irrelevant with E501 ignored
@@ -109,9 +189,12 @@ lint.dummy-variable-rgx = "^(_+|(_+[a-zA-Z0-9_]*[a-zA-Z0-9]+?))$"
 # Add to all files
 lint.isort.required-imports = ["from __future__ import annotations"]
 
-# Per-file ignores currently specified in the flake8 configuration
 [tool.ruff.lint.per-file-ignores]
 "sympy/interactive/session.py" = ["F821"]
+"sympy/core/benchmarks/*" = ["B015"]
+"sympy/plotting/pygletplot/*" = ["BLE001"]
+"sympy/parsing/latex/_parse_latex_antlr.py" = ["BLE001"]
+"sympy/parsing/autolev/_listener_autolev_antlr.py" = ["BLE001"]
 
 # Global mypy settings:
 [tool.mypy]
@@ -130,13 +213,23 @@ module = [
 ]
 ignore_errors = true
 
+# sympy.release imports names that are declared before the optional import.
+[[tool.mypy.overrides]]
+module = ["sympy.release"]
+disable_error_code = ["no-redef"]
+
+# Compatibility with installations created before release.py became the
+# setuptools-scm-generated version file.
+[[tool.mypy.overrides]]
+module = ["sympy._version"]
+ignore_missing_imports = true
+
 # Third-party untyped code:
 [[tool.mypy.overrides]]
 module = [
     "antlr4.*",
     "Cython.*",
     "flint.*",
-    "gmpy.*",
     "gmpy2.*",
     "IPython.*",
     "lxml.*",
@@ -149,7 +242,6 @@ module = [
     "pyglet.*",
     "pymc.*",
     "pymc3.*",
-    "python-sat.*",
     "pytest.*",
     "_pytest.*",
     "sage.*",
@@ -157,7 +249,6 @@ module = [
     "symengine.*",
     "aesara.*",
     "xml.*",
-    "pydy.*",
     "theano.*",
     "multiset.*",
     "pysat.*",

@@ -12,8 +12,7 @@ This module contains functions to:
 """
 from __future__ import annotations
 from sympy.core.sympify import sympify
-from sympy.core import (S, Pow, Dummy, pi, Expr, Wild, Mul,
-                        Add, Basic)
+from sympy.core import (S, Pow, Dummy, pi, Expr, Wild, Mul, Add)
 from sympy.core.containers import Tuple
 from sympy.core.function import (Lambda, expand_complex, AppliedUndef,
                                 expand_log, _mexpand, expand_trig, nfloat)
@@ -25,6 +24,10 @@ from sympy.core.sorting import default_sort_key, ordered
 from sympy.core.symbol import Symbol, _uniquely_named_symbol
 from sympy.core.sympify import _sympify
 from sympy.core.traversal import preorder_traversal
+from sympy.core.exprtools import (
+    linear_coeffs as linear_coeffs,
+    NonlinearError as NonlinearError,
+)
 from sympy.external.gmpy import gcd as number_gcd, lcm as number_lcm
 from sympy.polys.matrices.linsolve import _linear_eq_to_dict
 from sympy.polys.polyroots import UnsolvableFactorError
@@ -59,16 +62,11 @@ from sympy.solvers.solvers import (checksol, denoms, unrad,
 from sympy.solvers.polysys import solve_poly_system
 from sympy.utilities import filldedent
 from sympy.utilities.iterables import (numbered_symbols, has_dups,
-                                       is_sequence, iterable)
+                                       is_sequence)
 from sympy.calculus.util import periodicity, continuous_domain, function_range
 
 
 from types import GeneratorType
-
-
-class NonlinearError(ValueError):
-    """Raised when unexpectedly encountering nonlinear equations"""
-    pass
 
 
 def _masked(f, *atoms):
@@ -151,7 +149,7 @@ def _invert(f_x, y, x, domain=S.Complexes):
     When does exp(x) == y?
 
     >>> invert_complex(exp(x), y, x)
-    (x, ImageSet(Lambda(_n, I*(2*_n*pi + arg(y)) + log(Abs(y))), Integers))
+    (x, ImageSet(Lambda(_n, log(Abs(y)) + I*(2*_n*pi + arg(y))), Integers))
     >>> invert_real(exp(x), y, x)
     (x, Intersection({log(y)}, Reals))
 
@@ -1186,7 +1184,7 @@ def solve_decomposition(f, symbol, domain):
                2
     >>> f3 = sin(x + 2)
     >>> pprint(sd(f3, x, S.Reals), use_unicode=False)
-    {2*n*pi - 2 | n in Integers} U {2*n*pi - 2 + pi | n in Integers}
+    {2*n*pi - 2 | n in Integers} U {2*n*pi + pi - 2 | n in Integers}
 
     """
     from sympy.solvers.decompogen import decompogen
@@ -1270,9 +1268,22 @@ def _solveset(f, symbol, domain, _check=False):
 
     result = S.EmptySet
 
-    if f.expand().is_zero:
+    expanded = f.expand()
+
+   # symbol-independent relation may be True, False, or conditional
+    if f.is_Relational and not expanded.has(symbol):
+        expanded = expanded.simplify()
+        if expanded is S.true:
+            return domain
+        elif expanded is S.false:
+            return S.EmptySet
+        return ConditionSet(symbol, expanded, domain)
+
+    # for ordinary equations, expansion can settle independence immediately
+    # without needing to solve further
+    if expanded.is_zero:
         return domain
-    elif not f.has(symbol):
+    elif not expanded.has(symbol):
         return S.EmptySet
     elif f.is_Mul and all(_is_finite_with_finite_vars(m, domain)
             for m in f.args):
@@ -1527,6 +1538,8 @@ def _invert_modular(modterm, rhs, n, symbol):
     (x**2 + x + 1, ImageSet(Lambda(_n, 3*_n + 1), Naturals0))
 
     """
+    if not isinstance(modterm, Mod):
+        return modterm, rhs
     a, m = modterm.args
 
     if rhs.is_integer is False:
@@ -1564,7 +1577,9 @@ def _invert_modular(modterm, rhs, n, symbol):
         if expo.has(symbol) and not base.has(symbol):
             # remainder -> solution independent of n of equation.
             # m, rhs are made coprime by dividing number_gcd(m, rhs)
-            if not m.is_Integer and rhs.is_Integer and a.base.is_Integer:
+            if not (m.is_Integer and rhs.is_Integer and base.is_Integer):
+                return modterm, rhs
+            if number_gcd(m.p, base.p) != 1 or number_gcd(m.p, rhs.p) != 1:
                 return modterm, rhs
 
             mdiv = m.p // number_gcd(m.p, rhs.p)
@@ -1642,7 +1657,7 @@ def _solve_modular(f, symbol, domain):
     >>> solve_modulo(-7 + Mod(x, 5), x, S.Integers)
     EmptySet
     >>> solve_modulo(Mod(12**x, 21) - 18, x, S.Integers)
-    ImageSet(Lambda(_n, 6*_n + 2), Naturals0)
+    ConditionSet(x, Eq(Mod(12**x, 21) - 18, 0), Integers)
     >>> solve_modulo(Mod(sin(x), 7) - 3, x, S.Integers) # not solvable
     ConditionSet(x, Eq(Mod(sin(x), 7) - 3, 0), Integers)
     >>> solve_modulo(3 - Mod(x, 5), x, Intersection(S.Integers, Interval(0, 100)))
@@ -1766,7 +1781,7 @@ def _solve_exponential(lhs, rhs, symbol, domain):
     >>> solve_expo(a**x - b**x, 0, x, S.Reals)  # solvable but incorrect assumptions
     ConditionSet(x, (a > 0) & (b > 0), {0})
     >>> solve_expo(3**(2*x) - 2**(x + 3), 0, x, S.Reals)
-    {-3*log(2)/(-2*log(3) + log(2))}
+    {-3*log(2)/(log(2) - 2*log(3))}
     >>> solve_expo(2**x - 4**x, 0, x, S.Reals)
     {0}
 
@@ -2170,7 +2185,7 @@ def _transolve(f, symbol, domain):
     >>> from sympy import symbols, S, pprint
     >>> x = symbols('x', real=True) # assumption added
     >>> transolve(5**(x - 3) - 3**(2*x + 1), x, S.Reals)
-    {-(log(3) + 3*log(5))/(-log(5) + 2*log(3))}
+    {-(log(3) + 3*log(5))/(2*log(3) - log(5))}
 
     How ``_transolve`` works
     ========================
@@ -2213,9 +2228,9 @@ def _transolve(f, symbol, domain):
 
     >>> f = 3**(2*x) - 2**(x + 3)
     >>> pprint(transolve(f, x, S.Reals), use_unicode=False)
-        -3*log(2)
-    {------------------}
-     -2*log(3) + log(2)
+            -3*log(2)
+        {-----------------}
+         log(2) - 2*log(3)
     >>> pprint(tsolve(f, x), use_unicode=False)
          /   3     \
          | --------|
@@ -2673,97 +2688,6 @@ def solvify(f, symbol, domain):
 ###############################################################################
 
 
-def linear_coeffs(eq, *syms, dict=False):
-    """Return a list whose elements are the coefficients of the
-    corresponding symbols in the sum of terms in  ``eq``.
-    The additive constant is returned as the last element of the
-    list.
-
-    Raises
-    ======
-
-    NonlinearError
-        The equation contains a nonlinear term
-    ValueError
-        duplicate or unordered symbols are passed
-
-    Parameters
-    ==========
-
-    dict - (default False) when True, return coefficients as a
-        dictionary with coefficients keyed to syms that were present;
-        key 1 gives the constant term
-
-    Examples
-    ========
-
-    >>> from sympy.solvers.solveset import linear_coeffs
-    >>> from sympy.abc import x, y, z
-    >>> linear_coeffs(3*x + 2*y - 1, x, y)
-    [3, 2, -1]
-
-    It is not necessary to expand the expression:
-
-        >>> linear_coeffs(x + y*(z*(x*3 + 2) + 3), x)
-        [3*y*z + 1, y*(2*z + 3)]
-
-    When nonlinear is detected, an error will be raised:
-
-        * even if they would cancel after expansion (so the
-        situation does not pass silently past the caller's
-        attention)
-
-        >>> eq = 1/x*(x - 1) + 1/x
-        >>> linear_coeffs(eq.expand(), x)
-        [0, 1]
-        >>> linear_coeffs(eq, x)
-        Traceback (most recent call last):
-        ...
-        NonlinearError:
-        nonlinear in given generators
-
-        * when there are cross terms
-
-        >>> linear_coeffs(x*(y + 1), x, y)
-        Traceback (most recent call last):
-        ...
-        NonlinearError:
-        symbol-dependent cross-terms encountered
-
-        * when there are terms that contain an expression
-        dependent on the symbols that is not linear
-
-        >>> linear_coeffs(x**2, x)
-        Traceback (most recent call last):
-        ...
-        NonlinearError:
-        nonlinear in given generators
-    """
-    eq = _sympify(eq)
-    if len(syms) == 1 and iterable(syms[0]) and not isinstance(syms[0], Basic):
-        raise ValueError('expecting unpacked symbols, *syms')
-    symset = set(syms)
-    if len(symset) != len(syms):
-        raise ValueError('duplicate symbols given')
-    try:
-        d, c = _linear_eq_to_dict([eq], symset)
-        d = d[0]
-        c = c[0]
-    except PolyNonlinearError as err:
-        raise NonlinearError(str(err))
-    if dict:
-        if c:
-            d[S.One] = c
-        return d
-    rv = [S.Zero]*(len(syms) + 1)
-    rv[-1] = c
-    for i, k in enumerate(syms):
-        if k not in d:
-            continue
-        rv[i] = d[k]
-    return rv
-
-
 def linear_eq_to_matrix(equations, *symbols):
     r"""
     Converts a given System of Equations into Matrix form. Here ``equations``
@@ -3035,7 +2959,7 @@ def linsolve(system, *symbols):
     >>> a, b, c, d, e, f = symbols('a, b, c, d, e, f')
     >>> eqns = [a*x + b*y - c, d*x + e*y - f]
     >>> linsolve(eqns, x, y)
-    {((-b*f + c*e)/(a*e - b*d), (a*f - c*d)/(a*e - b*d))}
+    {((c*e - b*f)/(a*e - b*d), (a*f - c*d)/(a*e - b*d))}
 
     * A degenerate system returns solution as set of given
       symbols.
@@ -3174,12 +3098,70 @@ def linsolve(system, *symbols):
 ##############################################################################
 
 
-def _return_conditionset(eqs, symbols):
+def _return_conditionset(eqs, symbols, exclude=()):
     # return conditionset
     eqs = (Eq(lhs, 0) for lhs in eqs)
     condition_set = ConditionSet(
-        Tuple(*symbols), And(*eqs), S.Complexes**len(symbols))
+        Tuple(*symbols), And(*eqs, *(Ne(d, 0) for d in exclude)),
+        S.Complexes**len(symbols))
     return condition_set
+
+
+def _process_exclusions_for_branch(branch, exclude, symbols):
+    """Return branch-local complements and conditions, or None if invalid."""
+    complements = {}
+    conditions = []
+    # Only scalar expressions can be substituted into the denominator.
+    # Set-valued branch entries represent possible values of a symbol,
+    # so they must remain unresolved here.
+    expr_branch = {s: v for s, v in branch.items() if isinstance(v, Expr)}
+    set_valued_symbols = set(branch) - set(expr_branch)
+    for denominator in exclude:
+        transformed = denominator.subs(expr_branch).cancel()
+        if transformed.is_zero is True:
+            return None
+        if transformed.is_zero is False:
+            continue
+        unresolved = transformed.free_symbols & set(symbols)
+        if (len(unresolved) == 1 and
+                not transformed.free_symbols & set_valued_symbols):
+            parameter = next(iter(unresolved))
+            if branch.get(parameter, parameter) == parameter:
+                solver = solveset_real if parameter.is_real else solveset_complex
+                forbidden = solver(transformed, parameter)
+                if not forbidden.has(ConditionSet):
+                    complements[parameter] = Union(
+                        complements.get(parameter, S.EmptySet), forbidden)
+                    continue
+        conditions.append(Ne(transformed, 0))
+    return complements, conditions
+
+
+def _branch_as_conditionset(branch, symbols, intersections, complements, conditions):
+    """Represent branch assignments and restrictions as a set of points."""
+    relations = list(conditions)
+    values = []
+    for symbol in symbols:
+        value = branch.get(symbol, symbol)
+        values.append(value)
+        if isinstance(value, Set):
+            relations.append(Contains(symbol, value))
+            restricted_value = symbol
+        else:
+            if value != symbol:
+                relations.append(Eq(symbol, value))
+            restricted_value = value
+        if symbol in intersections:
+            relations.append(intersections[symbol].contains(restricted_value))
+        if symbol in complements:
+            relations.append(~complements[symbol].contains(restricted_value))
+    domain = ProductSet(*(S.Reals if s.is_real else S.Complexes for s in symbols))
+    condition = And(*relations)
+    if all(isinstance(v, Expr) and v.is_number for v in values):
+        # Concrete branches retain exact point-set semantics during normalization.
+        domain = Intersection(domain, FiniteSet(Tuple(*values)))
+        condition = condition.subs(dict(zip(symbols, values)), simultaneous=True)
+    return ConditionSet(Tuple(*symbols), condition, domain)
 
 
 def substitution(system, symbols, result=[{}], known_symbols=[],
@@ -3255,17 +3237,11 @@ def substitution(system, symbols, result=[{}], known_symbols=[],
     >>> x, y, z = symbols('x, y, z')
     >>> from sympy import exp, sin
     >>> substitution([exp(x) - sin(y), y**2 - 4], [x, y])
-    {(ImageSet(Lambda(_n, I*(2*_n*pi + pi) + log(sin(2))), Integers), -2),
-     (ImageSet(Lambda(_n, 2*_n*I*pi + log(sin(2))), Integers), 2)}
+    {(ImageSet(Lambda(_n, log(sin(2)) + I*(2*_n*pi + pi)), Integers), -2), (ImageSet(Lambda(_n, log(sin(2)) + 2*_n*I*pi), Integers), 2)}
 
     >>> eqs = [z**2 + exp(2*x) - sin(y), -3 + exp(-y)]
     >>> substitution(eqs, [y, z])
-    {(-log(3), -sqrt(-exp(2*x) - sin(log(3)))),
-     (-log(3), sqrt(-exp(2*x) - sin(log(3)))),
-     (ImageSet(Lambda(_n, 2*_n*I*pi - log(3)), Integers),
-      ImageSet(Lambda(_n, -sqrt(-exp(2*x) + sin(2*_n*I*pi - log(3)))), Integers)),
-     (ImageSet(Lambda(_n, 2*_n*I*pi - log(3)), Integers),
-      ImageSet(Lambda(_n, sqrt(-exp(2*x) + sin(2*_n*I*pi - log(3)))), Integers))}
+    {(-log(3), -sqrt(-exp(2*x) - sin(log(3)))), (-log(3), sqrt(-exp(2*x) - sin(log(3)))), (ImageSet(Lambda(_n, -log(3) + 2*_n*I*pi), Integers), ImageSet(Lambda(_n, -sqrt(sin(-log(3) + 2*_n*I*pi) - exp(2*x))), Integers)), (ImageSet(Lambda(_n, -log(3) + 2*_n*I*pi), Integers), ImageSet(Lambda(_n, sqrt(sin(-log(3) + 2*_n*I*pi) - exp(2*x))), Integers))}
 
     """
 
@@ -3326,7 +3302,7 @@ def substitution(system, symbols, result=[{}], known_symbols=[],
         # for any symbol, it will be added in the final solution.
         final_result = []
         for res in result:
-            res_copy = res
+            res_copy = res.copy()
             for key_res, value_res in res.items():
                 intersect_set, complement_set = None, None
                 for key_sym, value_sym in intersection_dict.items():
@@ -3408,29 +3384,6 @@ def substitution(system, symbols, result=[{}], known_symbols=[],
             sol = FiniteSet(sol)
         return sol, soln_imageset
 
-    def _check_exclude(rnew, imgset_yes):
-        rnew_ = rnew
-        if imgset_yes:
-            # replace all dummy variables (Imageset lambda variables)
-            # with zero before `checksol`. Considering fundamental soln
-            # for `checksol`.
-            rnew_copy = rnew.copy()
-            dummy_n = imgset_yes[0]
-            for key_res, value_res in rnew_copy.items():
-                rnew_copy[key_res] = value_res.subs(dummy_n, 0)
-            rnew_ = rnew_copy
-        # satisfy_exclude == true if it satisfies the expr of `exclude` list.
-        try:
-            # something like : `Mod(-log(3), 2*I*pi)` can't be
-            # simplified right now, so `checksol` returns `TypeError`.
-            # when this issue is fixed this try block should be
-            # removed. Mod(-log(3), 2*I*pi) == -log(3)
-            satisfy_exclude = any(
-                checksol(d, rnew_) for d in exclude)
-        except TypeError:
-            satisfy_exclude = None
-        return satisfy_exclude
-
     def _restore_imgset(rnew, original_imageset, newresult):
         restore_sym = set(rnew.keys()) & \
             set(original_imageset.keys())
@@ -3461,45 +3414,39 @@ def substitution(system, symbols, result=[{}], known_symbols=[],
          of imageset expr and imageset from this result.
         `soln_imageset` dict of imageset expr and imageset of new soln.
         """
-        satisfy_exclude = _check_exclude(rnew, imgset_yes)
         delete_soln = False
-        # soln should not satisfy expr present in `exclude` list.
-        if not satisfy_exclude:
-            local_n = None
-            # if it is imageset
-            if imgset_yes:
-                local_n = imgset_yes[0]
-                base = imgset_yes[1]
-                if sym and sol:
-                    # when `sym` and `sol` is `None` means no new
-                    # soln. In that case we will append rnew directly after
-                    # substituting original imagesets in rnew values if present
-                    # (second last line of this function using _restore_imgset)
-                    dummy_list = list(sol.atoms(Dummy))
-                    # use one dummy `n` which is in
-                    # previous imageset
-                    local_n_list = [
-                        local_n for i in range(
-                            0, len(dummy_list))]
+        local_n = None
+        # if it is imageset
+        if imgset_yes:
+            local_n = imgset_yes[0]
+            base = imgset_yes[1]
+            if sym and sol:
+                # when `sym` and `sol` is `None` means no new
+                # soln. In that case we will append rnew directly after
+                # substituting original imagesets in rnew values if present
+                # (second last line of this function using _restore_imgset)
+                dummy_list = list(sol.atoms(Dummy))
+                # use one dummy `n` which is in
+                # previous imageset
+                local_n_list = [
+                    local_n for i in range(
+                        0, len(dummy_list))]
 
-                    dummy_zip = zip(dummy_list, local_n_list)
-                    lam = Lambda(local_n, sol.subs(dummy_zip))
-                    rnew[sym] = ImageSet(lam, base)
-                if eq is not None:
-                    newresult, rnew, delete_soln = _append_eq(
-                        eq, newresult, rnew, delete_soln, local_n)
-            elif eq is not None:
+                dummy_zip = zip(dummy_list, local_n_list)
+                lam = Lambda(local_n, sol.subs(dummy_zip))
+                rnew[sym] = ImageSet(lam, base)
+            if eq is not None:
                 newresult, rnew, delete_soln = _append_eq(
-                    eq, newresult, rnew, delete_soln)
-            elif sol in soln_imageset.keys():
-                rnew[sym] = soln_imageset[sol]
-                # restore original imageset
-                _restore_imgset(rnew, original_imageset, newresult)
-            else:
-                newresult.append(rnew)
-        elif satisfy_exclude:
-            delete_soln = True
-            rnew = {}
+                    eq, newresult, rnew, delete_soln, local_n)
+        elif eq is not None:
+            newresult, rnew, delete_soln = _append_eq(
+                eq, newresult, rnew, delete_soln)
+        elif sol in soln_imageset.keys():
+            rnew[sym] = soln_imageset[sol]
+            # restore original imageset
+            _restore_imgset(rnew, original_imageset, newresult)
+        else:
+            newresult.append(rnew)
         _restore_imgset(rnew, original_imageset, newresult)
         return newresult, delete_soln
 
@@ -3565,10 +3512,6 @@ def substitution(system, symbols, result=[{}], known_symbols=[],
                             res, None, None, imgset_yes, soln_imageset,
                             original_imageset, newresult, eq2)
                         if delete_res:
-                            # `delete_res` is true, means substituting `res` in
-                            # eq2 doesn't return `zero` or deleting the `res`
-                            # (a soln) since it satisfies expr of `exclude`
-                            # list.
                             result.remove(res)
                     continue  # skip as it's independent of desired symbols
                 depen1, depen2 = eq2.as_independent(*unsolved_syms)
@@ -3663,8 +3606,6 @@ def substitution(system, symbols, result=[{}], known_symbols=[],
                             rnew, sym, sol, imgset_yes, soln_imageset,
                             original_imageset, newresult)
                         if delete_res:
-                            # deleting the `res` (a soln) since it satisfies
-                            # eq of `exclude` list
                             result.remove(res)
                     # solution got for sym
                     if not not_solvable:
@@ -3686,7 +3627,7 @@ def substitution(system, symbols, result=[{}], known_symbols=[],
     total_solveset_call += (solve_call1 + solve_call2)
 
     if total_conditionset == total_solveset_call and total_solveset_call != -1:
-        return _return_conditionset(eqs_in_better_order, all_symbols)
+        return _return_conditionset(eqs_in_better_order, all_symbols, exclude)
 
     # don't keep duplicate solutions
     filtered_complex = []
@@ -3726,16 +3667,27 @@ def substitution(system, symbols, result=[{}], known_symbols=[],
         # eg : [{x: -1, y : 1}, {x : -y, y: y}] then
         # return [{x : -y, y : y}]
         result_all_variables = result_infinite
-    if intersections or complements:
-        result_all_variables = add_intersection_complement(
-            result_all_variables, intersections, complements)
+    processed_branches = []
+    for res in result_all_variables:
+        processed = _process_exclusions_for_branch(res, exclude, all_symbols)
+        if processed is None:
+            continue
+        branch_complements, conditions = processed
+        for symbol, forbidden in complements.items():
+            branch_complements[symbol] = Union(
+                branch_complements.get(symbol, S.EmptySet), forbidden)
+        restricted = add_intersection_complement(
+            [res], intersections, branch_complements)
+        for branch in restricted:
+            processed_branches.append((res, branch_complements, conditions, branch))
 
-    # convert to ordered tuple
-    result = S.EmptySet
-    for r in result_all_variables:
-        temp = [r[symb] for symb in all_symbols]
-        result += FiniteSet(tuple(temp))
-    return result
+    # Symbolic-family tuples cannot be mixed with actual point sets in a Union.
+    if any(conditions for _, _, conditions, _ in processed_branches):
+        return Union(*(_branch_as_conditionset(
+            res, all_symbols, intersections, branch_complements, conditions)
+            for res, branch_complements, conditions, _ in processed_branches))
+    return FiniteSet(*(tuple(branch[s] for s in all_symbols)
+                       for _, _, _, branch in processed_branches))
 
 
 def _solveset_work(system, symbols):
@@ -3927,20 +3879,14 @@ def nonlinsolve(system, *symbols):
     Returns
     =======
 
-    A :class:`~.FiniteSet` of ordered tuple of values of `symbols` for which the `system`
-    has solution. Order of values in the tuple is same as symbols present in
-    the parameter `symbols`.
+    A :class:`~.Set` representing the ordered values of `symbols` for which
+    the `system` has a solution. Results are typically returned as a
+    :class:`~.FiniteSet` of ordered tuples. Unresolved denominator restrictions
+    may require a :class:`~.ConditionSet`, and multiple set-valued branches
+    may form a :class:`~.Union`.
 
-    Please note that general :class:`~.FiniteSet` is unordered, the solution
-    returned here is not simply a :class:`~.FiniteSet` of solutions, rather it
-    is a :class:`~.FiniteSet` of ordered tuple, i.e. the first and only
-    argument to :class:`~.FiniteSet` is a tuple of solutions, which is
-    ordered, and, hence ,the returned solution is ordered.
-
-    Also note that solution could also have been returned as an ordered tuple,
-    FiniteSet is just a wrapper ``{}`` around the tuple. It has no other
-    significance except for the fact it is just used to maintain a consistent
-    output format throughout the solveset.
+    A :class:`~.FiniteSet` is unordered, but the values in each solution tuple
+    follow the order of the parameter `symbols`.
 
     For the given set of equations, the respective input types
     are given below:
@@ -3995,8 +3941,7 @@ def nonlinsolve(system, *symbols):
 
     >>> from sympy import exp, sin
     >>> nonlinsolve([exp(x) - sin(y), y**2 - 4], [x, y])
-    {(ImageSet(Lambda(_n, I*(2*_n*pi + pi) + log(sin(2))), Integers), -2),
-     (ImageSet(Lambda(_n, 2*_n*I*pi + log(sin(2))), Integers), 2)}
+    {(ImageSet(Lambda(_n, log(sin(2)) + I*(2*_n*pi + pi)), Integers), -2), (ImageSet(Lambda(_n, log(sin(2)) + 2*_n*I*pi), Integers), 2)}
 
     3. If system is non-linear polynomial and zero-dimensional then it
     returns both solution (real and complex solutions, if present) using
@@ -4023,9 +3968,9 @@ def nonlinsolve(system, *symbols):
     >>> nonlinsolve((e1, e2), (x, y))
     {(191/20, -3*sqrt(391)/20), (191/20, 3*sqrt(391)/20)}
     >>> nonlinsolve([x**2 + 2/y - 2, x + y - 3], [x, y])
-    {(1, 2), (1 - sqrt(5), 2 + sqrt(5)), (1 + sqrt(5), 2 - sqrt(5))}
+    {(1, 2), (1 - sqrt(5), sqrt(5) + 2), (sqrt(5) + 1, 2 - sqrt(5))}
     >>> nonlinsolve([x**2 + 2/y - 2, x + y - 3], [y, x])
-    {(2, 1), (2 - sqrt(5), 1 + sqrt(5)), (2 + sqrt(5), 1 - sqrt(5))}
+    {(2, 1), (2 - sqrt(5), sqrt(5) + 1), (sqrt(5) + 2, 1 - sqrt(5))}
 
     6. It is better to use symbols instead of trigonometric functions or
     :class:`~.Function`. For example, replace $\sin(x)$ with a symbol, replace
@@ -4083,7 +4028,7 @@ def nonlinsolve(system, *symbols):
     system, symbols, swap = recast_to_symbols(system, symbols)
     if swap:
         soln = nonlinsolve(system, symbols)
-        return FiniteSet(*[tuple(i.xreplace(swap) for i in s) for s in soln])
+        return soln.subs(swap, simultaneous=True)
 
     if len(system) == 1 and len(symbols) == 1:
         return _solveset_work(system, symbols)
@@ -4115,8 +4060,11 @@ def nonlinsolve(system, *symbols):
     to_tuple = lambda sol: tuple(sol.get(s, s) for s in symbols)
 
     if not remaining:
-        # If there is nothing left to solve then return the solution from
-        # solve_poly_system directly.
+        # Validate denominators even when there is nothing left to solve.
+        if denominators:
+            branches = [{s: sol.get(s, s) for s in symbols} for sol in poly_sol]
+            return substitution([S.Zero], symbols, result=branches,
+                                exclude=denominators)
         return FiniteSet(*map(to_tuple, poly_sol))
     else:
         # Here we handle:

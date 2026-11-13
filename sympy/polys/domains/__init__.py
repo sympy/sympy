@@ -3,8 +3,8 @@ from __future__ import annotations
 
 __all__ = [
     'Domain', 'FiniteField', 'IntegerRing', 'RationalField', 'RealField',
-    'ComplexField', 'AlgebraicField', 'PolynomialRing', 'FractionField',
-    'ExpressionDomain', 'PythonRational',
+    'ComplexField', 'AlgebraicField', 'CyclotomicField',
+    'PolynomialRing', 'FractionField', 'ExpressionDomain', 'PythonRational',
 
     'GF', 'FF', 'ZZ', 'QQ', 'ZZ_I', 'QQ_I', 'RR', 'CC', 'EX', 'EXRAW',
 ]
@@ -14,6 +14,7 @@ from .finitefield import FiniteField, FF, GF
 from .integerring import IntegerRing, ZZ
 from .rationalfield import RationalField, QQ
 from .algebraicfield import AlgebraicField
+from .cyclotomicfield import CyclotomicField
 from .gaussiandomains import ZZ_I, QQ_I
 from .realfield import RealField, RR
 from .complexfield import ComplexField, CC

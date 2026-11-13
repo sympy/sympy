@@ -191,6 +191,11 @@ class BlockMatrix(MatrixExpr):
             Matrix(self.blockshape[0], self.blockshape[1], self.blocks).adjoint()
         )
 
+    def _eval_conjugate(self):
+        return BlockMatrix(
+            Matrix(self.blockshape[0], self.blockshape[1], self.blocks).conjugate()
+        )
+
     def _eval_trace(self):
         if self.rowblocksizes == self.colblocksizes:
             blocks = [self.blocks[i, i] for i in range(self.blockshape[0])]
@@ -272,7 +277,7 @@ class BlockMatrix(MatrixExpr):
         The default Schur Complement is evaluated with "A"
 
         >>> X.schur()
-        -C*A**(-1)*B + D
+        D - C*A**(-1)*B
         >>> X.schur('D')
         A - B*D**(-1)*C
 
@@ -284,7 +289,7 @@ class BlockMatrix(MatrixExpr):
         >>> X.schur('B', generalized=True)
         C - D*(B.T*B)**(-1)*B.T*A
         >>> X.schur('C', generalized=True)
-        -A*(C.T*C)**(-1)*C.T*D + B
+        B - A*(C.T*C)**(-1)*C.T*D
 
         Returns
         =======

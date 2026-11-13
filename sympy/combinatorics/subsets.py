@@ -391,7 +391,7 @@ class Subset():
 
         superset, size, superset_size, cardinality
         """
-        return self._subset
+        return self._subset[:]
 
     @property
     def size(self):
@@ -431,7 +431,7 @@ class Subset():
 
         subset, size, superset_size, cardinality
         """
-        return self._superset
+        return self._superset[:]
 
     @property
     def superset_size(self):

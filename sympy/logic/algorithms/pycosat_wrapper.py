@@ -9,8 +9,8 @@ def pycosat_satisfiable(expr, all_models=False):
         exprs.add_prop(expr)
         expr = exprs
 
-    # Return UNSAT when False (encoded as 0) is present in the CNF
-    if {0} in expr.data:
+    # Return UNSAT when False (encoded as 0) or empty clause is present in the CNF
+    if {0} in expr.data or set() in expr.data:
         if all_models:
             return (f for f in [False])
         return False
@@ -20,7 +20,8 @@ def pycosat_satisfiable(expr, all_models=False):
         result = (r != "UNSAT")
         if not result:
             return result
-        return {expr.symbols[abs(lit) - 1]: lit > 0 for lit in r}
+        res = {expr.symbols[abs(lit) - 1]: lit > 0 for lit in r}
+        return {True: True} if res == {} else res
     else:
         r = pycosat.itersolve(expr.data)
         result = (r != "UNSAT")
@@ -33,7 +34,8 @@ def pycosat_satisfiable(expr, all_models=False):
             try:
                 while True:
                     sol = next(results)
-                    yield {expr.symbols[abs(lit) - 1]: lit > 0 for lit in sol}
+                    res = {expr.symbols[abs(lit) - 1]: lit > 0 for lit in sol}
+                    yield {True: True} if res == {} else res
                     satisfiable = True
             except StopIteration:
                 if not satisfiable:

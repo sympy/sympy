@@ -10,8 +10,8 @@ def minisat22_satisfiable(expr, all_models=False, minimal=False):
 
     from pysat.solvers import Minisat22
 
-    # Return UNSAT when False (encoded as 0) is present in the CNF
-    if {0} in expr.data:
+    # Return UNSAT when False (encoded as 0) or empty clause is present in the CNF
+    if {0} in expr.data or set() in expr.data:
         if all_models:
             return (f for f in [False])
         return False
@@ -25,7 +25,8 @@ def minisat22_satisfiable(expr, all_models=False, minimal=False):
         return False
 
     if not all_models:
-        return {expr.symbols[abs(lit) - 1]: lit > 0 for lit in r.get_model()}
+        res = {expr.symbols[abs(lit) - 1]: lit > 0 for lit in r.get_model()}
+        return {True: True} if res == {} else res
 
     else:
         # Make solutions SymPy compatible by creating a generator
@@ -33,7 +34,8 @@ def minisat22_satisfiable(expr, all_models=False, minimal=False):
             satisfiable = False
             while results.solve():
                 sol = results.get_model()
-                yield {expr.symbols[abs(lit) - 1]: lit > 0 for lit in sol}
+                res = {expr.symbols[abs(lit) - 1]: lit > 0 for lit in sol}
+                yield {True: True} if res == {} else res
                 if minimal:
                     results.add_clause([-i for i in sol if i>0])
                 else:
@@ -42,6 +44,5 @@ def minisat22_satisfiable(expr, all_models=False, minimal=False):
             if not satisfiable:
                 yield False
             raise StopIteration
-
 
         return _gen(r)
