@@ -4704,7 +4704,7 @@ class PurePoly(Poly):
                      for _ in range(self.rep.lev + 1))
 
     @property
-    def bound_symbols(self):
+    def operator_variables(self) -> tuple[Basic, ...]:
         return self.gens
 
     def as_dummy(self):
