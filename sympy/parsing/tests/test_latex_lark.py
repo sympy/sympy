@@ -15,7 +15,8 @@ from sympy.core.symbol import Symbol
 from sympy.functions.combinatorial.factorials import binomial, factorial
 from sympy.functions.elementary.complexes import Abs, conjugate
 from sympy.functions.elementary.exponential import exp, log
-from sympy.functions.elementary.hyperbolic import asinh, atanh, cosh, coth, sinh, tanh
+from sympy.functions.elementary.hyperbolic import (acosh, acoth, acsch, asech, asinh, atanh, cosh, coth, csch,
+    sech, sinh, tanh)
 from sympy.functions.elementary.integers import ceiling, floor
 from sympy.functions.elementary.miscellaneous import root, sqrt, Min, Max
 from sympy.functions.elementary.trigonometric import acos, acot, acsc, asec, asin, atan, cos, csc, sec, sin, tan
@@ -389,6 +390,22 @@ INVERSE_TRIGONOMETRIC_EXPRESSION_PAIRS = [
     (r"\arccsc x", acsc(x)),
     (r"\arcsec x", asec(x)),
     (r"\arccot x", acot(x))
+]
+
+HYPERBOLIC_EXPRESSION_PAIRS = [
+    (r"\sech x", sech(x)),
+    (r"\csch x", csch(x)),
+    (r"\arsinh x", asinh(x)),
+    (r"\arcosh x", acosh(x)),
+    (r"\artanh x", atanh(x)),
+    (r"\arcsinh x", asinh(x)),
+    (r"\arccosh x", acosh(x))
+]
+
+UNSUPPORTED_HYPERBOLIC_EXPRESSION_PAIRS = [
+    (r"\arcoth x", acoth(x)),
+    (r"\arsech x", asech(x)),
+    (r"\arcsch x", acsch(x))
 ]
 
 UNEVALUATED_LIMIT_EXPRESSION_PAIRS = [
@@ -881,6 +898,19 @@ def test_trigonometric_expressions():
 
 def test_inverse_trigonometric_expressions():
     for latex_str, sympy_expr in INVERSE_TRIGONOMETRIC_EXPRESSION_PAIRS:
+        with evaluate(False):
+            assert parse_latex_lark(latex_str) == sympy_expr, latex_str
+
+
+def test_hyperbolic_expressions():
+    for latex_str, sympy_expr in HYPERBOLIC_EXPRESSION_PAIRS:
+        with evaluate(False):
+            assert parse_latex_lark(latex_str) == sympy_expr, latex_str
+
+
+@XFAIL
+def test_unsupported_hyperbolic_expressions():
+    for latex_str, sympy_expr in UNSUPPORTED_HYPERBOLIC_EXPRESSION_PAIRS:
         with evaluate(False):
             assert parse_latex_lark(latex_str) == sympy_expr, latex_str
 
