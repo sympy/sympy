@@ -49,6 +49,14 @@ def test_torch_code_settings():
         'tensor([[x]], dtype=torch.float32, requires_grad=True)'
 
 
+def test_torch_code_assign_to():
+    assert torch_code(x + 1, assign_to='y') == 'y = x + 1'
+    assert torch_code(Matrix([[x]]), assign_to='y') == \
+        'y = torch.tensor([[x]], dtype=torch.float64)'
+    assert torch_code(sin(x), assign_to='y', fully_qualified_modules=False) == \
+        'y = sin(x)'
+
+
 def _compare_torch_matrix(variables, expr):
     f = lambdify(variables, expr, 'torch')
 

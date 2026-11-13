@@ -293,7 +293,8 @@ class TorchPrinter(ArrayPrinter, AbstractPythonCodePrinter):
     _ones = "ones"
     _zeros = "zeros"
 
-def torch_code(expr, requires_grad=False, dtype="torch.float64", **settings):
+def torch_code(expr, requires_grad=False, dtype="torch.float64", assign_to=None,
+               **settings):
     settings.update(requires_grad=requires_grad, dtype=dtype)
     printer = TorchPrinter(settings=settings)
-    return printer.doprint(expr)
+    return printer.doprint(expr, assign_to=assign_to)
