@@ -157,17 +157,14 @@ def checkodesol(ode, sol, func=None, order='auto', solve_for_func=True):
         Oterm = sol.rhs.getO()
         solrhs = sol.rhs.removeO()
 
-        Oexpr = Oterm.expr
-        assert isinstance(Oexpr, Pow)
-        sorder = Oexpr.exp
-        assert Oterm == Order(x**sorder)
+        x0, = Oterm.point
+        t = Dummy('t')
+        sorder = Oterm.expr.subs(x, t + x0).as_powers_dict().get(t, S.Zero)
+        assert Oterm == Order((x - x0)**sorder, (x, x0))
 
-        odesubs = (ode.lhs-ode.rhs).subs(func, solrhs).doit().expand()
-
-        neworder = Order(x**(sorder - order))
-        odesubs = odesubs + neworder
-        assert odesubs.getO() == neworder
-        residual = odesubs.removeO()
+        odesubs = (ode.lhs - ode.rhs).subs(func, solrhs).doit().expand()
+        neworder = Order((x - x0)**(sorder - order), (x, x0))
+        residual = (odesubs.series(x, x0, sorder - order) + neworder).removeO().expand()
 
         return (residual == 0, residual)
 
