@@ -1556,6 +1556,26 @@ def test_matrixsymbol_summation_symbolic_limits():
     assert Sum(n*A, (n, 0, N)).doit() == (N**2/2+N/2)*A
 
 
+def test_issue_14230():
+    n = Symbol('n', integer=True, nonnegative=True)
+
+    A = diag(I/2, -I/3)
+    assert Sum(n*A**n, (n, 0, oo)).doit() == diag(
+        -Rational(8, 25) + 6*I/25, -Rational(9, 50) - 6*I/25)
+
+    A = diag(a, b)
+    matrix_sum = Sum(A**n, (n, 0, oo))
+    assert matrix_sum.doit() == Piecewise(
+        (diag(1/(1 - a), 1/(1 - b)), And(Abs(a) < 1, Abs(b) < 1)),
+        (matrix_sum, True))
+
+    assert Sum(diag(1/sqrt(2), pi/4)**n, (n, 0, oo)).doit() == diag(
+        2 + sqrt(2), 4/(4 - pi))
+
+    divergent = Sum(diag(2, Rational(1, 2))**n, (n, 0, oo))
+    assert divergent.doit() == divergent
+
+
 def test_summation_by_residues():
     x = Symbol('x')
 

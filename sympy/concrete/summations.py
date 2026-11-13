@@ -26,6 +26,7 @@ from sympy.functions.special.tensor_functions import KroneckerDelta
 from sympy.functions.special.zeta_functions import zeta
 from sympy.integrals.integrals import Integral
 from sympy.logic.boolalg import And, Not
+from sympy.matrices.matrixbase import MatrixBase
 from sympy.matrices.expressions.special import ZeroMatrix
 from sympy.polys.partfrac import apart
 from sympy.polys.polyerrors import PolynomialError, PolificationFailed
@@ -250,7 +251,8 @@ class Sum(AddWithLimits, ExprWithIntLimits):
         if self.function.is_Matrix:
             expanded = self.expand()
             if self != expanded:
-                return expanded.doit()
+                result = expanded.doit(**hints)
+                return _eval_matrix_sum_after_expansion(self, result)
             expr = _eval_matrix_sum(self)
             if expr is not None:
                 return expr
@@ -1706,6 +1708,50 @@ def _eval_matrix_sum(expression):
             newf = eval_sum_direct(f, (i, a, b))
             if newf is not None:
                 return newf.doit()
+
+
+def _eval_matrix_sum_after_expansion(expression, result):
+    """Reassemble scalar results from an explicit infinite matrix sum.
+
+    Summing a matrix element by element can produce a different convergence
+    condition for every entry.  A matrix series converges only when all of
+    those conditions hold, so put the evaluated matrix and the unevaluated
+    matrix sum in one matrix-valued Piecewise expression.
+    """
+    if (len(expression.limits) != 1 or
+            expression.limits[0][2] is not S.Infinity or
+            not isinstance(expression.function, MatrixBase) or
+            not isinstance(result, MatrixBase)):
+        return result
+
+    conditions = []
+    entries = []
+    for original, value in zip(expression.function, result):
+        if isinstance(value, Piecewise):
+            if (len(value.args) != 2 or value.args[1][1] is not S.true or
+                    not isinstance(value.args[1][0], Sum) or
+                    value.args[1][0].limits != expression.limits or
+                    value.args[1][0].function != original):
+                return expression
+            evaluated, condition = value.args[0]
+            if evaluated.has(Sum) or evaluated.is_finite is False:
+                return expression
+            conditions.append(condition)
+            value = evaluated
+        elif value.has(Sum) or value.is_finite is False:
+            # Do not return a partly evaluated matrix when one of its entries
+            # diverges or could not be summed.
+            return expression
+
+        if value.is_number:
+            from sympy.simplify.radsimp import radsimp
+            value = expand(radsimp(value))
+        entries.append(value)
+
+    matrix = result.func(result.rows, result.cols, entries)
+    if conditions:
+        return Piecewise((matrix, And(*conditions)), (expression, True))
+    return matrix
 
 
 def _dummy_with_inherited_properties_concrete(limits):
