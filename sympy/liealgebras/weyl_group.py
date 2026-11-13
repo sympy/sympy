@@ -69,7 +69,7 @@ class WeylGroup(Atom):
         >>> from sympy.liealgebras.weyl_group import WeylGroup
         >>> c = WeylGroup("D4")
         >>> c.group_order()
-        192.0
+        192
         """
         n = self.cartan_type.rank()
         if self.cartan_type.series == "A":
