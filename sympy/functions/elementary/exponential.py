@@ -563,7 +563,7 @@ class exp(ExpBase, metaclass=ExpMeta):
             darg = self.args[0].diff(s)
             if (not darg.has(s)
                     and darg.is_zero is not True
-                    and darg.diff(s) == 0):
+                    and darg.is_scalar):
                 return self*darg**n
         return super()._eval_derivative_n_times(s, n)
 
