@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import overload, Literal
+from typing import overload, Literal, TYPE_CHECKING, SupportsIndex, SupportsInt
 
 import numbers
 import decimal
@@ -68,6 +68,13 @@ from sympy.external.mpmath import (
 from sympy.utilities.misc import debug, as_int
 from sympy.utilities.exceptions import sympy_deprecation_warning
 from .parameters import global_parameters
+
+
+if TYPE_CHECKING:
+    from typing import TypeAlias
+    from sympy.logic.boolalg import Boolean
+    _NonNegativeInteger: TypeAlias = Literal[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25]
+
 
 _LOG2 = math.log(2)
 
@@ -437,7 +444,7 @@ class Number(AtomicExpr):
         prec = max(prec, self._prec)
         return self._as_mpf_val(prec), prec
 
-    def __float__(self):
+    def __float__(self) -> float:
         return _to_float(self._as_mpf_val(53), False, rnd)
 
     def floor(self):
@@ -1431,6 +1438,15 @@ class Rational(Number):
     def _eval_is_positive(self):
         return self.p > 0
 
+    def _eval_is_negative(self):
+        return self.p < 0
+
+    def _eval_is_extended_positive(self):
+        return self.p > 0
+
+    def _eval_is_extended_negative(self):
+        return self.p < 0
+
     def _eval_is_zero(self):
         return self.p == 0
 
@@ -1491,7 +1507,7 @@ class Rational(Number):
     __rmul__ = __mul__
 
     @_sympifyit('other', NotImplemented)
-    def __truediv__(self, other):
+    def __truediv__(self, other) -> Expr:
         if global_parameters.evaluate:
             if isinstance(other, Integer):
                 if self.p and other.p == S.Zero:
@@ -1506,7 +1522,7 @@ class Rational(Number):
                 return Number.__truediv__(self, other)
         return Number.__truediv__(self, other)
     @_sympifyit('other', NotImplemented)
-    def __rtruediv__(self, other):
+    def __rtruediv__(self, other) -> Expr:
         if global_parameters.evaluate:
             if isinstance(other, Integer):
                 return Rational._new(other.p*self.q, self.p, igcd(self.p, other.p))
@@ -1765,17 +1781,11 @@ class Rational(Number):
             return -self, S.NegativeOne
         return S.One, self
 
-    @overload
-    def as_coeff_Mul(self, rational: Literal[True]) -> tuple[Rational, Expr]: ...
-
-    @overload
-    def as_coeff_Mul(self, rational: bool = False) -> tuple["Number", Expr]: ...
-
-    def as_coeff_Mul(self, rational=False):
+    def as_coeff_Mul(self, rational: bool = False) -> tuple[Rational, One]:
         """Efficiently extract the coefficient of a product."""
         return self, S.One
 
-    def as_coeff_Add(self, rational=False):
+    def as_coeff_Add(self, rational: bool = False) -> tuple[Rational, Zero]:
         """Efficiently extract the coefficient of a summation."""
         return self, S.Zero
 
@@ -1815,14 +1825,14 @@ class Integer(Rational):
 
     __slots__ = ()
 
-    def _as_mpf_val(self, prec):
+    def _as_mpf_val(self, prec: int) -> tuple[int, int, int, int]:
         return _from_int(self.p, prec, rnd)
 
-    def _mpmath_(self, prec, rnd):
+    def _mpmath_(self, prec: int, rnd: str) -> _mpf:
         return _make_mpf(self._as_mpf_val(prec))
 
     @cacheit
-    def __new__(cls, i):
+    def __new__(cls, i: str | bytes | bytearray | SupportsInt | SupportsIndex) -> Integer:
         if isinstance(i, str):
             i = i.replace(' ', '')
         # whereas we cannot, in general, make a Rational from an
@@ -1835,7 +1845,7 @@ class Integer(Rational):
             ival = int(i)
         except TypeError:
             raise TypeError(
-                "Argument of Integer should be of numeric type, got %s." % i)
+                "Argument of Integer should be of numeric type, got %s." % str(i))
         # We only work with well-behaved integer types. This converts, for
         # example, numpy.int32 instances.
         if ival == 1:
@@ -1848,20 +1858,23 @@ class Integer(Rational):
         obj.p = ival
         return obj
 
-    def __getnewargs__(self):
+    def __getnewargs__(self) -> tuple[int]:
         return (self.p,)
 
     # Arithmetic operations are here for efficiency
-    def __int__(self):
+    def __int__(self) -> int:
         return self.p
 
-    def floor(self):
+    def floor(self) -> Integer:
         return Integer(self.p)
 
-    def ceiling(self):
+    def ceiling(self) -> Integer:
         return Integer(self.p)
 
-    def __neg__(self):
+    def __pos__(self) -> Integer:
+        return self
+
+    def __neg__(self) -> Integer:
         return Integer(-self.p)
 
     def __abs__(self) -> Integer:
@@ -1890,7 +1903,18 @@ class Integer(Rational):
             return Number.__divmod__(other, self)
 
     # TODO make it decorator + bytecodehacks?
-    def __add__(self, other):
+
+    # mypy (incorrectly) thinks that this is incompatible with Number.__add__.
+    @overload # type: ignore[override]
+    def __add__(self, other: Integer | int) -> Integer: ...
+    @overload
+    def __add__(self, other: Rational) -> Rational: ...
+    @overload
+    def __add__(self, other: Number | float) -> Number: ...
+    @overload
+    def __add__(self, other: Expr | complex) -> Expr: ...
+
+    def __add__(self, other: Expr | complex) -> Expr:
         if global_parameters.evaluate:
             if isinstance(other, int):
                 return Integer(self.p + other)
@@ -1902,7 +1926,16 @@ class Integer(Rational):
         else:
             return Add(self, other)
 
-    def __radd__(self, other):
+    @overload
+    def __radd__(self, other: Integer | int) -> Integer: ...
+    @overload
+    def __radd__(self, other: Rational) -> Rational: ...
+    @overload
+    def __radd__(self, other: Number | float) -> Number: ...
+    @overload
+    def __radd__(self, other: Expr | complex) -> Expr: ...
+
+    def __radd__(self, other: Expr | complex) -> Expr:
         if global_parameters.evaluate:
             if isinstance(other, int):
                 return Integer(other + self.p)
@@ -1911,7 +1944,17 @@ class Integer(Rational):
             return Rational.__radd__(self, other)
         return Rational.__radd__(self, other)
 
-    def __sub__(self, other):
+    # TODO make it decorator + bytecodehacks?
+    @overload
+    def __sub__(self, other: Integer | int) -> Integer: ...
+    @overload
+    def __sub__(self, other: Rational) -> Rational: ...
+    @overload
+    def __sub__(self, other: Number | float) -> Number: ...
+    @overload
+    def __sub__(self, other: Expr | complex) -> Expr: ...
+
+    def __sub__(self, other: Expr | complex) -> Expr:
         if global_parameters.evaluate:
             if isinstance(other, int):
                 return Integer(self.p - other)
@@ -1922,7 +1965,16 @@ class Integer(Rational):
             return Rational.__sub__(self, other)
         return Rational.__sub__(self, other)
 
-    def __rsub__(self, other):
+    @overload
+    def __rsub__(self, other: Integer | int) -> Integer: ...
+    @overload
+    def __rsub__(self, other: Rational) -> Rational: ...
+    @overload
+    def __rsub__(self, other: Number | float) -> Number: ...
+    @overload
+    def __rsub__(self, other: Expr | complex) -> Expr: ...
+
+    def __rsub__(self, other: Expr | complex) -> Expr:
         if global_parameters.evaluate:
             if isinstance(other, int):
                 return Integer(other - self.p)
@@ -1931,7 +1983,16 @@ class Integer(Rational):
             return Rational.__rsub__(self, other)
         return Rational.__rsub__(self, other)
 
-    def __mul__(self, other):
+    @overload
+    def __mul__(self, other: Integer | int) -> Integer: ...
+    @overload
+    def __mul__(self, other: Rational) -> Rational: ...
+    @overload
+    def __mul__(self, other: Number | float) -> Number: ...
+    @overload
+    def __mul__(self, other: Expr | complex) -> Expr: ...
+
+    def __mul__(self, other: Expr | complex) -> Expr:
         if global_parameters.evaluate:
             if isinstance(other, int):
                 return Integer(self.p*other)
@@ -1942,7 +2003,16 @@ class Integer(Rational):
             return Rational.__mul__(self, other)
         return Rational.__mul__(self, other)
 
-    def __rmul__(self, other):
+    @overload
+    def __rmul__(self, other: Integer | int) -> Integer: ...
+    @overload
+    def __rmul__(self, other: Rational) -> Rational: ...
+    @overload
+    def __rmul__(self, other: Number | float) -> Number: ...
+    @overload
+    def __rmul__(self, other: Expr | complex) -> Expr: ...
+
+    def __rmul__(self, other: Expr | complex) -> Expr:
         if global_parameters.evaluate:
             if isinstance(other, int):
                 return Integer(other*self.p)
@@ -1951,7 +2021,14 @@ class Integer(Rational):
             return Rational.__rmul__(self, other)
         return Rational.__rmul__(self, other)
 
-    def __mod__(self, other):
+    @overload
+    def __mod__(self, other: Integer | int) -> Integer: ...
+    @overload
+    def __mod__(self, other: Rational) -> Rational: ...
+    @overload
+    def __mod__(self, other: Expr | complex) -> Expr: ...
+
+    def __mod__(self, other: Expr | complex) -> Expr:
         if global_parameters.evaluate:
             if isinstance(other, int):
                 return Integer(self.p % other)
@@ -1960,7 +2037,14 @@ class Integer(Rational):
             return Rational.__mod__(self, other)
         return Rational.__mod__(self, other)
 
-    def __rmod__(self, other):
+    @overload
+    def __rmod__(self, other: Integer | int) -> Integer: ...
+    @overload
+    def __rmod__(self, other: Rational) -> Rational: ...
+    @overload
+    def __rmod__(self, other: Expr | complex) -> Expr: ...
+
+    def __rmod__(self, other: Expr | complex) -> Expr:
         if global_parameters.evaluate:
             if isinstance(other, int):
                 return Integer(other % self.p)
@@ -1969,10 +2053,17 @@ class Integer(Rational):
             return Rational.__rmod__(self, other)
         return Rational.__rmod__(self, other)
 
-    def __pow__(self, other, mod=None):
+    @overload
+    def __pow__(self, other: _NonNegativeInteger, mod: None = None) -> Integer: ...
+    @overload
+    def __pow__(self, other: Expr | complex, mod: None = None) -> Expr: ...
+    @overload
+    def __pow__(self, other: Integer | int, mod: Integer | int) -> Integer: ...
+
+    def __pow__(self, other: Expr | complex, mod: Integer | int | None = None) -> Expr:
         if mod is not None:
             try:
-                other_int = as_int(other)
+                other_int = as_int(other) # type: ignore[call-overload]
                 mod_int = as_int(mod)
             except ValueError:
                 pass
@@ -1981,64 +2072,64 @@ class Integer(Rational):
 
         return super().__pow__(other, mod)
 
-    def __eq__(self, other):
+    def __eq__(self, other: object) -> bool:
         if isinstance(other, int):
             return (self.p == other)
         elif isinstance(other, Integer):
             return (self.p == other.p)
         return Rational.__eq__(self, other)
 
-    def __ne__(self, other):
+    def __ne__(self, other: object) -> bool:
         return not self == other
 
-    def __gt__(self, other):
+    def __gt__(self, other: Expr | int | float) -> Boolean:
         try:
             other = _sympify(other)
         except SympifyError:
             return NotImplemented
-        if other.is_Integer:
+        if isinstance(other, Integer):
             return _sympify(self.p > other.p)
         return Rational.__gt__(self, other)
 
-    def __lt__(self, other):
+    def __lt__(self, other: Expr | int | float) -> Boolean:
         try:
             other = _sympify(other)
         except SympifyError:
             return NotImplemented
-        if other.is_Integer:
+        if isinstance(other, Integer):
             return _sympify(self.p < other.p)
         return Rational.__lt__(self, other)
 
-    def __ge__(self, other):
+    def __ge__(self, other: Expr | int | float) -> Boolean:
         try:
             other = _sympify(other)
         except SympifyError:
             return NotImplemented
-        if other.is_Integer:
+        if isinstance(other, Integer):
             return _sympify(self.p >= other.p)
         return Rational.__ge__(self, other)
 
-    def __le__(self, other):
+    def __le__(self, other: Expr | int | float) -> Boolean:
         try:
             other = _sympify(other)
         except SympifyError:
             return NotImplemented
-        if other.is_Integer:
+        if isinstance(other, Integer):
             return _sympify(self.p <= other.p)
         return Rational.__le__(self, other)
 
-    def __hash__(self):
+    def __hash__(self) -> int:
         return hash(self.p)
 
-    def __index__(self):
+    def __index__(self) -> int:
         return self.p
 
     ########################################
 
-    def _eval_is_odd(self):
+    def _eval_is_odd(self) -> bool:
         return bool(self.p % 2)
 
-    def _eval_power(self, expt):
+    def _eval_power(self, expt: Expr) -> Expr | None:
         """
         Tries to do some simplifications on self**expt
 
@@ -2077,7 +2168,7 @@ class Integer(Rational):
             # Rational knows how to exponentiate by a Float
             return super()._eval_power(expt)
         if not isinstance(expt, Rational):
-            return
+            return None
         if expt is S.Half and self.is_negative:
             # we extract I for this special case since everyone is doing so
             return S.ImaginaryUnit*Pow(-self, expt)
@@ -2092,7 +2183,7 @@ class Integer(Rational):
         x, xexact = integer_nthroot(abs(self.p), expt.q)
         if xexact:
             # if it's a perfect root we've finished
-            result = Integer(x**abs(expt.p))
+            result: Expr = Integer(x**abs(expt.p))
             if self.is_negative:
                 result *= S.NegativeOne**expt
             return result
@@ -2110,7 +2201,7 @@ class Integer(Rational):
 
         # now process the dict of factors
         out_int = 1  # integer part
-        out_rad = 1  # extracted radicals
+        out_rad: Expr | int = 1  # extracted radicals
         sqr_int = 1
         sqr_gcd = 0
         sqr_dict = {}
@@ -2138,38 +2229,51 @@ class Integer(Rational):
                     break
         for k, v in sqr_dict.items():
             sqr_int *= k**(v//sqr_gcd)
+
         if sqr_int == b_pos and out_int == 1 and out_rad == 1:
-            result = None
+            return None
         else:
             result = out_int*out_rad*Pow(sqr_int, Rational(sqr_gcd, expt.q))
             if self.is_negative:
                 result *= Pow(S.NegativeOne, expt)
-        return result
+            return result
 
-    def _eval_is_prime(self):
+    def _eval_is_prime(self) -> bool:
         from sympy.ntheory.primetest import isprime
 
         return isprime(self)
 
-    def _eval_is_composite(self):
+    def _eval_is_composite(self) -> bool | None:
         if self > 1:
             return fuzzy_not(self.is_prime)
         else:
             return False
 
-    def as_numer_denom(self):
+    def as_numer_denom(self) -> tuple[Integer, One]:
         return self, S.One
 
+    @overload
+    def __floordiv__(self, other: Rational | int) -> Integer: ...
+    @overload
+    def __floordiv__(self, other: Expr | complex) -> Expr: ...
+
     @_sympifyit('other', NotImplemented)
-    def __floordiv__(self, other):
+    def __floordiv__(self, other: Expr | complex) -> Expr:
         if not isinstance(other, Expr):
             return NotImplemented
         if isinstance(other, Integer):
-            return Integer(self.p // other)
+            return Integer(self.p // other.p)
         return divmod(self, other)[0]
 
-    def __rfloordiv__(self, other):
-        return Integer(Integer(other).p // self.p)
+    @overload
+    def __rfloordiv__(self, other: int) -> Integer: ...
+    @overload
+    def __rfloordiv__(self, other: Expr | complex) -> Expr: ...
+
+    def __rfloordiv__(self, other: Expr | complex) -> Expr:
+        if isinstance(other, int):
+            return Integer(other // self.p)
+        return super().__rfloordiv__(other)
 
     # These bitwise operations (__lshift__, __rlshift__, ..., __invert__) are defined
     # for Integer only and not for general SymPy expressions. This is to achieve
@@ -2178,67 +2282,67 @@ class Integer(Rational):
     # integer types rather than using sympify because they should not accept arbitrary
     # symbolic expressions and there is no symbolic analogue of numbers.Integral's
     # bitwise operations.
-    def __lshift__(self, other):
+    def __lshift__(self, other: Integer | int | numbers.Integral) -> Integer:
         if isinstance(other, (int, Integer, numbers.Integral)):
             return Integer(self.p << int(other))
         else:
             return NotImplemented
 
-    def __rlshift__(self, other):
+    def __rlshift__(self, other: Integer | int | numbers.Integral) -> Integer:
         if isinstance(other, (int, numbers.Integral)):
             return Integer(int(other) << self.p)
         else:
             return NotImplemented
 
-    def __rshift__(self, other):
+    def __rshift__(self, other: Integer | int | numbers.Integral) -> Integer:
         if isinstance(other, (int, Integer, numbers.Integral)):
             return Integer(self.p >> int(other))
         else:
             return NotImplemented
 
-    def __rrshift__(self, other):
+    def __rrshift__(self, other: Integer | int | numbers.Integral) -> Integer:
         if isinstance(other, (int, numbers.Integral)):
             return Integer(int(other) >> self.p)
         else:
             return NotImplemented
 
-    def __and__(self, other):
+    def __and__(self, other: Integer | int | numbers.Integral) -> Integer:
         if isinstance(other, (int, Integer, numbers.Integral)):
             return Integer(self.p & int(other))
         else:
             return NotImplemented
 
-    def __rand__(self, other):
+    def __rand__(self, other: Integer | int | numbers.Integral) -> Integer:
         if isinstance(other, (int, numbers.Integral)):
             return Integer(int(other) & self.p)
         else:
             return NotImplemented
 
-    def __xor__(self, other):
+    def __xor__(self, other: Integer | int | numbers.Integral) -> Integer:
         if isinstance(other, (int, Integer, numbers.Integral)):
             return Integer(self.p ^ int(other))
         else:
             return NotImplemented
 
-    def __rxor__(self, other):
+    def __rxor__(self, other: Integer | int | numbers.Integral) -> Integer:
         if isinstance(other, (int, numbers.Integral)):
             return Integer(int(other) ^ self.p)
         else:
             return NotImplemented
 
-    def __or__(self, other):
+    def __or__(self, other: Integer | int | numbers.Integral) -> Integer:
         if isinstance(other, (int, Integer, numbers.Integral)):
             return Integer(self.p | int(other))
         else:
             return NotImplemented
 
-    def __ror__(self, other):
+    def __ror__(self, other: Integer | int | numbers.Integral) -> Integer:
         if isinstance(other, (int, numbers.Integral)):
             return Integer(int(other) | self.p)
         else:
             return NotImplemented
 
-    def __invert__(self):
+    def __invert__(self) -> Integer:
         return Integer(~self.p)
 
 # Add sympify converters
@@ -2367,13 +2471,13 @@ class AlgebraicNumber(Expr):
 
         >>> a2 = AlgebraicNumber(a1, [3, -5])
         >>> a2.as_expr()
-        -5 + 3*sqrt(2)
+        3*sqrt(2) - 5
 
         or start from scratch:
 
         >>> a2 = AlgebraicNumber(sqrt(2), [3, -5])
         >>> a2.as_expr()
-        -5 + 3*sqrt(2)
+        3*sqrt(2) - 5
 
         Example (3): $\alpha = 6 \sqrt{2} - 11$, $\theta = \sqrt{2}$. Again we
         can build on the previous example, and we see that the coeff polys are
@@ -2381,7 +2485,7 @@ class AlgebraicNumber(Expr):
 
         >>> a3 = AlgebraicNumber(a2, [2, -1])
         >>> a3.as_expr()
-        -11 + 6*sqrt(2)
+        6*sqrt(2) - 11
 
         reflecting the fact that $(2x - 1) \circ (3x - 5) = 6x - 11$.
 
@@ -2603,7 +2707,7 @@ class AlgebraicNumber(Expr):
         >>> print(a)
         1 - sqrt(5)
         >>> print(b)
-        2 + 3*sqrt(5)
+        3*sqrt(5) + 2
         >>> print(b.primitive_element() == a.primitive_element())
         True
 
@@ -3439,7 +3543,7 @@ class NaN(Number, metaclass=Singleton):
 
     @cacheit
     def sort_key(self, order=None):
-        return self.class_key(), (0, ()), (), S.NegativeInfinity
+        return (1, 0, 'NaN'), (0, ()), (), S.NegativeInfinity
 
     def floor(self):
         return self
@@ -3846,7 +3950,7 @@ class GoldenRatio(NumberSymbol, metaclass=Singleton):
     >>> S.GoldenRatio > 1
     True
     >>> S.GoldenRatio.expand(func=True)
-    1/2 + sqrt(5)/2
+    sqrt(5)/2 + 1/2
     >>> S.GoldenRatio.is_irrational
     True
 
@@ -3915,7 +4019,7 @@ class TribonacciConstant(NumberSymbol, metaclass=Singleton):
     >>> S.TribonacciConstant > 1
     True
     >>> S.TribonacciConstant.expand(func=True)
-    1/3 + (19 - 3*sqrt(33))**(1/3)/3 + (3*sqrt(33) + 19)**(1/3)/3
+    (19 - 3*sqrt(33))**(1/3)/3 + (3*sqrt(33) + 19)**(1/3)/3 + 1/3
     >>> S.TribonacciConstant.is_irrational
     True
     >>> S.TribonacciConstant.n(20)

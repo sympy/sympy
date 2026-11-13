@@ -664,7 +664,7 @@ class PythonCodePrinter(AbstractPythonCodePrinter):
         return self._print_Rational(expr)
 
     def _print_frac(self, expr):
-        return self._print_Mod(Mod(expr.args[0], 1))
+        return '({})'.format(self._print_Mod(Mod(expr.args[0], 1)))
 
     def _print_Symbol(self, expr):
 
@@ -885,7 +885,7 @@ class MpmathPrinter(PythonCodePrinter):
             self._print(e.args[1]))
 
     def _print_log2(self, e):
-        return '{0}({1})/{0}(2)'.format(
+        return '({0}({1})/{0}(2))'.format(
             self._module_format('mpmath.log'), self._print(e.args[0]))
 
     def _print_log1p(self, e):

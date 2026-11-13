@@ -12,8 +12,7 @@ This module contains functions to:
 """
 from __future__ import annotations
 from sympy.core.sympify import sympify
-from sympy.core import (S, Pow, Dummy, pi, Expr, Wild, Mul,
-                        Add, Basic)
+from sympy.core import (S, Pow, Dummy, pi, Expr, Wild, Mul, Add)
 from sympy.core.containers import Tuple
 from sympy.core.function import (Lambda, expand_complex, AppliedUndef,
                                 expand_log, _mexpand, expand_trig, nfloat)
@@ -25,6 +24,10 @@ from sympy.core.sorting import default_sort_key, ordered
 from sympy.core.symbol import Symbol, _uniquely_named_symbol
 from sympy.core.sympify import _sympify
 from sympy.core.traversal import preorder_traversal
+from sympy.core.exprtools import (
+    linear_coeffs as linear_coeffs,
+    NonlinearError as NonlinearError,
+)
 from sympy.external.gmpy import gcd as number_gcd, lcm as number_lcm
 from sympy.polys.matrices.linsolve import _linear_eq_to_dict
 from sympy.polys.polyroots import UnsolvableFactorError
@@ -59,16 +62,11 @@ from sympy.solvers.solvers import (checksol, denoms, unrad,
 from sympy.solvers.polysys import solve_poly_system
 from sympy.utilities import filldedent
 from sympy.utilities.iterables import (numbered_symbols, has_dups,
-                                       is_sequence, iterable)
+                                       is_sequence)
 from sympy.calculus.util import periodicity, continuous_domain, function_range
 
 
 from types import GeneratorType
-
-
-class NonlinearError(ValueError):
-    """Raised when unexpectedly encountering nonlinear equations"""
-    pass
 
 
 def _masked(f, *atoms):
@@ -151,7 +149,7 @@ def _invert(f_x, y, x, domain=S.Complexes):
     When does exp(x) == y?
 
     >>> invert_complex(exp(x), y, x)
-    (x, ImageSet(Lambda(_n, I*(2*_n*pi + arg(y)) + log(Abs(y))), Integers))
+    (x, ImageSet(Lambda(_n, log(Abs(y)) + I*(2*_n*pi + arg(y))), Integers))
     >>> invert_real(exp(x), y, x)
     (x, Intersection({log(y)}, Reals))
 
@@ -1186,7 +1184,7 @@ def solve_decomposition(f, symbol, domain):
                2
     >>> f3 = sin(x + 2)
     >>> pprint(sd(f3, x, S.Reals), use_unicode=False)
-    {2*n*pi - 2 | n in Integers} U {2*n*pi - 2 + pi | n in Integers}
+    {2*n*pi - 2 | n in Integers} U {2*n*pi + pi - 2 | n in Integers}
 
     """
     from sympy.solvers.decompogen import decompogen
@@ -1540,6 +1538,8 @@ def _invert_modular(modterm, rhs, n, symbol):
     (x**2 + x + 1, ImageSet(Lambda(_n, 3*_n + 1), Naturals0))
 
     """
+    if not isinstance(modterm, Mod):
+        return modterm, rhs
     a, m = modterm.args
 
     if rhs.is_integer is False:
@@ -1577,7 +1577,9 @@ def _invert_modular(modterm, rhs, n, symbol):
         if expo.has(symbol) and not base.has(symbol):
             # remainder -> solution independent of n of equation.
             # m, rhs are made coprime by dividing number_gcd(m, rhs)
-            if not m.is_Integer and rhs.is_Integer and a.base.is_Integer:
+            if not (m.is_Integer and rhs.is_Integer and base.is_Integer):
+                return modterm, rhs
+            if number_gcd(m.p, base.p) != 1 or number_gcd(m.p, rhs.p) != 1:
                 return modterm, rhs
 
             mdiv = m.p // number_gcd(m.p, rhs.p)
@@ -1655,7 +1657,7 @@ def _solve_modular(f, symbol, domain):
     >>> solve_modulo(-7 + Mod(x, 5), x, S.Integers)
     EmptySet
     >>> solve_modulo(Mod(12**x, 21) - 18, x, S.Integers)
-    ImageSet(Lambda(_n, 6*_n + 2), Naturals0)
+    ConditionSet(x, Eq(Mod(12**x, 21) - 18, 0), Integers)
     >>> solve_modulo(Mod(sin(x), 7) - 3, x, S.Integers) # not solvable
     ConditionSet(x, Eq(Mod(sin(x), 7) - 3, 0), Integers)
     >>> solve_modulo(3 - Mod(x, 5), x, Intersection(S.Integers, Interval(0, 100)))
@@ -1779,7 +1781,7 @@ def _solve_exponential(lhs, rhs, symbol, domain):
     >>> solve_expo(a**x - b**x, 0, x, S.Reals)  # solvable but incorrect assumptions
     ConditionSet(x, (a > 0) & (b > 0), {0})
     >>> solve_expo(3**(2*x) - 2**(x + 3), 0, x, S.Reals)
-    {-3*log(2)/(-2*log(3) + log(2))}
+    {-3*log(2)/(log(2) - 2*log(3))}
     >>> solve_expo(2**x - 4**x, 0, x, S.Reals)
     {0}
 
@@ -2183,7 +2185,7 @@ def _transolve(f, symbol, domain):
     >>> from sympy import symbols, S, pprint
     >>> x = symbols('x', real=True) # assumption added
     >>> transolve(5**(x - 3) - 3**(2*x + 1), x, S.Reals)
-    {-(log(3) + 3*log(5))/(-log(5) + 2*log(3))}
+    {-(log(3) + 3*log(5))/(2*log(3) - log(5))}
 
     How ``_transolve`` works
     ========================
@@ -2226,9 +2228,9 @@ def _transolve(f, symbol, domain):
 
     >>> f = 3**(2*x) - 2**(x + 3)
     >>> pprint(transolve(f, x, S.Reals), use_unicode=False)
-        -3*log(2)
-    {------------------}
-     -2*log(3) + log(2)
+            -3*log(2)
+        {-----------------}
+         log(2) - 2*log(3)
     >>> pprint(tsolve(f, x), use_unicode=False)
          /   3     \
          | --------|
@@ -2686,97 +2688,6 @@ def solvify(f, symbol, domain):
 ###############################################################################
 
 
-def linear_coeffs(eq, *syms, dict=False):
-    """Return a list whose elements are the coefficients of the
-    corresponding symbols in the sum of terms in  ``eq``.
-    The additive constant is returned as the last element of the
-    list.
-
-    Raises
-    ======
-
-    NonlinearError
-        The equation contains a nonlinear term
-    ValueError
-        duplicate or unordered symbols are passed
-
-    Parameters
-    ==========
-
-    dict - (default False) when True, return coefficients as a
-        dictionary with coefficients keyed to syms that were present;
-        key 1 gives the constant term
-
-    Examples
-    ========
-
-    >>> from sympy.solvers.solveset import linear_coeffs
-    >>> from sympy.abc import x, y, z
-    >>> linear_coeffs(3*x + 2*y - 1, x, y)
-    [3, 2, -1]
-
-    It is not necessary to expand the expression:
-
-        >>> linear_coeffs(x + y*(z*(x*3 + 2) + 3), x)
-        [3*y*z + 1, y*(2*z + 3)]
-
-    When nonlinear is detected, an error will be raised:
-
-        * even if they would cancel after expansion (so the
-        situation does not pass silently past the caller's
-        attention)
-
-        >>> eq = 1/x*(x - 1) + 1/x
-        >>> linear_coeffs(eq.expand(), x)
-        [0, 1]
-        >>> linear_coeffs(eq, x)
-        Traceback (most recent call last):
-        ...
-        NonlinearError:
-        nonlinear in given generators
-
-        * when there are cross terms
-
-        >>> linear_coeffs(x*(y + 1), x, y)
-        Traceback (most recent call last):
-        ...
-        NonlinearError:
-        symbol-dependent cross-terms encountered
-
-        * when there are terms that contain an expression
-        dependent on the symbols that is not linear
-
-        >>> linear_coeffs(x**2, x)
-        Traceback (most recent call last):
-        ...
-        NonlinearError:
-        nonlinear in given generators
-    """
-    eq = _sympify(eq)
-    if len(syms) == 1 and iterable(syms[0]) and not isinstance(syms[0], Basic):
-        raise ValueError('expecting unpacked symbols, *syms')
-    symset = set(syms)
-    if len(symset) != len(syms):
-        raise ValueError('duplicate symbols given')
-    try:
-        d, c = _linear_eq_to_dict([eq], symset)
-        d = d[0]
-        c = c[0]
-    except PolyNonlinearError as err:
-        raise NonlinearError(str(err))
-    if dict:
-        if c:
-            d[S.One] = c
-        return d
-    rv = [S.Zero]*(len(syms) + 1)
-    rv[-1] = c
-    for i, k in enumerate(syms):
-        if k not in d:
-            continue
-        rv[i] = d[k]
-    return rv
-
-
 def linear_eq_to_matrix(equations, *symbols):
     r"""
     Converts a given System of Equations into Matrix form. Here ``equations``
@@ -3048,7 +2959,7 @@ def linsolve(system, *symbols):
     >>> a, b, c, d, e, f = symbols('a, b, c, d, e, f')
     >>> eqns = [a*x + b*y - c, d*x + e*y - f]
     >>> linsolve(eqns, x, y)
-    {((-b*f + c*e)/(a*e - b*d), (a*f - c*d)/(a*e - b*d))}
+    {((c*e - b*f)/(a*e - b*d), (a*f - c*d)/(a*e - b*d))}
 
     * A degenerate system returns solution as set of given
       symbols.
@@ -3326,17 +3237,11 @@ def substitution(system, symbols, result=[{}], known_symbols=[],
     >>> x, y, z = symbols('x, y, z')
     >>> from sympy import exp, sin
     >>> substitution([exp(x) - sin(y), y**2 - 4], [x, y])
-    {(ImageSet(Lambda(_n, I*(2*_n*pi + pi) + log(sin(2))), Integers), -2),
-     (ImageSet(Lambda(_n, 2*_n*I*pi + log(sin(2))), Integers), 2)}
+    {(ImageSet(Lambda(_n, log(sin(2)) + I*(2*_n*pi + pi)), Integers), -2), (ImageSet(Lambda(_n, log(sin(2)) + 2*_n*I*pi), Integers), 2)}
 
     >>> eqs = [z**2 + exp(2*x) - sin(y), -3 + exp(-y)]
     >>> substitution(eqs, [y, z])
-    {(-log(3), -sqrt(-exp(2*x) - sin(log(3)))),
-     (-log(3), sqrt(-exp(2*x) - sin(log(3)))),
-     (ImageSet(Lambda(_n, 2*_n*I*pi - log(3)), Integers),
-      ImageSet(Lambda(_n, -sqrt(-exp(2*x) + sin(2*_n*I*pi - log(3)))), Integers)),
-     (ImageSet(Lambda(_n, 2*_n*I*pi - log(3)), Integers),
-      ImageSet(Lambda(_n, sqrt(-exp(2*x) + sin(2*_n*I*pi - log(3)))), Integers))}
+    {(-log(3), -sqrt(-exp(2*x) - sin(log(3)))), (-log(3), sqrt(-exp(2*x) - sin(log(3)))), (ImageSet(Lambda(_n, -log(3) + 2*_n*I*pi), Integers), ImageSet(Lambda(_n, -sqrt(sin(-log(3) + 2*_n*I*pi) - exp(2*x))), Integers)), (ImageSet(Lambda(_n, -log(3) + 2*_n*I*pi), Integers), ImageSet(Lambda(_n, sqrt(sin(-log(3) + 2*_n*I*pi) - exp(2*x))), Integers))}
 
     """
 
@@ -4036,8 +3941,7 @@ def nonlinsolve(system, *symbols):
 
     >>> from sympy import exp, sin
     >>> nonlinsolve([exp(x) - sin(y), y**2 - 4], [x, y])
-    {(ImageSet(Lambda(_n, I*(2*_n*pi + pi) + log(sin(2))), Integers), -2),
-     (ImageSet(Lambda(_n, 2*_n*I*pi + log(sin(2))), Integers), 2)}
+    {(ImageSet(Lambda(_n, log(sin(2)) + I*(2*_n*pi + pi)), Integers), -2), (ImageSet(Lambda(_n, log(sin(2)) + 2*_n*I*pi), Integers), 2)}
 
     3. If system is non-linear polynomial and zero-dimensional then it
     returns both solution (real and complex solutions, if present) using
@@ -4064,9 +3968,9 @@ def nonlinsolve(system, *symbols):
     >>> nonlinsolve((e1, e2), (x, y))
     {(191/20, -3*sqrt(391)/20), (191/20, 3*sqrt(391)/20)}
     >>> nonlinsolve([x**2 + 2/y - 2, x + y - 3], [x, y])
-    {(1, 2), (1 - sqrt(5), 2 + sqrt(5)), (1 + sqrt(5), 2 - sqrt(5))}
+    {(1, 2), (1 - sqrt(5), sqrt(5) + 2), (sqrt(5) + 1, 2 - sqrt(5))}
     >>> nonlinsolve([x**2 + 2/y - 2, x + y - 3], [y, x])
-    {(2, 1), (2 - sqrt(5), 1 + sqrt(5)), (2 + sqrt(5), 1 - sqrt(5))}
+    {(2, 1), (2 - sqrt(5), sqrt(5) + 1), (sqrt(5) + 2, 1 - sqrt(5))}
 
     6. It is better to use symbols instead of trigonometric functions or
     :class:`~.Function`. For example, replace $\sin(x)$ with a symbol, replace

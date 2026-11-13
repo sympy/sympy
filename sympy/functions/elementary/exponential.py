@@ -18,9 +18,10 @@ from sympy.functions.elementary.complexes import arg, unpolarify, im, re, Abs
 from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.ntheory import multiplicity, perfect_power
 from sympy.ntheory.factor_ import factorint
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, overload
 
 if TYPE_CHECKING:
+    from typing import Literal
     from sympy.core.expr import Expr
 
 # NOTE IMPORTANT
@@ -39,6 +40,11 @@ class ExpBase(DefinedFunction):
 
     unbranched = True
     _singularities = (S.ComplexInfinity,)
+
+    if TYPE_CHECKING:
+        @property
+        def args(self) -> tuple[Expr]:
+            ...
 
     @property
     def kind(self):
@@ -77,7 +83,7 @@ class ExpBase(DefinedFunction):
         return self, S.One
 
     @property
-    def exp(self):
+    def exp(self) -> Expr:
         """
         Returns the exponent of the function.
         """
@@ -630,7 +636,7 @@ class log(DefinedFunction):
     >>> log(8, 2)
     3
     >>> log(S(8)/3, 2)
-    -log(3)/log(2) + 3
+    3 - log(3)/log(2)
     >>> log(-1 + I*sqrt(3))
     log(2) + 2*I*pi/3
 
@@ -641,7 +647,37 @@ class log(DefinedFunction):
 
     """
 
-    args: tuple[Expr]
+    if TYPE_CHECKING:
+
+        @overload
+        def __new__(
+            cls,
+            arg: Expr | complex,
+            base: Expr | complex | None = None,
+            *,
+            evaluate: Literal[False],
+        ) -> log: ...
+        @overload
+        def __new__( # type: ignore[misc]
+            cls,
+            arg: Expr | complex,
+            base: Expr | complex | None = None,
+            *,
+            evaluate: bool = True,
+        ) -> Expr: ...
+
+        def __new__( # type: ignore[misc]
+            cls,
+            arg: Expr | complex,
+            base: Expr | complex | None = None,
+            *,
+            evaluate: bool = True,
+        ) -> Expr:
+            ...
+
+        @property
+        def args(self) -> tuple[Expr]:
+            ...
 
     _singularities = (S.Zero, S.ComplexInfinity)
 

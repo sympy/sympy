@@ -2,7 +2,7 @@ from __future__ import annotations
 from sympy import Not
 from sympy.codegen import Assignment
 from sympy.codegen.ast import none
-from sympy.codegen.cfunctions import expm1, log1p
+from sympy.codegen.cfunctions import expm1, log1p, log2
 from sympy.codegen.scipy_nodes import cosm1
 from sympy.codegen.matrix_nodes import MatrixSolve
 from sympy.core import Expr, Mod, symbols, Eq, Le, Gt, zoo, oo, Rational, Pow
@@ -60,7 +60,7 @@ def test_PythonCodePrinter():
 
     assert prntr.doprint(acos(x)) == 'math.acos(x)'
     assert prntr.doprint(cot(x)) == '(1/math.tan(x))'
-    assert prntr.doprint(coth(x)) == '((math.exp(x) + math.exp(-x))/(math.exp(x) - math.exp(-x)))'
+    assert prntr.doprint(coth(x)) == '((math.exp(-x) + math.exp(x))/(math.exp(x) - math.exp(-x)))'
     assert prntr.doprint(asec(x)) == '(math.acos(1/x))'
     assert prntr.doprint(acsch(x)) == '(math.log(math.sqrt(1 + x**(-2)) + 1/x))'
 
@@ -147,6 +147,8 @@ def test_MpmathPrinter():
     assert p.doprint(S.Infinity) == 'mpmath.inf'
     assert p.doprint(S.NegativeInfinity) == 'mpmath.ninf'
     assert p.doprint(loggamma(x)) == 'mpmath.loggamma(x)'
+    assert p.doprint(log2(x)**2) == '(mpmath.log(x)/mpmath.log(2))**2'
+    assert p.doprint(1/log2(x)) == '1/(mpmath.log(x)/mpmath.log(2))'
 
 
 def test_NumPyPrinter():
@@ -293,7 +295,11 @@ def test_frac():
     assert prntr.doprint(expr) == 'numpy.mod(x, 1)'
 
     prntr = PythonCodePrinter()
-    assert prntr.doprint(expr) == 'x % 1'
+    assert prntr.doprint(expr) == '(x % 1)'
+    assert prntr.doprint(2*expr) == '2*(x % 1)'
+    assert prntr.doprint(-expr) == '-(x % 1)'
+    assert prntr.doprint(expr**2) == '(x % 1)**2'
+    assert prntr.doprint(x*expr) == 'x*(x % 1)'
 
     prntr = MpmathPrinter()
     assert prntr.doprint(expr) == 'mpmath.frac(x)'

@@ -714,7 +714,7 @@ class FpSubgroup(DefaultPrinting):
         if isinstance(self.parent, FreeGroup):
             gen_syms = [('x_%d'%i) for i in range(len(self.generators))]
             return free_group(', '.join(gen_syms))[0]
-        return self.parent.subgroup(C=self.C)
+        return self.parent.subgroup(self.generators, C=self.C)
 
     def __str__(self):
         if len(self.generators) > 30:

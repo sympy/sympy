@@ -689,6 +689,8 @@ class LatexPrinter(Printer):
             elif expr.exp.is_negative and expr.base.is_commutative:
                 # special case for 1^(-x), issue 9216
                 if expr.base == 1:
+                    if expr.exp == -1:
+                        return r"\frac{1}{1}"
                     return r"%s^{%s}" % (expr.base, expr.exp)
                 # special case for (1/x)^(-y) and (-1/-x)^(-y), issue 20252
                 if expr.base.is_Rational:
@@ -823,7 +825,7 @@ class LatexPrinter(Printer):
                 lower = self._print(expr.lower)
             else:
                 lower = self._print(S.Zero)
-            interval = '{lower}\\mathrel{{..}}\\nobreak {upper}'.format(
+            interval = '{lower}\\mathrel{{..}}{upper}'.format(
                     lower = lower, upper = upper)
             return '{{{label}}}_{{{interval}}}'.format(
                 label = label, interval = interval)
@@ -1153,14 +1155,16 @@ class LatexPrinter(Printer):
 
     def _print_Not(self, e):
         from sympy.logic.boolalg import (Equivalent, Implies)
-        if isinstance(e.args[0], Equivalent):
-            return self._print_Equivalent(e.args[0], r"\not\Leftrightarrow")
-        if isinstance(e.args[0], Implies):
-            return self._print_Implies(e.args[0], r"\not\Rightarrow")
-        if (e.args[0].is_Boolean):
-            return r"\neg \left(%s\right)" % self._print(e.args[0])
+        from sympy.sets.contains import Contains
+        arg = e.args[0]
+        if isinstance(arg, Equivalent):
+            return self._print_Equivalent(arg, r"\not\Leftrightarrow")
+        if isinstance(arg, Implies):
+            return self._print_Implies(arg, r"\not\Rightarrow")
+        if (arg.is_Boolean or arg.is_Relational or isinstance(arg, Contains)) and not arg.is_Not:
+            return r"\neg \left(%s\right)" % self._print(arg)
         else:
-            return r"\neg %s" % self._print(e.args[0])
+            return r"\neg %s" % self._print(arg)
 
     def _print_LogOp(self, args, char):
         arg = args[0]
@@ -1840,6 +1844,9 @@ class LatexPrinter(Printer):
             else:
                 return r"%s^{%s}" % (s, adjoint_style)
 
+    def _print_Conjugate(self, expr, exp=None):
+        return self._print_conjugate(expr, exp=exp)
+
     def _print_MatMul(self, expr):
         from sympy import MatMul
 
@@ -1967,7 +1974,7 @@ class LatexPrinter(Printer):
         block_str = r'\begin{%MATSTR%}%s\end{%MATSTR%}'
         block_str = block_str.replace('%MATSTR%', mat_str)
         if mat_str == 'array':
-            block_str = block_str.replace('%s', '{' + 'c'*expr.shape[0] + '}%s')
+            block_str = block_str.replace('%s', '{%COLS%}%s')
 
         if self._settings['mat_delim']:
             left_delim: str = self._settings['mat_delim']
@@ -1975,8 +1982,8 @@ class LatexPrinter(Printer):
             block_str = r'\left' + left_delim + block_str + \
                         r'\right' + right_delim
 
-        if expr.ndim == 0:
-            return block_str % ""
+        def block(content, ncols):
+            return block_str.replace('%COLS%', 'c'*ncols) % content
 
         level_str: list[list[str]] = [[] for i in range(expr.ndim + 1)]
         shape_ranges = [list(range(i)) for i in expr.shape]
@@ -1991,7 +1998,8 @@ class LatexPrinter(Printer):
                         r" & ".join(level_str[back_outer_i+1]))
                 else:
                     level_str[back_outer_i].append(
-                        block_str % (r"\\".join(level_str[back_outer_i+1])))
+                        block(r"\\".join(level_str[back_outer_i+1]),
+                              expr.shape[back_outer_i+1]))
                     if len(level_str[back_outer_i+1]) == 1:
                         level_str[back_outer_i][-1] = r"\left[" + \
                             level_str[back_outer_i][-1] + r"\right]"
@@ -2001,7 +2009,7 @@ class LatexPrinter(Printer):
         out_str = level_str[0][0]
 
         if expr.ndim % 2 == 1:
-            out_str = block_str % out_str
+            out_str = block(out_str, expr.shape[0])
 
         return out_str
 

@@ -2884,16 +2884,24 @@ def test_matrix_norm():
     # Test columns and symbols
     x = Symbol('x', real=True)
     v = Matrix([cos(x), sin(x)])
+    assert trigsimp(v.norm()) == 1
+    assert trigsimp(v.norm(None)) == 1
     assert trigsimp(v.norm(2)) == 1
     assert v.norm(10) == Pow(cos(x)**10 + sin(x)**10, Rational(1, 10))
 
     # Test Rows
     A = Matrix([[5, Rational(3, 2)]])
     assert A.norm() == Pow(25 + Rational(9, 4), S.Half)
+    assert A.norm(None) == Pow(25 + Rational(9, 4), S.Half)
     assert A.norm(oo) == max(A)
     assert A.norm(-oo) == min(A)
 
     # Matrix Tests
+    A = Matrix([[1, 2], [3, 4]])
+    assert A.norm() == sqrt(30)
+    assert A.norm(None) == sqrt(30)
+    assert A.norm(2) == sqrt(15 + sqrt(221))
+
     # Intuitive test
     A = Matrix([[1, 1], [1, 1]])
     assert A.norm(2) == 2

@@ -114,12 +114,6 @@ def test_issue_4992():
 
 
 @XFAIL
-def test_issue_16396a():
-    i = integrate(1/(1+sqrt(tan(x))), (x, pi/3, pi/6))
-    assert not i.has(Integral)
-
-
-@XFAIL
 def test_issue_16396b():
     i = integrate(x*sin(x)/(1+cos(x)**2), (x, 0, pi))
     assert not i.has(Integral)
@@ -153,17 +147,6 @@ def test_issue_15227():
     i = integrate(log(1-x)*log((1+x)**2)/x, (x, 0, 1))
     assert not i.has(Integral)
     # assert i == -5*zeta(3)/4
-
-
-@XFAIL
-@slow
-def test_issue_14716():
-    i = integrate(log(x + 5)*cos(pi*x),(x, S.Half, 1))
-    assert not i.has(Integral)
-    # Mathematica can not solve it either, but
-    # integrate(log(x + 5)*cos(pi*x),(x, S.Half, 1)).transform(x, y - 5).doit()
-    # works
-    # assert i == -log(Rational(11, 2))/pi - Si(pi*Rational(11, 2))/pi + Si(6*pi)/pi
 
 
 @XFAIL

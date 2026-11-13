@@ -6,7 +6,7 @@ from collections import defaultdict
 from sympy.core.numbers import (nan, oo, zoo)
 from sympy.core.add import Add
 from sympy.core.expr import Expr
-from sympy.core.function import Derivative, Function, expand
+from sympy.core.function import Derivative, DefinedFunction, Function, expand
 from sympy.core.mul import Mul
 from sympy.core.numbers import Rational
 from sympy.core.relational import Eq
@@ -78,7 +78,7 @@ def rational_algorithm(f, x, k, order=4, full=False):
     (-1/((-1)**k*k), 0, 1)
 
     >>> ra(atan(x), x, k, full=True)
-    ((-I/(2*(-I)**k) + I/(2*I**k))/k, 0, 1)
+    ((I/(2*I**k) - I/(2*(-I)**k))/k, 0, 1)
 
     Notes
     =====
@@ -267,7 +267,7 @@ def exp_re(DE, r, k):
     >>> f, r = Function('f'), Function('r')
 
     >>> exp_re(-f(x) + Derivative(f(x)), r, k)
-    -r(k) + r(k + 1)
+    r(k + 1) - r(k)
     >>> exp_re(Derivative(f(x), x) + Derivative(f(x), (x, 2)), r, k)
     r(k) + r(k + 1)
 
@@ -956,7 +956,7 @@ def compute_fps(f, x, x0=0, dir=1, hyper=True, order=4, rational=True,
     return _compute_fps(f, x, x0, dir, hyper, order, rational, full)
 
 
-class Coeff(Function):
+class Coeff(DefinedFunction):
     """
     Coeff(p, x, n) represents the nth coefficient of the polynomial p in x
     """

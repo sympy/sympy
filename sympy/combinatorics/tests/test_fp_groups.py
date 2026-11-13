@@ -220,6 +220,25 @@ def test_fp_subgroup():
     assert b**-1*a*b in H_free
     assert b**3*a*b not in H_free
 
+def test_fp_subgroup_to_fp_group():
+    F, x = free_group("x")
+    G = FpGroup(F, [x**4])
+    H = FpSubgroup(G, [x**2])
+    assert H.C is None
+    K = H.to_FpGroup()
+    assert K.order() == 2
+    assert K.relators == (K.generators[0]**2,)
+
+    assert H.order() == 2
+    assert H.C is not None
+    K = H.to_FpGroup()
+    assert K.order() == 2
+    assert K.relators == (K.generators[0]**2,)
+
+    assert FpSubgroup(G, []).to_FpGroup().order() == 1
+    assert FpSubgroup(G, [x]).to_FpGroup().order() == 4
+
+
 def test_permutation_methods():
     F, x, y = free_group("x, y")
     # DihedralGroup(8)

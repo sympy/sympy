@@ -144,6 +144,8 @@ class KroneckerProduct(MatrixExpr):
         return KroneckerProduct(*list(map(transpose, self.args))).doit()
 
     def _eval_trace(self):
+        if not all(a.is_square for a in self.args):
+            return None
         from .trace import trace
         return Mul(*[trace(a) for a in self.args])
 
@@ -438,7 +440,7 @@ def kronecker_mat_add(expr):
     krons = []
     for group in args.values():
         # Greedily merge each addend into the first mergeable partner:
-        merged: list[tuple] = []
+        merged = []
         for pair in map(_coeff_kron, group):
             for i, other in enumerate(merged):
                 combined = _kronecker_merge_add(other, pair)

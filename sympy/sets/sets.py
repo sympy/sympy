@@ -1276,7 +1276,7 @@ class Interval(Set):
 
     @property
     def _measure(self):
-        return self.end - self.start
+        return Max(0, self.end - self.start)
 
     def _kind(self):
         return SetKind(NumberKind)
@@ -2465,10 +2465,10 @@ def imageset(*args):
     Interval(0, 4)
 
     >>> imageset(Lambda(x, sin(x)), Interval(-2, 1))
-    ImageSet(Lambda(x, sin(x)), Interval(-2, 1))
+    Interval(-1, sin(1))
 
     >>> imageset(sin, Interval(-2, 1))
-    ImageSet(Lambda(x, sin(x)), Interval(-2, 1))
+    Interval(-1, sin(1))
     >>> imageset(lambda y: x + y, Interval(-2, 1))
     ImageSet(Lambda(y, x + y), Interval(-2, 1))
 
@@ -2725,8 +2725,10 @@ def _handle_finite_sets(op, x, y, commutative):
     if len(fs_args) == 2:
         return FiniteSet(*[op(i, j) for i in fs_args[0] for j in fs_args[1]])
     elif len(fs_args) == 1:
-        sets = [_apply_operation(op, other[0], i, commutative) for i in fs_args[0]]
-        return Union(*sets)
+        sets = [_apply_operation(op, other[0], i, commutative)
+            for i in fs_args[0]]
+        return Union(*(i if isinstance(i, Set) else FiniteSet(i)
+            for i in sets))
     else:
         return None
 

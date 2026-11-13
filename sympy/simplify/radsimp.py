@@ -671,7 +671,7 @@ def collect_const(expr, *vars, Numbers=True):
     >>> collect_const(sqrt(3)*s + sqrt(3) + sqrt(7)*s + sqrt(7))
     (sqrt(2) + 3)*(sqrt(3) + sqrt(7))
     >>> collect_const(sqrt(3)*s + sqrt(3) + sqrt(7)*s + sqrt(7), sqrt(3))
-    sqrt(7) + sqrt(3)*(sqrt(2) + 3) + sqrt(7)*(sqrt(2) + 2)
+    sqrt(3)*(sqrt(2) + 3) + sqrt(7)*(sqrt(2) + 2) + sqrt(7)
 
     The collection is sign-sensitive, giving higher precedence to the
     unsigned values:
@@ -1037,7 +1037,7 @@ def rad_rationalize(num, den):
     >>> from sympy import sqrt
     >>> from sympy.simplify.radsimp import rad_rationalize
     >>> rad_rationalize(sqrt(3), 1 + sqrt(2)/3)
-    (-sqrt(3) + sqrt(6)/3, -7/9)
+    (sqrt(6)/3 - sqrt(3), -7/9)
     """
     if not den.is_Add:
         return num, den
@@ -1111,20 +1111,23 @@ def fraction(expr, exact=False):
     for term in Mul.make_args(expr):
         if term.is_commutative and (term.is_Pow or isinstance(term, exp)):
             b, ex = term.as_base_exp()
-            if ex.is_negative:
+            if exact:
+                if ex.is_number and ex.could_extract_minus_sign():
+                    if ex is S.NegativeOne:
+                        denom.append(b)
+                    else:
+                        denom.append(Pow(b, -ex, evaluate=False))
+                else:
+                    numer.append(term)
+            elif ex.is_negative:
                 if ex is S.NegativeOne:
                     denom.append(b)
-                elif exact:
-                    if ex.is_constant():
-                        denom.append(Pow(b, -ex, evaluate=False))
-                    else:
-                        numer.append(term)
                 else:
                     denom.append(Pow(b, -ex))
             elif ex.is_positive:
                 numer.append(term)
-            elif not exact and ex.is_Mul:
-                n, d = term.as_numer_denom()  # this will cause evaluation
+            elif ex.is_Mul:
+                n, d = term.as_numer_denom()
                 if n != 1:
                     numer.append(n)
                 denom.append(d)
@@ -1180,7 +1183,7 @@ def split_surds(expr):
     >>> from sympy import sqrt
     >>> from sympy.simplify.radsimp import split_surds
     >>> split_surds(3*sqrt(3) + sqrt(5)/7 + sqrt(6) + sqrt(10) + sqrt(15))
-    (3, sqrt(2) + sqrt(5) + 3, sqrt(5)/7 + sqrt(10))
+    (3, sqrt(2) + sqrt(5) + 3, sqrt(10) + sqrt(5)/7)
     """
     args = sorted(expr.args, key=default_sort_key)
     coeff_muls = [x.as_coeff_Mul() for x in args]
