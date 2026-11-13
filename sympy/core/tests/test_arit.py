@@ -4,6 +4,7 @@ import pytest
 
 from sympy.core.add import Add
 from sympy.core.basic import Basic
+from sympy.core.containers import Tuple
 from sympy.core.mod import Mod
 from sympy.core.mul import Mul
 from sympy.core.numbers import (Float, I, Integer, Rational, comp, nan,
@@ -1682,10 +1683,10 @@ def test_suppressed_evaluation():
 
 
 def test_AssocOp_doit():
-    a = Add(x,x, evaluate=False)
-    b = Mul(y,y, evaluate=False)
-    c = Add(b,b, evaluate=False)
-    d = Mul(a,a, evaluate=False)
+    a = Add(x, x, evaluate=False)
+    b = Mul(y, y, evaluate=False)
+    c = Add(b, b, evaluate=False)
+    d = Mul(a, a, evaluate=False)
     assert c.doit(deep=False).func == Mul
     assert c.doit(deep=False).args == (2,y,y)
     assert c.doit().func == Mul
@@ -1859,9 +1860,37 @@ def test_Mod():
     assert k**m % k == 0
     assert (-2*k)**m % k == 0
 
-    # Float handling
+    # Symbolic Floats must not be rescaled, even by exact factors.
+    assert unchanged(Mod, x, Float('0.5'))
+    assert unchanged(Mod, 2*x, 4.0)
+    assert unchanged(Mod, 3*x, -6.0)
+
+    # Float dividend, exact modulus: reducing 5.0 to 1.0 loses parity
+    # after rounding a large integer product.
+    assert unchanged(Mod, 5.0*k, 2)
+    assert Tuple(Mod(5.0*k, 2), Mod(1.0*k, 2, evaluate=False)).subs(
+        k, 2**51 + 1) == (0, 1.0)
+
+    # Exact dividend, Float modulus: extracting an integer factor
+    # changes which side of the remainder boundary is reached.
+    assert unchanged(Mod, 3*x, 6.0*y)
+    vals = Tuple(Mod(3*x, 6.0*y), 3*Mod(x, 2.0*y)).subs(
+        {x: Rational(21, 10), y: Float('0.21')})
+    assert vals[0] > 1
+    assert abs(vals[1]) < 1e-12
+
+    # Float dividend and modulus: extracting 0.1 changes the remainder.
+    assert unchanged(Mod, 5.0*x, 0.1*y)
+    vals = Tuple(Mod(5.0*x, 0.1*y),
+                 0.1*Mod(50*x, y, evaluate=False)).subs(
+        {x: Float('0.1'), y: Float('0.2')})
+    assert vals[0] > 0 and vals[1] == 0
+    delta = Rational(1, 10**20)
+    assert Mod(x, Float(1)).subs(x, 1 + delta) == Float(delta)
+    assert Mod(x, Float('0.5')).subs(x, 1 + delta) == Float(delta)
+    assert Mod(x + 3.0, 1).subs(x, 1 + delta) == 0
+
     point3 = Float(3.3) % 1
-    assert (x - 3.3) % 1 == Mod(1.*x + 1 - point3, 1)
     assert Mod(-3.3, 1) == 1 - point3
     assert Mod(0.7, 1) == Float(0.7)
     e = Mod(1.3, 1)
@@ -1886,14 +1915,18 @@ def test_Mod():
             reps = [(x, _x), (y, _y)]
             assert Mod(3*x + y, 9).subs(reps) == (3*_x + _y) % 9
 
+    # Float in either operand blocks symbolic quotient reduction.
+    assert unchanged(Mod, 6*x, 0.2*x)
+    assert unchanged(Mod, 1.0*x, x)
+    assert Mod(6*x, 0.2*x, evaluate=False).subs(x, -7) != 0
     # Known negative ratios must use floor, not truncation toward zero.
     # The sign of the modulus can be unknown even though p/q is rational.
     assert Mod(-x, 2*x) == x
     assert Mod(x, -2*x) == -x
     assert Mod(-x, 3*x) == 2*x
     assert Mod(-x**2, 2*x**2) == x**2
-    a, b = symbols('a b', integer=True)
-    t = a*x + b
+    a, b, i = symbols('a b i', integer=True)
+    t = a*i + b
     expr = Mod(-t**2, 2*t**2)
     assert expr == t**2
     params = {a: 0, b: 1}
@@ -1915,6 +1948,20 @@ def test_Mod():
 
     # known difference
     assert Mod(5*sqrt(2), sqrt(5)) == 5*sqrt(2) - 3*sqrt(5)
+    assert Mod(5.*sqrt(2), sqrt(5)) == 5.*sqrt(2) - 3*sqrt(5)
+    # Difference simplification can change rounding without new Floats.
+    u, v = symbols('u v', positive=True)
+    p, q = 3.0*u + 1.0*v, 2.0*u + 1.0*v
+    assert unchanged(Mod, p, q)
+    assert Mod(p, q, evaluate=False).subs({u: Rational(1, 2**60), v: 1}) == 0
+    # A Float in a nested Mod also protects the surrounding arithmetic.
+    a = Mod(Float('2e-16')*y, 1)
+    assert unchanged(Mod, 3*x + a, 2*x)
+    m1 = Mod(x + a, 2*x)
+    m2 = Mod(3*x + a, 2*x)
+    assert m1 != m2
+    assert m1.xreplace({x: 1, y: 1}) != m2.xreplace({x: 1, y: 1})
+    assert unchanged(Mod, Mod(1.0*y, 1) + 1, 1)
     p = symbols('p', positive=True)
     assert Mod(2, p + 3) == 2
     assert Mod(-2, p + 3) == p + 1
@@ -1934,36 +1981,36 @@ def test_Mod():
 
     # handling sums
     assert (x + 3) % 1 == Mod(x, 1)
-    assert (x + 3.0) % 1 == Mod(1.*x, 1)
+    assert unchanged(Mod, x + 3.0, 1)
     assert (x - S(33)/10) % 1 == Mod(x + S(7)/10, 1)
 
     a = Mod(.6*x + y, .3*y)
     b = Mod(0.1*y + 0.6*x, 0.3*y)
-    # Test that a, b are equal, with 1e-14 accuracy in coefficients
-    eps = 1e-14
-    assert abs((a.args[0] - b.args[0]).subs({x: 1, y: 1})) < eps
-    assert abs((a.args[1] - b.args[1]).subs({x: 1, y: 1})) < eps
+    assert a.args == (.6*x + y, .3*y)
+    assert b.args == (.1*y + .6*x, .3*y)
+    assert comp(a.subs({x: 1, y: 2}), b.subs({x: 1, y: 2}))
 
     assert (x + 1) % x == 1 % x
     assert (x + y) % x == y % x
     assert (x + y + 2) % x == (y + 2) % x
-    assert (a + 3*x + 1) % (2*x) == Mod(a + x + 1, 2*x)
     assert (12*x + 18*y) % (3*x) == 3*Mod(6*y, x)
+    # Exact terms can still be reduced in a Float-free expression.
+    assert (y + 3*x + 1) % (2*x) == Mod(y + x + 1, 2*x)
+
+    # A nested Float-containing Mod prevents outer simplification.
+    assert unchanged(Mod, a + 3*x + 1, 2*x)
 
     # gcd extraction
     assert (-3*x) % (-2*y) == -Mod(3*x, 2*y)
-    assert (.6*pi) % (.3*x*pi) == 0.3*pi*Mod(2, x)
-    assert (.6*pi) % (.31*x*pi) == pi*Mod(0.6, 0.31*x)
-    assert (6*pi) % (.3*x*pi) == 0.3*pi*Mod(20, x)
-    assert (6*pi) % (.31*x*pi) == pi*Mod(6, 0.31*x)
-    assert (6*pi) % (.42*x*pi) == pi*Mod(6, 0.42*x)
+    # Common symbolic factors are not extracted across Floats.
+    assert unchanged(Mod, .6*pi, .3*x*pi)
+    assert unchanged(Mod, 6*pi, .31*x*pi)
     assert (12*x) % (2*y) == 2*Mod(6*x, y)
     assert (12*x) % (3*5*y) == 3*Mod(4*x, 5*y)
     assert (12*x) % (15*x*y) == 3*x*Mod(4, 5*y)
     assert (-2*pi) % (3*pi) == pi
     assert (2*x + 2) % (x + 1) == 0
     assert (x*(x + 1)) % (x + 1) == (x + 1)*Mod(x, 1)
-    assert Mod(5.0*x, 0.1*y) == 0.1*Mod(50*x, y)
     i = Symbol('i', integer=True)
     assert (3*i*x) % (2*i*y) == i*Mod(3*x, 2*y)
     assert Mod(4*i, 4) == 0
@@ -2021,7 +2068,8 @@ def test_Mod():
 
     # issue 24215
     from sympy.abc import phi
-    assert Mod(4.0*Mod(phi, 1) , 2) == 2.0*(Mod(2*(Mod(phi, 1)), 1))
+    assert unchanged(Mod, 4.0*Mod(phi, 1), 2)
+    assert comp(Mod(4.0*Mod(phi, 1), 2).subs(phi, 0.9), 1.6)
 
     xi = symbols('x', integer=True)
     assert unchanged(Mod, xi, 2)
@@ -2046,6 +2094,50 @@ def test_Mod():
 
     assert Mod(3 * Mod(x1_int, 7), 7) == Mod(3 * x1_int, 7)
     assert Mod(5 * Mod(x1_int, 3), 3) == Mod(2 * x1_int, 3)
+
+
+def test_Mod_integer_terms():
+    i, j = symbols('i j', integer=True)
+    u = Symbol('u')
+    r = Symbol('r', rational=True)
+
+    # Integer-valued terms may be reduced even when the whole sum is
+    # not integer-valued.
+    assert Mod(3*i + 4*u, 2) == Mod(i + 4*u, 2)
+    assert Mod(6*i + u, 3) == Mod(u, 3)
+    assert Mod(3*i + u, 1) == Mod(u, 1)
+    assert Mod(3*i + 4*r, 2) == Mod(i + 4*r, 2)
+    assert Mod(3*i + u, -2) == Mod(-i + u, -2)
+    # Keep negative remainders decidable for odd integer symbols.
+    o = Symbol('o', integer=True, odd=True)
+    assert Mod(8 - o, -2) == -1
+    assert Mod(9 - o, -2) == 0
+    assert Mod(-i + u, 5) == Mod(4*i + u, 5)
+
+    # The same canonical form allows expressions to combine.
+    assert Mod(3*i + 4*u, 2) + Mod(i + 4*u, 2) == 2*Mod(i + 4*u, 2)
+
+    # Without the integer assumption, coefficients cannot be reduced.
+    assert unchanged(Mod, 3*x + 4*y, 2)
+
+    # The integer-valued factor need not itself be a Symbol.
+    xr = Symbol('xr', real=True)
+    assert Mod(3*floor(xr) + u, 2) == Mod(floor(xr) + u, 2)
+
+    # Rational coefficients and moduli can be reduced in the same way.
+    # The difference between 4*i/3 and 2*i/15 is 6*i/5, an integer
+    # multiple of the modulus 1/5 when i is integer.
+    fifth = Rational(1, 5)
+    assert Mod(4*i/3, fifth) == Mod(2*i/15, fifth)
+    assert Mod(4*i/3 + u, fifth) == Mod(2*i/15 + u, fifth)
+    assert Mod(4*i/3 + 2*j/5 + u, fifth) == Mod(2*i/15 + u, fifth)
+    assert Mod(-4*i/3 + u, fifth) == Mod(i/15 + u, fifth)
+    assert Mod(4*i/3 + u, -fifth) == Mod(-i/15 + u, -fifth)
+    assert unchanged(Mod, 4*u/3 + x, fifth)
+
+    # The exact coefficient reduction must not alter sums with Floats.
+    assert unchanged(Mod, 4*i/3 + Float('0.1')*u, fifth)
+
 
 def test_Mod_Pow():
     # modular exponentiation

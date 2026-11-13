@@ -5,7 +5,7 @@ from .function import DefinedFunction
 from .kind import NumberKind
 from .logic import fuzzy_and, fuzzy_not
 from .mul import Mul
-from .numbers import equal_valued
+from .numbers import Float, equal_valued
 from .relational import is_le, is_lt, is_ge, is_gt
 from .singleton import S
 
@@ -76,6 +76,10 @@ class Mod(DefinedFunction):
                     elif p.is_odd:
                         return S.One
 
+            if (p.has(Float) or q.has(Float)) and not (
+                    p.is_number and q.is_number):
+                return
+
             if hasattr(p, '_eval_Mod'):
                 rv = getattr(p, '_eval_Mod')(q)
                 if rv is not None:
@@ -121,6 +125,10 @@ class Mod(DefinedFunction):
         rv = number_eval(p, q)
         if rv is not None:
             return rv
+
+        if (p.has(Float) or q.has(Float)) and not (
+                p.is_number and q.is_number):
+            return
 
         # denest
         if isinstance(p, cls):
@@ -182,37 +190,54 @@ class Mod(DefinedFunction):
         from sympy.polys.polyerrors import PolynomialError
         from sympy.polys.polytools import gcd
 
-        # extract gcd; any further simplification should be done by the user
-        try:
-            G = gcd(p, q)
-            if not equal_valued(G, 1):
-                p, q = [gcd_terms(i/G, clear=False, fraction=False)
-                        for i in (p, q)]
-        except PolynomialError:  # issue 21373
-            G = S.One
+        # Extract common factors only for exact operands. With Floats,
+        # even exact common factors can change the rounding points after
+        # substitution, producing a different numerical remainder.
+        G = S.One
+        if not (p.has(Float) or q.has(Float)):
+            try:
+                G = gcd(p, q)
+                if not equal_valued(G, 1):
+                    p, q = [gcd_terms(i/G, clear=False, fraction=False)
+                            for i in (p, q)]
+            except PolynomialError:  # issue 21373
+                pass
         pwas, qwas = p, q
 
         # simplify terms
         # (x + y + 2) % x -> Mod(y + 2, x)
         if p.is_Add:
-            args = []
-            for i in p.args:
-                a = cls(i, q)
-                if a.count(cls) > i.count(cls):
-                    args.append(i)
-                else:
-                    args.append(a)
-            if args != list(p.args):
-                p = Add(*args)
+            # Do not rearrange Float-containing sums.
+            if not (p.has(Float) or q.has(Float)):
+                args = []
+                exact_coeffs = q.is_Rational and not p.has(Float)
+
+                for i in p.args:
+                    if exact_coeffs:
+                        c, term = i.as_coeff_Mul()
+                        if c.is_Rational and term.is_integer:
+                            i = (c % q)*term
+
+                    a = cls(i, q)
+                    if a.count(cls) > i.count(cls):
+                        args.append(i)
+                    else:
+                        args.append(a)
+                if args != list(p.args):
+                    p = Add(*args)
 
         else:
-            # handle coefficients if they are not Rational
-            # since those are not handled by factor_terms
-            # e.g. Mod(.6*x, .3*y) -> 0.3*Mod(2*x, y)
+            # Reduce exact coefficients of integer-valued factors.
+            if q.is_Rational and not p.has(Float):
+                c, term = p.as_coeff_Mul()
+                if c.is_Rational and term.is_integer:
+                    p = (c % q)*term
+            # Handle non-Rational coefficients not handled by factor_terms.
             cp, p = p.as_coeff_Mul()
             cq, q = q.as_coeff_Mul()
             ok = False
-            if not cp.is_Rational or not cq.is_Rational:
+            if (not cp.is_Rational or not cq.is_Rational) and not (
+                    cp.has(Float) or cq.has(Float)):
                 r = cp % cq
                 if equal_valued(r, 0):
                     G *= cq
@@ -231,13 +256,6 @@ class Mod(DefinedFunction):
         if rv is not None:
             return rv*G
 
-        # put 1.0 from G on inside
-        if G.is_Float and equal_valued(G, 1):
-            p *= G
-            return cls(p, q, evaluate=False)
-        elif G.is_Mul and G.args[0].is_Float and equal_valued(G.args[0], 1):
-            p = G.args[0]*p
-            G = Mul._from_args(G.args[1:])
         return G*cls(p, q, evaluate=(p, q) != (pwas, qwas))
 
     def _eval_is_integer(self):
