@@ -558,7 +558,7 @@ def BetaNoncentral(name, alpha, beta, lamda):
     Compute cdf with specific 'x', 'alpha', 'beta' and 'lamda' values as follows:
 
     >>> cdf(BetaNoncentral("x", 1, 1, 1), evaluate=False)(2).doit()
-    2*exp(1/2)
+    1
 
     The argument evaluate=False prevents an attempt at evaluation
     of the sum for general x, before the argument 2 is passed.
@@ -694,7 +694,7 @@ def BoundedPareto(name, alpha, left, right):
     >>> density(X)(x)
     2*L**2/(x**3*(1 - L**2/H**2))
     >>> cdf(X)(x)
-    Piecewise((H**2/(H**2 - L**2) - H**2*L**2/(x**2*(H**2 - L**2)), L <= x), (0, True))
+    Piecewise((0, L >= x), (H**2/(H**2 - L**2) - H**2*L**2/(x**2*(H**2 - L**2)), H > x), (1, True))
     >>> E(X).simplify()
     2*H*L/(H + L)
 
@@ -2722,10 +2722,7 @@ class LogitNormalDistribution(SingleContinuousDistribution):
 
     def _cdf(self, x):
         mu, s = self.mu, self.s
-        return Piecewise(
-            (S.Zero, x <= 0),
-            ((S.One/2)*(1 + erf((self._logit(x) - mu)/(sqrt(2*s**2)))), x < 1),
-            (S.One, True))
+        return (S.One/2)*(1 + erf((self._logit(x) - mu)/(sqrt(2*s**2))))
 
 
 def LogitNormal(name, mu, s):
@@ -3593,8 +3590,8 @@ def PowerFunction(name, alpha, a, b):
     (2*z - 2*a)/(b - a)**2
 
     >>> cdf(X)(z)
-    Piecewise((a**2/(a**2 - 2*a*b + b**2) - 2*a*z/(a**2 - 2*a*b + b**2) +
-    z**2/(a**2 - 2*a*b + b**2), a <= z), (0, True))
+    Piecewise((0, a >= z), (a**2/(a**2 - 2*a*b + b**2) - 2*a*z/(a**2 - 2*a*b + b**2) +
+    z**2/(a**2 - 2*a*b + b**2), b > z), (1, True))
 
     >>> alpha = 2
     >>> a = 0
@@ -3925,7 +3922,7 @@ def Reciprocal(name, a, b):
     >>> density(R)(x)
     1/(x*(log(b) - log(a)))
     >>> cdf(R)(x)
-    Piecewise((log(a)/(log(a) - log(b)) - log(x)/(log(a) - log(b)), a <= x), (0, True))
+    Piecewise((0, a >= x), (log(a)/(log(a) - log(b)) - log(x)/(log(a) - log(b)), b > x), (1, True))
 
     Reference
     =========

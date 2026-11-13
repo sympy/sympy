@@ -483,8 +483,9 @@ def test_BoundedPareto():
     X = BoundedPareto('X', 2, L, H)
     assert X.pspace.domain.set == Interval(L, H)
     assert density(X)(x) == 2*L**2/(x**3*(1 - L**2/H**2))
-    assert cdf(X)(x) == Piecewise((-H**2*L**2/(x**2*(H**2 - L**2)) \
-                            + H**2/(H**2 - L**2), L <= x), (0, True))
+    assert cdf(X)(x) == Piecewise((0, x <= L),
+        (-H**2*L**2/(x**2*(H**2 - L**2)) + H**2/(H**2 - L**2), x < H),
+        (1, True))
     assert E(X).simplify() == 2*H*L/(H + L)
     X = BoundedPareto('X', 1, 2, 4)
     assert E(X).simplify() == log(16)
@@ -909,6 +910,25 @@ def test_loglogistic():
     X = LogLogistic('x', 1, 2)
     assert median(X) == FiniteSet(1)
 
+def test_continuous_cdf_support_bounds():
+    for X in (LogitNormal('L', 0, 1), Reciprocal('R', 1, 2),
+              PowerFunction('P', 2, 0, 1), BoundedPareto('B', 2, 1, 2)):
+        left = X.pspace.distribution.set.start
+        right = X.pspace.distribution.set.end
+        F = cdf(X)
+        assert F(left - 1) == 0
+        assert F(left) == 0
+        assert F(right) == 1
+        assert F(right + 1) == 1
+        assert F(x).subs(x, right + 1) == 1
+    assert cdf(LogitNormal('L', 0, 1))(S.Half) == S.Half
+    assert cdf(Reciprocal('R', 1, 2))(sqrt(2)).simplify() == S.Half
+    assert cdf(PowerFunction('P', 2, 0, 1))(S.Half) == Rational(1, 4)
+    F = cdf(PowerFunction('P', 2, 0, 1), evaluate=False)
+    assert F(-1) == 0
+    assert F(2) == 1
+
+
 def test_logitnormal():
     mu = Symbol('mu', real=True)
     s = Symbol('s', positive=True)
@@ -1097,12 +1117,13 @@ def test_PowerFunction():
 
     X = PowerFunction('X', 2, a, b)
     assert density(X)(z) == (-2*a + 2*z)/(-a + b)**2
-    assert cdf(X)(z) == Piecewise((a**2/(a**2 - 2*a*b + b**2) -
-        2*a*z/(a**2 - 2*a*b + b**2) + z**2/(a**2 - 2*a*b + b**2), a <= z), (0, True))
+    assert cdf(X)(z) == Piecewise((0, z <= a),
+        (a**2/(a**2 - 2*a*b + b**2) - 2*a*z/(a**2 - 2*a*b + b**2)
+         + z**2/(a**2 - 2*a*b + b**2), z < b), (1, True))
 
     X = PowerFunction('X', 2, 0, 1)
     assert density(X)(z) == 2*z
-    assert cdf(X)(z) == Piecewise((z**2, z >= 0), (0,True))
+    assert cdf(X)(z) == Piecewise((0, z <= 0), (z**2, z < 1), (1, True))
     assert E(X) == Rational(2,3)
     assert P(X < 0) == 0
     assert P(X < 1) == 1
@@ -1143,7 +1164,8 @@ def test_reciprocal():
 
     X = Reciprocal('x', a, b)
     assert density(X)(x) == 1/(x*(-log(a) + log(b)))
-    assert cdf(X)(x) == Piecewise((log(a)/(log(a) - log(b)) - log(x)/(log(a) - log(b)), a <= x), (0, True))
+    assert cdf(X)(x) == Piecewise((0, x <= a),
+        (log(a)/(log(a) - log(b)) - log(x)/(log(a) - log(b)), x < b), (1, True))
     X = Reciprocal('x', 5, 30)
 
     assert E(X) == 25/(log(30) - log(5))

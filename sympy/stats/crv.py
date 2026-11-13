@@ -196,9 +196,14 @@ class SingleContinuousDistribution(ContinuousDistribution, NamedArgsMixin):
         # CDF is integral of PDF from left bound to z
         pdf = self.pdf(x)
         cdf = integrate(pdf.doit(), (x, left_bound, z), **kwargs)
-        # CDF Ensure that CDF left of left_bound is zero
-        cdf = Piecewise((cdf, z >= left_bound), (0, True))
+        cdf = self._cdf_with_bounds(cdf, z)
         return Lambda(z, cdf)
+
+    def _cdf_with_bounds(self, cdf, x):
+        left, right = self.set.inf, self.set.sup
+        if right is S.Infinity:
+            return Piecewise((cdf, x >= left), (0, True))
+        return Piecewise((0, x <= left), (cdf, x < right), (1, True))
 
     def _cdf(self, x):
         return None
@@ -208,7 +213,9 @@ class SingleContinuousDistribution(ContinuousDistribution, NamedArgsMixin):
         if len(kwargs) == 0:
             cdf = self._cdf(x)
             if cdf is not None:
-                return cdf
+                if isinstance(cdf, Piecewise) or self.set.sup is S.Infinity:
+                    return cdf
+                return self._cdf_with_bounds(cdf, x)
         return self.compute_cdf(**kwargs)(x)
 
     @cacheit
