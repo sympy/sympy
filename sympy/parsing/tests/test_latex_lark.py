@@ -189,6 +189,19 @@ PRIMES_BEFORE_SUBSCRIPT_PAIRS = [
     (r"y'_{\theta}", Symbol("y_{theta}'")),
 ]
 
+SUBSCRIPT_EXPRESSION_PAIRS = [
+    (r"a_{2n}", Symbol("a_{2n}")),
+    (r"a_{2 n}", Symbol("a_{2n}")),
+    (r"a_{n-1}", Symbol("a_{n-1}"))
+]
+
+UNSUPPORTED_SUBSCRIPT_EXPRESSION_PAIRS = [
+    (r"a_{n^2}", Symbol("a_{n^2}")),
+    (r"a_{n/2}", Symbol("a_{n/2}")),
+    (r"a_{\alpha+1}", Symbol("a_{alpha+1}")),
+    (r"a_{i_j}", Symbol("a_{i_j}"))
+]
+
 UNEVALUATED_SIMPLE_EXPRESSION_PAIRS = [
     (r"0", 0),
     (r"1", 1),
@@ -810,6 +823,17 @@ def test_primes_after_subscript():
 @XFAIL
 def test_primes_before_subscript():
     for latex_str, sympy_expr in PRIMES_BEFORE_SUBSCRIPT_PAIRS:
+        assert parse_latex_lark(latex_str) == sympy_expr, latex_str
+
+
+def test_subscript_expressions():
+    for latex_str, sympy_expr in SUBSCRIPT_EXPRESSION_PAIRS:
+        assert parse_latex_lark(latex_str) == sympy_expr, latex_str
+
+
+@XFAIL
+def test_unsupported_subscript_expressions():
+    for latex_str, sympy_expr in UNSUPPORTED_SUBSCRIPT_EXPRESSION_PAIRS:
         assert parse_latex_lark(latex_str) == sympy_expr, latex_str
 
 
