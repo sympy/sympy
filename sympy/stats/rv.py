@@ -960,6 +960,10 @@ def cdf(expr, condition=None, evaluate=True, **kwargs):
     Discrete variables produce Dicts.
     Continuous variables produce Lambdas.
 
+    For bounded continuous distributions, the Lambda may contain a
+    support-aware expression that evaluates when its argument is specified.
+    Use ``cdf(X)(z).rewrite(Piecewise)`` to obtain explicit boundary cases.
+
     Examples
     ========
 

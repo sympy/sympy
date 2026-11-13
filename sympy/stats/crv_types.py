@@ -256,10 +256,7 @@ class ArcsinDistribution(SingleContinuousDistribution):
 
     def _cdf(self, x):
         a, b = self.a, self.b
-        return Piecewise(
-            (S.Zero, x < a),
-            (2*asin(sqrt((x - a)/(b - a)))/pi, x <= b),
-            (S.One, True))
+        return 2*asin(sqrt((x - a)/(b - a)))/pi
 
 
 def Arcsin(name, a=0, b=1):
@@ -299,8 +296,8 @@ def Arcsin(name, a=0, b=1):
     >>> density(X)(z)
     1/(pi*sqrt((z - a)*(b - z)))
 
-    >>> cdf(X)(z)
-    Piecewise((0, a > z), (2*asin(sqrt((z - a)/(b - a)))/pi, b >= z), (1, True))
+    >>> cdf(X)(z).rewrite("Piecewise")
+    Piecewise((0, a >= z), (2*asin(sqrt((z - a)/(b - a)))/pi, b > z), (1, True))
 
 
     References
@@ -693,7 +690,7 @@ def BoundedPareto(name, alpha, left, right):
     >>> x = symbols('x')
     >>> density(X)(x)
     2*L**2/(x**3*(1 - L**2/H**2))
-    >>> cdf(X)(x)
+    >>> cdf(X)(x).rewrite("Piecewise")
     Piecewise((0, L >= x), (H**2/(H**2 - L**2) - H**2*L**2/(x**2*(H**2 - L**2)), H > x), (1, True))
     >>> E(X).simplify()
     2*H*L/(H + L)
@@ -2773,7 +2770,7 @@ def LogitNormal(name, mu, s):
     >>> density(X)(z)
     sqrt(2)*exp(-(log(z/(1 - z)) - mu)**2/(2*s**2))/(2*sqrt(pi)*s*z*(1 - z))
 
-    >>> cdf(X)(z)
+    >>> cdf(X)(z).rewrite("Piecewise")
     Piecewise((0, z <= 0), (erf(sqrt(2)*(log(z/(1 - z)) - mu)/(2*s))/2 + 1/2, z < 1), (1, True))
 
 
@@ -3589,7 +3586,7 @@ def PowerFunction(name, alpha, a, b):
     >>> density(X)(z)
     (2*z - 2*a)/(b - a)**2
 
-    >>> cdf(X)(z)
+    >>> cdf(X)(z).rewrite("Piecewise")
     Piecewise((0, a >= z), (a**2/(a**2 - 2*a*b + b**2) - 2*a*z/(a**2 - 2*a*b + b**2) +
     z**2/(a**2 - 2*a*b + b**2), b > z), (1, True))
 
@@ -3921,7 +3918,7 @@ def Reciprocal(name, a, b):
 
     >>> density(R)(x)
     1/(x*(log(b) - log(a)))
-    >>> cdf(R)(x)
+    >>> cdf(R)(x).rewrite("Piecewise")
     Piecewise((0, a >= x), (log(a)/(log(a) - log(b)) - log(x)/(log(a) - log(b)), b > x), (1, True))
 
     Reference
@@ -4397,11 +4394,7 @@ class UniformDistribution(SingleContinuousDistribution):
 
     def _cdf(self, x):
         left, right = self.left, self.right
-        return Piecewise(
-            (S.Zero, x < left),
-            ((x - left)/(right - left), x <= right),
-            (S.One, True)
-        )
+        return (x - left)/(right - left)
 
     def _characteristic_function(self, t):
         left, right = self.left, self.right
@@ -4464,8 +4457,8 @@ def Uniform(name, left, right):
     >>> density(X)(z)
     Piecewise((1/(b - a), (b >= z) & (a <= z)), (0, True))
 
-    >>> cdf(X)(z)
-    Piecewise((0, a > z), ((z - a)/(b - a), b >= z), (1, True))
+    >>> cdf(X)(z).rewrite("Piecewise")
+    Piecewise((0, a >= z), ((z - a)/(b - a), b > z), (1, True))
 
     >>> E(X)
     a/2 + b/2
