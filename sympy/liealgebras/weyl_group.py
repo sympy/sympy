@@ -94,6 +94,8 @@ class WeylGroup(Atom):
         if self.cartan_type.series == "G":
             return 12
 
+        raise ValueError(f"Invalid Cartan type: {self.cartan_type.series}{n}")
+
     def group_name(self) -> str:
         """
         This method returns some general information about the Weyl group for
@@ -125,6 +127,8 @@ class WeylGroup(Atom):
 
         if self.cartan_type.series == "G":
             return "D6, the dihedral group of order 12, and symmetry group of the hexagon."
+
+        raise ValueError(f"Invalid Cartan type: {self.cartan_type.series}{n}")
 
     def element_order(self, weylelt: str) -> int | float:
         """
@@ -186,9 +190,9 @@ class WeylGroup(Atom):
                 if len(reflections) == 1:
                     return 2
                 else:
-                    m = len(reflections) // 2
-                    lcm = (6 * m)/ igcd(m, 6)
-                order = lcm / m
+                    p = len(reflections) // 2
+                    lcm = (6 * p) / igcd(p, 6)
+                order = lcm / p
                 return order
 
 
@@ -208,6 +212,8 @@ class WeylGroup(Atom):
                 a *= self.matrix_form(weylelt)
                 order += 1
             return order
+
+        raise ValueError(f"Invalid Cartan type: {self.cartan_type.series}{n}")
 
     def delete_doubles(self, reflections: list[str]) -> list[str]:
         """
@@ -372,7 +378,6 @@ class WeylGroup(Atom):
             return matrixform
 
 
-
     def coxeter_diagram(self) -> str:
         """
         This method returns the Coxeter diagram corresponding to a Weyl group.
@@ -410,3 +415,5 @@ class WeylGroup(Atom):
         if self.cartan_type.series == "G":
             diag = "0≡≡≡0\n1   2"
             return diag
+
+        raise ValueError(f"Invalid Cartan type: {self.cartan_type.series}{n}")
