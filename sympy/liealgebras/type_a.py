@@ -92,7 +92,7 @@ class TypeA(Standard_Cartan):
         """
 
         n = self.n
-        posroots = {}
+        posroots: dict[int, list[int]] = {}
         k = 0
         for i in range(0, n):
             for j in range(i+1, n+1):

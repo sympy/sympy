@@ -2,12 +2,18 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
-from .cartan_type import CartanType, Standard_Cartan
-from sympy.core.basic import Atom
+from .cartan_type import CartanType
+from sympy.core import Atom, Rational
 
 if TYPE_CHECKING:
     from sympy.matrices.dense import Matrix
-
+    from .type_a import TypeA
+    from .type_b import TypeB
+    from .type_c import TypeC
+    from .type_d import TypeD
+    from .type_e import TypeE
+    from .type_f import TypeF
+    from .type_g import TypeG
 
 class RootSystem(Atom):
     """Represent the root system of a simple Lie algebra
@@ -41,7 +47,7 @@ class RootSystem(Atom):
     .. [2] Lie Algebras and Representation Theory - Humphreys
 
     """
-    cartan_type: Standard_Cartan
+    cartan_type: TypeA | TypeB | TypeC | TypeD | TypeE | TypeF | TypeG
 
     def __new__(cls, cartantype:  str | list[str | int]):
         """Create a new RootSystem object
@@ -57,7 +63,7 @@ class RootSystem(Atom):
         obj.cartan_type = CartanType(cartantype)
         return obj
 
-    def simple_roots(self) -> dict[int, list[int]]:
+    def simple_roots(self) -> dict[int, list[int] | list[Rational]]:
         """Generate the simple roots of the Lie algebra
 
         The rank of the Lie algebra determines the number of simple roots that
@@ -80,7 +86,7 @@ class RootSystem(Atom):
         return roots
 
 
-    def all_roots(self) -> dict[int, list[int]]:
+    def all_roots(self) -> dict[int, list[int] | list[Rational]]:
         """Generate all the roots of a given root system
 
         The result is a dictionary where the keys are integer numbers.  It
@@ -90,13 +96,13 @@ class RootSystem(Atom):
         roots are generated.
 
         """
-        alpha = self.cartan_type.positive_roots()
+        alpha = {**self.cartan_type.positive_roots()}
         keys = list(alpha.keys())
         k = max(keys)
         for val in keys:
             k += 1
             root = alpha[val]
-            newroot = [-x for x in root]
+            newroot: list[int] | list[Rational] = [-x for x in root] #type: ignore
             alpha[k] = newroot
         return alpha
 

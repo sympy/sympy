@@ -39,7 +39,7 @@ class TypeF(Standard_Cartan):
         root[j] = -1
         return root
 
-    def simple_root(self, i: int) -> list[int]:
+    def simple_root(self, i: int) -> list[int] | list[Rational]:
         """The ith simple root of F_4
 
         Every lie algebra has a unique root system.
@@ -72,7 +72,7 @@ class TypeF(Standard_Cartan):
             return root
         raise ValueError("F_4 has four simple roots")
 
-    def positive_roots(self) -> dict[int, list[int]]:
+    def positive_roots(self) -> dict[int, list[int] | list[Rational]]:
         """Generate all the positive roots of A_n
 
         This is half of all of the roots of F_4; by multiplying all the
@@ -90,7 +90,7 @@ class TypeF(Standard_Cartan):
         """
 
         n = self.n
-        posroots = {}
+        posroots: dict[int, list[int] | list[Rational]] = {}
         k = 0
         for i in range(0, n-1):
             for j in range(i+1, n):

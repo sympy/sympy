@@ -28,7 +28,7 @@ class TypeE(Standard_Cartan):
 
         return 8
 
-    def basic_root(self, i: int, j: int) -> list[int | Rational]:
+    def basic_root(self, i: int, j: int) -> list[int]:
         """
         This is a method just to generate roots
         with a -1 in the ith position and a 1
@@ -81,7 +81,7 @@ class TypeE(Standard_Cartan):
 
             return self.basic_root(i - 3, i - 2)
 
-    def positive_roots(self) -> dict[int, list[int | Rational]]:
+    def positive_roots(self) -> dict[int, list[int] | list[Rational]]:
         """
         This method generates all the positive roots of
         A_n.  This is half of all of the roots of E_n;
@@ -99,9 +99,9 @@ class TypeE(Standard_Cartan):
         """
         n = self.n
         neghalf = Rational(-1, 2)
-        poshalf = S.Half
+        poshalf = Rational(1, 2)
         if n == 6:
-            posroots = {}
+            posroots: dict[int, list[int] | list[Rational]] = {}
             k = 0
             for i in range(n-1):
                 for j in range(i+1, n-1):
@@ -132,7 +132,7 @@ class TypeE(Standard_Cartan):
                     posroots[k] = root[:]
             return posroots
         if n == 7:
-            posroots = {}
+            posroots: dict[int, list[int] | list[Rational]] = {}
             k = 0
             for i in range(n-1):
                 for j in range(i+1, n-1):
@@ -167,7 +167,7 @@ class TypeE(Standard_Cartan):
                     posroots[k] = root[:]
             return posroots
         else:
-            posroots = {}
+            posroots: dict[int, list[int] | list[Rational]] = {}
             k = 0
             for i in range(n):
                 for j in range(i+1, n):
@@ -202,7 +202,6 @@ class TypeE(Standard_Cartan):
                         root[6] = poshalf
                     posroots[k] = root[:]
             return posroots
-
 
 
     def roots(self) -> int:

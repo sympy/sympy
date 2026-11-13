@@ -1,8 +1,8 @@
 from __future__ import annotations
 
-from typing import cast, Literal, TYPE_CHECKING
+from typing import cast, Literal, Mapping, TYPE_CHECKING
 
-from sympy.core import Atom, Basic
+from sympy.core import Atom, Basic, Rational
 
 if TYPE_CHECKING:
     from sympy.matrices.dense import Matrix
@@ -91,13 +91,12 @@ class Standard_Cartan(Atom):
         """
         return self._series
 
-    # for simple_root type_e is list[int | float], the rest are list[int]
-    def simple_root(self, i: int) -> list:
+    def simple_root(self, i: int) -> list[int] | list[Rational]:
         raise NotImplementedError(
             "simple_root is implemented by subclasses of Standard_Cartan"
         )
 
-    def positive_roots(self) -> dict[int, list[int]]:
+    def positive_roots(self) -> Mapping[int, list[int] | list[Rational]]:
         raise NotImplementedError(
             "positive_roots is implemented by subclasses of Standard_Cartan"
         )

@@ -377,6 +377,7 @@ class WeylGroup(Atom):
                     matrixform *= mat
             return matrixform
 
+        raise ValueError(f"Invalid Cartan type: {self.cartan_type.series}{n}")
 
     def coxeter_diagram(self) -> str:
         """
