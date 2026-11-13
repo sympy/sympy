@@ -959,7 +959,7 @@ def test_latex_derivatives():
 
     # use ordinary d when one of the variables has been integrated out
     assert latex(diff(Integral(exp(-x*y), (x, 0, oo)), y, evaluate=False)) == \
-        r"\frac{d}{d y} \int\limits_{0}^{\infty} e^{- x y}\, dx"
+        r"\frac{d}{d y} \left(\int\limits_{0}^{\infty} e^{- x y}\, dx\right)"
 
     # Derivative wrapped in power:
     assert latex(diff(x, x, evaluate=False)**2) == \
@@ -1000,6 +1000,11 @@ def test_latex_derivatives():
 def test_latex_derivative_product_scope():
     f = Function('f')
     g = Function('g', commutative=False)
+    a = Derivative(UnevaluatedExpr(f(x)*g(x)), x)
+    b = Derivative(f(x), x)*g(x)
+    assert latex(a) != latex(b)
+    assert latex(a) == \
+        r"\frac{d}{d x} \left(f{\left(x \right)} g{\left(x \right)}\right)"
     assert latex(Derivative(f(x)*g(x), x)) == \
         r"\frac{d}{d x} \left(f{\left(x \right)} g{\left(x \right)}\right)"
     assert latex(Derivative(f(x), x)*g(x)) == \
