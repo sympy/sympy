@@ -22,10 +22,13 @@ from sympy.external.mpmath import prec_to_dps, giant_steps as _giant_steps, mpf_
 
 
 if TYPE_CHECKING:
-    from typing import Any, Hashable
+    from typing import Any, Hashable, TypeVar
     from typing_extensions import Self
     from .numbers import Number
+    from sympy.core.basic import Tbasic
     from sympy.logic.boolalg import Boolean
+
+    Texpr = TypeVar("Texpr", bound='Expr')
 
 from collections import defaultdict
 
@@ -91,7 +94,18 @@ class Expr(Basic, EvalfMixin):
                  arg2: Basic | complex | None = None, **kwargs: Any) -> Basic:
             ...
 
+        @overload
+        def xreplace(self, rule: Mapping[Tbasic, Expr]) -> Expr: ...
+        @overload
+        def xreplace(self, rule: Mapping[Tbasic, Basic]) -> Basic: ...
+
+        def xreplace(self, rule: Mapping[Tbasic, Basic]) -> Basic:
+            ...
+
         def simplify(self, **kwargs) -> Expr:
+            ...
+
+        def doit(self, **hints: Any) -> Expr:
             ...
 
         def evalf(self, n: int | None = 15, subs: dict[Basic, Basic | float] | None = None,
@@ -293,7 +307,7 @@ class Expr(Basic, EvalfMixin):
 
     @sympify_return([('other', 'Expr')], NotImplemented)
     @call_highest_priority('__pow__')
-    def __rpow__(self, other) -> Expr:
+    def __rpow__(self, other: Expr | complex) -> Expr:
         return Pow(other, self)
 
     @sympify_return([('other', 'Expr')], NotImplemented)
@@ -3359,7 +3373,7 @@ class Expr(Basic, EvalfMixin):
         Wrapper for series yielding an iterator of the terms of the series.
 
         Note: an infinite series will yield an infinite iterator. The following,
-        for exaxmple, will never terminate. It will just keep printing terms
+        for example, will never terminate. It will just keep printing terms
         of the sin(x) series::
 
           for term in sin(x).lseries(x):

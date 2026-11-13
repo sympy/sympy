@@ -7,6 +7,7 @@ from sympy.core.basic import Basic
 from sympy.core.containers import (Dict, Tuple)
 from sympy.core.function import (Derivative, Function, Lambda, Subs)
 from sympy.core.mul import Mul
+from sympy.core.mod import Mod
 from sympy.core import (EulerGamma, GoldenRatio, Catalan)
 from sympy.core.numbers import (I, Rational, oo, pi)
 from sympy.core.power import Pow
@@ -6995,6 +6996,13 @@ def test_pretty_Mod():
     assert upretty(Mod(x, 7) + 1) == ucode_str4
     assert pretty(2 * Mod(x, 7)) == ascii_str5
     assert upretty(2 * Mod(x, 7)) == ucode_str5
+
+
+def test_issue_23912():
+    assert pretty(Mod(x, y + z)) == 'x mod (y + z)'
+    assert upretty(Mod(x, y + z)) == 'x mod (y + z)'
+    assert pretty(Mod(x + 1, y + z)) == '(x + 1) mod (y + z)'
+    assert upretty(Mod(x + 1, y + z)) == '(x + 1) mod (y + z)'
 
 
 def test_issue_11801():

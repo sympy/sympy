@@ -1979,7 +1979,10 @@ class PrettyPrinter(Printer):
         if pform.binding > prettyForm.MUL:
             pform = prettyForm(*pform.parens())
         pform = prettyForm(*pform.right(' mod '))
-        pform = prettyForm(*pform.right(self._print(expr.args[1])))
+        divisor = self._print(expr.args[1])
+        if divisor.binding > prettyForm.MUL:
+            divisor = prettyForm(*divisor.parens())
+        pform = prettyForm(*pform.right(divisor))
         pform.binding = prettyForm.OPEN
         return pform
 

@@ -315,6 +315,31 @@ def test_Mul():
     assert str(cc1*Rational(2)*cc2) == '2*CustomClass1()*CustomClass2()'
 
 
+def test_issue_18788():
+    denominator = Pow(x*y, -1, evaluate=False)
+    assert str(Mul(2, denominator, evaluate=False)) == '2/(x*y)'
+    assert str(Mul(-2, z, denominator, evaluate=False)) == '-2*z/(x*y)'
+    denominator = Pow(Mul(x, x, evaluate=False), -1, evaluate=False)
+    assert str(Mul(2, denominator, evaluate=False)) == '2/(x*x)'
+    assert str(Mul(-2, z, denominator, evaluate=False)) == '-2*z/(x*x)'
+    denominator = Pow(x**y, -1, evaluate=False)
+    assert str(Mul(2, denominator, evaluate=False)) == '2/(x**y)'
+    d = Pow(x*y, -1, evaluate=False)
+    e = Mul(2, d, Pow(z, -1, evaluate=False), evaluate=False)
+    assert str(e) == '2/(z*(x*y))'
+
+
+def test_unevaluated_reciprocal_denominator():
+    for coefficient, base, expected in [
+            (1, 1/y, '1/(1/y)'), (1, 1/sqrt(y), '1/(1/sqrt(y))'),
+            (1, Rational(2, 3), '1/(2/3)'),
+            (-2, Rational(2, 3), '-2/(2/3)')]:
+        d = Pow(base, -1, evaluate=False)
+        e = Mul(coefficient, d, evaluate=False)
+        assert str(e) == expected
+        assert S(str(e)).equals(e)
+
+
 def test_numeric_factors_first():
     # Numeric functions need not be Number instances. Ordering them is
     # a printer preference and should not evaluate their values.

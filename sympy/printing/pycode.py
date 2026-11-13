@@ -762,9 +762,6 @@ class CmathPrinter(PythonCodePrinter):
     def _print_Pow(self, expr, rational=False):
         return self._hprint_Pow(expr, rational=rational, sqrt='cmath.sqrt')
 
-    def _print_Float(self, e):
-        return '{func}({val})'.format(func=self._module_format('cmath.mpf'), val=self._print(e))
-
     def _print_known_func(self, expr):
         func_name = expr.func.__name__
         if func_name in self._kf:
@@ -885,7 +882,7 @@ class MpmathPrinter(PythonCodePrinter):
             self._print(e.args[1]))
 
     def _print_log2(self, e):
-        return '{0}({1})/{0}(2)'.format(
+        return '({0}({1})/{0}(2))'.format(
             self._module_format('mpmath.log'), self._print(e.args[0]))
 
     def _print_log1p(self, e):

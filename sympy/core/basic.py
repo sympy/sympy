@@ -404,7 +404,7 @@ class Basic(Printable):
         comparison is based on the class name.
         If the names are the same then a comparison is made
         on the length of the hashable content.
-        Items of the equal-lengthed contents are then
+        Items of the equal-length contents are then
         successively compared using the same rules. If there
         is never a difference then 0 is returned.
 
@@ -1372,7 +1372,7 @@ class Basic(Printable):
         """
         return None
 
-    def xreplace(self, rule):
+    def xreplace(self, rule: Mapping[Tbasic, Basic]) -> Basic:
         """
         Replace occurrences of objects within the expression.
 
@@ -1439,14 +1439,14 @@ class Basic(Printable):
         value, _ = self._xreplace(rule)
         return value
 
-    def _xreplace(self, rule):
+    def _xreplace(self, rule: Mapping[Any, Basic]) -> tuple[Basic, bool]:
         """
         Helper for xreplace. Tracks whether a replacement actually occurred.
         """
         if self in rule:
             return rule[self], True
         elif rule:
-            args = []
+            args: list[Basic] = []
             changed = False
             for a in self.args:
                 a, achanged = a._xreplace(rule)
@@ -1457,7 +1457,7 @@ class Basic(Printable):
         return self, False
 
     @cacheit
-    def has(self, *patterns) -> bool:
+    def has(self, *patterns: Basic | type[Basic] | complex) -> bool:
         """
         Test whether any subexpression matches any of the patterns.
 
@@ -2067,7 +2067,7 @@ class Basic(Printable):
         from .function import count_ops
         return count_ops(self, visual)
 
-    def doit(self, **hints):
+    def doit(self, **hints: Any) -> Basic:
         """Evaluate objects that are not evaluated by default like limits,
         integrals, sums and products. All objects of this kind will be
         evaluated recursively, unless some species were excluded via 'hints'
@@ -2261,7 +2261,7 @@ class Basic(Printable):
         # WARNING: This API is experimental.
 
         # This is an experimental API that introduces constructor
-        # postprosessors for SymPy Core elements. If an argument of a SymPy
+        # postprocessors for SymPy Core elements. If an argument of a SymPy
         # expression has a `_constructor_postprocessor_mapping` attribute, it will
         # be interpreted as a dictionary containing lists of postprocessing
         # functions for matching expression node names.
@@ -2403,10 +2403,12 @@ class Atom(Basic):
                 return {}
             return repl_dict.copy()
 
-    def xreplace(self, rule, hack2=False):
-        return rule.get(self, self)
+    def _xreplace(self, rule: Mapping[Any, Basic]) -> tuple[Basic, bool]:
+        if self in rule:
+            return rule[self], True
+        return self, False
 
-    def doit(self, **hints):
+    def doit(self, **hints: Any) -> Self:
         return self
 
     @classmethod

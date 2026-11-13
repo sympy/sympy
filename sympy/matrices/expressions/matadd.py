@@ -105,8 +105,7 @@ class MatAdd(MatrixExpr, Add):
         return canonicalize(MatAdd(*args))
 
     def _eval_derivative(self, x):
-        # MatAdd does not remove ZeroMatrix unless you call .doit():
-        return super()._eval_derivative(x).doit()
+        return MatAdd(*[arg.diff(x) for arg in self.args]).doit()
 
 add.register_handlerclass((Add, MatAdd), MatAdd)
 
