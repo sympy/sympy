@@ -2777,7 +2777,7 @@ def LogitNormal(name, mu, s):
     sqrt(2)*exp(-(log(z/(1 - z)) - mu)**2/(2*s**2))/(2*sqrt(pi)*s*z*(1 - z))
 
     >>> cdf(X)(z)
-    erf(sqrt(2)*(log(z/(1 - z)) - mu)/(2*s))/2 + 1/2
+    Piecewise((0, z <= 0), (erf(sqrt(2)*(log(z/(1 - z)) - mu)/(2*s))/2 + 1/2, z < 1), (1, True))
 
 
     References
