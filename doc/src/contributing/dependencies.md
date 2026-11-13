@@ -65,26 +65,9 @@ are working on a part of SymPy that uses them.
 
 ### Recommended Optional Dependencies
 
-These dependencies are not required for SymPy to function, but it is
-recommended that all users install them if they can, as they will improve the
-general performance of SymPy.
+These optional dependencies are recommended for improved SymPy performance.
 
-- **gmpy2**: [gmpy2](https://gmpy2.readthedocs.io/en/latest/) is a
-  Python wrapper for the [GMP multiple-precision
-  library](https://gmplib.org/). It provides large integers that are faster
-  than the built-in Python `int`. When gmpy2 is installed, it is used
-  automatically by certain core functions that operate on integers, such as
-  the [polys](polys-docs). See {ref}`polys-domainsref` for more details. SymPy
-  uses `gmpy2` automatically when it is installed. No further action is
-  required to enable it.
-
-  The polys themselves are used by many parts of SymPy, such as the
-  integration algorithms, simplification algorithms like `collect()` and
-  `factor()`, the matrices, and some parts of the core. Thus, installing
-  `gmpy2` can speed up many parts of SymPy. It is not a required dependency of
-  SymPy because it makes use of a non-Python library (GMP), which is also
-  non-BSD licensed. However, we recommended all users who are able to
-  install `gmpy2` to get a better SymPy experience.
+- **gmpy2**: [gmpy2](https://gmpy2.readthedocs.io/en/latest/) provides faster large-integer arithmetic using the [GMP library](https://gmplib.org/). SymPy uses it automatically when installed, particularly in its [polynomial routines](polys-docs), which support integration, simplification, matrices, and other operations. See {ref}`polys-domainsref` for details. It remains optional because GMP is a non-Python library with a non-BSD license. We encourage all users who can install `gmpy2` to do so for a better SymPy experience.
 
 ### Interactive Use
 
