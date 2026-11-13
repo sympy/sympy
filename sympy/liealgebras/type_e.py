@@ -5,7 +5,6 @@ from typing import Literal
 
 from .cartan_type import Standard_Cartan
 from sympy.core.backend import eye, Matrix, Rational
-from sympy.core.singleton import S
 
 class TypeE(Standard_Cartan):
 
