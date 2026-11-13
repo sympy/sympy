@@ -362,6 +362,11 @@ DERIVATIVE_EXPRESSION_PAIRS = [
     (r"\frac{d\theta(x)}{dx}", Derivative(Function('theta')(x), x))
 ]
 
+# read as ambiguous, although the superscript of the argument binds tighter than the function
+AMBIGUOUS_TRIGONOMETRIC_EXPRESSION_PAIRS = [
+    (r"\sin^2 x^2", sin(x ** 2) ** 2)
+]
+
 TRIGONOMETRIC_EXPRESSION_PAIRS = [
     (r"\sin \theta", sin(theta)),
     (r"\sin(\theta)", sin(theta)),
@@ -370,7 +375,11 @@ TRIGONOMETRIC_EXPRESSION_PAIRS = [
     (r"\sin \cos \theta", sin(cos(theta))),
     (r"\sin(\cos \theta)", sin(cos(theta))),
     (r"(\csc x)(\sec y)", csc(x) * sec(y)),
-    (r"\frac{\sin{x}}2", _Mul(sin(x), _Pow(2, -1)))
+    (r"\frac{\sin{x}}2", _Mul(sin(x), _Pow(2, -1))),
+    (r"\sin^{2} x", _Pow(sin(x), 2)),
+    (r"\sin^n x", _Pow(sin(x), n)),
+    (r"\sin^{-2} x", _Pow(sin(x), -2)),
+    (r"\cos^2(x)", _Pow(cos(x), 2))
 ]
 
 UNEVALUATED_LIMIT_EXPRESSION_PAIRS = [
@@ -846,6 +855,12 @@ def test_derivative_expressions():
     for i, (latex_str, sympy_expr) in enumerate(DERIVATIVE_EXPRESSION_PAIRS):
         if i in expected_failures:
             continue
+        assert parse_latex_lark(latex_str) == sympy_expr, latex_str
+
+
+@XFAIL
+def test_ambiguous_trigonometric_expressions():
+    for latex_str, sympy_expr in AMBIGUOUS_TRIGONOMETRIC_EXPRESSION_PAIRS:
         assert parse_latex_lark(latex_str) == sympy_expr, latex_str
 
 
