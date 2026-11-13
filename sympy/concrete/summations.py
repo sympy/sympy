@@ -1169,6 +1169,15 @@ def eval_sum_symbolic(f, limits):
             s = eval_sum_symbolic(with_i, (i, a, b))
             if s:
                 r = without_i*s
+                if isinstance(s, Piecewise) and (a.has(S.Infinity, S.NegativeInfinity) or b.has(S.Infinity, S.NegativeInfinity)):
+                    new_args = []
+                    for e, c in s.args:
+                        if e.is_Add:
+                            e = Add(*[without_i * arg for arg in e.args])
+                        else:
+                            e = without_i * e
+                        new_args.append((e, c))
+                    r = Piecewise(*new_args)
                 if r is not S.NaN:
                     return r
         else:
@@ -1351,7 +1360,13 @@ def _eval_sum_hyper(f, i, a):
     x = ab[0]/ab[1]
     h = hyper(ap, bq, x)
     f = combsimp(f)
-    return f.subs(i, 0)*hyperexpand(h), h.convergence_statement
+    h_val = hyperexpand(h)
+    f0 = f.subs(i, 0)
+    if h_val.is_Add:
+        res = Add(*[f0 * arg for arg in h_val.args])
+    else:
+        res = f0 * h_val
+    return res, h.convergence_statement
 
 
 def eval_sum_hyper(f, i_a_b):
