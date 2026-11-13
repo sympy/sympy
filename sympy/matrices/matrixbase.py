@@ -2801,7 +2801,7 @@ class MatrixBase(Printable):
         return self.conjugate()
 
     # should mirror core.basic.xreplace
-    def xreplace(self, rule: Mapping[SBasic, SBasic]) -> Self:
+    def xreplace(self, rule: Mapping[Tbasic, Expr]) -> Self:
         """Return a new matrix with xreplace applied to each entry.
 
         Examples

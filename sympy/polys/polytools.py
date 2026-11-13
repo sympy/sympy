@@ -64,8 +64,10 @@ from sympy.external.mpmath import local_workdps, NoConvergence
 
 
 if TYPE_CHECKING:
+    from sympy.core.basic import Tbasic
+    from sympy.core.expr import Texpr
     from sympy.polys.domains.domain import Domain
-    from collections.abc import Iterator
+    from collections.abc import Iterator, Mapping
     from typing import Self
 
 
@@ -226,6 +228,16 @@ class Poly(Basic):
 
     def _hashable_content(self):
         return (self.rep,) + self.gens
+
+    if TYPE_CHECKING:
+
+        @overload
+        def xreplace(self, rule: Mapping[Texpr, Expr]) -> Self: ...
+        @overload
+        def xreplace(self, rule: Mapping[Tbasic, Basic]) -> Basic: ...
+
+        def xreplace(self, rule: Mapping[Tbasic, Basic]) -> Basic:
+            ...
 
     @classmethod
     def from_dict(cls, rep: dict[tuple[int, ...], Any] | dict[int, Any], *gens, **args):

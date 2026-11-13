@@ -22,10 +22,13 @@ from sympy.external.mpmath import prec_to_dps, giant_steps as _giant_steps, mpf_
 
 
 if TYPE_CHECKING:
-    from typing import Any, Hashable
+    from typing import Any, Hashable, TypeVar
     from typing_extensions import Self
     from .numbers import Number
+    from sympy.core.basic import Tbasic
     from sympy.logic.boolalg import Boolean
+
+    Texpr = TypeVar("Texpr", bound='Expr')
 
 from collections import defaultdict
 
@@ -89,6 +92,14 @@ class Expr(Basic, EvalfMixin):
 
         def subs(self, arg1: Mapping[Basic | complex, Basic | complex] | Basic | complex, # type: ignore
                  arg2: Basic | complex | None = None, **kwargs: Any) -> Basic:
+            ...
+
+        @overload
+        def xreplace(self, rule: Mapping[Tbasic, Expr]) -> Expr: ...
+        @overload
+        def xreplace(self, rule: Mapping[Tbasic, Basic]) -> Basic: ...
+
+        def xreplace(self, rule: Mapping[Tbasic, Basic]) -> Basic:
             ...
 
         def simplify(self, **kwargs) -> Expr:
@@ -3359,7 +3370,7 @@ class Expr(Basic, EvalfMixin):
         Wrapper for series yielding an iterator of the terms of the series.
 
         Note: an infinite series will yield an infinite iterator. The following,
-        for exaxmple, will never terminate. It will just keep printing terms
+        for example, will never terminate. It will just keep printing terms
         of the sin(x) series::
 
           for term in sin(x).lseries(x):
