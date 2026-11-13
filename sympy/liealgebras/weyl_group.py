@@ -130,7 +130,7 @@ class WeylGroup(Atom):
 
         raise ValueError(f"Invalid Cartan type: {self.cartan_type.series}{n}")
 
-    def element_order(self, weylelt: str) -> int | float:
+    def element_order(self, weylelt: str) -> int:
         """
         This method returns the order of a given Weyl group element, which should
         be specified by the user in the form of products of the generating
@@ -191,10 +191,7 @@ class WeylGroup(Atom):
                     return 2
                 else:
                     p = len(reflections) // 2
-                    lcm = (6 * p) / igcd(p, 6)
-                order = lcm / p
-                return order
-
+                    return 6 // igcd(p, 6)
 
         if self.cartan_type.series == 'F':
             a = self.matrix_form(weylelt)
