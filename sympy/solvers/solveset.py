@@ -15,7 +15,8 @@ from sympy.core.sympify import sympify
 from sympy.core import (S, Pow, Dummy, pi, Expr, Wild, Mul, Add)
 from sympy.core.containers import Tuple
 from sympy.core.function import (Lambda, expand_complex, AppliedUndef,
-                                expand_log, _mexpand, expand_trig, nfloat)
+                                expand_log, _mexpand, expand_trig,
+                                nfloat, expand_power_exp)
 from sympy.core.mod import Mod
 from sympy.core.numbers import I, Number, Rational, oo
 from sympy.core.intfunc import integer_log
@@ -49,6 +50,7 @@ from sympy.sets import (FiniteSet, imageset, Interval, Intersection,
 from sympy.sets.sets import Set, ProductSet
 from sympy.matrices import zeros, Matrix, MatrixBase
 from sympy.ntheory.factor_ import divisors
+from sympy.ntheory.generate import cycle_length
 from sympy.ntheory.residue_ntheory import discrete_log, nthroot_mod
 from sympy.polys import (roots, Poly, degree, together, PolynomialError,
                          RootOf, factor, lcm, gcd)
@@ -1564,6 +1566,17 @@ def _invert_modular(modterm, rhs, n, symbol):
             x_indep_term = rhs - Mod(g, m)
             return _invert_modular(Mod(h, m), Mod(x_indep_term, m), n, symbol)
 
+    for reject in range(2):
+        if a.is_Mul:
+            g, h = a.as_independent(symbol)
+            c = g.as_coeff_Mul()[0]
+            if (c.is_Rational and c.q != 1 and
+                    h.is_Pow and not h.exp.is_Integer):
+                if reject:
+                    return modterm, rhs
+                else:
+                    a = expand_power_exp(a)
+
     if a.is_Mul:
         # g*h = a
         g, h = a.as_independent(symbol)
@@ -1578,6 +1591,31 @@ def _invert_modular(modterm, rhs, n, symbol):
             # remainder -> solution independent of n of equation.
             # m, rhs are made coprime by dividing number_gcd(m, rhs)
             if not (m.is_Integer and rhs.is_Integer and base.is_Integer):
+                return modterm, rhs
+            # The modular-power sequence has a finite preperiod followed by
+            # a cycle, even when base and modulus are not coprime. For small
+            # cycles we can solve it without discrete logarithms.
+            if m > 1 and abs(base) > 1 and expo == symbol:
+                modulus, target = int(m), int(rhs)
+                b = int(base) % modulus
+                step = lambda residue: b*residue % modulus
+                period, start = next(cycle_length(step, 1, nmax=1024))
+                if start is not None:
+                    residue = 1
+                    for exponent in range(start + period):
+                        if residue == target:
+                            if exponent < start:
+                                return symbol, FiniteSet(exponent)
+                            return symbol, ImageSet(
+                                Lambda(n, period*n + exponent), S.Naturals0)
+                        residue = step(residue)
+                    return symbol, S.EmptySet
+
+            # The discrete-log method requires an integer-valued exponent.
+            # Bases -1, 0, 1 can have solutions for negative exponents too.
+            if (m <= 1 or abs(base) <= 1 or
+                    expo.xreplace({symbol: Dummy(integer=True)}).is_integer
+                    is not True):
                 return modterm, rhs
             if number_gcd(m.p, base.p) != 1 or number_gcd(m.p, rhs.p) != 1:
                 return modterm, rhs
@@ -1657,7 +1695,7 @@ def _solve_modular(f, symbol, domain):
     >>> solve_modulo(-7 + Mod(x, 5), x, S.Integers)
     EmptySet
     >>> solve_modulo(Mod(12**x, 21) - 18, x, S.Integers)
-    ConditionSet(x, Eq(Mod(12**x, 21) - 18, 0), Integers)
+    ImageSet(Lambda(_n, 6*_n + 2), Naturals0)
     >>> solve_modulo(Mod(sin(x), 7) - 3, x, S.Integers) # not solvable
     ConditionSet(x, Eq(Mod(sin(x), 7) - 3, 0), Integers)
     >>> solve_modulo(3 - Mod(x, 5), x, Intersection(S.Integers, Interval(0, 100)))
