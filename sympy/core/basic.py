@@ -1457,7 +1457,7 @@ class Basic(Printable):
         return self, False
 
     @cacheit
-    def has(self, *patterns) -> bool:
+    def has(self, *patterns: Basic | type[Basic] | complex) -> bool:
         """
         Test whether any subexpression matches any of the patterns.
 
