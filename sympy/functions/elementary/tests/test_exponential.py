@@ -229,7 +229,12 @@ def test_exp_MatrixSymbol():
 
 def test_exp_fdiff():
     x = Symbol('x')
+    n = Symbol('n', integer=True, nonnegative=True)
+    a, b = symbols('a b')
     raises(ArgumentIndexError, lambda: exp(x).fdiff(2))
+    assert exp(x).diff((x, n)) == exp(x)
+    assert exp(a*x + b).diff((x, n)) == a**n*exp(a*x + b)
+    assert exp(2*x + 3).diff((x, 5)) == 2**5*exp(2*x + 3)
 
 
 def test_log_values():
