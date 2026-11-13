@@ -28,11 +28,11 @@ def init_custom_parser(modification, transformer=None):
     latex_grammar = Path(grammar_file).read_text(encoding="utf-8")
     latex_grammar += modification
 
-    with tempfile.NamedTemporaryFile() as f:
-        f.write(bytes(latex_grammar, encoding="utf8"))
-        f.flush()
-
-        parser = LarkLaTeXParser(grammar_file=f.name, transformer=transformer)
+    with tempfile.TemporaryDirectory() as d:
+        path = Path(d) / "latex.lark"
+        path.write_text(latex_grammar, encoding="utf-8")
+        parser = LarkLaTeXParser(
+            grammar_file=str(path), transformer=transformer)
 
     return parser
 
