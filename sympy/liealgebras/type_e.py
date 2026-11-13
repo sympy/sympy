@@ -41,7 +41,7 @@ class TypeE(Standard_Cartan):
         root[j] = 1
         return root
 
-    def simple_root(self, i: int) -> list[int | float]:
+    def simple_root(self, i: int) -> list[int] | list[Rational]:
         """
         Every Lie algebra has a unique root system.
         Given a root system Q, there is a subset of the
@@ -64,9 +64,9 @@ class TypeE(Standard_Cartan):
         """
         n = self.n
         if i == 1:
-            root = [-0.5]*8
-            root[0] = 0.5
-            root[7] = 0.5
+            root = [-Rational(1, 2)]*8
+            root[0] = Rational(1, 2)
+            root[7] = Rational(1, 2)
             return root
         elif i == 2:
             root = [0]*8
