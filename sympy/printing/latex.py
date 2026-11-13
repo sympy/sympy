@@ -622,10 +622,10 @@ class LatexPrinter(Printer):
                 if self._needs_mul_brackets(numer, last=True):
                     tex += r"\frac{1}{%s}%s\left(%s\right)" \
                         % (sdenom, separator, snumer)
-                elif numer.is_Mul:
+                elif isinstance(numer, Mul):
                     # split a long numerator
-                    a = S.One
-                    b = S.One
+                    a: Expr = S.One
+                    b: Expr = S.One
                     for x in numer.args:
                         if self._needs_mul_brackets(x, last=False) or \
                                 len(convert(a*x).split()) > ratio*ldenom or \
