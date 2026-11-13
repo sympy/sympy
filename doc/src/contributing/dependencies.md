@@ -83,7 +83,7 @@ general performance of SymPy.
   `factor()`, the matrices, and some parts of the core. Thus, installing
   `gmpy2` can speed up many parts of SymPy. It is not a required dependency of
   SymPy because it makes use of a non-Python library (GMP), which is also
-  non-BSD licensed. However, we recommended all users who are able to to
+  non-BSD licensed. However, we recommended all users who are able to
   install `gmpy2` to get a better SymPy experience.
 
 ### Interactive Use
