@@ -104,6 +104,15 @@ class Sum(AddWithLimits, ExprWithIntLimits):
 
     with the lower and upper limit values `f(b)` and `f(a)` excluded.
 
+    .. note::
+
+       The closed forms returned by ``Sum.doit()`` and ``summation()`` are
+       guaranteed to be correct only when the series converges. A
+       ``Piecewise`` guard attached to a result is a condition under which the
+       summation routine supplies that formula. It is not a convergence test,
+       and it does not necessarily describe the full convergence domain. The
+       same applies to sums of matrices, which are evaluated entry by entry.
+
     Examples
     ========
 
@@ -123,6 +132,16 @@ class Sum(AddWithLimits, ExprWithIntLimits):
     Piecewise((1/(1 - x), Abs(x) < 1), (Sum(x**k, (k, 0, oo)), True))
     >>> Sum(x**k/factorial(k), (k, 0, oo)).doit()
     exp(x)
+
+    An entrywise result can contain finite closed forms even when another
+    entry diverges:
+
+    >>> from sympy import Matrix, Rational
+    >>> A = Matrix([[Rational(1, 2), 0], [0, 2]])
+    >>> Sum(A**n, (n, 0, oo)).doit()
+    Matrix([
+    [2,  0],
+    [0, oo]])
 
     Here are examples to do summation with symbolic indices.  You
     can use either Function of IndexedBase classes:
@@ -940,7 +959,16 @@ def summation(f, *symbols, **kwargs):
                                   i = a
 
     If it cannot compute the sum, it returns an unevaluated Sum object.
-    Repeated sums can be computed by introducing additional symbols tuples::
+    Repeated sums can be computed by introducing additional limit tuples.
+
+    .. note::
+
+       The closed forms returned by ``Sum.doit()`` and ``summation()`` are
+       guaranteed to be correct only when the series converges. A
+       ``Piecewise`` guard attached to a result is a condition under which the
+       summation routine supplies that formula. It is not a convergence test,
+       and it does not necessarily describe the full convergence domain. The
+       same applies to sums of matrices, which are evaluated entry by entry.
 
     Examples
     ========
@@ -956,6 +984,13 @@ def summation(f, *symbols, **kwargs):
     Sum(log(n)**(-n), (n, 2, oo))
     >>> summation(i, (i, 0, n), (n, 0, m))
     m**3/6 + m**2/2 + m/3
+
+    A condition attached to a closed form is not necessarily a complete
+    convergence condition:
+
+    >>> r = symbols('r')
+    >>> summation(r**n, (n, 0, oo))
+    Piecewise((1/(1 - r), Abs(r) < 1), (Sum(r**n, (n, 0, oo)), True))
 
     >>> from sympy.abc import x
     >>> from sympy import factorial
