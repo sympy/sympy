@@ -156,7 +156,7 @@ class TypeB(Standard_Cartan):
         """
 
         n = self.n
-        return int((n**2 - n)/2)
+        return (n**2 - n) // 2
 
     def lie_algebra(self) -> str:
         """

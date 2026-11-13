@@ -155,7 +155,7 @@ class TypeD(Standard_Cartan):
         Returns the number of independent generators of D_n
         """
         n = self.n
-        return int(n*(n-1)/2)
+        return n*(n-1) // 2
 
     def lie_algebra(self) -> str:
         """
