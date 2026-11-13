@@ -3,7 +3,7 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 
 from .cartan_type import CartanType
-from sympy.core import Atom, Rational
+from sympy.core import Atom, Integer, Rational
 
 if TYPE_CHECKING:
     from sympy.matrices.dense import Matrix
@@ -127,7 +127,7 @@ class RootSystem(Atom):
         rs = " + ".join("alpha["+str(i) +"]" for i in range(1, n+1))
         return rs
 
-    def add_simple_roots(self, root1: int, root2: int) -> list[int]:
+    def add_simple_roots(self, root1: int, root2: int) -> list[int] | list[Rational | Integer]:
         """Add two simple roots together
 
         The function takes as input two integers, root1 and root2.  It then
@@ -153,7 +153,9 @@ class RootSystem(Atom):
         newroot = [_a1 + _a2 for _a1, _a2 in zip(a1, a2)]
         return newroot
 
-    def add_as_roots(self, root1: list[int], root2: list[int]) -> list[int] | str:
+    def add_as_roots(self,
+                     root1: list[int] | list[Rational],
+                     root2: list[int] | list[Rational]) -> list[int] | list[Rational | Integer] | str:
         """Add two roots together if and only if their sum is also a root
 
         It takes as input two vectors which should be roots.  It then computes
