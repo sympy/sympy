@@ -105,6 +105,9 @@ class Expr(Basic, EvalfMixin):
         def simplify(self, **kwargs) -> Expr:
             ...
 
+        def doit(self, **hints: Any) -> Expr:
+            ...
+
         def evalf(self, n: int | None = 15, subs: dict[Basic, Basic | float] | None = None,
                   maxn: int = 100, chop: bool | int = False, strict: bool  = False,
                   quad: str | None = None, verbose: bool = False) -> Expr:
