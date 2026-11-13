@@ -113,6 +113,8 @@ def test_PythonCodePrinter_standard():
 
 def test_CmathPrinter():
     p = CmathPrinter()
+    assert p.doprint(S(2.5)) == '2.50000000000000'
+    assert p.doprint(S(-2.5)) == '-2.50000000000000'
 
     assert p.doprint(sqrt(x)) == 'cmath.sqrt(x)'
     assert p.doprint(log(x)) == 'cmath.log(x)'
