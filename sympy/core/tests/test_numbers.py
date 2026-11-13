@@ -2236,6 +2236,11 @@ def test_abc():
 
 def test_floordiv():
     assert S(2)//S.Half == 4
+    assert S(7)//S(2) == 3
+    assert 7//S(2) == 3
+    assert -7//S(2) == -4
+    assert -0.5//S(2) == -1
+    assert 0.5//S(-2) == -1
 
 
 def test_negation():

@@ -8,6 +8,7 @@
 #
 from __future__ import annotations
 from functools import update_wrapper as _update_wrapper
+from typing import TYPE_CHECKING
 
 
 from mpmath import (
@@ -23,12 +24,16 @@ from mpmath import (
     make_mpf,
     mp,
     mpc,
-    mpf,
     mpi,
     ninf,
     sqrt,
     workprec,
 )
+
+if TYPE_CHECKING:
+    from mpmath.ctx_mp_python import _mpf as mpf
+else:
+    from mpmath import mpf
 
 NoConvergence = mp.NoConvergence
 

@@ -311,7 +311,9 @@ class StrPrinter(Printer):
                 pre = [self._print(d.pop(0))]
             else:
                 pre = []
-            dfactors = pre + [self.parenthesize(a, prec, strict=False)
+            dfactors = pre + [self.parenthesize(a,
+                PRECEDENCE["Pow"] if a.is_Pow and a.exp in (-S.One, -S.Half)
+                else PRECEDENCE["Mul"], strict=False)
                 for a in d]
 
             n = '*'.join(nfactors)
@@ -376,12 +378,12 @@ class StrPrinter(Printer):
         a = a or [S.One]
 
         a_str = [self.parenthesize(x, prec, strict=False) for x in a]
-        b_str = [self.parenthesize(x, prec, strict=False) for x in b]
+        b_str = [self.parenthesize(x, PRECEDENCE["Mul"], strict=False) for x in b]
 
         # To parenthesize Pow with exp = -1 and having more than one Symbol
         for item in pow_paren:
             if item.base in b:
-                b_str[b.index(item.base)] = "(%s)" % b_str[b.index(item.base)]
+                b_str[b.index(item.base)] = "(%s)" % self._print(item.base)
 
         if not b:
             return sign + '*'.join(a_str)
