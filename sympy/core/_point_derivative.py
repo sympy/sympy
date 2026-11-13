@@ -69,11 +69,26 @@ class _TaylorJet:
             ))/(j*a[0])
         return _TaylorJet(result)
 
+    def exp(self):
+        """Jet of exp(f), using exp(f)' = f'*exp(f)."""
+        from .function import expand_mul
+        from sympy.functions.elementary.exponential import exp
+
+        a = self.coeffs
+        # Factor out exp(a[0]) to avoid repeated exponential factors.
+        b = [S.One]
+        for j in range(1, self.order + 1):
+            b.append(expand_mul(Add(*(
+                k*a[k]*b[j - k] for k in range(1, j + 1)
+            ))/j))
+        scale = exp(a[0])
+        return _TaylorJet([scale*v for v in b])
+
 
 def _derivative_at_point(expr, x, x0, n):
     """Return d**n(expr)/dx**n at x0 without constructing the derivative.
 
-    Supports Add/Mul/Pow with numeric exponents and no free parameters apart
+    Supports Add/Mul/Pow and exp with no free parameters apart
     from x. All Taylor coefficients are computed with SymPy arithmetic.
     """
     if not (n.is_Integer and n.is_nonnegative and n.is_number):
@@ -85,6 +100,8 @@ def _derivative_at_point(expr, x, x0, n):
         raise _TaylorNotSupported('noncommutative expression')
     if expr.free_symbols - {x}:
         raise _TaylorNotSupported('unsubstituted parameters')
+
+    from sympy.functions.elementary.exponential import exp
 
     cache = {}
 
@@ -105,6 +122,8 @@ def _derivative_at_point(expr, x, x0, n):
                 result *= eval_node(arg)
         elif e.is_Pow and e.exp.is_number:
             result = eval_node(e.base)**e.exp
+        elif e.func is exp:
+            result = eval_node(e.args[0]).exp()
         else:
             raise _TaylorNotSupported('unsupported expression node')
         cache[e] = result

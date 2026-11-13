@@ -74,3 +74,31 @@ def test_point_derivative_symbolic_order():
     d = Subs(Derivative(f, (x, n + 1)), (n, y, x), (32, 2, 10))
     assert _subs_derivative_at_point(
         d.expr, d.variables, d.point) == expected
+
+
+def test_point_derivative_exponential():
+    from sympy import S, exp
+    from sympy.core._point_derivative import _derivative_at_point
+
+    x = Symbol('x')
+    # Closed-form cases verify high orders without expanding derivatives.
+    assert _derivative_at_point(exp(x**2), x, S.Zero, S(40)) == factorial(40)/factorial(20)
+    assert _derivative_at_point(exp(x**2), x, S.Zero, S(39)) == 0
+    assert _derivative_at_point(exp(3*x + 4), x, S(2), S(30)) == 3**30*exp(10)
+
+    # Compositions with rational functions and algebraic expressions.
+    for f, x0, orders in (
+        (exp(x/(1 + x)), 0, (1, 2, 5, 8)),
+        (exp(1/(x + 1)), 2, (1, 3, 5)),
+        (exp(sqrt(1 + x**2)), 2, (1, 3, 8)),
+        (1/(1 + exp(x)), 1, (1, 2, 4)),
+        (exp(exp(x)), 0, (1, 2, 6)),
+    ):
+        for n in orders:
+            got = _derivative_at_point(f, x, S(x0), S(n))
+            expected = f.diff(x, n).subs(x, x0)
+            assert (got - expected).equals(0)
+
+    # Also exercise the public Subs integration.
+    d = Subs(Derivative(exp(x**2), (x, 40)), x, 0)
+    assert d.doit() == factorial(40)/factorial(20)
