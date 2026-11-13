@@ -2067,7 +2067,7 @@ class Basic(Printable):
         from .function import count_ops
         return count_ops(self, visual)
 
-    def doit(self, **hints):
+    def doit(self, **hints: Any) -> Basic:
         """Evaluate objects that are not evaluated by default like limits,
         integrals, sums and products. All objects of this kind will be
         evaluated recursively, unless some species were excluded via 'hints'
@@ -2408,7 +2408,7 @@ class Atom(Basic):
             return rule[self], True
         return self, False
 
-    def doit(self, **hints):
+    def doit(self, **hints: Any) -> Self:
         return self
 
     @classmethod

@@ -2480,6 +2480,12 @@ class TensAdd(TensExpr, AssocOp):
     [x + 1, y + 2, z + 3, t + 4]
     """
 
+    if TYPE_CHECKING:
+
+        @property
+        def args(self) -> tuple[Expr, ...]:
+            ...
+
     def __new__(cls, *args, **kw_args):
         args = [_sympify(x) for x in args if x]
         args = TensAdd._tensAdd_flatten(args)
