@@ -163,7 +163,7 @@ class Set(Basic, EvalfMixin):
         """
         return Union(self, other)
 
-    def intersect(self, other):
+    def intersect(self, other: Set) -> Set:
         """
         Returns the intersection of 'self' and 'other'.
 
@@ -184,7 +184,7 @@ class Set(Basic, EvalfMixin):
         """
         return Intersection(self, other)
 
-    def intersection(self, other):
+    def intersection(self, other: Set) -> Set:
         """
         Alias for :meth:`intersect()`
         """
@@ -836,7 +836,7 @@ class Set(Basic, EvalfMixin):
     def __sub__(self, other):
         return Complement(self, other)
 
-    def __contains__(self, other):
+    def __contains__(self, other: Basic | complex | tuple[Basic | complex, ...]) -> Boolean:
         other = _sympify(other)
         c = self._contains(other)
         b = tfn[c]
@@ -1362,7 +1362,7 @@ class Union(Set, LatticeOp):
     def zero(self):
         return S.UniversalSet
 
-    def __new__(cls, *args, **kwargs):
+    def __new__(cls, *args: Set, **kwargs: bool) -> Set:  # type: ignore[misc]
         evaluate = kwargs.get('evaluate', global_parameters.evaluate)
 
         # flatten inputs to merge intersections and iterables
@@ -1370,10 +1370,10 @@ class Union(Set, LatticeOp):
 
         # Reduce sets using known rules
         if evaluate:
-            args = list(cls._new_args_filter(args))
+            args = tuple(cls._new_args_filter(args))
             return simplify_union(args)
 
-        args = list(ordered(args, Set._infimum_key))
+        args = tuple(ordered(args, Set._infimum_key))
 
         obj = Basic.__new__(cls, *args)
         obj._argset = frozenset(args)
