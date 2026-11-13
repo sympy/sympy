@@ -5,7 +5,7 @@ from sympy.core import (S, pi, oo, symbols, Rational, Integer, Symbol,
 from sympy.functions import (Piecewise, sin, cos, Abs, exp, ceiling, sqrt,
                              sign, floor, log)
 from sympy.logic import ITE
-from sympy.testing.pytest import raises
+from sympy.testing.pytest import raises, skip
 from sympy.utilities.lambdify import implemented_function
 from sympy.tensor import IndexedBase, Idx
 from sympy.matrices import MatrixSymbol, SparseMatrix, Matrix
@@ -364,6 +364,92 @@ def test_sparse_matrix():
         rust_code(SparseMatrix([[1, 2, 3]]))
 
 def test_parenthesize_typecast():
+    # https://github.com/sympy/sympy/issues/28418
     modulus = Symbol("modulus")
     exp = (2 ** (2.0 * ceiling(-y + log(x) / log(2.0) + 4)) + 0.5) / (3 * modulus**2)
-    assert(rust_code(exp) == '(1_f64/3.0)*(0.5 + (2.0*(-y + 1.44269504088896*x.ln()).ceil() + 8.0).exp2())*modulus.powi(-2)')
+    assert rust_code(exp) == '(1_f64/3.0)*(0.5 + (2.0*(-y + 1.44269504088896*x.ln()).ceil() + 8.0).exp2())*modulus.powi(-2)'
+
+    # https://github.com/sympy/sympy/issues/28418#issuecomment-6403738647
+    i, j = symbols("i j", integer=True)
+    r = Symbol("r", real=True)
+    w = Symbol("w")
+    assert rust_code(r * (i + j)) == "r*(i + j) as f64"
+    assert rust_code(Eq(w, i + j)) == "w == (i + j) as f64"
+    assert rust_code(Eq(i + j, w)) == "(i + j) as f64 == w"
+    assert rust_code(Lt(i + j, w)) == "((i + j) as f64) < w"
+    assert rust_code(Lt(r * (i + j), w)) == "(r*(i + j) as f64) < w"
+    assert rust_code((i + j) * (r + 1)) == "(i + j) as f64*(r + 1.0)"
+
+
+def check_rust(cases, variables):
+    import os
+    import shutil
+    import subprocess
+    import tempfile
+
+    rustc = shutil.which("rustc")
+    if rustc is None and os.name == "nt":
+        cargo_bin = os.path.expandvars(r"%USERPROFILE%\.cargo\bin\rustc.exe")
+        if os.path.isfile(cargo_bin):
+            rustc = cargo_bin
+    if rustc is None:
+        skip("rustc is not installed")
+
+    var_lines = []
+    for var, val in variables.items():
+        name = var.name if hasattr(var, "name") else str(var)
+        if isinstance(val, tuple) and len(val) == 2:
+            typ, v = val
+        elif getattr(var, "is_integer", False) or (isinstance(val, int) and not isinstance(val, bool)):
+            typ, v = "i32", str(val)
+        elif getattr(var, "is_real", False) or isinstance(val, float):
+            typ, v = "f64", f"{float(val)}"
+        elif isinstance(val, bool):
+            typ, v = "bool", str(val).lower()
+        else:
+            typ, v = "f64", str(val)
+        var_lines.append(f"    let {name}: {typ} = {v};")
+
+    body_lines = []
+    for idx, (expr, expected) in enumerate(cases):
+        code = rust_code(expr)
+        if isinstance(expected, bool):
+            body_lines.append(f"    let res_{idx}: bool = {code};")
+            body_lines.append(f"    assert_eq!(res_{idx}, {str(expected).lower()});")
+        elif isinstance(expected, int):
+            body_lines.append(f"    let res_{idx}: i32 = {code};")
+            body_lines.append(f"    assert_eq!(res_{idx}, {expected});")
+        elif isinstance(expected, float):
+            body_lines.append(f"    let res_{idx}: f64 = {code};")
+            body_lines.append(f"    assert!((res_{idx} - {float(expected)}).abs() < 1e-12);")
+
+    program = "fn main() {\n" + "\n".join(var_lines) + "\n\n" + "\n".join(body_lines) + "\n}\n"
+
+    with tempfile.TemporaryDirectory() as tmp_dir:
+        src = os.path.join(tmp_dir, "generated.rs")
+        exe = os.path.join(tmp_dir, "generated.exe" if os.name == "nt" else "generated")
+        with open(src, "w", encoding="utf-8") as f:
+            f.write(program)
+        compiled = subprocess.run(
+            [rustc, "--edition=2021", str(src), "-o", str(exe)],
+            capture_output=True,
+            text=True,
+        )
+        assert compiled.returncode == 0, f"Compilation failed:\n{compiled.stderr}\nProgram:\n{program}"
+        executed = subprocess.run([str(exe)], capture_output=True, text=True)
+        assert executed.returncode == 0, f"Execution failed:\n{executed.stderr}"
+
+
+def test_rust_typecast_compiles():
+    i, j = symbols("i j", integer=True)
+    r, w = symbols("r w", real=True)
+
+    variables = {i: 2, j: 3, r: 10.0, w: 60.0}
+    cases = [
+        (Lt(r * (i + j), w), True),
+        (Lt(i + j, w), True),
+        (Eq(w, i + j), False),
+        ((i + j) * (r + 1), 55.0),
+        (r * (i + j), 50.0),
+    ]
+    check_rust(cases, variables)
