@@ -539,6 +539,7 @@ UNEVALUATED_COMMON_FUNCTION_EXPRESSION_PAIRS = [
     (r"\overline{\overline{z}}", _Conjugate(_Conjugate(z))),
     (r"\overline{x + y}", _Conjugate(_Add(x, y))),
     (r"\overline{x} + \overline{y}", _Conjugate(x) + _Conjugate(y)),
+    (r"\overline1", _Conjugate(1)),
     (r"\min(a, b)", _Min(a, b)),
     (r"\min(a, b, c - d, xy)", _Min(a, b, c - d, x * y)),
     (r"\max(a, b)", _Max(a, b)),
@@ -573,6 +574,7 @@ EVALUATED_COMMON_FUNCTION_EXPRESSION_PAIRS = [
     (r"\overline{\overline{z}}", conjugate(conjugate(z))),
     (r"\overline{x + y}", conjugate(x + y)),
     (r"\overline{x} + \overline{y}", conjugate(x) + conjugate(y)),
+    (r"\overline1", 1),
     (r"\min(a, b)", Min(a, b)),
     (r"\min(a, b, c - d, xy)", Min(a, b, c - d, x * y)),
     (r"\max(a, b)", Max(a, b)),
@@ -580,6 +582,11 @@ EVALUATED_COMMON_FUNCTION_EXPRESSION_PAIRS = [
     (r"\langle x |", Bra('x')),
     (r"| x \rangle", Ket('x')),
     (r"\langle x | y \rangle", InnerProduct(Bra('x'), Ket('y'))),
+]
+
+UNSUPPORTED_CONJUGATE_EXPRESSION_PAIRS = [
+    (r"\overline x", _Conjugate(x)),
+    (r"\overline12", _Mul(_Conjugate(1), 2))
 ]
 
 SPACING_RELATED_EXPRESSION_PAIRS = [
@@ -995,6 +1002,13 @@ def test_common_function_expressions():
 
     for latex_str, sympy_expr in EVALUATED_COMMON_FUNCTION_EXPRESSION_PAIRS:
         assert parse_latex_lark(latex_str) == sympy_expr, latex_str
+
+
+@XFAIL
+def test_unsupported_conjugate_expressions():
+    for latex_str, sympy_expr in UNSUPPORTED_CONJUGATE_EXPRESSION_PAIRS:
+        with evaluate(False):
+            assert parse_latex_lark(latex_str) == sympy_expr, latex_str
 
 
 def test_spacing():
