@@ -1801,7 +1801,8 @@ class Basic(Printable):
             if isinstance(value, Basic):
                 if exact:
                     _value = lambda expr, result: (value.subs(result)
-                        if all(result.values()) else expr)
+                        if all(val.is_Relational or val for val in result.values())
+                        else expr)
                 else:
                     _value = lambda expr, result: value.subs(result)
             elif callable(value):
@@ -1812,7 +1813,8 @@ class Basic(Printable):
                 if exact:
                     _value = lambda expr, result: (value(**
                         {str(k)[:-1]: v for k, v in result.items()})
-                        if all(val for val in result.values()) else expr)
+                        if all(val.is_Relational or val for val in result.values())
+                        else expr)
                 else:
                     _value = lambda expr, result: value(**
                         {str(k)[:-1]: v for k, v in result.items()})
