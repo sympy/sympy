@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Sequence
 
 from .cartan_type import CartanType
 from sympy.core import Atom, Integer, Rational
@@ -148,14 +148,14 @@ class RootSystem(Atom):
         alpha = self.simple_roots()
         if root1 > len(alpha) or root2 > len(alpha):
             raise ValueError("You've used a root that doesn't exist!")
-        a1 = alpha[root1]
-        a2 = alpha[root2]
+        a1: Sequence[int | Rational] = alpha[root1]
+        a2: Sequence[int | Rational] = alpha[root2]
         newroot = [_a1 + _a2 for _a1, _a2 in zip(a1, a2)]
         return newroot
 
     def add_as_roots(self,
-                     root1: list[int] | list[Rational],
-                     root2: list[int] | list[Rational]) -> list[int] | list[Rational | Integer] | str:
+                     root1: Sequence[int | Rational],
+                     root2: Sequence[int | Rational]) -> list[int] | list[Rational | Integer] | str:
         """Add two roots together if and only if their sum is also a root
 
         It takes as input two vectors which should be roots.  It then computes

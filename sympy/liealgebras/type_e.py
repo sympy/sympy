@@ -99,8 +99,9 @@ class TypeE(Standard_Cartan):
         n = self.n
         neghalf = Rational(-1, 2)
         poshalf = Rational(1, 2)
+        posroots: dict[int, list[int] | list[Rational]] = {}
+
         if n == 6:
-            posroots: dict[int, list[int] | list[Rational]] = {}
             k = 0
             for i in range(n-1):
                 for j in range(i+1, n-1):
@@ -131,7 +132,6 @@ class TypeE(Standard_Cartan):
                     posroots[k] = root[:]
             return posroots
         if n == 7:
-            posroots: dict[int, list[int] | list[Rational]] = {}
             k = 0
             for i in range(n-1):
                 for j in range(i+1, n-1):
@@ -166,7 +166,6 @@ class TypeE(Standard_Cartan):
                     posroots[k] = root[:]
             return posroots
         else:
-            posroots: dict[int, list[int] | list[Rational]] = {}
             k = 0
             for i in range(n):
                 for j in range(i+1, n):
