@@ -66,4 +66,4 @@ def test_atomic_classes():
     raises(TypeError, lambda: OrdinalOmega(OmegaPower(0,1)))
 
 def test_ordinal():
-    assert type(Ordinal()) is OrdinalZero
+    assert Ordinal() is ord0
