@@ -293,9 +293,9 @@ UNEVALUATED_POWER_EXPRESSION_PAIRS = [
     (r"x^{3 + 1}", x ** _Add(3, 1)),
     (r"\pi^{|xy|}", Symbol('pi') ** _Abs(x * y)),
     (r"5^0 - 4^0", _Add(_Pow(5, 0), _Mul(-1, _Pow(4, 0)))),
-    (r"x^\circ", _Mul(x, _Mul(pi, _Pow(180, -1)))),
-    (r"x^{\circ}", _Mul(x, _Mul(pi, _Pow(180, -1)))),
-    (r"180^\circ", _Mul(180, _Mul(pi, _Pow(180, -1))))
+    (r"x^\circ", _Mul(x, pi / 180)),
+    (r"x^{\circ}", _Mul(x, pi / 180)),
+    (r"180^\circ", _Mul(180, pi / 180))
 ]
 
 EVALUATED_POWER_EXPRESSION_PAIRS = [
@@ -857,7 +857,7 @@ UNEVALUATED_EXPRESSION_PAIRS = [
     (r"\max(1, 2)", _Max(1, 2)),
     (r"\operatorname{erf}(0)", erf(0, evaluate=False)),
     (r"\operatorname{sgn} 1", sign(1, evaluate=False)),
-    (r"90^\circ", _Mul(90, _Mul(pi, _Pow(180, -1)))),
+    (r"90^\circ", _Mul(90, pi / 180)),
 ]
 
 def test_symbol_expressions():

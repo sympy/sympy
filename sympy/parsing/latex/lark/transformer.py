@@ -405,7 +405,7 @@ class TransformToSymPyExpr(Transformer):
 
     def degree(self, args):
         base = args[0]
-        return self._multiply(base, self._handle_division(sympy.pi, sympy.Integer(180)))
+        return self._multiply(base, sympy.pi / 180)
 
     def matrix_prime(self, tokens):
         base = tokens[0]
