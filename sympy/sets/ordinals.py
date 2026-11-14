@@ -49,9 +49,9 @@ class OmegaPower(Basic):
             except TypeError:
                 return NotImplemented
         if self.exp == other.exp:
-            return self.mult < other.mult
+            return bool(self.mult < other.mult)
         else:
-            return self.exp < other.exp
+            return bool(self.exp < other.exp)
 
 
 class Ordinal(Basic):
