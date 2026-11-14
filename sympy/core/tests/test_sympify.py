@@ -6,7 +6,7 @@ from sympy.core.mul import Mul
 from sympy.core.numbers import (Float, I, Integer, Rational, pi, oo)
 from sympy.core.power import Pow
 from sympy.core.singleton import S
-from sympy.core.symbol import Symbol
+from sympy.core.symbol import Dummy, Symbol
 from sympy.functions.elementary.complexes import Abs
 from sympy.functions.elementary.exponential import exp
 from sympy.functions.elementary.miscellaneous import sqrt
@@ -44,6 +44,11 @@ def test_issue_3538():
     assert v == exp(x)
     assert type(v) == type(exp(x))
     assert str(type(v)) == str(type(exp(x)))
+
+
+def test_srepr_dummy_roundtrip():
+    d = Dummy('d', dummy_index=5)
+    assert sympify(srepr(d + 1)) == d + 1
 
 
 def test_sympify1():
@@ -437,12 +442,18 @@ def test_evaluate_false():
         '2**2 / 3': Mul(Pow(2, 2, evaluate=False), Pow(3, -1, evaluate=False), evaluate=False),
         '2 + 3 * 5': Add(2, Mul(3, 5, evaluate=False), evaluate=False),
         '2 - 3 * 5': Add(2, Mul(-1, Mul(3, 5,evaluate=False), evaluate=False), evaluate=False),
-        '1 / 3': Pow(3, -1, evaluate=False),
+        '1 / 3': Rational(1, 3),
         'True | False': Or(True, False, evaluate=False),
         '1 + 2 + 3 + 5*3 + integrate(x)': Add(1, 2, 3, Mul(5, 3, evaluate=False), x**2/2, evaluate=False),
         '2 * 4 * 6 + 8': Add(Mul(2, 4, 6, evaluate=False), 8, evaluate=False),
         '2 - 8 / 4': Add(2, Mul(-1, Mul(8, Pow(4, -1, evaluate=False), evaluate=False), evaluate=False), evaluate=False),
         '2 - 2**2': Add(2, Mul(-1, Pow(2, 2, evaluate=False), evaluate=False), evaluate=False),
+        '-(2*3)': Mul(Integer(-1), Mul(Integer(2), Integer(3), evaluate=False), evaluate=False),
+        '-(x + 2)': Mul(Integer(-1), Add(Symbol('x'), Integer(2), evaluate=False), evaluate=False),
+        '-(2 - x)': Mul(Integer(-1), Add(Integer(2), Mul(Integer(-1), Symbol('x'), evaluate=False), evaluate=False), evaluate=False),
+        '-(2*3/3)': Mul(Integer(-1), Mul(Integer(2), Integer(3), Pow(Integer(3), Integer(-1), evaluate=False), evaluate=False), evaluate=False),
+        # see gh-22290
+        'root(x,3)**(2/3)': Pow(Pow(Symbol('x'), Rational(1, 3)), Rational(2, 3), evaluate=False)
     }
     for case, result in cases.items():
         assert sympify(case, evaluate=False) == result

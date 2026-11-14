@@ -3,7 +3,7 @@ Generating and counting primes.
 
 """
 from __future__ import annotations
-from typing import Iterator, Callable, overload, SupportsIndex, Literal
+from typing import Iterator, Callable, overload, SupportsIndex, Literal, TYPE_CHECKING
 from bisect import bisect, bisect_left
 from itertools import count
 # Using arrays for sieving instead of lists greatly reduces
@@ -17,11 +17,15 @@ from sympy.utilities.decorator import deprecated
 from sympy.utilities.misc import as_int
 
 
+if TYPE_CHECKING:
+    from sympy.core.expr import Expr
+
+
 def _as_int_ceiling(a) -> int:
     """ Wrapping ceiling in as_int will raise an error if there was a problem
         determining whether the expression was exactly an integer or not."""
     from sympy.functions.elementary.integers import ceiling
-    return as_int(ceiling(a))
+    return as_int(ceiling(a)) # type: ignore
 
 
 class Sieve:
@@ -123,6 +127,18 @@ class Sieve:
             raise ValueError("sieve_interval should be a positive integer")
         self.sieve_interval = sieve_interval
         assert all(len(i) == self._n for i in (self._list, self._tlist, self._mlist))
+
+    def __eq__(self, other) -> bool:
+        if not isinstance(other, Sieve):
+            return NotImplemented
+        return (self.sieve_interval == other.sieve_interval
+                and self._n == other._n
+                and self._list == other._list
+                and self._tlist == other._tlist
+                and self._mlist == other._mlist)
+
+    def __hash__(self) -> int:
+        return hash((type(self), self.sieve_interval, self._n))
 
     def __repr__(self) -> str:
         return ("<%s sieve (%i): %i, %i, %i, ... %i, %i\n"
@@ -543,7 +559,7 @@ def prime(nth: SupportsIndex) -> int:
 The `sympy.ntheory.generate.primepi` has been moved to `sympy.functions.combinatorial.numbers.primepi`.""",
 deprecated_since_version="1.13",
 active_deprecations_target='deprecated-ntheory-symbolic-functions')
-def primepi(n: SupportsIndex) -> int:
+def primepi(n: SupportsIndex) -> Expr:
     r""" Represents the prime counting function pi(n) = the number
         of prime numbers less than or equal to n.
 

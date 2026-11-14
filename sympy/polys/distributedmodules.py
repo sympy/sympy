@@ -705,8 +705,10 @@ def sdm_groebner(G, NF, O, K, extended=False):
 
     # First add all the elements of G to S
     for i, f in enumerate(G):
+        if not f:
+            continue
         P = update(f, sdm_deg(f), P)
-        if extended and f:
+        if extended:
             coefficients.append(sdm_from_dict({(i,) + (0,)*numgens: K(1)}, O))
 
     # Now carry out the buchberger algorithm.

@@ -45,6 +45,9 @@ def _pinv_rank_decomposition(M):
     if M.is_zero_matrix:
         return M.H
 
+    if M.rows == 1 or M.cols == 1:
+        return M.H / M.dot(M, hermitian=True)
+
     B, C = M.rank_decomposition()
 
     Bp = _pinv_full_rank(B)

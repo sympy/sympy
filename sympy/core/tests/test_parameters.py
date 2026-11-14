@@ -1,9 +1,17 @@
 from __future__ import annotations
+
+import pytest
+
 from sympy.abc import x, y
 from sympy.core.parameters import evaluate
 from sympy.core import Mul, Add, Pow, S
 from sympy.core.numbers import oo
 from sympy.functions.elementary.miscellaneous import sqrt
+
+
+pytestmark = pytest.mark.thread_unsafe(
+    reason="changes thread-local evaluation modes while using the shared expression cache"
+)
 
 def test_add():
     with evaluate(False):

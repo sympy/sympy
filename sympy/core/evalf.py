@@ -3,7 +3,7 @@ Adaptive numerical evaluation of SymPy expressions, using mpmath
 for mathematical functions.
 """
 from __future__ import annotations
-from typing import Callable, TYPE_CHECKING, Any, overload
+from typing import Callable, TYPE_CHECKING, Any, overload, cast
 
 import math
 
@@ -38,7 +38,7 @@ if TYPE_CHECKING:
     from sympy.functions.elementary.exponential import exp, log
     from sympy.functions.elementary.complexes import Abs, re, im
     from sympy.functions.elementary.integers import ceiling, floor
-    from sympy.functions.elementary.trigonometric import atan
+    from sympy.functions.elementary.trigonometric import atan, sin, cos, tan
     from .numbers import Float, Rational, Integer, AlgebraicNumber, Number
 
 LG10 = math.log2(10)
@@ -269,8 +269,8 @@ def get_abs(expr: Expr, prec: int, options: OPT_DICT) -> TMP_RES:
         re, re_acc, im, im_acc = im, im_acc, re, re_acc
     if im:
         if expr.is_number:
-            abs_expr, _, acc, _ = evalf(abs(N(expr, prec + 2)),
-                                        prec + 2, options)
+            abs_expr = mpc_abs((mpf_abs(re), mpf_abs(im)), prec, rnd)
+            acc = min(prec, complex_accuracy(result))
             return abs_expr, None, acc, None
         else:
             if 'subs' in options:
@@ -631,6 +631,37 @@ def evalf_add(v: 'Add', prec: int, options: OPT_DICT) -> TMP_RES:
     return re, im, re_acc, im_acc
 
 
+class _ExactComplex:
+    __slots__ = ('a', 'b', 'q')
+
+    def __init__(self):
+        # (a + i*b)/q
+        self.q = 1
+        self.a = 1
+        self.b = 0
+
+    def __imul__(self, ri):
+        r, i = ri
+        c = r.p*i.q
+        d = i.p*r.q
+        s = r.q*i.q
+        a, b, q = self.a, self.b, self.q
+
+        real = a*c - b*d
+        imag = a*d + b*c
+        denom = q*s
+
+        g = math.gcd(real, imag, denom)
+        self.a = real // g
+        self.b = imag // g
+        self.q = denom // g
+        return self
+
+    def as_rationals(self):
+        from sympy.core.numbers import Rational
+        return Rational(self.a, self.q), Rational(self.b, self.q)
+
+
 def evalf_mul(v: 'Mul', prec: int, options: OPT_DICT) -> TMP_RES:
     res = pure_complex(v)
     if res:
@@ -638,13 +669,32 @@ def evalf_mul(v: 'Mul', prec: int, options: OPT_DICT) -> TMP_RES:
         _, h = res
         im, _, im_acc, _ = evalf(h, prec, options)
         return None, im, None, im_acc
+
     args = list(v.args)
+    flat_factors = []
+    coeff = _ExactComplex()
+    have_exact = False
+
+    for arg in args:
+        if arg.is_Mul:
+            args.extend(cast('tuple[Expr, ...]', arg.args))
+            continue
+
+        pair = pure_complex(arg)
+        if (pair is not None
+                and pair[0]  # note: pair[1] cannot be 0
+                and all(c.is_Rational for c in pair)):
+            coeff *= pair
+            have_exact = True
+            continue
+
+        flat_factors.append(arg)
 
     # see if any argument is NaN or oo and thus warrants a special return
     has_zero = False
     special = []
     from .numbers import Float
-    for arg in args:
+    for arg in flat_factors:
         result = evalf(arg, prec, options)
         if result is S.ComplexInfinity:
             special.append(result)
@@ -673,7 +723,7 @@ def evalf_mul(v: 'Mul', prec: int, options: OPT_DICT) -> TMP_RES:
     acc = prec
 
     # XXX: big overestimate
-    working_prec = prec + len(args) + 5
+    working_prec = prec + len(flat_factors) + int(have_exact) + 5
 
     # Empty product is 1
     start = man, exp, bc = MPZ(1), 0, 1
@@ -681,19 +731,23 @@ def evalf_mul(v: 'Mul', prec: int, options: OPT_DICT) -> TMP_RES:
     # First, we multiply all pure real or pure imaginary numbers.
     # direction tells us that the result should be multiplied by
     # I**direction; all other numbers get put into complex_factors
-    # to be multiplied out after the first phase.
-    last = len(args)
+    # to be multiplied out after the first phase. Exact complex
+    # numbers (Rational + I*Rational) gathered in previous loop
+    # are handled after all others.
     direction = 0
-    args.append(S.One)
     complex_factors = []
+    LAST = len(flat_factors)
+    for i in range(LAST + 1):
+        if i != LAST:
+            re, im, re_acc, im_acc = evalf(
+                flat_factors[i], working_prec, options)
+        elif have_exact:
+            real, imag = coeff.as_rationals()
+            re, _, re_acc, _ = evalf(real, working_prec, options)
+            im, _, im_acc, _ = evalf(imag, working_prec, options)
+        else:
+            break
 
-    for i, arg in enumerate(args):
-        if i != last and pure_complex(arg):
-            args[-1] = (args[-1]*arg).expand()
-            continue
-        elif i == last and arg is S.One:
-            continue
-        re, im, re_acc, im_acc = evalf(arg, working_prec, options)
         if re and im:
             complex_factors.append((re, im, re_acc, im_acc))
             continue
@@ -814,7 +868,12 @@ def evalf_pow(v: 'Pow', prec: int, options) -> TMP_RES:
 
     # Pure square root
     if exp is S.Half:
-        xre, xim, _, _ = result
+        xre, xim, re_acc, im_acc = result
+        if (xim and xre and mpf_lt(xre, fzero)
+                and im_acc is not None and im_acc < 2):
+            if base.as_real_imag()[1].is_zero:
+                # ^ or base.expand(complex=True).as_real_imag()[1].is_zero?
+                return None, mpf_sqrt(mpf_neg(xre), prec), None, prec
         # General complex square root
         if xim:
             re, im = mpc_sqrt((xre or fzero, xim), prec)
@@ -892,7 +951,7 @@ def evalf_exp(expr: 'exp', prec: int, options: OPT_DICT) -> TMP_RES:
     return evalf_pow(Pow(S.Exp1, expr.exp, evaluate=False), prec, options)
 
 
-def evalf_trig(v: Expr, prec: int, options: OPT_DICT) -> TMP_RES:
+def evalf_trig(v: cos | sin | tan, prec: int, options: OPT_DICT) -> TMP_RES:
     """
     This function handles sin , cos and tan of complex arguments.
 
@@ -913,7 +972,7 @@ def evalf_trig(v: Expr, prec: int, options: OPT_DICT) -> TMP_RES:
     re, im, re_acc, im_acc = evalf(arg, xprec, options)
     if im:
         if 'subs' in options:
-            v = v.subs(options['subs'])
+            v = v.subs(options['subs']) # type: ignore
         return evalf(v._eval_evalf(prec), prec, options) # type: ignore
     if not re:
         if isinstance(v, cos):
@@ -1280,11 +1339,15 @@ def hypsum(expr: Expr, n: Symbol, start: int, prec: int) -> mpf:
             s = term
             k = 1
             while abs(term) > 5:
-                term *= MPZ(func1(k - 1))
-                term //= MPZ(func2(k - 1))
+                # The ratio must be applied before it is truncated to an integer:
+                # the numerator and denominator of the quotient between successive
+                # terms need not be integral (the ratio for 1.9**n/factorial(n) is
+                # 1.9/(n + 1), and MPZ(1.9) is 1). ctx.mpf keeps the division in
+                # arbitrary precision instead of falling back to a float.
+                term *= ctx.mpf(func1(k - 1)) / ctx.mpf(func2(k - 1))
                 s += term
                 k += 1
-            return from_man_exp(s, -prec)
+            return from_man_exp(MPZ(s), -prec)
         else:
             alt = g < 0
             if abs(g) < 1:
@@ -1304,8 +1367,21 @@ def hypsum(expr: Expr, n: Symbol, start: int, prec: int) -> mpf:
                 def summand(k, _term=[term0]):
                     if k:
                         k = int(k)
-                        _term[0] *= MPZ(func1(k - 1))
-                        _term[0] //= MPZ(func2(k - 1))
+                        # The ratio must be applied before it is truncated to an
+                        # integer, since the numerator and denominator of the
+                        # quotient between successive terms need not be integral
+                        # (the ratio for 1.9**n/factorial(n) is 1.9/(n + 1), and
+                        # MPZ(1.9) is 1). The ratio is held as a fixed-point
+                        # integer with prec2 extra bits so that the accumulator
+                        # keeps the accuracy the extrapolation relies on, and
+                        # ctx.mpf keeps the division from falling back to a float.
+                        with local_workprec(prec2 + 20):
+                            ratio = MPZ(
+                                ctx.mpf(func1(k - 1))
+                                / ctx.mpf(func2(k - 1))
+                                * (1 << prec2)
+                            )
+                        _term[0] = _term[0] * ratio >> prec2
                     return ctx.make_mpf(from_man_exp(_term[0], -prec2))
 
                 ctx.prec = prec

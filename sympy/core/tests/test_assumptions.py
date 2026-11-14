@@ -1,6 +1,9 @@
 from __future__ import annotations
+
+import pytest
+
 from sympy.core.mod import Mod
-from sympy.core.numbers import (I, oo, pi)
+from sympy.core.numbers import (I, oo, pi, zoo)
 from sympy.functions.combinatorial.factorials import factorial
 from sympy.functions.elementary.exponential import (exp, log)
 from sympy.functions.elementary.miscellaneous import sqrt
@@ -12,6 +15,7 @@ from sympy.core.assumptions import (assumptions, check_assumptions,
     _load_pre_generated_assumption_rules)
 from sympy.core.facts import InconsistentAssumptions
 from sympy.core.random import seed
+from sympy.core.symbol import symbols
 from sympy.combinatorics import Permutation
 from sympy.combinatorics.perm_groups import PermutationGroup
 
@@ -839,7 +843,32 @@ def test_Pow_is_algebraic():
     e = Symbol('e', algebraic=True)
 
     assert Pow(1, e, evaluate=False).is_algebraic
-    assert Pow(0, e, evaluate=False).is_algebraic
+    assert Pow(0, e, evaluate=False).is_algebraic is None
+
+    for exponent in [-1, -S.Half, -oo, Symbol('n', negative=True)]:
+        assert Pow(0, exponent, evaluate=False).is_algebraic is False
+    for exponent in [0, 1, S.Half, oo, Symbol('p', nonnegative=True)]:
+        assert Pow(0, exponent, evaluate=False).is_algebraic is True
+    assert Pow(0, -1, evaluate=False).is_finite is False
+
+    # issue 30665
+    for exponent in [-1, -S.Half, -Integer(2)]:
+        assert Pow(zoo, exponent, evaluate=False).is_algebraic is True
+    for exponent in [1, S.Half, Integer(2)]:
+        assert Pow(zoo, exponent, evaluate=False).is_algebraic is False
+    assert Pow(zoo, 0, evaluate=False).is_algebraic is True
+    one_over_zero = Pow(0, -1, evaluate=False)
+    assert Pow(one_over_zero, -1, evaluate=False).is_algebraic is True
+
+    inf = Symbol('inf', infinite=True)
+    for exponent in [-1, -S.Half]:
+        p = Pow(inf, exponent, evaluate=False)
+        assert p.is_algebraic is True
+        assert p.is_zero is True
+    assert Pow(inf, 0, evaluate=False).is_algebraic is True
+    assert Pow(inf, 2, evaluate=False).is_algebraic is False
+    r = Symbol('r', rational=True)
+    assert Pow(inf, r, evaluate=False).is_algebraic is None
 
     a = Symbol('a', algebraic=True)
     azf = Symbol('azf', algebraic=True, zero=False)
@@ -1188,6 +1217,11 @@ def test_complex_reciprocal_imaginary():
     assert (1 / (4 + 3*I)).is_imaginary is False
 
 
+def test_issue_10458():
+    x = Symbol('x', integer=True, positive=True)
+    assert (1/x - 1).is_nonpositive
+
+
 def test_issue_16313():
     x = Symbol('x', extended_real=False)
     k = Symbol('k', real=True)
@@ -1214,6 +1248,17 @@ def test_issue_16579():
     # Now infinite == !finite
     nf = Symbol('nf', finite=False)
     assert nf.is_infinite is True
+
+
+def test_add_signed_group_assumptions():
+    a, b, c = symbols('a b c', positive=True, integer=True)
+
+    assert (a + b + c - 2).is_positive is True
+    assert (a + b + c - 3).is_nonnegative is True
+    assert (a + b + c - 3).is_positive is None
+    assert (a + b - c - 2).is_positive is None
+    assert (-a - b - c + 2).is_negative is True
+    assert (-a - b - c + 3).is_nonpositive is True
 
 
 def test_issue_17556():
@@ -1320,6 +1365,9 @@ def test_pre_generated_assumption_rules_are_valid():
     assert pre_generated_assumptions._to_python() == generated_assumptions._to_python(), "pre-generated assumptions are invalid, see sympy.core.assumptions._generate_assumption_rules"
 
 
+@pytest.mark.thread_unsafe(
+    reason="resets and consumes process-global RNG state"
+)
 def test_ask_shuffle():
     grp = PermutationGroup(Permutation(1, 0, 2), Permutation(2, 1, 3))
 
@@ -1333,3 +1381,18 @@ def test_ask_shuffle():
     third = grp.random()
 
     assert first == second == third
+
+
+def test_issue_30804():
+    # Issue 30804: b has real=False, but b*I can be real (e.g. b=I => b*I=-1 in Re)
+    # or non-real (e.g. b=1+I => b*I=-1+I not in Re). Hence is_real and is_integer should be None.
+    b = Symbol('b', finite=True, real=False)
+    assert (b*I).is_real is None
+    assert (b*I).is_extended_real is None
+    assert (b*I).is_integer is None
+    assert (b*I).is_rational is None
+    assert (b*I).is_imaginary is False
+
+    # Real multiple of non-real number cannot be real
+    assert (3*b).is_real is False
+    assert (3*b).is_extended_real is False

@@ -128,7 +128,11 @@ def test_radius_of_convergence():
     assert hyper([1, 1], [2], 1).convergence_statement == False
     assert hyper([1, 1], [2], -1).convergence_statement == True
     assert hyper([1, 1], [1], -1).convergence_statement == False
+    n = symbols('n', positive=True, integer=True)
+    assert hyper((1 - n,), [], z).radius_of_convergence is oo
 
+    m = symbols('m', integer=True)
+    assert hyper((1, 1 - n), (-m,), z).radius_of_convergence == 1
 
 def test_meijer():
     raises(TypeError, lambda: meijerg(1, z))

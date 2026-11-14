@@ -8,7 +8,7 @@ from sympy import (eye, MatrixSymbol, Matrix)
 from sympy.tensor.array import NDimArray
 from sympy.tensor.array.expressions.array_expressions import (
     ArrayTensorProduct, ArrayAdd,
-    PermuteDims, ArrayDiagonal, _CodegenArrayAbstract)
+    PermuteDims, ArrayDiagonal, _ArrayExpr)
 from sympy.utilities.lambdify import lambdify
 from sympy.core.relational import Eq, Ne, Ge, Gt, Le, Lt
 from sympy.functions import \
@@ -41,6 +41,22 @@ if torch is not None:
     m3x3sympy = Matrix(llo)
 
 
+def test_torch_code_settings():
+    assert torch_code(sin(x), fully_qualified_modules=False) == 'sin(x)'
+    assert torch_code(sin(x), fully_qualified_modules=True) == 'torch.sin(x)'
+    assert torch_code(Matrix([[x]]), requires_grad=True, dtype='torch.float32',
+                      fully_qualified_modules=False) == \
+        'tensor([[x]], dtype=torch.float32, requires_grad=True)'
+
+
+def test_torch_code_assign_to():
+    assert torch_code(x + 1, assign_to='y') == 'y = x + 1'
+    assert torch_code(Matrix([[x]]), assign_to='y') == \
+        'y = torch.tensor([[x]], dtype=torch.float64)'
+    assert torch_code(sin(x), assign_to='y', fully_qualified_modules=False) == \
+        'y = sin(x)'
+
+
 def _compare_torch_matrix(variables, expr):
     f = lambdify(variables, expr, 'torch')
 
@@ -49,7 +65,7 @@ def _compare_torch_matrix(variables, expr):
     r = f(*random_variables)
     e = expr.subs(dict(zip(variables, random_matrices))).doit()
 
-    if isinstance(e, _CodegenArrayAbstract):
+    if isinstance(e, _ArrayExpr):
         e = e.doit()
 
     if hasattr(e, 'is_number') and e.is_number:

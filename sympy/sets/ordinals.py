@@ -1,6 +1,8 @@
 from __future__ import annotations
 
-from sympy.core import Basic, Integer
+from typing import cast
+
+from sympy.core import Basic, Integer, S
 
 
 class OmegaPower(Basic):
@@ -242,10 +244,77 @@ class Ordinal(Basic):
                 return NotImplemented
         return other * self
 
+    def _pow(self, other: Ordinal) -> Ordinal:
+        if other == ord0:
+            return Ordinal.convert(1)
+        if self == ord0:
+            return ord0
+        if self == Ordinal.convert(1):
+            return self
+
+        if other.is_limit_ordinal:
+            infinite_terms = other.terms
+            finite_part = Integer(0)
+        else:
+            infinite_terms = other.terms[:-1]
+            finite_part = other.trailing_term.mult
+
+        # finite self to arbitrary other
+        if self.degree == ord0:
+            exponent_terms = []
+            for term in infinite_terms:
+                if term.exp >= omega:
+                    exponent_terms.append(term)
+                else:
+                    exponent_terms.append(
+                        OmegaPower(
+                            term.exp.leading_term.mult - 1,
+                            term.mult,
+                            )
+                        )
+            new_degree = Ordinal(*exponent_terms)
+            if finite_part == ord0:
+                mult: Integer = S.One
+            else:
+                mult = cast(Integer, self.leading_term.mult ** finite_part)
+            return Ordinal(OmegaPower(new_degree, mult))
+
+        # infinite self to limit ordinal other
+        if other.is_limit_ordinal:
+            return Ordinal(OmegaPower(self.degree*other,1))
+
+        # infinite self to successor ordinal
+        # other = beta + m
+        m = other.trailing_term.mult
+        beta = Ordinal(*other.terms[:-1])
+        first_term = Ordinal(OmegaPower(self.degree*(beta + (m-1)),1))
+        if self.is_limit_ordinal:
+            return first_term * self
+        else:
+            # self = alpha + k
+            k = self.trailing_term.mult
+            alpha = Ordinal(*self.terms[:-1])
+            out = first_term*alpha
+            for i in reversed(range(m-1)):
+                out += Ordinal(OmegaPower(self.degree*(beta + i),1))*alpha*k
+            out += Ordinal(OmegaPower(self.degree*beta,k))
+            return out
+
     def __pow__(self, other: Ordinal | Integer | int) -> Ordinal:
-        if not self == omega:
-            return NotImplemented
-        return Ordinal(OmegaPower(other, 1))
+        if not isinstance(other, Ordinal):
+            try:
+                other = Ordinal.convert(other)
+            except TypeError:
+                return NotImplemented
+        return self._pow(other)
+
+    def __rpow__(self, other: Ordinal | Integer | int) -> Ordinal:
+        if not isinstance(other, Ordinal):
+            try:
+                other = Ordinal.convert(other)
+            except TypeError:
+                return NotImplemented
+        return other._pow(self)
 
 
 class OrdinalZero(Ordinal):
@@ -253,7 +322,8 @@ class OrdinalZero(Ordinal):
 
     OrdinalZero can be imported as ``ord0``.
     """
-    pass
+    def __new__(cls):
+        return Ordinal.__new__(cls)
 
 
 class OrdinalOmega(Ordinal):

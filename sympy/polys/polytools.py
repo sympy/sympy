@@ -56,7 +56,7 @@ from sympy.polys.rationaltools import together
 from sympy.polys.rootisolation import dup_isolate_real_roots_list
 from sympy.utilities import group, public, filldedent
 from sympy.utilities.exceptions import sympy_deprecation_warning
-from sympy.utilities.iterables import iterable, sift
+from sympy.utilities.iterables import iterable, sift, numbered_symbols
 
 # Required to avoid errors
 import sympy.polys
@@ -64,8 +64,10 @@ from sympy.external.mpmath import local_workdps, NoConvergence
 
 
 if TYPE_CHECKING:
+    from sympy.core.basic import Tbasic
+    from sympy.core.expr import Texpr
     from sympy.polys.domains.domain import Domain
-    from collections.abc import Iterator
+    from collections.abc import Iterator, Mapping
     from typing import Self
 
 
@@ -226,6 +228,16 @@ class Poly(Basic):
 
     def _hashable_content(self):
         return (self.rep,) + self.gens
+
+    if TYPE_CHECKING:
+
+        @overload
+        def xreplace(self, rule: Mapping[Texpr, Expr]) -> Self: ...
+        @overload
+        def xreplace(self, rule: Mapping[Tbasic, Basic]) -> Basic: ...
+
+        def xreplace(self, rule: Mapping[Tbasic, Basic]) -> Basic:
+            ...
 
     @classmethod
     def from_dict(cls, rep: dict[tuple[int, ...], Any] | dict[int, Any], *gens, **args):
@@ -2150,7 +2162,11 @@ class Poly(Basic):
         if hasattr(f.rep, 'nth'):
             if len(N) != len(f.gens):
                 raise ValueError('exponent of each generator must be specified')
-            result = f.rep.nth(*list(map(int, N)))
+            for n in N:
+                if isinstance(n, int):
+                    continue
+                raise TypeError('expecting integer exponent(s), got %s' % n)
+            result = f.rep.nth(*N)
         else:  # pragma: no cover
             raise OperationNotSupported(f, 'nth')
 
@@ -4257,7 +4273,7 @@ class Poly(Basic):
         >>> conditions
         [-15*k**2 + 20*k - 5, -8*k**2 - 8*k + 8, 3*k**2 + 8*k - 3]
         >>> reduce_inequalities([c > 0 for c in conditions])
-        (1/3 < k) & (k < -1/2 + sqrt(5)/2)
+        (1/3 < k) & (k < sqrt(5)/2 - 1/2)
 
         References
         ==========
@@ -4665,6 +4681,105 @@ class Poly(Basic):
 class PurePoly(Poly):
     """Class for representing pure polynomials. """
 
+    def __new__(cls, rep, *gens, **args):
+        # A coefficient sequence defines a univariate polynomial without a
+        # named generator. Poly needs one for construction, but PurePoly
+        # discards it once the representation is built.
+        if not gens and isinstance(rep, (list, tuple)):
+            gens = (Dummy('x'),)
+        return super().__new__(cls, rep, *gens, **args)
+
+    @classmethod
+    def new(cls, rep, *gens):
+        """Build a PurePoly without retaining the construction generators."""
+        if not isinstance(rep, DMP):
+            raise PolynomialError(
+                "invalid polynomial representation: %s" % rep)
+        if gens and rep.lev != len(gens) - 1:
+            raise PolynomialError("invalid arguments: %s, %s" % (rep, gens))
+        obj = Basic.__new__(cls)
+        obj.rep = rep
+        return obj
+
+    @property
+    def args(self):
+        # Carry the coefficient domain through Basic reconstruction.
+        return (self.as_poly(),)
+
+    @property
+    def gens(self):
+        """Canonical generator placeholders, distinct from coefficient symbols."""
+        names = {s.name for s in self.free_symbols_in_domain
+                 if isinstance(s, Symbol)}
+        candidates = numbered_symbols('_')
+        return tuple(next(g for g in candidates if g.name not in names)
+                     for _ in range(self.rep.lev + 1))
+
+    @property
+    def bound_symbols(self):
+        return self.gens
+
+    def as_dummy(self):
+        # The generator placeholders are already canonical.
+        return self
+
+    def _eval_subs(self, old, new):
+        # The formal generators are not free variables. Only coefficients
+        # can be substituted.
+        if not (old.free_symbols & self.free_symbols):
+            return self
+        expr = self.as_expr().subs(old, new)
+        try:
+            return PurePoly(expr, *self.gens, domain=self.domain)
+        except (PolynomialError, CoercionFailed, DomainError):
+            return PurePoly(expr, *self.gens)
+
+    def __call__(self, *values):
+        """Instantiate generators simultaneously, retaining unbound ones."""
+        gens = self.gens
+        if len(values) > len(gens):
+            raise ValueError("too many values provided")
+        if not values:
+            return self
+        values = tuple(sympify(v) for v in values)
+        if len(values) == len(gens):
+            if len(gens) == 1:
+                from sympy.polys.rootoftools import ComplexRootOf
+                root = values[0]
+                if (isinstance(root, ComplexRootOf)
+                        and self.domain.characteristic() == 0
+                        and self.degree() >= root.poly.degree()):
+                    # A polynomial divisible by the root's defining
+                    # polynomial vanishes at that root. Avoid expanding
+                    # powers of RootOf just to discover this zero.
+                    try:
+                        if self.rem(PurePoly.new(root.poly.rep)).is_zero:
+                            return S.Zero
+                    except (CoercionFailed, DomainError, UnificationFailed):
+                        # Incompatible coefficient domains: retain the
+                        # ordinary symbolic evaluation.
+                        pass
+            return self.as_expr().xreplace(dict(zip(gens, values)))
+
+        # Use fresh placeholders for unbound generators so that supplied
+        # values can contain canonical generator names without capture.
+        remaining = tuple(Dummy() for _ in gens[len(values):])
+        expr = self.as_expr().xreplace(dict(zip(gens, values + remaining)))
+        try:
+            return PurePoly(expr, *remaining, domain=self.domain)
+        except (PolynomialError, CoercionFailed, DomainError):
+            return PurePoly(expr, *remaining)
+
+    def as_poly(self, *gens, **args):
+        if not gens:
+            gens = self.gens
+        if len(gens) != len(self.gens):
+            raise GeneratorsError("expected %d generators" % len(self.gens))
+        gens = options.Gens.preprocess(gens)
+        if args:
+            return Poly(self.as_expr(*gens), *gens, **args)
+        return Poly.new(self.rep, *gens)
+
     def _hashable_content(self):
         """Allow SymPy to hash Poly instances. """
         return (self.rep,)
@@ -4695,27 +4810,14 @@ class PurePoly(Poly):
 
     @_sympifyit('other', NotImplemented)
     def __eq__(self, other):
-        f, g = self, other
+        return (isinstance(other, PurePoly)
+                and self.rep.eq(other.rep, strict=True))
 
-        if not g.is_Poly:
-            try:
-                g = f.__class__(g, f.gens, domain=f.get_domain())
-            except (PolynomialError, DomainError, CoercionFailed):
-                return False
-
-        if len(f.gens) != len(g.gens):
-            return False
-
-        if f.rep.dom != g.rep.dom:
-            try:
-                dom = f.rep.dom.unify(g.rep.dom, f.gens)
-            except UnificationFailed:
-                return False
-
-            f = f.set_domain(dom)
-            g = g.set_domain(dom)
-
-        return f.rep == g.rep
+    def dummy_eq(self, other, symbol=None):
+        """Compare polynomial coefficients without matching generator names."""
+        if isinstance(other, Poly):
+            return self.rep.eq(other.rep, strict=True)
+        return super().dummy_eq(other, symbol)
 
     def _strict_eq(f, g):
         return isinstance(g, f.__class__) and f.rep.eq(g.rep, strict=True)
@@ -5610,13 +5712,13 @@ def gcdex_steps(
     >>> g = x + 2*y
     >>> for step in gcdex_steps(f, g, gens=x): print(step)
     (0, 1, x + 2*y)
-    (1, -x*y + 4*y**2, 8*y**3 + 1)
+    (1, 4*y**2 - x*y, 8*y**3 + 1)
 
     This example treats the same polynomials as univariate polynomials over `y`
 
     >>> for step in gcdex_steps(f, g, gens=y): print(step)
     (0, 1, x + 2*y)
-    (1, -x**2 + x*y, 1 - x**3)
+    (1, x*y - x**2, 1 - x**3)
 
     See Also
     ========
@@ -6800,7 +6902,7 @@ def to_rational_coeffs(f):
     >>> p = Poly(((x**2-1)*(x-2)).subs({x:x*(1 + sqrt(2))}), x, domain='EX')
     >>> lc, r, _, g = to_rational_coeffs(p)
     >>> lc, r
-    (7 + 5*sqrt(2), 2 - 2*sqrt(2))
+    (5*sqrt(2) + 7, 2 - 2*sqrt(2))
     >>> g
     Poly(x**3 + x**2 - 1/4*x - 1/4, x, domain='QQ')
     >>> r1 = simplify(1/r)
@@ -6909,12 +7011,12 @@ def _torational_factor_list(p, x):
     >>> from sympy import sqrt, expand, Mul
     >>> p = expand(((x**2-1)*(x-2)).subs({x:x*(1 + sqrt(2))}))
     >>> factors = _torational_factor_list(p, x); factors
-    (-2, [(-x*(1 + sqrt(2))/2 + 1, 1), (-x*(1 + sqrt(2)) - 1, 1), (-x*(1 + sqrt(2)) + 1, 1)])
+    (-2, [(1 - x*(sqrt(2) + 1)/2, 1), (-x*(sqrt(2) + 1) - 1, 1), (1 - x*(sqrt(2) + 1), 1)])
     >>> expand(factors[0]*Mul(*[z[0] for z in factors[1]])) == p
     True
     >>> p = expand(((x**2-1)*(x-2)).subs({x:x + sqrt(2)}))
     >>> factors = _torational_factor_list(p, x); factors
-    (1, [(x - 2 + sqrt(2), 1), (x - 1 + sqrt(2), 1), (x + 1 + sqrt(2), 1)])
+    (1, [(x + sqrt(2) - 2, 1), (x + sqrt(2) - 1, 1), (x + sqrt(2) + 1, 1)])
     >>> expand(factors[0]*Mul(*[z[0] for z in factors[1]])) == p
     True
 
@@ -7262,7 +7364,7 @@ def all_roots(f, multiple=True, radicals=True, extension=False):
     >>> from sympy import sqrt, expand
     >>> p = expand((x - sqrt(2))*(x - sqrt(3)))
     >>> print(p)
-    x**2 - sqrt(3)*x - sqrt(2)*x + sqrt(6)
+    x**2 - sqrt(2)*x - sqrt(3)*x + sqrt(6)
     >>> all_roots(p)
     Traceback (most recent call last):
     ...
@@ -7463,7 +7565,7 @@ def real_roots(f, multiple=True, radicals=True, extension=False):
     >>> from sympy import sqrt, expand
     >>> p = expand((x - sqrt(2))*(x - sqrt(3)))
     >>> print(p)
-    x**2 - sqrt(3)*x - sqrt(2)*x + sqrt(6)
+    x**2 - sqrt(2)*x - sqrt(3)*x + sqrt(6)
     >>> real_roots(p)
     Traceback (most recent call last):
     ...
@@ -8131,7 +8233,7 @@ class GroebnerBasis(Basic):
 
         Given a polynomial ``f`` and a set of polynomials ``G = (g_1, ..., g_n)``,
         computes a set of quotients ``q = (q_1, ..., q_n)`` and the remainder ``r``
-        such that ``f = q_1*f_1 + ... + q_n*f_n + r``, where ``r`` vanishes or ``r``
+        such that ``f = q_1*g_1 + ... + q_n*g_n + r``, where ``r`` vanishes or ``r``
         is a completely reduced polynomial with respect to ``G``.
 
         Examples
@@ -8160,6 +8262,7 @@ class GroebnerBasis(Basic):
         ([Poly(2*x, x, y, domain='ZZ'), Poly(1, x, y, domain='ZZ')], Poly(x**2 + y**2 + y, x, y, domain='ZZ'))
 
         """
+        expr = _sympify(expr)
         if isinstance(expr, Poly):
 
             if expr.gens != self._options.gens:

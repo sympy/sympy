@@ -1,5 +1,5 @@
 from __future__ import annotations
-from typing import Callable, TYPE_CHECKING
+from typing import Callable, TYPE_CHECKING, overload, Literal
 from itertools import product
 
 from .sympify import _sympify
@@ -133,8 +133,19 @@ class Pow(Expr):
         else:
             return UndefinedKind
 
+    @overload
+    def __new__(
+        cls, b: Expr | complex, e: Expr | complex, evaluate: Literal[False]
+    ) -> Pow: ...
+    @overload
+    def __new__( # type: ignore[misc]
+        cls, b: Expr | complex, e: Expr | complex, evaluate: bool | None = None
+    ) -> Expr: ...
+
     @cacheit
-    def __new__(cls, b: Expr | complex, e: Expr | complex, evaluate=None) -> Expr: # type: ignore
+    def __new__( # type: ignore[misc]
+        cls, b: Expr | complex, e: Expr | complex, evaluate: bool | None = None
+    ) -> Expr:
         if evaluate is None:
             evaluate = global_parameters.evaluate
 
@@ -795,14 +806,7 @@ class Pow(Expr):
                 return result
 
     def as_base_exp(self):
-        """Return base and exp of self.
-
-        Explanation
-        ===========
-
-        If base a Rational less than 1, then return 1/Rational, -exp.
-        If this extra processing is not needed, the base and exp
-        properties will give the raw arguments.
+        """Return a tuple of the arguments of self.
 
         Examples
         ========
@@ -810,17 +814,14 @@ class Pow(Expr):
         >>> from sympy import Pow, S
         >>> p = Pow(S.Half, 2, evaluate=False)
         >>> p.as_base_exp()
-        (2, -2)
+        (1/2, 2)
         >>> p.args
         (1/2, 2)
         >>> p.base, p.exp
         (1/2, 2)
 
         """
-        b, e = self.args
-        if b.is_Rational and b.p == 1 and b.q != 1:
-            return Integer(b.q), -e
-        return b, e
+        return self.args
 
     def _eval_adjoint(self):
         from sympy.functions.elementary.complexes import adjoint
@@ -916,7 +917,9 @@ class Pow(Expr):
             nc = [Mul(*nc)]
 
         # sift the commutative bases
-        other, maybe_real = sift(cargs, lambda x: x.is_extended_real is False,
+        other, maybe_real = sift(cargs,
+            lambda x: x.is_extended_real is False and
+                x.is_polar is not True,
             binary=True)
         def pred(x):
             if x is S.ImaginaryUnit:
@@ -1284,7 +1287,13 @@ class Pow(Expr):
                 # when the operation is not allowed
                 return False
 
-        if self.base.is_zero or _is_one(self.base):
+        if self.base.is_zero:
+            if self.exp.is_extended_negative:
+                return False
+            if self.exp.is_extended_nonnegative:
+                return True
+            return None
+        if _is_one(self.base):
             return True
         elif self.base is S.Exp1:
             s = self.func(*self.args)
@@ -1299,6 +1308,12 @@ class Pow(Expr):
             else:
                 return s.is_algebraic
         elif self.exp.is_rational:
+            if self.base.is_infinite:
+                if self.exp.is_positive:
+                    return False
+                if self.exp.is_nonpositive:
+                    return True
+                return None
             if self.base.is_algebraic is False:
                 return self.exp.is_zero
             if self.base.is_zero is False:
@@ -1739,9 +1754,9 @@ class Pow(Expr):
 
         >>> from sympy import sqrt
         >>> sqrt(4 + 4*sqrt(2)).as_content_primitive()
-        (2, sqrt(1 + sqrt(2)))
+        (2, sqrt(sqrt(2) + 1))
         >>> sqrt(3 + 3*sqrt(2)).as_content_primitive()
-        (1, sqrt(3)*sqrt(1 + sqrt(2)))
+        (1, sqrt(3)*sqrt(sqrt(2) + 1))
 
         >>> from sympy import expand_power_base, powsimp, Mul
         >>> from sympy.abc import x, y

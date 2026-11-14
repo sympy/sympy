@@ -8,6 +8,7 @@
 #
 from __future__ import annotations
 from functools import update_wrapper as _update_wrapper
+from typing import TYPE_CHECKING
 
 
 from mpmath import (
@@ -23,12 +24,16 @@ from mpmath import (
     make_mpf,
     mp,
     mpc,
-    mpf,
     mpi,
     ninf,
     sqrt,
     workprec,
 )
+
+if TYPE_CHECKING:
+    from mpmath.ctx_mp_python import _mpf as mpf
+else:
+    from mpmath import mpf
 
 NoConvergence = mp.NoConvergence
 
@@ -92,7 +97,6 @@ from mpmath.libmp import (
     normalize,
     phi_fixed,
     prec_to_dps,
-    repr_dps,
     round_nearest,
     sqrtrem,
     to_float,
@@ -108,6 +112,16 @@ except ImportError:
 
 from mpmath.libmp.libintmath import giant_steps
 from mpmath.matrices.matrices import _matrix
+
+
+def repr_dps(n: int) -> int:
+    # This is how mpmath's repr_dps was implemented in mpmath < 1.5
+    # Keep a stable version here that is not affected by the mpmath version.
+    dps = prec_to_dps(n)
+    if dps == 15:
+        return 17
+    return dps + 3
+
 
 __all__ = [
     "MPContext",

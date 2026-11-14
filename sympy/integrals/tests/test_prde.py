@@ -10,6 +10,8 @@ from sympy.integrals.prde import (prde_normal_denom, prde_special_denom,
 
 from sympy.polys.polymatrix import PolyMatrix as Matrix
 
+from sympy.testing.pytest import raises
+
 from sympy.core.numbers import Rational
 from sympy.core.singleton import S
 from sympy.core.symbol import symbols
@@ -66,6 +68,14 @@ def test_prde_special_denom():
     assert prde_special_denom(Poly(t + 1, t), Poly(t**2, t), Poly(t**3, t), G, DE) == \
         (Poly(t + 1, t), Poly(0, t, domain='ZZ[x]'), [(Poly(t + x, t), Poly(x*t, t)), (Poly(2*t, t, x),
         Poly(x**2, t, x))], Poly(1, t))
+
+    # Hypertangent case with a nontrivial special denominator (parametric
+    # version of the corresponding test in test_rde.py)
+    DE = DifferentialExtension(extension={'D': [Poly(1, x), Poly(t**2 + 1, t)]})
+    assert prde_special_denom(Poly(t, t), Poly(t, t), Poly(1, t),
+        [(Poly(-2*t**2 + t, t), Poly(t**2 + 1, t))], DE) == \
+        (Poly(t, t), Poly(-2*t**2 + t, t),
+        [(Poly(-2*t**2 + t, t), Poly(1, t))], Poly(t**2 + 1, t))
 
 
 def test_prde_linear_constraints():
@@ -268,6 +278,34 @@ def test_is_log_deriv_k_t_radical():
         ([(t0, 2), (x, 1)], x*t0**2, 2, 3)
 
 
+def test_structure_theorem_guards():
+    # A tower with an unlabeled top monomial (len(exts) < len(D)) is not
+    # supported by the structure theorems.  When every primitive monomial
+    # in it is a logarithm, it is reported as a nonelementary tower.
+    DE = DifferentialExtension(extension={'D': [Poly(1, x), Poly(1/x, t1),
+        Poly(t2, t2)], 'exts': [None, 'log'], 'extargs': [None, x]})
+    for func in (is_deriv_k, is_log_deriv_k_t_radical):
+        try:
+            func(Poly(t2, t2), Poly(1, t2), DE)
+        except NotImplementedError as e:
+            assert "Nonelementary extensions" in str(e)
+        else:
+            raise AssertionError("NotImplementedError was not raised")
+
+    # A primitive monomial that is not a logarithm (here an unlabeled
+    # arctangent-like monomial) needs the real version of the structure
+    # theorems instead.
+    DE = DifferentialExtension(extension={'D': [Poly(1, x), Poly(1/x, t1),
+        Poly(1/(x**2 + 1), t2)], 'exts': [None, 'log'], 'extargs': [None, x]})
+    for func in (is_deriv_k, is_log_deriv_k_t_radical):
+        try:
+            func(Poly(t2, t2), Poly(1, t2), DE)
+        except NotImplementedError as e:
+            assert "hypertangent" in str(e)
+        else:
+            raise AssertionError("NotImplementedError was not raised")
+
+
 def test_is_deriv_k():
     DE = DifferentialExtension(extension={'D': [Poly(1, x), Poly(1/x, t1), Poly(1/(x + 1), t2)],
         'exts': [None, 'log', 'log'], 'extargs': [None, x, x + 1]})
@@ -330,3 +368,32 @@ def test_parametric_log_deriv():
     assert parametric_log_deriv_heu(Poly(-2, x), Poly(5, x), Poly(2, x),
     Poly(3, x), DE) ==\
         (5, -3, Poly(1, x))
+
+    # f == w == 0: any n works, with m == 0 and v == 1 (the rational
+    # shortcut used to raise ZeroDivisionError on this input, which
+    # arises from the degenerate hypertangent case in test_special_denom())
+    assert parametric_log_deriv_heu(Poly(0, x), Poly(1, x), Poly(0, x),
+    Poly(1, x), DE) == \
+        (1, 0, Poly(1, x))
+
+    # Cases where z is in k, so the residue equations are vacuous.  These
+    # used to return None ("proven no solution"), which was wrong: at the
+    # base level they are completely decidable from the polynomial parts.
+    # f == -1 + 1/(x + 1), w == 1
+    assert parametric_log_deriv_heu(Poly(-x, x), Poly(x + 1, x), Poly(1, x),
+    Poly(1, x), DE) == \
+        (1, -1, x + 1)
+    # f == 1/x, w == 1 (arises while integrating log(log(x + exp(x))))
+    assert parametric_log_deriv_heu(Poly(1, x), Poly(x, x), Poly(1, x),
+    Poly(1, x), DE) == \
+        (1, 0, x)
+    # f == 1/(x**2 + 1), w == 1: proven no solution (complex residues)
+    assert parametric_log_deriv_heu(Poly(1, x), Poly(x**2 + 1, x), Poly(1, x),
+    Poly(1, x), DE) is None
+
+    # In a non-base field the z in k case cannot be decided by the
+    # heuristic ("failed" in the book), so it must raise
+    # NotImplementedError, not return None.
+    DE = DifferentialExtension(extension={'D': [Poly(1, x), Poly(1/x, t)]})
+    raises(NotImplementedError, lambda: parametric_log_deriv_heu(
+        Poly(1, t), Poly(t + 1, t), Poly(1, t), Poly(1, t), DE))

@@ -20,7 +20,7 @@ from sympy.functions.combinatorial.numbers import bernoulli, harmonic
 from sympy.functions.elementary.complexes import Abs, sign
 from sympy.functions.elementary.exponential import exp, log
 from sympy.functions.elementary.hyperbolic import asinh,acosh,atanh
-from sympy.functions.elementary.integers import floor
+from sympy.functions.elementary.integers import floor, frac
 from sympy.functions.elementary.miscellaneous import (Max, Min, sqrt)
 from sympy.functions.elementary.piecewise import Piecewise
 from sympy.functions.elementary.trigonometric import (asin, acos, atan, cos, cot, sin,
@@ -230,6 +230,17 @@ def test_number_precision():
     prec = 1e-49  # mpmath precision is around 50 decimal places
     assert -prec < f(0) - sin02 < prec
 
+def test_mpmath_log2_precedence():
+    expressions = (log2(x), log2(x)**2, 1/log2(x), x/log2(x))
+    functions = [lambdify(x, expr, 'mpmath') for expr in expressions]
+    with mpmath.workdps(50):
+        for value in (mpmath.mpf(8), mpmath.mpf('0.25'), mpmath.mpc(2, 3)):
+            logarithm = mpmath.log(value, 2)
+            expected = (logarithm, logarithm**2, 1/logarithm, value/logarithm)
+            for function, result in zip(functions, expected):
+                assert mpmath.almosteq(function(value), result)
+
+
 @conserve_mpmath_dps
 def test_mpmath_precision():
     mpmath.mp.dps = 100
@@ -304,6 +315,14 @@ def test_numexpr_printer():
         args = arg_tuple[:nargs]
         f = lambdify(args, ssym(*args), modules='numexpr')
         assert f(*(1, )*nargs) is not None
+
+
+def test_cmath_float():
+    f = lambdify(x, x + 2.5, 'cmath')
+    assert f(1) == 3.5
+    assert f(1j) == 2.5 + 1j
+    g = lambdify(x, sqrt(x + 2.5), 'cmath')
+    assert g(-6.5) == 2j
 
 
 def test_cmath_sqrt():
@@ -722,13 +741,13 @@ def test_numpy_old_matrix():
         assert isinstance(f(1, 2, 3), numpy.matrix)
 
 
-def test_scipy_sparse_matrix():
+def test_scipy_sparse_array():
     if not scipy:
         skip("scipy not installed.")
     A = SparseMatrix([[x, 0], [0, y]])
     f = lambdify((x, y), A, modules="scipy")
     B = f(1, 2)
-    assert isinstance(B, scipy.sparse.coo_matrix)
+    assert isinstance(B, scipy.sparse.coo_array)
 
 
 
@@ -2331,3 +2350,8 @@ def test_issue_28803_jointrandonsymbol_recursion():
 
     # Should not raise RecursionError
     lambdify(a, z * a)
+
+
+def test_frac_math():
+    f = lambdify(x, [2*frac(x), -frac(x), frac(x)**2], 'math')
+    assert f(1.75) == [1.5, -0.75, 0.5625]

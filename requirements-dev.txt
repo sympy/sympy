@@ -8,7 +8,5 @@ pytest-split
 pytest-doctestplus
 pytest-run-parallel
 hypothesis
-flake8
-flake8-comprehensions
 ruff
 slotscheck

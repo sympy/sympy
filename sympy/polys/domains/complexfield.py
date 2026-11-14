@@ -9,12 +9,13 @@ from sympy.polys.domains.characteristiczero import CharacteristicZero
 from sympy.polys.domains.field import Field
 from sympy.polys.domains.gaussiandomains import QQ_I
 from sympy.polys.domains.simpledomain import SimpleDomain
+from sympy.polys.domains.conjugatedomain import ConjugateDomain
 from sympy.polys.polyerrors import DomainError, CoercionFailed
 from sympy.utilities import public
 
 
 @public
-class ComplexField(Field, CharacteristicZero, SimpleDomain):
+class ComplexField(Field, CharacteristicZero, SimpleDomain, ConjugateDomain):
     """Complex numbers up to the given precision. """
 
     rep = 'CC'
@@ -194,5 +195,10 @@ class ComplexField(Field, CharacteristicZero, SimpleDomain):
         slightly inaccurate due to floating point rounding error.
         """
         return a ** 0.5
+
+    def conjugate(self, a):
+        """Returns the complex conjugate of ``a``. """
+        return self.dtype(a.real, -a.imag)
+
 
 CC = ComplexField()

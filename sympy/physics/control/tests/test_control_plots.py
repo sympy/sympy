@@ -331,3 +331,23 @@ def test_nichols_expr():
     assert p3 == 180*arg(-w3*I/(w3**3*I + 1))/pi
     assert m4 == 20*log(10/(w4**2*Abs(w4)))/log(10)
     assert p4 == 180*arg(I/w4**3)/pi
+
+
+def test_issue_29530():
+    if not numpy:
+        skip("NumPy is required for this test")
+
+    num = numpy.array([
+        3.48799648e-03+0.00000000e+00j,  3.94714557e+00-3.27602726e+02j,
+       -1.26370216e+07-8.62936992e+05j, -2.85822924e+10+2.68995812e+11j,
+        3.49538064e+15+3.72323599e+14j,  2.17691576e+18-2.86131354e+19j,
+       -1.47410187e+23-3.86894682e+21j,  1.76676107e+25+4.66860012e+26j,
+        8.63781663e+29-1.02652261e+29j, -1.90093975e+32-8.42072953e+32j,
+       -3.29925768e+35+1.22585000e+35j])
+    den = numpy.array([-9.19119158e+36-5.78774471e+36j])
+    num_poly = numpy.sum([num[i] * s**(int(len(num) - 1 - i)) for i in range(len(num))])
+    den_poly = numpy.sum([den[i] * s**(int(len(den) - 1 - i)) for i in range(len(den))])
+    sym_tf = TransferFunction(num_poly, den_poly, s)
+    freq, mag = bode_magnitude_numerical_data(
+        sym_tf, freq_unit ='Hz', initial_exp=0, final_exp=5)
+    assert not numpy.isnan(mag).any()

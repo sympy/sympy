@@ -1,4 +1,5 @@
 from __future__ import annotations
+from sympy import S
 from sympy.core.numbers import (Float, pi)
 from sympy.core.symbol import symbols
 from sympy.functions.elementary.trigonometric import (cos, sin)
@@ -18,6 +19,7 @@ def test_dyadic():
     assert d1 != 0
     assert d1 * 2 == 2 * A.x | A.x
     assert d1 / 2. == 0.5 * d1
+    assert d1 / 3 == (S.One / 3) * d1
     assert d1 & (0 * d1) == 0
     assert d1 & d2 == 0
     assert d1 & A.x == A.x

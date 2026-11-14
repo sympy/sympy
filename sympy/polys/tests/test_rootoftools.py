@@ -26,8 +26,14 @@ from sympy.solvers.solvers import solve
 
 from sympy.testing.pytest import raises, slow
 from sympy.core.expr import unchanged
+from sympy.core.sympify import sympify
+from sympy.printing.repr import srepr
 
 from sympy.abc import a, b, x, y, z, r
+
+
+def test_CRootOf_srepr_roundtrip():
+    assert sympify(srepr(CRootOf(x**3 - x + 1, 0))) == CRootOf(x**3 - x + 1, 0)
 
 
 def test_CRootOf___new__():
@@ -338,6 +344,7 @@ def test_CRootOf_real_roots():
     ]
 
 
+@slow
 def test_CRootOf_all_roots():
     assert Poly(x**5 + x + 1).all_roots() == [
         rootof(x**3 - x**2 + 1, 0),

@@ -24,8 +24,9 @@ from sympy.utilities.iterables import sift, ibin
 from sympy.utilities.misc import filldedent
 
 if TYPE_CHECKING:
-    from collections.abc import Iterable
-    from sympy.core.basic import _SupportsItems
+    from collections.abc import Iterable, Mapping
+    from sympy.core.basic import _SupportsItems, Tbasic
+    from sympy.core.expr import Expr, Texpr
 
 
 def as_Boolean(e):
@@ -98,6 +99,16 @@ class Boolean(Basic):
 
         def subs(self, arg1: _SupportsItems[Basic | complex, Basic | complex] | Basic | complex, # type: ignore
                  arg2: Basic | complex | None = None, **kwargs: Any) -> Basic:
+            ...
+
+        @overload
+        def xreplace(self, rule: Mapping[Texpr, Expr]) -> Boolean: ...
+        @overload
+        def xreplace(self, rule: Mapping[Tbasic, Boolean]) -> Boolean: ...
+        @overload
+        def xreplace(self, rule: Mapping[Tbasic, Basic]) -> Basic: ...
+
+        def xreplace(self, rule: Mapping[Tbasic, Basic]) -> Basic:
             ...
 
         def simplify(self, **kwargs) -> Boolean:
@@ -670,7 +681,7 @@ class And(LatticeOp, BooleanFunction):
 
     def _eval_simplify(self, **kwargs):
         from sympy.core.relational import Equality, Relational
-        from sympy.solvers.solveset import linear_coeffs
+        from sympy.core.exprtools import linear_coeffs
         # standard simplify
         rv = super()._eval_simplify(**kwargs)
         if not isinstance(rv, And):
@@ -3533,13 +3544,13 @@ def simplify_univariate(expr):
             if b is S.Infinity:
                 c = true
             else:
-                if c.subs(x, b) == True:
+                if expr.subs(x, b) == True:
                     c = (x <= b)
                 else:
                     c = (x < b)
         else:
-            incl_a = (c.subs(x, a) == True)
-            incl_b = (c.subs(x, b) == True)
+            incl_a = (expr.subs(x, a) == True)
+            incl_b = (expr.subs(x, b) == True)
             if incl_a and incl_b:
                 if b.is_infinite:
                     c = (x >= a)

@@ -109,7 +109,7 @@ See <https://docs.sympy.org/dev/install.html> for more information.
 ## Contributing
 
 We welcome contributions from anyone, even if you are new to open
-source. Please read our [Introduction to Contributing](https://docs.sympy.org/dev/contributing/introduction-to-contributing.html)
+source. Please read our [Contributor Guide](https://docs.sympy.org/dev/contributing/index.html)
 page and the [SymPy Documentation Style Guide](https://docs.sympy.org/dev/documentation-style-guide.html). If you
 are new and looking for some way to contribute, a good place to start is
 to look at the issues tagged [Easy to Fix](https://github.com/sympy/sympy/issues?q=is%3Aopen+is%3Aissue+label%3A%22Easy+to+Fix%22).
@@ -120,15 +120,13 @@ by its terms. See [CODE\_OF\_CONDUCT.md](CODE_OF_CONDUCT.md).
 
 ## Tests
 
-To execute all tests, run:
+To run the tests and doctests, run:
 
-    $./setup.py test
+    $ python bin/test
+    $ python bin/doctest
 
-in the current directory.
-
-For the more fine-grained running of tests or doctests, use `bin/test`
-or respectively `bin/doctest`. The master branch is automatically tested
-by GitHub Actions.
+in the repository root. Both commands accept paths to run specific tests
+or doctests. The master branch is automatically tested by GitHub Actions.
 
 To test pull requests, use
 [sympy-bot](https://github.com/sympy/sympy-bot).
@@ -155,7 +153,12 @@ java -jar /usr/local/lib/antlr-4.11.1-complete.jar "$@"
 
 After making changes to `sympy/parsing/latex/LaTeX.g4`, run:
 
-    $ ./setup.py antlr
+    $ python -m sympy.parsing.latex._build_latex_antlr
+
+To regenerate the Autolev parser and lexer after changing
+`sympy/parsing/autolev/Autolev.g4`, run:
+
+    $ python -m sympy.parsing.autolev._build_autolev_antlr
 
 ## Clean
 
@@ -211,10 +214,7 @@ place. Ondřej Čertík is still active in the community but is too busy
 with work and family to play a lead development role.
 
 Since then, a lot more people have joined the development and some
-people have also left. You can see the full list in doc/src/aboutus.rst,
-or online at:
-
-<https://docs.sympy.org/dev/aboutus.html#sympy-development-team>
+people have also left. You can see the full list in [AUTHORS](https://github.com/sympy/sympy/blob/master/AUTHORS).
 
 The git history goes back to 2007 when development moved from svn to hg.
 To see the history before that point, look at

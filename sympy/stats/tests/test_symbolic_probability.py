@@ -9,6 +9,7 @@ from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.functions.elementary.trigonometric import sin
 from sympy.integrals.integrals import Integral
 from sympy.core.expr import unchanged
+from sympy.core.singleton import S
 from sympy.stats import (Normal, Poisson, variance, Covariance, Variance,
                          Probability, Expectation, Moment, CentralMoment)
 from sympy.stats.rv import probability, expectation
@@ -35,6 +36,7 @@ def test_literal_probability():
     assert Expectation(2*X + 3*Y + z*X*Y).expand() == 2*Expectation(X) + 3*Expectation(Y) + z*Expectation(X*Y)
     assert Expectation(2*X + 3*Y + z*X*Y).args == (2*X + 3*Y + z*X*Y,)
     assert Expectation(sin(X)) == Expectation(sin(X)).expand()
+    assert Expectation(sin(X)).doit() == exp(-S(9)/2)*sin(2)
     assert Expectation(2*x*sin(X)*Y + y*X**2 + z*X*Y).expand() == 2*x*Expectation(sin(X)*Y) \
                             + y*Expectation(X**2) + z*Expectation(X*Y)
     assert Expectation(X + Y).expand() ==  Expectation(X) + Expectation(Y)

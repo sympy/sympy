@@ -5,7 +5,7 @@ from sympy.core import Basic, sympify, S
 from sympy.core.mul import mul, Mul
 from sympy.core.numbers import Number, Integer
 from sympy.core.symbol import Dummy
-from sympy.functions import adjoint
+from sympy.functions import adjoint, conjugate
 from sympy.strategies import (rm_id, unpack, typed, flatten, exhaust,
         do_one, new)
 from sympy.matrices.exceptions import NonInvertibleMatrixError
@@ -140,6 +140,39 @@ class MatMul(MatrixExpr, Mul):
         expanded = super(MatMul, self).expand(**kwargs)
         return self._evaluate(expanded)
 
+    def _eval_power(self, exp):
+        # Match Mul._eval_power by separating only the commutative scalar
+        # coefficient and keeping the ordered matrix product intact.
+        coeff, matrices = self.as_coeff_matrices()
+        # The S.One guard avoids recursing on coefficient-free MatMul
+        # expressions such as (A*B)**2.
+        if coeff is S.One:
+            return MatPow(self, exp)
+        # Follow Mul._eval_power's design: split only concrete integer powers
+        # and exact rational/float powers. Symbolic exponents, including
+        # symbolic integers, remain unchanged.
+        if not (exp.is_Rational or exp.is_Float):
+            return MatPow(self, exp)
+
+        if exp.is_Integer:
+            # Preserve matrix singularity for definite zero coefficients:
+            # (0*A)**-1 should raise rather than extract zoo*A**-1.
+            # Maybe-zero symbolic coefficients follow SymPy's generic
+            # convention of being treated as nonzero.
+            if coeff.is_zero:
+                if exp.is_negative:
+                    return MatPow(self, exp)
+                return ZeroMatrix(*self.shape)
+        elif not coeff.is_positive:
+            # For noninteger numeric powers, only extract a positive scalar
+            # coefficient to avoid branch cut issues.
+            return MatPow(self, exp)
+
+        # Only extraction cases remain: integer powers, and noninteger
+        # rational/float powers with positive scalar coefficient.
+        matrix_part = matrices[0] if len(matrices) == 1 else MatMul(*matrices)
+        return coeff**exp * MatPow(matrix_part, exp).doit(deep=False)
+
     def _eval_transpose(self):
         """Transposition of matrix multiplication.
 
@@ -166,6 +199,9 @@ class MatMul(MatrixExpr, Mul):
     def _eval_adjoint(self):
         return MatMul(*[adjoint(arg) for arg in self.args[::-1]]).doit()
 
+    def _eval_conjugate(self):
+        return MatMul(*[conjugate(arg) for arg in self.args]).doit()
+
     def _eval_trace(self):
         factor, mmul = self.as_coeff_mmul()
         if factor != 1:
@@ -186,6 +222,19 @@ class MatMul(MatrixExpr, Mul):
                 )
             ).doit()
         return Inverse(self)
+
+    def _eval_derivative(self, x):
+        from .matadd import MatAdd
+        args = self.args
+        terms = []
+        for i, arg in enumerate(args):
+            d_arg = arg.diff(x)
+            term = MatMul(*(args[:i] + (d_arg,) + args[i + 1:])).doit()
+            if not term.is_ZeroMatrix:
+                terms.append(term)
+        if not terms:
+            return ZeroMatrix(*self.shape)
+        return MatAdd(*terms).doit()
 
     def doit(self, **hints):
         deep = hints.get('deep', True)
@@ -209,31 +258,6 @@ class MatMul(MatrixExpr, Mul):
                 raise ValueError('repeated commutative arguments: %s' %
                                  [ci for ci in coeff_c if list(self.args).count(ci) > 1])
         return [coeff_c, coeff_nc]
-
-    def _eval_derivative_matrix_lines(self, x):
-        from .transpose import Transpose
-        with_x_ind = [i for i, arg in enumerate(self.args) if arg.has(x)]
-        lines = []
-        for ind in with_x_ind:
-            left_args = self.args[:ind]
-            right_args = self.args[ind+1:]
-
-            if right_args:
-                right_mat = MatMul.fromiter(right_args)
-            else:
-                right_mat = Identity(self.shape[1])
-            if left_args:
-                left_rev = MatMul.fromiter([Transpose(i).doit() if i.is_Matrix else i for i in reversed(left_args)])
-            else:
-                left_rev = Identity(self.shape[0])
-
-            d = self.args[ind]._eval_derivative_matrix_lines(x)
-            for i in d:
-                i.append_first(left_rev)
-                i.append_second(right_mat)
-                lines.append(i)
-
-        return lines
 
 mul.register_handlerclass((Mul, MatMul), MatMul)
 
