@@ -94,6 +94,26 @@ def test_integers():
     assert Z.as_relational(x) == And(Eq(floor(x), x), -oo < x, x < oo)
 
 
+def test_imageset_affine_symbolic_membership():
+    k = Dummy('k', integer=True)
+    n = Symbol('n', integer=True)
+    a = ImageSet(Lambda(k, 2*pi*k + pi), S.Integers)
+
+    assert a.contains(pi*(2*n + 1)) is S.true
+    assert a.contains(pi*(4*n + 3)) is S.true
+    assert a.contains(pi*(2*n + 2)) is S.false
+    assert a.contains(pi*(n + 1)) == Contains(pi*(n + 1), a)
+
+    # Also handle integer progressions without transcendental factors.
+    b = ImageSet(Lambda(k, 2*k), S.Integers)
+    assert b.contains(2*n) is S.true
+    assert b.contains(2*n + 1) is S.false
+
+    # Do not change the handling of nonlinear images.
+    squares = ImageSet(Lambda(k, k**2), S.Integers)
+    assert squares.contains(4) is S.true
+
+
 def test_ImageSet():
     raises(ValueError, lambda: ImageSet(x, S.Integers))
     assert ImageSet(Lambda(x, 1), S.Integers) == FiniteSet(1)
