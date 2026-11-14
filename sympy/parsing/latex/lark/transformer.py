@@ -336,12 +336,19 @@ class TransformToSymPyExpr(Transformer):
     def factors_after_argument(self, tokens):
         return _FactorsAfterArgument(tokens[0], tokens[1])
 
-    def _apply(self, function, argument):
-        # ``function`` applied to the argument of a function command, and multiplied by
-        # the factors that follow it when the argument is read as the first factor alone
+    def _apply(self, function, argument, exponent=None):
+        # ``function`` applied to the argument of a function command and raised to
+        # ``exponent``, as in ``\sin^2 x``, and multiplied by the factors that follow
+        # the argument when it is read as the first factor alone, as in ``\sin x y``.
+        # All the functions read from commands are applied here, so that each of them
+        # is called with ``evaluate``.
         if isinstance(argument, _FactorsAfterArgument):
-            return self._multiply(function(argument.argument), argument.factors)
-        return function(argument)
+            return self._multiply(self._apply(function, argument.argument, exponent),
+                                  argument.factors)
+        result = function(argument, evaluate=self.evaluate)
+        if exponent is not None:
+            result = sympy.Pow(result, exponent, evaluate=self.evaluate)
+        return result
 
     def superscript(self, tokens):
         def isprime(x):
@@ -722,26 +729,15 @@ class TransformToSymPyExpr(Transformer):
             return self._trigonometric_functions[command]
         return self._exponential_functions[command]
 
-    def _call(self, function):
-        """``function`` as a callable passing ``evaluate`` to it, unless it is
-        one of the matrix functions of the transformer, which do not take it."""
-        if function in (self._determinant, self._trace, self._adjugate):
-            return function
-        return lambda *args: function(*args, evaluate=self.evaluate)
-
-    def _power(self, function, exponent):
-        return lambda argument: sympy.Pow(self._call(function)(argument), exponent,
-                                          evaluate=self.evaluate)
-
     def trigonometric_function(self, tokens):
-        return self._apply(self._call(self._function(tokens[0])), tokens[1])
+        return self._apply(self._function(tokens[0]), tokens[1])
 
     def trigonometric_function_power(self, tokens):
         function = self._function(tokens[0])
         exponent = tokens[2]
         if exponent == -1 and function in self._inverse_trigonometric_functions:
-            return self._apply(self._call(self._inverse_trigonometric_functions[function]), tokens[-1])
-        return self._apply(self._power(function, exponent), tokens[-1])
+            return self._apply(self._inverse_trigonometric_functions[function], tokens[-1])
+        return self._apply(function, tokens[-1], exponent)
 
     _named_functions = {
         "exp": sympy.exp, "ln": sympy.log, "log": sympy.log, "min": sympy.Min, "max": sympy.Max,
@@ -771,16 +767,16 @@ class TransformToSymPyExpr(Transformer):
         name = re.match(r"\\operatorname\s*\{\s*([a-zA-Z]+)\s*\}", tokens[0]).group(1)
         function = self._named_function(name)
         if len(tokens) == 2:
-            return self._apply(self._call(function), tokens[1])
+            return self._apply(function, tokens[1])
         if tokens[1].type == "CARET":
             exponent = tokens[2]
             if exponent == -1 and function in self._inverse_trigonometric_functions:
-                return self._apply(self._call(self._inverse_trigonometric_functions[function]), tokens[3])
-            return self._apply(self._power(function, exponent), tokens[3])
+                return self._apply(self._inverse_trigonometric_functions[function], tokens[3])
+            return self._apply(function, tokens[3], exponent)
         if not (function in (sympy.Min, sympy.Max) or "\\operatorname{%s}" % name in self.locals
                 or isinstance(function, sympy.core.function.UndefinedFunction)):
             raise LaTeXParsingError("\\operatorname{%s} takes one argument." % name)
-        return self._call(function)(*tokens[2:-1:2])
+        return function(*tokens[2:-1:2], evaluate=self.evaluate)
 
     def abs(self, tokens):
         return sympy.Abs(tokens[1], evaluate=self.evaluate)
@@ -806,16 +802,17 @@ class TransformToSymPyExpr(Transformer):
             return sympy.root(tokens[2], tokens[1], evaluate=self.evaluate)
 
     def exponential(self, tokens):
-        return self._apply(self._call(self._function(tokens[0])), tokens[1])
+        return self._apply(self._function(tokens[0]), tokens[1])
 
     def function_power(self, tokens):
-        return self._apply(self._power(self._function(tokens[0]), tokens[2]), tokens[3])
+        return self._apply(self._function(tokens[0]), tokens[3], tokens[2])
 
     def log(self, tokens):
-        function = self._call(self._function(tokens[0]))
+        function = self._function(tokens[0])
         # only \log takes a base
         if "_" in tokens:
-            return self._apply(lambda argument: function(argument, tokens[2]), tokens[3])
+            return self._apply(lambda argument, evaluate: function(argument, tokens[2], evaluate=evaluate),
+                               tokens[3])
         return self._apply(function, tokens[1])
 
     def _extract_differential_symbol(self, s: str):
@@ -843,7 +840,7 @@ class TransformToSymPyExpr(Transformer):
         if len(tokens) == 3: # | A |
             return self.matrix(tokens).det()
 
-    def _determinant(self, matrix):
+    def _determinant(self, matrix, evaluate=True):
         if not self._obj_is_sympy_Matrix(matrix):
             raise LaTeXParsingError("Cannot take determinant of non-matrix.")
 
@@ -852,7 +849,7 @@ class TransformToSymPyExpr(Transformer):
     def trace(self, tokens):
         return self._apply(self._trace, tokens[1])
 
-    def _trace(self, matrix):
+    def _trace(self, matrix, evaluate=True):
         if not self._obj_is_sympy_Matrix(matrix):
             raise LaTeXParsingError("Cannot take trace of non-matrix.")
 
@@ -861,7 +858,7 @@ class TransformToSymPyExpr(Transformer):
     def adjugate(self, tokens):
         return self._apply(self._adjugate, tokens[1])
 
-    def _adjugate(self, matrix):
+    def _adjugate(self, matrix, evaluate=True):
         if not self._obj_is_sympy_Matrix(matrix):
             raise LaTeXParsingError("Cannot take adjugate of non-matrix.")
 
