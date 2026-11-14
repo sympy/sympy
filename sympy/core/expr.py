@@ -1,8 +1,9 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, overload, Literal
-from collections.abc import Iterable, Mapping
+from collections import defaultdict
+from collections.abc import Iterable
 from functools import reduce
+from typing import TYPE_CHECKING, overload
 import re
 
 from .sympify import sympify, _sympify
@@ -22,15 +23,14 @@ from sympy.external.mpmath import prec_to_dps, giant_steps as _giant_steps, mpf_
 
 
 if TYPE_CHECKING:
-    from typing import Any, Hashable, TypeVar, SupportsIndex
+    from collections.abc import Mapping
+    from sympy.core.numbers import Zero, Number
+    from typing import Any, Hashable, TypeVar, Literal, SupportsIndex
     from typing_extensions import Self
-    from .numbers import Number, Zero
     from sympy.core.basic import Tbasic
     from sympy.logic.boolalg import Boolean
 
     Texpr = TypeVar("Texpr", bound='Expr')
-
-from collections import defaultdict
 
 
 def _corem(eq, c):  # helper for extract_additively
@@ -1674,14 +1674,14 @@ class Expr(Basic, EvalfMixin):
 
             while co and returnMe != S.Zero:
                 r, nc = co.pop()
-                ii = find(nc, nx, first=right)
+                index: int | None = find(nc, nx, first=right)
 
-                if ii is not None:
+                if index is not None:
                     if returnMe is None:
                         if right:
-                            returnMe = Mul(*nc[ii + len(nx):None])
+                            returnMe = Mul(*nc[index + len(nx):None])
                         else:
-                            returnMe = Mul(*r, *nc[0:ii])
+                            returnMe = Mul(*r, *nc[0:index])
                     else:
                         returnMe = S.Zero
 
@@ -3964,7 +3964,7 @@ class Expr(Basic, EvalfMixin):
         #     575000000000000.0
         # which rounds to integer
         #    5750000000000000
-        # And now we can round to the desired digt, e.g. at
+        # And now we can round to the desired digit, e.g. at
         # the second from the left and we get
         #    5800000000000000
         # and rescaling that gives
