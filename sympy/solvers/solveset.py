@@ -1004,19 +1004,37 @@ def _solve_trig2(f, symbol, domain):
 
     if g.has(x) or h.has(x):
         return ConditionSet(symbol, Eq(f_original, 0), domain)
-    solns = solveset(g, y, S.Reals) - solveset(h, y, S.Reals)
+
+    # The tangent substitution is valid over the complex numbers as well, so
+    # both the polynomial and the inversion have to be done in the domain that
+    # was asked for.  Solving in ``S.Reals`` regardless of the domain made
+    # this helper report an empty solution set for equations whose solutions
+    # are not real (see issue #17358).  For real domains ``y`` is still solved
+    # over ``S.Reals`` because ``y = tan(x)`` is not confined to a real subset
+    # of the domain; the final intersection with ``domain`` is done below.
+    if domain.is_subset(S.Reals):
+        inverter = invert_real
+        y_domain = S.Reals
+    else:
+        inverter = invert_complex
+        y_domain = S.Complexes
+
+    solns = solveset(g, y, y_domain) - solveset(h, y, y_domain)
 
     if isinstance(solns, FiniteSet):
-        result = Union(*[invert_real(tan(symbol/mu), s, symbol)[1]
+        result = Union(*[inverter(tan(symbol/mu), s, symbol)[1]
                        for s in solns])
-        dsol = invert_real(tan(symbol/mu), oo, symbol)[1]
-        if degree(h) > degree(g):                   # If degree(denom)>degree(num) then there
-            result = Union(result, dsol)            # would be another sol at Lim(denom-->oo)
+        if domain.is_subset(S.Reals):
+            dsol = invert_real(tan(symbol/mu), oo, symbol)[1]
+            if degree(h) > degree(g):               # If degree(denom)>degree(num) then there
+                result = Union(result, dsol)        # would be another sol at Lim(denom-->oo)
+        if domain is S.Complexes:
+            return result
         return Intersection(result, domain)
     elif solns is S.EmptySet:
         return S.EmptySet
     else:
-        return ConditionSet(symbol, Eq(f_original, 0), S.Reals)
+        return ConditionSet(symbol, Eq(f_original, 0), domain)
 
 
 def _solve_as_poly(f, symbol, domain=S.Complexes):
