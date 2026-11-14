@@ -1044,80 +1044,58 @@ def dmp_zz_wang(f, u, K, mod=None, seed=None):
         else:
             mod = 1
 
-    history, configs, A, r = set(), [], [K.zero]*u, None
-
-    try:
-        cs, s, E = dmp_zz_wang_test_points(f, T, ct, A, u, K)
-
-        _, H = dup_zz_factor_sqf(s, K)
-
-        r = len(H)
-
-        if r == 1:
-            return [f]
-
-        configs = [(s, cs, E, H, A)]
-    except EvaluationFailed:
-        pass
-
+    history, configs, A = set(), [], [K.zero]*u
     eez_num_configs = query('EEZ_NUMBER_OF_CONFIGS')
     eez_num_tries = query('EEZ_NUMBER_OF_TRIES')
     eez_mod_step = query('EEZ_MODULUS_STEP')
-
-    while len(configs) < eez_num_configs:
-        for _ in range(eez_num_tries):
-            A = [ K(randint(-mod, mod)) for _ in range(u) ]
-
-            if tuple(A) not in history:
-                history.add(tuple(A))
-            else:
-                continue
-
-            try:
-                cs, s, E = dmp_zz_wang_test_points(f, T, ct, A, u, K)
-            except EvaluationFailed:
-                continue
-
-            _, H = dup_zz_factor_sqf(s, K)
-
-            rr = len(H)
-
-            if r is not None:
-                if rr != r:  # pragma: no cover
-                    if rr < r:
-                        configs, r = [], rr
-                    else:
-                        continue
-            else:
-                r = rr
-
-            if r == 1:
-                return [f]
-
-            configs.append((s, cs, E, H, A))
-
-            if len(configs) == eez_num_configs:
-                break
-        else:
-            mod += eez_mod_step
-
-    s_norm, s_arg = None, 0
-
-    for i, (s, _, _, _, _) in enumerate(configs):
-        _s_norm = dup_max_norm(s, K)
-
-        if s_norm is not None:
-            if _s_norm < s_norm:
-                s_norm = _s_norm
-                s_arg = i
-        else:
-            s_norm = _s_norm
-
-    _, cs, E, H, A = configs[s_arg]
+    target_configs = eez_num_configs if isinstance(seed, (list, tuple)) else max(eez_num_configs, 5)
+    first = True
     orig_f = f
 
+    while True:
+        while len(configs) < target_configs:
+            for _ in range(eez_num_tries):
+                if not first:
+                    A = [ K(randint(-mod, mod)) for _ in range(u) ]
+                first = False
+
+                if tuple(A) in history:
+                    continue
+                history.add(tuple(A))
+
+                try:
+                    cs, s, E = dmp_zz_wang_test_points(f, T, ct, A, u, K)
+                except EvaluationFailed:
+                    continue
+
+                _, H = dup_zz_factor_sqf(s, K)
+
+                if len(H) == 1:
+                    return [f]
+
+                configs.append((s, cs, E, H, A))
+
+                if len(configs) == target_configs:
+                    break
+            else:
+                mod += eez_mod_step
+
+        configs.sort(key=lambda config: (len(config[3]), dup_max_norm(config[0], K)))
+
+        for _, cs, E, H, A in configs:
+            try:
+                f, H, LC = dmp_zz_wang_lead_coeffs(f, T, cs, E, H, A, u, K)
+                break
+            except ExtraneousFactors:
+                continue
+        else:
+            configs = []
+            mod += eez_mod_step
+            continue
+
+        break
+
     try:
-        f, H, LC = dmp_zz_wang_lead_coeffs(f, T, cs, E, H, A, u, K)
         factors = dmp_zz_wang_hensel_lifting(f, H, LC, A, p, u, K)
     except ExtraneousFactors:  # pragma: no cover
         if query('EEZ_RESTART_IF_NEEDED'):
