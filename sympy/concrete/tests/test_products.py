@@ -204,6 +204,29 @@ def test_simple_products():
     assert product(-1, (n, 1, oo)).func is Product
 
 
+def test_polynomial_product_without_roots():
+    polynomial = k**5 - k + 1
+    unevaluated = Product(polynomial, (k, 1, n))
+    assert product(polynomial, (k, 1, n)) == unevaluated
+    assert unevaluated.doit() == unevaluated
+
+
+def test_polynomial_product_partial_roots():
+    remainder = k**5 - k + 1
+    polynomial = ((k + 2)**2*remainder).expand()
+    expected = rf(a + 2, n - a + 1)**2*Product(remainder, (k, a, n))
+    assert product(polynomial, (k, a, n)) == expected
+
+
+def test_polynomial_product_partial_roots_leading_coefficient():
+    remainder = k**5 - k + 1
+    polynomial = (2*(k + 2)**2*remainder).expand()
+    result = product(polynomial, (k, 1, n))
+    assert result == 2**n*rf(3, n)**2*Product(remainder, (k, 1, n))
+    for upper in (0, 1, 3):
+        assert result.subs(n, upper).doit() == product(polynomial, (k, 1, upper))
+
+
 def test_multiple_products():
     assert product(x, (n, 1, k), (k, 1, m)) == x**(m**2/2 + m/2)
     assert product(f(n), (

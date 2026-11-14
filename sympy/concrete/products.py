@@ -323,15 +323,17 @@ class Product(ExprWithIntLimits):
             A = B = Q = S.One
 
             all_roots = roots(poly)
+            if not all_roots:
+                return None
 
             M = 0
             for r, m in all_roots.items():
                 M += m
                 A *= RisingFactorial(a - r, n - a + 1)**m
-                Q *= (n - r)**m
+                Q *= (k - r)**m
 
             if M < poly.degree():
-                arg = quo(poly, Q.as_poly(k))
+                arg = quo(poly.monic(), Q.as_poly(k)).as_expr()
                 B = self.func(arg, (k, a, n)).doit()
 
             return poly.LC()**(n - a + 1) * A * B
