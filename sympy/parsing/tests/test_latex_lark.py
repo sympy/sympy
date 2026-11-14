@@ -7,7 +7,7 @@ from sympy.external import import_module
 from sympy.concrete.products import Product
 from sympy.concrete.summations import Sum
 from sympy.core.function import Derivative, Function
-from sympy.core.numbers import E, oo, Rational
+from sympy.core.numbers import E, Integer, oo, Rational
 from sympy.core.power import Pow
 from sympy.core.relational import GreaterThan, LessThan, StrictGreaterThan, StrictLessThan, Unequality
 from sympy.core.symbol import Symbol
@@ -841,8 +841,8 @@ UNEVALUATED_EXPRESSION_PAIRS = [
     (r"2 > 1", Gt(2, 1, evaluate=False)),
     (r"2 \geq 1", Ge(2, 1, evaluate=False)),
     (r"1 < 2 < 3", And(Lt(1, 2, evaluate=False), Lt(2, 3, evaluate=False), evaluate=False)),
-    (r"1 \in \mathbb{R}", Contains(1, S.Reals, evaluate=False)),
-    (r"1 \notin \mathbb{R}", Not(Contains(1, S.Reals, evaluate=False), evaluate=False)),
+    (r"1 \in \mathbb{R}", Contains(Integer(1), S.Reals, evaluate=False)),
+    (r"1 \notin \mathbb{R}", Not(Contains(Integer(1), S.Reals, evaluate=False), evaluate=False)),
     (r"\sin 0", sin(0, evaluate=False)),
     (r"\sin^2 0", _Pow(sin(0, evaluate=False), 2)),
     (r"\sin^{-1} 0", asin(0, evaluate=False)),
