@@ -12,7 +12,7 @@ from __future__ import annotations
 
 from sympy.core.basic import Basic
 from sympy.core.cache import cacheit
-from sympy.core.function import Function, Lambda, PoleError
+from sympy.core.function import Lambda, PoleError
 from sympy.core.numbers import (I, nan, oo)
 from sympy.core.relational import (Eq, Ne)
 from sympy.core.singleton import S
@@ -155,43 +155,6 @@ class ContinuousDistribution(Distribution):
         return self.pdf(*args)
 
 
-class ContinuousCDF(Function):
-    """A continuous CDF retaining its formula and support during substitution.
-
-    Arguments are the evaluation point, a univariate Lambda for the CDF
-    inside the support, and the support interval. Use ``rewrite(Piecewise)``
-    to expose the boundary cases explicitly.
-    """
-
-    nargs = 3
-    is_commutative = True
-
-    @classmethod
-    def eval(cls, x, formula, support):
-        if not isinstance(formula, Lambda) or len(formula.variables) != 1:
-            raise TypeError("CDF formula must be a univariate Lambda")
-        if not isinstance(support, Interval):
-            raise TypeError("CDF support must be an Interval")
-        canonical_formula = formula.as_dummy()
-        if formula != canonical_formula:
-            return cls(x, canonical_formula, support)
-        if x is S.NaN:
-            return S.NaN
-        if (x <= support.inf) is S.true:
-            return S.Zero
-        if (x >= support.sup) is S.true:
-            return S.One
-        if support.contains(x) is S.true:
-            return formula(x)
-
-    def _eval_rewrite_as_Piecewise(self, x, formula, support, **kwargs):
-        return Piecewise((0, x <= support.inf),
-                         (formula(x), x < support.sup), (1, True))
-
-    def _eval_derivative(self, symbol):
-        return self.rewrite(Piecewise).diff(symbol)
-
-
 class SingleContinuousDistribution(ContinuousDistribution, NamedArgsMixin):
     """ Continuous distribution of a single variable.
 
@@ -233,15 +196,9 @@ class SingleContinuousDistribution(ContinuousDistribution, NamedArgsMixin):
         # CDF is integral of PDF from left bound to z
         pdf = self.pdf(x)
         cdf = integrate(pdf.doit(), (x, left_bound, z), **kwargs)
-        cdf = self._cdf_with_bounds(cdf, z)
+        # CDF Ensure that CDF left of left_bound is zero
+        cdf = Piecewise((cdf, z >= left_bound), (0, True))
         return Lambda(z, cdf)
-
-    def _cdf_with_bounds(self, cdf, x):
-        left, right = self.set.inf, self.set.sup
-        if right is S.Infinity:
-            return Piecewise((cdf, x >= left), (0, True))
-        z = Dummy('z', real=True)
-        return ContinuousCDF(x, Lambda(z, cdf.xreplace({x: z})), self.set)
 
     def _cdf(self, x):
         return None
@@ -249,12 +206,9 @@ class SingleContinuousDistribution(ContinuousDistribution, NamedArgsMixin):
     def cdf(self, x, **kwargs):
         """ Cumulative density function """
         if len(kwargs) == 0:
-            z = Dummy('z', real=True)
-            cdf = self._cdf(z)
+            cdf = self._cdf(x)
             if cdf is not None:
-                if isinstance(cdf, Piecewise) or self.set.sup is S.Infinity:
-                    return cdf.xreplace({z: x})
-                return self._cdf_with_bounds(cdf, z).subs(z, x)
+                return cdf
         return self.compute_cdf(**kwargs)(x)
 
     @cacheit

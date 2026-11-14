@@ -21,8 +21,6 @@ from sympy.core.symbol import symbols
 from sympy.functions.elementary.exponential import (exp, log)
 from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.functions.elementary.trigonometric import sin
-from sympy.sets.sets import Interval
-from sympy.stats.crv import ContinuousCDF
 
 from sympy.testing.pytest import SKIP, warns_deprecated_sympy
 
@@ -1094,12 +1092,6 @@ from sympy.stats.crv_types import NormalDistribution
 nd = NormalDistribution(0, 1)
 from sympy.stats.frv_types import DieDistribution
 die = DieDistribution(6)
-
-
-def test_sympy__stats__crv__ContinuousCDF():
-    cdf = ContinuousCDF(x, Lambda(y, y**2), Interval(0, 1))
-    assert isinstance(cdf, ContinuousCDF)
-    assert _test_args(cdf)
 
 
 def test_sympy__stats__crv__ContinuousDomain():

@@ -44,7 +44,7 @@ from sympy.stats import (P, E, where, density, variance, covariance, skewness, k
 
 from sympy.stats.crv_types import NormalDistribution, ExponentialDistribution, ContinuousDistributionHandmade
 from sympy.stats.joint_rv_types import MultivariateLaplaceDistribution, MultivariateNormalDistribution
-from sympy.stats.crv import ContinuousCDF, SingleContinuousPSpace, SingleContinuousDomain
+from sympy.stats.crv import SingleContinuousPSpace, SingleContinuousDomain
 from sympy.stats.compound_rv import CompoundPSpace
 from sympy.stats.symbolic_probability import Probability
 from sympy.testing.pytest import raises, XFAIL, slow, ignore_warnings
@@ -374,8 +374,8 @@ def test_arcsin():
 
     X = Arcsin('x', a, b)
     assert density(X)(x) == 1/(pi*sqrt((-x + b)*(x - a)))
-    assert cdf(X)(x).rewrite(Piecewise) == Piecewise((0, a >= x),
-                            (2*asin(sqrt((-a + x)/(-a + b)))/pi, b > x),
+    assert cdf(X)(x) == Piecewise((0, a > x),
+                            (2*asin(sqrt((-a + x)/(-a + b)))/pi, b >= x),
                             (1, True))
     assert pspace(X).domain.set == Interval(a, b)
 
@@ -483,9 +483,8 @@ def test_BoundedPareto():
     X = BoundedPareto('X', 2, L, H)
     assert X.pspace.domain.set == Interval(L, H)
     assert density(X)(x) == 2*L**2/(x**3*(1 - L**2/H**2))
-    assert cdf(X)(x).rewrite(Piecewise) == Piecewise((0, x <= L),
-        (-H**2*L**2/(x**2*(H**2 - L**2)) + H**2/(H**2 - L**2), x < H),
-        (1, True))
+    assert cdf(X)(x) == Piecewise((-H**2*L**2/(x**2*(H**2 - L**2)) \
+                            + H**2/(H**2 - L**2), L <= x), (0, True))
     assert E(X).simplify() == 2*H*L/(H + L)
     X = BoundedPareto('X', 1, 2, 4)
     assert E(X).simplify() == log(16)
@@ -910,51 +909,6 @@ def test_loglogistic():
     X = LogLogistic('x', 1, 2)
     assert median(X) == FiniteSet(1)
 
-def test_continuous_cdf_support_bounds():
-    for X in (LogitNormal('L', 0, 1), Reciprocal('R', 1, 2),
-              PowerFunction('P', 2, 0, 1), BoundedPareto('B', 2, 1, 2),
-              Arcsin('A', 0, 1), Uniform('U', 0, 1)):
-        left = X.pspace.distribution.set.start
-        right = X.pspace.distribution.set.end
-        F = cdf(X)
-        assert not isinstance(F(x), Piecewise)
-        assert isinstance(F(x).rewrite(Piecewise), Piecewise)
-        assert F(left - 1) == 0
-        assert F(left) == 0
-        assert F(right) == 1
-        assert F(right + 1) == 1
-        assert F(x).subs(x, right + 1) == 1
-        assert F(x) == cdf(X)(x)
-        assert F(x).free_symbols == {x}
-        assert F(x).is_commutative is True
-    assert cdf(LogitNormal('L', 0, 1))(S.Half) == S.Half
-    assert cdf(Reciprocal('R', 1, 2))(sqrt(2)).simplify() == S.Half
-    assert cdf(PowerFunction('P', 2, 0, 1))(S.Half) == Rational(1, 4)
-    F = cdf(PowerFunction('P', 2, 0, 1), evaluate=False)
-    assert F(-1) == 0
-    assert F(2) == 1
-
-
-def test_continuous_cdf_symbolic_evaluation():
-    X = LogitNormal('L', 0, 1)
-    F = cdf(X)(x)
-    assert isinstance(F, ContinuousCDF)
-    assert F.func(*F.args) == F
-    assert F.doit() == F
-    assert F.subs(x, -oo) == 0
-    assert F.subs(x, oo) == 1
-    assert F.subs(x, S.NaN) is S.NaN
-    assert abs(F.evalf(30, subs={x: Rational(1, 4)}) -
-               ((1 + erf(-log(3)/sqrt(2)))/2).evalf(30)) < S('1e-29')
-    assert diff(F, x).subs(x, S.Half) == density(X)(S.Half)
-    assert diff(F, x).subs(x, 2) == 0
-    a, b = symbols('a b', real=True)
-    G = cdf(Uniform('U', a, b))(x)
-    assert G.subs({a: 0, b: 2, x: 1}) == S.Half
-    assert G.subs({a: 0, b: 2, x: 3}) == 1
-    assert lambdify(x, F.rewrite(Piecewise), 'math')(2) == 1
-
-
 def test_logitnormal():
     mu = Symbol('mu', real=True)
     s = Symbol('s', positive=True)
@@ -962,7 +916,7 @@ def test_logitnormal():
     x = Symbol('x')
 
     assert density(X)(x) == sqrt(2)*exp(-(-mu + log(x/(1 - x)))**2/(2*s**2))/(2*sqrt(pi)*s*x*(1 - x))
-    assert cdf(X)(x).rewrite(Piecewise) == Piecewise(
+    assert cdf(X)(x) == Piecewise(
         (S.Zero, x <= 0),
         (erf(sqrt(2)*(-mu + log(x/(1 - x)))/(2*s))/2 + S.Half, x < 1),
         (S.One, True))
@@ -1143,13 +1097,12 @@ def test_PowerFunction():
 
     X = PowerFunction('X', 2, a, b)
     assert density(X)(z) == (-2*a + 2*z)/(-a + b)**2
-    assert cdf(X)(z).rewrite(Piecewise) == Piecewise((0, z <= a),
-        (a**2/(a**2 - 2*a*b + b**2) - 2*a*z/(a**2 - 2*a*b + b**2)
-         + z**2/(a**2 - 2*a*b + b**2), z < b), (1, True))
+    assert cdf(X)(z) == Piecewise((a**2/(a**2 - 2*a*b + b**2) -
+        2*a*z/(a**2 - 2*a*b + b**2) + z**2/(a**2 - 2*a*b + b**2), a <= z), (0, True))
 
     X = PowerFunction('X', 2, 0, 1)
     assert density(X)(z) == 2*z
-    assert cdf(X)(z).rewrite(Piecewise) == Piecewise((0, z <= 0), (z**2, z < 1), (1, True))
+    assert cdf(X)(z) == Piecewise((z**2, z >= 0), (0,True))
     assert E(X) == Rational(2,3)
     assert P(X < 0) == 0
     assert P(X < 1) == 1
@@ -1190,8 +1143,7 @@ def test_reciprocal():
 
     X = Reciprocal('x', a, b)
     assert density(X)(x) == 1/(x*(-log(a) + log(b)))
-    assert cdf(X)(x).rewrite(Piecewise) == Piecewise((0, x <= a),
-        (log(a)/(log(a) - log(b)) - log(x)/(log(a) - log(b)), x < b), (1, True))
+    assert cdf(X)(x) == Piecewise((log(a)/(log(a) - log(b)) - log(x)/(log(a) - log(b)), a <= x), (0, True))
     X = Reciprocal('x', 5, 30)
 
     assert E(X) == 25/(log(30) - log(5))
