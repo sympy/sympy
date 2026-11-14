@@ -684,7 +684,10 @@ class LatexPrinter(Printer):
                 if expr.base.is_Symbol:
                     base = self.parenthesize_super(base)
                 if expr.base.is_Function:
-                    return self._print(expr.base, exp="%s/%s" % (p, q))
+                    try:
+                        return self._print(expr.base, exp="%s/%s" % (p, q))
+                    except TypeError:
+                        pass
                 return r"%s^{%s/%s}" % (base, p, q)
             elif expr.exp.is_negative and expr.base.is_commutative:
                 # special case for 1^(-x), issue 9216
@@ -714,7 +717,10 @@ class LatexPrinter(Printer):
                 return r"\frac{1}{%s}" % tex
 
         if expr.base.is_Function:
-            return self._print(expr.base, exp=self._print(expr.exp))
+            try:
+                return self._print(expr.base, exp=self._print(expr.exp))
+            except TypeError:
+                pass
         tex = r"%s^{%s}"
         return self._helper_print_standard_power(expr, tex)
 

@@ -831,6 +831,15 @@ def test_latex_functions():
     # even when it is referred to without an argument
     assert latex(fjlkd) == r'\operatorname{fjlkd}'
 
+    # Issue #30844: functions that do not accept an exp parameter fall back to standard power formatting
+    assert latex(Lambda(x, x**2)**2) == r"\left(\left( x \mapsto x^{2} \right)\right)^{2}"
+
+    class CustomFunc(Function):
+        def _latex(self, printer):
+            return "F"
+
+    assert latex(CustomFunc(x)**2) == r"F^{2}"
+
 
 # test that notation passes to subclasses of the same name only
 def test_function_subclass_different_name():
