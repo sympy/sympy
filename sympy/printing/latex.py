@@ -684,7 +684,10 @@ class LatexPrinter(Printer):
                 if expr.base.is_Symbol:
                     base = self.parenthesize_super(base)
                 if expr.base.is_Function:
-                    return self._print(expr.base, exp="%s/%s" % (p, q))
+                    try:
+                        return self._print(expr.base, exp="%s/%s" % (p, q))
+                    except TypeError:
+                        pass
                 return r"%s^{%s/%s}" % (base, p, q)
             elif expr.exp.is_negative and expr.base.is_commutative:
                 # special case for 1^(-x), issue 9216
@@ -714,7 +717,10 @@ class LatexPrinter(Printer):
                 return r"\frac{1}{%s}" % tex
 
         if expr.base.is_Function:
-            return self._print(expr.base, exp=self._print(expr.exp))
+            try:
+                return self._print(expr.base, exp=self._print(expr.exp))
+            except TypeError:
+                pass
         tex = r"%s^{%s}"
         return self._helper_print_standard_power(expr, tex)
 
@@ -1743,7 +1749,7 @@ class LatexPrinter(Printer):
         return "%s %s %s" % (self._print(expr.lhs),
                              charmap[expr.rel_op], self._print(expr.rhs))
 
-    def _print_Piecewise(self, expr):
+    def _print_Piecewise(self, expr, exp=None):
         ecpairs = [r"%s & \text{for}\: %s" % (self._print(e), self._print(c))
                    for e, c in expr.args[:-1]]
         if expr.args[-1].cond == true:
@@ -1753,8 +1759,10 @@ class LatexPrinter(Printer):
             ecpairs.append(r"%s & \text{for}\: %s" %
                            (self._print(expr.args[-1].expr),
                             self._print(expr.args[-1].cond)))
-        tex = r"\begin{cases} %s \end{cases}"
-        return tex % r" \\".join(ecpairs)
+        tex = r"\begin{cases} %s \end{cases}" % r" \\".join(ecpairs)
+        if exp is not None:
+            tex = r"\left(%s\right)^{%s}" % (tex, exp)
+        return tex
 
     def _print_matrix_contents(self, expr):
         lines = []
@@ -2656,38 +2664,41 @@ class LatexPrinter(Printer):
             tex = r"%s^{%s}" % (tex, exp)
         return tex
 
-    def _print_UnifiedTransform(self, expr, s, inverse=False):
-        return r"\mathcal{{{}}}{}_{{{}}}\left[{}\right]\left({}\right)".format(s, '^{-1}' if inverse else '', self._print(expr.args[1]), self._print(expr.args[0]), self._print(expr.args[2]))
+    def _print_UnifiedTransform(self, expr, s, inverse=False, exp=None):
+        tex = r"\mathcal{{{}}}{}_{{{}}}\left[{}\right]\left({}\right)".format(s, '^{-1}' if inverse else '', self._print(expr.args[1]), self._print(expr.args[0]), self._print(expr.args[2]))
+        if exp is not None:
+            tex = r"\left(%s\right)^{%s}" % (tex, exp)
+        return tex
 
-    def _print_MellinTransform(self, expr):
-        return self._print_UnifiedTransform(expr, 'M')
+    def _print_MellinTransform(self, expr, exp=None):
+        return self._print_UnifiedTransform(expr, 'M', exp=exp)
 
-    def _print_InverseMellinTransform(self, expr):
-        return self._print_UnifiedTransform(expr, 'M', True)
+    def _print_InverseMellinTransform(self, expr, exp=None):
+        return self._print_UnifiedTransform(expr, 'M', True, exp=exp)
 
-    def _print_LaplaceTransform(self, expr):
-        return self._print_UnifiedTransform(expr, 'L')
+    def _print_LaplaceTransform(self, expr, exp=None):
+        return self._print_UnifiedTransform(expr, 'L', exp=exp)
 
-    def _print_InverseLaplaceTransform(self, expr):
-        return self._print_UnifiedTransform(expr, 'L', True)
+    def _print_InverseLaplaceTransform(self, expr, exp=None):
+        return self._print_UnifiedTransform(expr, 'L', True, exp=exp)
 
-    def _print_FourierTransform(self, expr):
-        return self._print_UnifiedTransform(expr, 'F')
+    def _print_FourierTransform(self, expr, exp=None):
+        return self._print_UnifiedTransform(expr, 'F', exp=exp)
 
-    def _print_InverseFourierTransform(self, expr):
-        return self._print_UnifiedTransform(expr, 'F', True)
+    def _print_InverseFourierTransform(self, expr, exp=None):
+        return self._print_UnifiedTransform(expr, 'F', True, exp=exp)
 
-    def _print_SineTransform(self, expr):
-        return self._print_UnifiedTransform(expr, 'SIN')
+    def _print_SineTransform(self, expr, exp=None):
+        return self._print_UnifiedTransform(expr, 'SIN', exp=exp)
 
-    def _print_InverseSineTransform(self, expr):
-        return self._print_UnifiedTransform(expr, 'SIN', True)
+    def _print_InverseSineTransform(self, expr, exp=None):
+        return self._print_UnifiedTransform(expr, 'SIN', True, exp=exp)
 
-    def _print_CosineTransform(self, expr):
-        return self._print_UnifiedTransform(expr, 'COS')
+    def _print_CosineTransform(self, expr, exp=None):
+        return self._print_UnifiedTransform(expr, 'COS', exp=exp)
 
-    def _print_InverseCosineTransform(self, expr):
-        return self._print_UnifiedTransform(expr, 'COS', True)
+    def _print_InverseCosineTransform(self, expr, exp=None):
+        return self._print_UnifiedTransform(expr, 'COS', True, exp=exp)
 
     def _print_DMP(self, p):
         try:
