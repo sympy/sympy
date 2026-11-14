@@ -1,6 +1,5 @@
 from __future__ import annotations
 import re
-from copy import copy
 
 import sympy
 from sympy.external import import_module
@@ -70,33 +69,29 @@ class TransformToSymPyExpr(Transformer):
         <https://lark-parser.readthedocs.io/en/latest/visitors.html#lark.visitors.Transformer>`_.
 
         Note that the option must be set to ``True`` for the default parser to work.
+
+    evaluate : bool, optional
+        Whether the expressions that are built are evaluated. See
+        :py:func:`~.parse_latex_lark`.
+
+    locals : dict, optional
+        The commands to read as the objects given here. See
+        :py:func:`~.parse_latex_lark`.
     """
 
     SYMBOL = sympy.Symbol
     DIGIT = sympy.core.numbers.Integer
 
-    locals: dict = {}
-
-    evaluate = True
-
-    def with_evaluate(self, evaluate):
-        """Returns a copy of the transformer that passes ``evaluate`` to the
-        expressions it builds. See :py:func:`~.parse_latex_lark`."""
-        transformer = copy(self)
-        transformer.evaluate = evaluate
-        return transformer
-
-    def with_locals(self, locals):
-        """Returns a copy of the transformer that reads the commands in ``locals``
-        as the objects given there. See :py:func:`~.parse_latex_lark`."""
+    def __init__(self, visit_tokens=True, evaluate=True, locals=None):
+        super().__init__(visit_tokens)
+        locals = dict(locals or {})
         for command in locals:
             if not (command in self._constants or command in self._trigonometric_functions
                     or command in self._exponential_functions
                     or re.fullmatch(r"\\operatorname\{[a-zA-Z]+\}", command)):
                 raise ValueError("The reading of %s cannot be overridden." % command)
-        transformer = copy(self)
-        transformer.locals = dict(locals)
-        return transformer
+        self.evaluate = evaluate
+        self.locals = locals
 
     _constants = {"\\pi": sympy.pi, "\\mathrm{e}": sympy.E, "\\infty": sympy.oo,
                   "\\imaginaryunit": sympy.I}

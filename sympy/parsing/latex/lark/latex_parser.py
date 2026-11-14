@@ -39,10 +39,12 @@ class LarkLaTeXParser:
         it uses the default grammar, which is in ``grammar/latex.lark``, relative to
         the ``sympy/parsing/latex/lark/`` directory.
 
-    transformer : str, optional
+    transformer : type, optional
 
-        The name of the Transformer class to use. If set to ``None``, it uses the
-        default transformer class, which is :py:func:`TransformToSymPyExpr`.
+        The Transformer class to use. If set to ``None``, it uses the default
+        transformer class, which is :py:func:`TransformToSymPyExpr`. A new
+        instance is made for each parse, with the ``evaluate`` and ``locals``
+        keyword arguments given to the parse.
 
     """
     def __init__(self, print_debug_output=False, transform=True, grammar_file=None, transformer=None):
@@ -74,9 +76,9 @@ class LarkLaTeXParser:
         self.transform_expr = transform
 
         if transformer is None:
-            self.transformer = TransformToSymPyExpr()
+            self.transformer = TransformToSymPyExpr
         else:
-            self.transformer = transformer()
+            self.transformer = transformer
 
     def doparse(self, s: str, locals=None, evaluate=True):
         if self.print_debug_output:
@@ -131,9 +133,7 @@ class LarkLaTeXParser:
         return self.parser.parse(s)
 
     def _transform(self, parse_tree, locals, evaluate):
-        transformer = self.transformer.with_evaluate(evaluate)
-        if locals:
-            transformer = transformer.with_locals(locals)
+        transformer = self.transformer(evaluate=evaluate, locals=locals)
 
         try:
             return transformer.transform(parse_tree)
