@@ -952,15 +952,15 @@ def test_2nd_power_series_ordinary():
 
     eq = f(x).diff(x, 2) + x*(f(x).diff(x)) + f(x)
     assert classify_ode(eq) == ('2nd_power_series_ordinary',)
-    sol = Eq(f(x), C2*(x**4/8 - x**2/2 + 1) + C1*x*(-x**2/3 + 1) + O(x**6))
+    sol = Eq(f(x), C2*(x**4/8 - x**2/2 + 1) + C1*x*(x**4/15 - x**2/3 + 1) + O(x**6))
     assert dsolve(eq) == sol
     # FIXME: checkodesol fails for this solution...
     # assert checkodesol(eq, sol) == (True, 0)
 
     eq = f(x).diff(x, 2) + f(x).diff(x) - x*f(x)
     assert classify_ode(eq) == ('2nd_power_series_ordinary',)
-    sol = Eq(f(x), C2*(-x**4/24 + x**3/6 + 1)
-            + C1*x*(x**3/24 + x**2/6 - x/2 + 1) + O(x**6))
+    sol = Eq(f(x), C2*(x**5/120 - x**4/24 + x**3/6 + 1)
+            + C1*x*(-x**4/30 + x**3/24 + x**2/6 - x/2 + 1) + O(x**6))
     assert dsolve(eq) == sol
     # FIXME: checkodesol fails for this solution...
     # assert checkodesol(eq, sol) == (True, 0)
