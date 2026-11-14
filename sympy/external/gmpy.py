@@ -194,11 +194,7 @@ if _SYMPY_GROUND_TYPES not in ('flint', 'gmpy', 'python'):
 #
 LONG_MAX = (1 << (8*sizeof(c_long) - 1)) - 1
 
-#
-# Type checkers are confused by what SYMPY_INTS is. There may be a better type
-# hint for this like Type[Integral] or something.
-#
-SYMPY_INTS: tuple[type, ...]
+SYMPY_INTS: tuple[type[int] | type[MPZ], ...]
 GROUND_TYPES: str
 
 

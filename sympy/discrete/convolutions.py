@@ -111,7 +111,8 @@ def convolution(a, b, cycle=0, dps=None, prime=None, dyadic=None, subset=None):
                 (ia, ma), (ib, mb) = da, db
                 den = ma*mb
                 ls = convolution_int(ia, ib)
-                ls.extend([0]*(len(a) + len(b) - 1 - len(ls)))
+                if a and b:
+                    ls.extend([0]*(len(a) + len(b) - 1 - len(ls)))
                 if den != 1:
                     ls = [Rational(i, den) for i in ls]
         if ls is None:
@@ -158,6 +159,9 @@ def convolution_fft(a, b, dps=None):
     .. [2] https://en.wikipedia.org/wiki/Discrete_Fourier_transform_(general%29
 
     """
+
+    if not a or not b:
+        return []
 
     a, b = a[:], b[:]
     n = m = len(a) + len(b) - 1 # convolution size
@@ -214,6 +218,8 @@ def convolution_ntt(a, b, prime):
 
     """
 
+    if not a or not b:
+        return []
     a, b, p = a[:], b[:], as_int(prime)
     n = m = len(a) + len(b) - 1 # convolution size
 
@@ -568,6 +574,9 @@ def convolution_int(a, b):
            University of California, Berkeley, California (2004).
            https://people.eecs.berkeley.edu/~fateman/papers/polysbyGMP.pdf
     """
+    if not a or not b:
+        return []
+
     # An upper bound on the largest coefficient in p(x)q(x) is given by (1 + min(dp, dq))N(p)N(q)
     # where dp = deg(p), dq = deg(q), N(f) denotes the coefficient of largest modulus in f [1]
     B = max(abs(c) for c in a)*max(abs(c) for c in b)*(1 + min(len(a) - 1, len(b) - 1))

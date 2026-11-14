@@ -211,6 +211,8 @@ mul
 ---
 .. module:: sympy.core.mul
 
+.. py:class:: MonomKey
+
 .. autoclass:: Mul
    :members:
 

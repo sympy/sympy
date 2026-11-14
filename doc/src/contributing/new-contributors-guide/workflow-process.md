@@ -3,7 +3,7 @@
 
 
 ```{note}
-This guide is intended for people are already familiar with contributing to
+This guide is intended for people who are already familiar with contributing to
 open source projects on GitHub. If you are new to GitHub, read the
 [](./dev-setup.md) guide first.
 ```
@@ -149,7 +149,7 @@ add-simplify-tests
 ```
 
 Ultimately the branch name is not that important, so don't spend too much time
-thinking about it. It's only function is to distinguish the code for this
+thinking about it. Its only function is to distinguish the code for this
 contribution from other contributions you may make.
 
 ## Modify code
@@ -229,7 +229,7 @@ One important thing that should be included in every docstring is examples.
 Examples are also called *doctests*, because they are tested with the
 `bin/doctest` script to ensure they output is correct.
 
-Doctests need to include imports for every function used define any symbols
+Doctests need to include imports for every function used and define any symbols
 that are used. Users should be able to copy and paste the example inputs into
 their own Python session and get the exact same outputs. `from sympy import *`
 is not allowed in doctests, as this would make it unclear which functions come
@@ -548,7 +548,7 @@ for instructions on each section. This includes adding cross-references to any r
   - "Modified solvers\.py"
   - "Fix issue #12345"
 
-  These do indicate to reviewers what is actually changed in the pull request,
+  These do not indicate to reviewers what is actually changed in the pull request,
   and hence, they are likely to just pass it over instead of reviewing it.
   An example of a better pull request title is
 
@@ -703,7 +703,7 @@ Sometimes a commit will be made with an incorrect name or email address or an au
 Joe Bloggs <joe@bloggs.com> joeb <wrong@email.com>
 ```
 
-A common reason that this can happen is if making commits with the GitHub web UI which always recorded the name as github username and the email as something like `1785690389+joeb@users.noreply.github.com`. In this case a line will need to be added to .mailmap like:
+A common reason that this can happen is if making commits with the GitHub web UI which always records the name as github username and the email as something like `1785690389+joeb@users.noreply.github.com`. In this case a line will need to be added to .mailmap like:
 
 ```
 Joe Bloggs <joe@bloggs.com> joeb <1785690389+joeb@users.noreply.github.com>

@@ -860,25 +860,15 @@ def test_big_expr():
         r'\left[J_z^{2},A + B\right] \left\{E^{-2},D^{\dagger} C^{\dagger}\right\} \left[J^2,J_z\right]'
     sT(e2, "Mul(Commutator(Pow(JzOp(Symbol('J')), Integer(2)),Add(Operator(Symbol('A')), Operator(Symbol('B')))), AntiCommutator(Pow(Operator(Symbol('E')), Integer(-2)),Mul(Dagger(Operator(Symbol('D'))), Dagger(Operator(Symbol('C'))))), Commutator(J2Op(Symbol('J')),JzOp(Symbol('J'))))")
     assert str(e3) == \
-        "Wigner3j(1, 2, 3, 4, 5, 6)*[Dagger(B) + A,C + D]x(-J2 + Jz)*|1,0><1,1|*(|1,0,j1=1,j2=1> + |1,1,j1=1,j2=1>)x|1,-1,j1=1,j2=1>"
+        'Wigner3j(1, 2, 3, 4, 5, 6)*[Dagger(B) + A,C + D]x(Jz - J2)*|1,0><1,1|*(|1,0,j1=1,j2=1> + |1,1,j1=1,j2=1>)x|1,-1,j1=1,j2=1>'
     ascii_str = \
-"""\
-          [ +          ]  /   2     \\                                                                 \n\
-/1  3  5\\*[B  + A,C + D]x |- J  + J |*|1,0><1,1|*(|1,0,j1=1,j2=1> + |1,1,j1=1,j2=1>)x |1,-1,j1=1,j2=1>\n\
-|       |                 \\        z/                                                                 \n\
-\\2  4  6/                                                                                             \
-"""
+'          [ +          ]  /      2\\                                                                 \n/1  3  5\\*[B  + A,C + D]x |J  - J |*|1,0><1,1|*(|1,0,j1=1,j2=1> + |1,1,j1=1,j2=1>)x |1,-1,j1=1,j2=1>\n|       |                 \\ z     /                                                                 \n\\2  4  6/                                                                                           '
     ucode_str = \
-"""\
-          ⎡ †          ⎤  ⎛   2     ⎞                                                                 \n\
-⎛1  3  5⎞⋅⎣B  + A,C + D⎦⨂ ⎜- J  + J ⎟⋅❘1,0⟩⟨1,1❘⋅(❘1,0,j₁=1,j₂=1⟩ + ❘1,1,j₁=1,j₂=1⟩)⨂ ❘1,-1,j₁=1,j₂=1⟩\n\
-⎜       ⎟                 ⎝        z⎠                                                                 \n\
-⎝2  4  6⎠                                                                                             \
-"""
+'          ⎡ †          ⎤  ⎛      2⎞                                                                 \n⎛1  3  5⎞⋅⎣B  + A,C + D⎦⨂ ⎜J  - J ⎟⋅❘1,0⟩⟨1,1❘⋅(❘1,0,j₁=1,j₂=1⟩ + ❘1,1,j₁=1,j₂=1⟩)⨂ ❘1,-1,j₁=1,j₂=1⟩\n⎜       ⎟                 ⎝ z     ⎠                                                                 \n⎝2  4  6⎠                                                                                           '
     assert pretty(e3) == ascii_str
     assert upretty(e3) == ucode_str
     assert latex(e3) == \
-        r'\left(\begin{array}{ccc} 1 & 3 & 5 \\ 2 & 4 & 6 \end{array}\right) {\left[B^{\dagger} + A,C + D\right]}\otimes \left({- J^2 + J_z}\right) {\left|1,0\right\rangle }{\left\langle 1,1\right|} \left({{\left|1,0,j_{1}=1,j_{2}=1\right\rangle } + {\left|1,1,j_{1}=1,j_{2}=1\right\rangle }}\right)\otimes {{\left|1,-1,j_{1}=1,j_{2}=1\right\rangle }}'
+        '\\left(\\begin{array}{ccc} 1 & 3 & 5 \\\\ 2 & 4 & 6 \\end{array}\\right) {\\left[B^{\\dagger} + A,C + D\\right]}\\otimes \\left({J_z - J^2}\\right) {\\left|1,0\\right\\rangle }{\\left\\langle 1,1\\right|} \\left({{\\left|1,0,j_{1}=1,j_{2}=1\\right\\rangle } + {\\left|1,1,j_{1}=1,j_{2}=1\\right\\rangle }}\\right)\\otimes {{\\left|1,-1,j_{1}=1,j_{2}=1\\right\\rangle }}'
     sT(e3, "Mul(Wigner3j(Integer(1), Integer(2), Integer(3), Integer(4), Integer(5), Integer(6)), TensorProduct(Commutator(Add(Dagger(Operator(Symbol('B'))), Operator(Symbol('A'))),Add(Operator(Symbol('C')), Operator(Symbol('D')))), Add(Mul(Integer(-1), J2Op(Symbol('J'))), JzOp(Symbol('J')))), OuterProduct(JzKet(Integer(1),Integer(0)),JzBra(Integer(1),Integer(1))), TensorProduct(Add(JzKetCoupled(Integer(1),Integer(0),Tuple(Integer(1), Integer(1)),Tuple(Tuple(Integer(1), Integer(2), Integer(1)))), JzKetCoupled(Integer(1),Integer(1),Tuple(Integer(1), Integer(1)),Tuple(Tuple(Integer(1), Integer(2), Integer(1))))), JzKetCoupled(Integer(1),Integer(-1),Tuple(Integer(1), Integer(1)),Tuple(Tuple(Integer(1), Integer(2), Integer(1))))))")
     assert str(e4) == '(C(1)*C(2)+F**2)*(L2(Interval(0, oo))+H)'
     ascii_str = \

@@ -1886,6 +1886,19 @@ def test_Mod():
             reps = [(x, _x), (y, _y)]
             assert Mod(3*x + y, 9).subs(reps) == (3*_x + _y) % 9
 
+    # Known negative ratios must use floor, not truncation toward zero.
+    # The sign of the modulus can be unknown even though p/q is rational.
+    assert Mod(-x, 2*x) == x
+    assert Mod(x, -2*x) == -x
+    assert Mod(-x, 3*x) == 2*x
+    assert Mod(-x**2, 2*x**2) == x**2
+    a, b = symbols('a b', integer=True)
+    t = a*x + b
+    expr = Mod(-t**2, 2*t**2)
+    assert expr == t**2
+    params = {a: 0, b: 1}
+    assert expr.subs(params) == Mod((-t**2).subs(params), (2*t**2).subs(params)) == 1
+
     # denesting
     t = Symbol('t', real=True)
     assert Mod(Mod(x, t), t) == Mod(x, t)

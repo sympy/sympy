@@ -25,12 +25,25 @@ def test_dummy_sgs():
         Perm(9)(2,4)(3,5)]]
 
 def test_get_symmetric_group_sgs():
+    assert get_symmetric_group_sgs(0) == ([], [Permutation(1)])
+    assert get_symmetric_group_sgs(0, 1) == ([], [Permutation(1)])
+    assert get_symmetric_group_sgs(1) == ([], [Permutation(2)])
+    assert get_symmetric_group_sgs(1, 1) == ([], [Permutation(2)])
     assert get_symmetric_group_sgs(2) == ([0], [Permutation(3)(0,1)])
     assert get_symmetric_group_sgs(2, 1) == ([0], [Permutation(0,1)(2,3)])
     assert get_symmetric_group_sgs(3) == ([0,1], [Permutation(4)(0,1), Permutation(4)(1,2)])
     assert get_symmetric_group_sgs(3, 1) == ([0,1], [Permutation(0,1)(3,4), Permutation(1,2)(3,4)])
     assert get_symmetric_group_sgs(4) == ([0,1,2], [Permutation(5)(0,1), Permutation(5)(1,2), Permutation(5)(2,3)])
     assert get_symmetric_group_sgs(4, 1) == ([0,1,2], [Permutation(0,1)(4,5), Permutation(1,2)(4,5), Permutation(2,3)(4,5)])
+
+
+def test_bsgs_direct_product_zero_rank():
+    zero = get_symmetric_group_sgs(0)
+    assert bsgs_direct_product(*zero, *zero) == zero
+    for antisym in (False, True):
+        group = get_symmetric_group_sgs(2, antisym)
+        assert bsgs_direct_product(*zero, *group) == group
+        assert bsgs_direct_product(*group, *zero) == group
 
 
 def test_canonicalize_no_slot_sym():

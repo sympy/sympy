@@ -91,10 +91,15 @@ class Mod(DefinedFunction):
                 pass
             else:
                 if isinstance(d, int):
-                    rv = p - d*q
-                    if (rv*q < 0) == True:
-                        rv += q
-                    return rv
+                    # int() truncates toward zero, whereas modulo uses
+                    # floor division. Correct the quotient from its value,
+                    # rather than the sign of an undecidable symbolic product.
+                    smaller = r < d
+                    if smaller is S.true:
+                        d -= 1
+                    elif smaller is not S.false:
+                        return
+                    return p - d*q
 
             # by difference
             # -2|q| < p < 2|q|

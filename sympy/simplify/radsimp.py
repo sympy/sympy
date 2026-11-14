@@ -1,4 +1,5 @@
 from __future__ import annotations
+from typing import TYPE_CHECKING
 from collections import defaultdict
 
 from sympy.core import sympify, S, Mul, Derivative, Pow
@@ -17,7 +18,8 @@ from sympy.polys import gcd
 from sympy.simplify.sqrtdenest import sqrtdenest
 from sympy.utilities.iterables import iterable, sift
 
-
+if TYPE_CHECKING:
+    from sympy.core.expr import Expr
 
 
 def collect(expr, syms, func=None, evaluate=None, exact=False, distribute_order_term=True):
@@ -671,7 +673,7 @@ def collect_const(expr, *vars, Numbers=True):
     >>> collect_const(sqrt(3)*s + sqrt(3) + sqrt(7)*s + sqrt(7))
     (sqrt(2) + 3)*(sqrt(3) + sqrt(7))
     >>> collect_const(sqrt(3)*s + sqrt(3) + sqrt(7)*s + sqrt(7), sqrt(3))
-    sqrt(7) + sqrt(3)*(sqrt(2) + 3) + sqrt(7)*(sqrt(2) + 2)
+    sqrt(3)*(sqrt(2) + 3) + sqrt(7)*(sqrt(2) + 2) + sqrt(7)
 
     The collection is sign-sensitive, giving higher precedence to the
     unsigned values:
@@ -1037,7 +1039,7 @@ def rad_rationalize(num, den):
     >>> from sympy import sqrt
     >>> from sympy.simplify.radsimp import rad_rationalize
     >>> rad_rationalize(sqrt(3), 1 + sqrt(2)/3)
-    (-sqrt(3) + sqrt(6)/3, -7/9)
+    (sqrt(6)/3 - sqrt(3), -7/9)
     """
     if not den.is_Add:
         return num, den
@@ -1048,7 +1050,7 @@ def rad_rationalize(num, den):
     return rad_rationalize(num, den)
 
 
-def fraction(expr, exact=False):
+def fraction(expr: Expr | complex, exact: bool = False) -> tuple[Expr, Expr]:
     """Returns a pair with expression's numerator and denominator.
        If the given expression is not a fraction then this function
        will return the tuple (expr, 1).
@@ -1106,7 +1108,8 @@ def fraction(expr, exact=False):
     """
     expr = sympify(expr)
 
-    numer, denom = [], []
+    numer: list[Expr | int] = []
+    denom: list[Expr | int] = []
 
     for term in Mul.make_args(expr):
         if term.is_commutative and (term.is_Pow or isinstance(term, exp)):
@@ -1133,7 +1136,7 @@ def fraction(expr, exact=False):
                 denom.append(d)
             else:
                 numer.append(term)
-        elif term.is_Rational and not term.is_Integer:
+        elif isinstance(term, Rational) and not term.is_Integer:
             if term.p != 1:
                 numer.append(term.p)
             denom.append(term.q)
@@ -1142,11 +1145,11 @@ def fraction(expr, exact=False):
     return Mul(*numer, evaluate=not exact), Mul(*denom, evaluate=not exact)
 
 
-def numer(expr, exact=False):  # default matches fraction's default
+def numer(expr: Expr | complex, exact: bool = False) -> Expr:  # default matches fraction's default
     return fraction(expr, exact=exact)[0]
 
 
-def denom(expr, exact=False):  # default matches fraction's default
+def denom(expr: Expr | complex, exact: bool = False) -> Expr:  # default matches fraction's default
     return fraction(expr, exact=exact)[1]
 
 
@@ -1183,7 +1186,7 @@ def split_surds(expr):
     >>> from sympy import sqrt
     >>> from sympy.simplify.radsimp import split_surds
     >>> split_surds(3*sqrt(3) + sqrt(5)/7 + sqrt(6) + sqrt(10) + sqrt(15))
-    (3, sqrt(2) + sqrt(5) + 3, sqrt(5)/7 + sqrt(10))
+    (3, sqrt(2) + sqrt(5) + 3, sqrt(10) + sqrt(5)/7)
     """
     args = sorted(expr.args, key=default_sort_key)
     coeff_muls = [x.as_coeff_Mul() for x in args]

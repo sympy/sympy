@@ -51,7 +51,7 @@ def test_solve_poly_system():
     a, b = sqrt(2) - 1, -sqrt(2) - 1
 
     assert solve_poly_system([f_1, f_2, f_3], x, y, z) == \
-        [(0, 0, 1), (0, 1, 0), (1, 0, 0), (a, a, a), (b, b, b)]
+        [(0, 0, 1), (0, 1, 0), (1, 0, 0), (b, b, b), (a, a, a)]
 
     solution = [(1, -1), (1, 1)]
 
@@ -171,7 +171,7 @@ def test_solve_triangulated():
     dom = QQ.algebraic_field(sqrt(2))
 
     assert solve_triangulated([f_1, f_2, f_3], x, y, z, domain=dom) == \
-        [(0, 0, 1), (0, 1, 0), (1, 0, 0), (a, a, a), (b, b, b)]
+        [(0, 0, 1), (0, 1, 0), (1, 0, 0), (b, b, b), (a, a, a)]
 
     a, b = CRootOf(z**2 + 2*z - 1, 0), CRootOf(z**2 + 2*z - 1, 1)
     assert solve_triangulated([f_1, f_2, f_3], x, y, z, extension=True) == \

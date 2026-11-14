@@ -5,7 +5,7 @@ from sympy.core import Basic, sympify, S
 from sympy.core.mul import mul, Mul
 from sympy.core.numbers import Number, Integer
 from sympy.core.symbol import Dummy
-from sympy.functions import adjoint
+from sympy.functions import adjoint, conjugate
 from sympy.strategies import (rm_id, unpack, typed, flatten, exhaust,
         do_one, new)
 from sympy.matrices.exceptions import NonInvertibleMatrixError
@@ -199,6 +199,9 @@ class MatMul(MatrixExpr, Mul):
     def _eval_adjoint(self):
         return MatMul(*[adjoint(arg) for arg in self.args[::-1]]).doit()
 
+    def _eval_conjugate(self):
+        return MatMul(*[conjugate(arg) for arg in self.args]).doit()
+
     def _eval_trace(self):
         factor, mmul = self.as_coeff_mmul()
         if factor != 1:
@@ -219,6 +222,19 @@ class MatMul(MatrixExpr, Mul):
                 )
             ).doit()
         return Inverse(self)
+
+    def _eval_derivative(self, x):
+        from .matadd import MatAdd
+        args = self.args
+        terms = []
+        for i, arg in enumerate(args):
+            d_arg = arg.diff(x)
+            term = MatMul(*(args[:i] + (d_arg,) + args[i + 1:])).doit()
+            if not term.is_ZeroMatrix:
+                terms.append(term)
+        if not terms:
+            return ZeroMatrix(*self.shape)
+        return MatAdd(*terms).doit()
 
     def doit(self, **hints):
         deep = hints.get('deep', True)

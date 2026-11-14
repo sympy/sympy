@@ -254,7 +254,7 @@ class RCodePrinter(CodePrinter):
         else:
             raise NotImplementedError("Only iterable currently supported is Range")
         body = self._print(expr.body)
-        return 'for({target} in seq(from={start}, to={stop}, by={step}){{\n{body}\n}}'.format(target=target, start=start,
+        return 'for({target} in seq(from={start}, to={stop}, by={step})){{\n{body}\n}}'.format(target=target, start=start,
                 stop=stop-1, step=step, body=body)
 
 

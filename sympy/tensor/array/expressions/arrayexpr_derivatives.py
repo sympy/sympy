@@ -7,7 +7,6 @@ from sympy import MatrixBase, derive_by_array, Integer, Determinant, Function, M
 from sympy.tensor.array import NDimArray
 from sympy.core.expr import Expr
 from sympy.matrices.expressions.diagonal import DiagMatrix, DiagonalMatrix
-from sympy.matrices.expressions.hadamard import HadamardProduct
 from sympy.matrices.expressions.inverse import Inverse
 from sympy.matrices.expressions.trace import Trace
 from sympy.matrices.expressions.matexpr import (MatrixExpr, MatrixSymbol, MatrixElement)
@@ -16,7 +15,7 @@ from sympy.matrices.expressions.transpose import Transpose
 from sympy.combinatorics.permutations import _af_invert
 from sympy.matrices.expressions.applyfunc import ElementwiseApplyFunction
 from sympy.tensor.array.expressions.array_expressions import (
-    _ArrayExpr, ZeroArray, ArraySymbol, ArrayTensorProduct, ArrayAdd,
+    _ArrayExpr, ZeroArray, OneArray, ArraySymbol, ArrayTensorProduct, ArrayAdd,
     PermuteDims, ArrayDiagonal, ArrayElementwiseApplyFunc, get_ndim,
     get_shape, ArrayContraction, _array_tensor_product, _array_contraction,
     _array_diagonal, _array_add, _permute_dims, Reshape, ArraySum)
@@ -45,7 +44,7 @@ def _(expr: Expr, x: _ArrayExpr):
             tp = _array_tensor_product(dparent, MatrixUnit(m, n, expr.i, expr.j))
             return _array_contraction(tp, (rank_x, rank_x + 2), (rank_x + 1, rank_x + 3))
         raise NotImplementedError("algorithm not implemented for this case")
-    return ZeroArray(*x.shape)
+    return ZeroArray(*(get_shape(x) + get_shape(expr)))
 
 
 @array_derive.register(Add)
@@ -181,6 +180,11 @@ def _(expr: ZeroArray, x: _ArrayExpr):
     return ZeroArray(*(get_shape(x) + expr.shape))
 
 
+@array_derive.register(OneArray)
+def _(expr: OneArray, x: _ArrayExpr):
+    return ZeroArray(*(get_shape(x) + expr.shape))
+
+
 @array_derive.register(Transpose)
 def _(expr: Transpose, x: Expr):
     # D(A.T, A) ==> (m,n,i,j) ==> D(A_ji, A_mn) = d_mj d_ni
@@ -308,11 +312,6 @@ def _(expr: DiagonalMatrix, x: Expr):
         return ZeroArray(*(get_shape(x) + get_shape(expr)))
     tp = _array_tensor_product(darg, Identity(r))
     return _array_diagonal(tp, (rank_x, rank_x + 1, rank_x + 2))
-
-
-@array_derive.register(HadamardProduct)
-def _(expr: HadamardProduct, x: Expr):
-    raise NotImplementedError()
 
 
 @array_derive.register(ArrayContraction)

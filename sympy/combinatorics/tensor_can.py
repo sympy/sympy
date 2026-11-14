@@ -950,8 +950,8 @@ def get_symmetric_group_sgs(n, antisym=False):
     >>> get_symmetric_group_sgs(3)
     ([0, 1], [(4)(0 1), (4)(1 2)])
     """
-    if n == 1:
-        return [], [Permutation(list(range(3)))]
+    if n in (0, 1):
+        return [], [Permutation(list(range(n + 2)))]
     gens = [Permutation(n - 1)(i, i + 1)._array_form for i in range(n - 1)]
     if antisym == 0:
         gens = [x + [n, n + 1] for x in gens]

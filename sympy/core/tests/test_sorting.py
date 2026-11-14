@@ -1,4 +1,7 @@
 from __future__ import annotations
+from itertools import permutations
+
+from sympy.core.numbers import nan, oo
 from sympy.core.sorting import default_sort_key, ordered
 from sympy.testing.pytest import raises
 
@@ -14,6 +17,12 @@ def test_default_sort_key():
             return 'x.y'
     func = C()
     assert sorted([x, func], key=default_sort_key) == [func, x]
+
+
+def test_nan_sort_key():
+    for values in permutations([nan, -oo, oo]):
+        assert sorted(values, key=default_sort_key) == [nan, -oo, oo]
+        assert list(ordered(values, warn=True)) == [nan, -oo, oo]
 
 
 def test_ordered():

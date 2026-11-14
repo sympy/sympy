@@ -8,8 +8,10 @@ from sympy.core.containers import (Dict, Tuple)
 from sympy.core.function import Function
 from sympy.core.mul import Mul
 from sympy.core.numbers import (I, Rational, oo)
+from sympy.core.power import Pow
 from sympy.core.singleton import S
 from sympy.core.symbol import (Dummy, Symbol, symbols)
+from sympy.functions.elementary.complexes import Abs
 from sympy.functions.elementary.exponential import (exp, log)
 from sympy.functions.elementary.miscellaneous import (root, sqrt)
 from sympy.functions.elementary.trigonometric import (cos, sin)
@@ -339,6 +341,10 @@ def test_factor_terms():
     assert factor_terms(0**(x + 2) - 1) == 0**(x + 2) - 1
     assert factor_terms((0**(x + 2) - 1).subs(x,-2)) == 0
 
+    # no unwanted hollow mul
+    eq = (-2*y*x - y)/(2*y)/-1
+    assert factor_terms(eq) == x + S.Half  # not x + (1/2)*1
+
 
 def test_xreplace():
     e = Mul(2, 1 + x, evaluate=False)
@@ -425,6 +431,7 @@ def test_issue_7903():
     t = exp(I*cos(a)) + exp(-I*sin(a))
     assert t.simplify()
 
+
 def test_issue_8263():
     F, G = symbols('F, G', commutative=False, cls=Function)
     x, y = symbols('x, y')
@@ -432,6 +439,7 @@ def test_issue_8263():
     for v in dummies.values():
         assert not v.is_commutative
     assert not expr.is_zero
+
 
 def test_monotonic_sign():
     F = _monotonic_sign
@@ -517,8 +525,6 @@ def test_monotonic_sign():
 
     # issue 9154
     p = Dummy(prime=True, odd=True)
-    assert F(log(p) - 1) == log(3) - 1
-    assert F(sqrt(p) - sqrt(2)) == sqrt(3) - sqrt(2)
     assert log(p) >= 1
     assert (sqrt(p) - sqrt(2)).is_positive is True
 
@@ -526,22 +532,16 @@ def test_monotonic_sign():
     nn = Dummy(integer=True, nonnegative=True)
 
     r = F(exp(nn) - 1)
-    assert r.is_nonnegative is True
     assert r.is_positive is None
 
     r = F(exp(-nn) - 1)
-    assert r.is_nonpositive is True
     assert r.is_negative is None
 
     np = Dummy(integer=True, nonpositive=True)
 
-    assert F(exp(np) - 2) == -1
-
     r = F(exp(np) - 1)
     assert r.is_nonpositive is True
     assert r.is_negative is None
-
-    assert F(exp(-np) - S.Half) == S.Half
 
     r = F(exp(-np) - 1)
     assert r.is_nonnegative is True
@@ -549,6 +549,70 @@ def test_monotonic_sign():
 
     nn = Dummy(integer=True, nonnegative=True)
     assert F(exp(-nn) - 2) == -1
+
+
+def test_monotonic_sign_discontinuous_integer_domain():
+    n = Dummy(integer=True, nonnegative=True)
+    t = 2*n - 1
+    f = Mul(t, Pow(t, -2, evaluate=False), evaluate=False)
+
+    # The denominator is positive at every integer.
+    assert f.as_numer_denom()[1].is_extended_positive is True
+    assert f.diff(n).is_negative is True
+
+    # Yet the function changes sign between consecutive integers.
+    assert f.subs(n, 0) == -1
+    assert f.subs(n, 1) == 1
+
+    # A negative derivative at integer values is insufficient.
+    assert _monotonic_sign(f) is None
+    assert f.is_negative is None
+
+    # Incorrect inference must not corrupt subsequent evaluation.
+    assert Abs(f).subs(n, 1) == 1
+    assert sqrt(f**2).subs(n, 1) == 1
+
+
+def test_monotonic_sign_safe_functions():
+    from sympy.functions.elementary.complexes import Abs, sign
+
+    F = _monotonic_sign
+    nn = Dummy(integer=True, nonnegative=True)
+    np = Dummy(integer=True, nonpositive=True)
+    p = Dummy(prime=True, odd=True)
+
+    # The endpoint method remains available for known monotonic functions.
+    assert F(log(p) - 1) == log(3) - 1
+    assert F(sqrt(p) - sqrt(2)) == sqrt(3) - sqrt(2)
+    assert F(exp(nn) - 1).is_nonnegative is True
+    assert F(exp(-nn) - 1).is_nonpositive is True
+    assert F(exp(np) - 2) == -1
+    assert F(exp(-np) - S.Half) == S.Half
+
+    # Affine argument and constant scaling.
+    assert F(2*exp(3*nn + 2) - 1) == 2*exp(2) - 1
+    assert F(2*log(nn + 1) + 1) == 1
+    assert F(-2*sqrt(nn + 1) - 3) == -5
+    assert F(exp(nn**2) - 2) is None
+
+    # Derivative signs do not establish monotonicity across poles or
+    # discontinuities between integers.
+    assert F(1/(2*nn - 1)) is None
+    assert F(1/(4*nn - 1)) is None
+    f = nn - 2*sign(nn - S.Half)
+    assert F(f) is None
+    assert f.subs(nn, 0) == 2
+    assert f.subs(nn, 1) == -1
+
+    # A logarithmic argument must remain positive throughout the
+    # relevant interval; a square root must remain nonnegative.
+    assert F(log(1 - nn) - 2) is None
+    assert F(sqrt(1 - nn) - 2) is None
+
+    bad = 1/(2*nn - 1) - S.Half
+    assert bad.is_negative is None
+    assert Abs(bad).subs(nn, 1) == S.Half
+
 
 
 def test_issue_17256():
@@ -568,7 +632,40 @@ def test_issue_17256():
     r2 = s2.xreplace({x:a})
     assert r1 == r2
 
+
 def test_issue_21623():
     from sympy.matrices.expressions.matexpr import MatrixSymbol
     M = MatrixSymbol('X', 2, 2)
     assert gcd_terms(M[0,0], 1) == M[0,0]
+
+
+def test_linear_coeffs():
+    from sympy.solvers.solveset import linear_coeffs, NonlinearError
+    from sympy.core.exprtools import (
+        NonlinearError as CoreNonlinearError,
+        linear_coeffs as core_linear_coeffs,
+    )
+    from sympy.core.mul import Mul
+    from sympy.core.relational import Eq
+
+    assert linear_coeffs is core_linear_coeffs
+    assert NonlinearError is CoreNonlinearError
+
+    # Nested affine terms need no expansion.
+    assert linear_coeffs(Mul(5, 2*x + 3, evaluate=False) + 7, x) == [10, 22]
+    assert linear_coeffs(0, x) == [0, 0]
+    assert all(i is S.Zero for i in linear_coeffs(0, x))
+    assert linear_coeffs(x + 2*y + 3, x, y) == [1, 2, 3]
+    assert linear_coeffs(x + 2*y + 3, y, x) == [2, 1, 3]
+    assert linear_coeffs(x + 2*x**2 + 3, x, x**2) == [1, 2, 3]
+    raises(ValueError, lambda:
+        linear_coeffs(x + 2*x**2 + x**3, x, x**2))
+    raises(ValueError, lambda:
+        linear_coeffs(1/x*(x - 1) + 1/x, x))
+    raises(ValueError, lambda:
+        linear_coeffs(x, x, x))
+    assert linear_coeffs(a*(x + y), x, y) == [a, a, 0]
+    assert linear_coeffs(1.0, x, y) == [0, 0, 1.0]
+    # don't include coefficients of 0
+    assert linear_coeffs(Eq(x, x + y), x, y, dict=True) == {y: -1}
+    assert linear_coeffs(0, x, y, dict=True) == {}

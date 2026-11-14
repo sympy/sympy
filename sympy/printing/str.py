@@ -7,6 +7,7 @@ from typing import Any
 
 from sympy.core import S, Rational, Pow, Basic, Mul, Number, UnevaluatedExpr
 from sympy.core.function import Lambda
+from sympy.core.mod import Mod
 from sympy.core.mul import _keep_coeff
 from sympy.core.numbers import Integer
 from sympy.core.relational import Relational
@@ -24,6 +25,9 @@ _rootsum_w = Symbol('w')
 
 class StrPrinter(Printer):
     printmethod = "_sympystr"
+
+    _mod_precedence = PRECEDENCE["Func"]
+
     _default_settings: dict[str, Any] = {
         "order": None,
         "full_prec": "auto",
@@ -38,7 +42,8 @@ class StrPrinter(Printer):
     _relationals: dict[str, str] = {}
 
     def parenthesize(self, item, level, strict=False):
-        if (precedence(item) < level) or ((not strict) and precedence(item) <= level):
+        prec = self._mod_precedence if isinstance(item, Mod) else precedence(item)
+        if prec < level or (not strict and prec <= level):
             return "(%s)" % self._print(item)
         else:
             return self._print(item)
@@ -306,7 +311,9 @@ class StrPrinter(Printer):
                 pre = [self._print(d.pop(0))]
             else:
                 pre = []
-            dfactors = pre + [self.parenthesize(a, prec, strict=False)
+            dfactors = pre + [self.parenthesize(a,
+                PRECEDENCE["Pow"] if a.is_Pow and a.exp in (-S.One, -S.Half)
+                else PRECEDENCE["Mul"], strict=False)
                 for a in d]
 
             n = '*'.join(nfactors)
@@ -371,12 +378,12 @@ class StrPrinter(Printer):
         a = a or [S.One]
 
         a_str = [self.parenthesize(x, prec, strict=False) for x in a]
-        b_str = [self.parenthesize(x, prec, strict=False) for x in b]
+        b_str = [self.parenthesize(x, PRECEDENCE["Mul"], strict=False) for x in b]
 
         # To parenthesize Pow with exp = -1 and having more than one Symbol
         for item in pow_paren:
             if item.base in b:
-                b_str[b.index(item.base)] = "(%s)" % b_str[b.index(item.base)]
+                b_str[b.index(item.base)] = "(%s)" % self._print(item.base)
 
         if not b:
             return sign + '*'.join(a_str)
@@ -427,8 +434,32 @@ class StrPrinter(Printer):
         else:
             return 'O(%s)' % self.stringify(expr.args, ', ', 0)
 
+    def _print_OrdinalZero(self, expr):
+        return "0"
+
+    def _print_OrdinalOmega(self, expr):
+        return "w"
+
+    def _print_OmegaPower(self, expr):
+        exp, mul = expr.args
+        if exp == 0:
+            return f"{mul}"
+
+        output_str = ""
+        if exp == 1:
+            output_str += "w"
+        elif len(exp.terms) > 1 or exp.is_limit_ordinal:
+            output_str += f"w**({self._print(exp)})"
+        else:
+            output_str += f"w**{self._print(exp)}"
+
+        if mul != 1:
+            output_str += f"*{mul}"
+
+        return output_str
+
     def _print_Ordinal(self, expr):
-        return expr.__str__()
+        return " + ".join([self._print(arg) for arg in expr.args])
 
     def _print_Cycle(self, expr):
         return expr.__str__()

@@ -281,19 +281,19 @@ class Quaternion(Expr):
 
         >>> q2.product_matrix_right * q1.to_Matrix()
         Matrix([
-        [ a - d],
-        [ b + c],
-        [-b + c],
-        [ a + d]])
+        [a - d],
+        [b + c],
+        [c - b],
+        [a + d]])
 
         This is equivalent to:
 
         >>> (q1 * q2).to_Matrix()
         Matrix([
-        [ a - d],
-        [ b + c],
-        [-b + c],
-        [ a + d]])
+        [a - d],
+        [b + c],
+        [c - b],
+        [a + d]])
         """
         return Matrix([
                 [self.a, -self.b, -self.c, -self.d],
@@ -518,9 +518,7 @@ class Quaternion(Expr):
         >>> from sympy.abc import a, b, c, d
         >>> euler = Quaternion(a, b, c, d).to_euler('zyz')
         >>> euler
-        (-atan2(-b, c) + atan2(d, a),
-         2*atan2(sqrt(b**2 + c**2), sqrt(a**2 + d**2)),
-         atan2(-b, c) + atan2(d, a))
+        (atan2(d, a) - atan2(-b, c), 2*atan2(sqrt(b**2 + c**2), sqrt(a**2 + d**2)), atan2(-b, c) + atan2(d, a))
 
 
         References

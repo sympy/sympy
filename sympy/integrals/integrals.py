@@ -76,11 +76,11 @@ def _add_atan_floor_terms(antideriv, x):
     >>> from sympy.integrals.integrals import _add_atan_floor_terms
     >>> x = Symbol('x', real=True)
     >>> _add_atan_floor_terms(2*atan(3*tan(x/2)), x)
-    2*atan(3*tan(x/2)) + 2*pi*floor((x/2 + pi/2)/pi)
+    2*pi*floor((x/2 + pi/2)/pi) + 2*atan(3*tan(x/2))
     >>> _add_atan_floor_terms(atan(cot(x) + x), x)
     atan(x + cot(x)) - pi*floor(x/pi)
     >>> _add_atan_floor_terms(atan(tan(x) + tan(3*x)), x)
-    atan(tan(x) + tan(3*x)) + pi*floor((3*x + pi/2)/pi)
+    pi*floor((3*x + pi/2)/pi) + atan(tan(x) + tan(3*x))
     >>> _add_atan_floor_terms(atan(x*tan(x)), x)
     atan(x*tan(x))
 
@@ -1471,7 +1471,7 @@ class Integral(AddWithLimits):
         interval:
 
         >>> e.as_sum(2, 'left')
-        2*sin(5) + 2*sin(3)
+        2*sin(3) + 2*sin(5)
 
         The midpoint rule uses evaluations at the center of each interval:
 
@@ -1490,7 +1490,7 @@ class Integral(AddWithLimits):
 
         >>> s = e.as_sum(2, 'trapezoid')
         >>> s
-        2*sin(5) + sin(3) + sin(7)
+        sin(3) + 2*sin(5) + sin(7)
         >>> (e.as_sum(2, 'left') + e.as_sum(2, 'right'))/2 == s
         True
 

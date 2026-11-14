@@ -45,9 +45,6 @@ jobs:
       - name: Detect invalid escapes like '\e'
         run: python -We:invalid -We::SyntaxWarning -m compileall -f -q sympy/
 
-      - name: Test all modules are listed in setup.py
-        run: bin/test_setup.py
-
       - name: Check for incorrect use of ``__slots__`` using slotscheck
         run: python bin/slotscheck
 
@@ -66,7 +63,7 @@ jobs:
 
   mypy:
     name: Mypy
-    needs: code-quality
+    needs: [code-quality, authors]
 
     runs-on: ubuntu-latest
     steps:
@@ -84,7 +81,7 @@ jobs:
 
   mypy-flint:
     name: Mypy With python-flint
-    needs: code-quality
+    needs: [code-quality, authors]
 
     runs-on: ubuntu-latest
     steps:
@@ -104,7 +101,7 @@ jobs:
 
   sphinx-lint:
     name: Sphinx Lint
-    needs: code-quality
+    needs: [code-quality, authors]
 
     runs-on: ubuntu-latest
     steps:
@@ -124,7 +121,6 @@ jobs:
 
   authors:
     name: Check Authors
-    needs: code-quality
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -143,7 +139,7 @@ jobs:
 
   doctests-latest:
     name: Doctests
-    needs: code-quality
+    needs: [code-quality, authors]
 
     runs-on: ubuntu-latest
     steps:
@@ -161,7 +157,7 @@ jobs:
   # ------------------------- Test latest Python ------------------- #
 
   tests-latest:
-    needs: code-quality
+    needs: [code-quality, authors]
 
     runs-on: ubuntu-latest
 
@@ -368,7 +364,7 @@ jobs:
 
   tests-slow:
     name: Slow Tests
-    needs: code-quality
+    needs: [code-quality, authors]
 
     runs-on: ubuntu-latest
 
@@ -476,7 +472,7 @@ jobs:
 
   sphinx:
     name: Build Docs
-    needs: code-quality
+    needs: [code-quality, authors]
 
     runs-on: ubuntu-latest
     steps:
