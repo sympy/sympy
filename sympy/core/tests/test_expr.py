@@ -41,7 +41,7 @@ from sympy.simplify.gammasimp import gammasimp
 from sympy.simplify.powsimp import powsimp
 from sympy.simplify.radsimp import collect, radsimp
 from sympy.simplify.ratsimp import ratsimp
-from sympy.simplify.simplify import simplify, nsimplify
+from sympy.simplify.simplify import hypersimp, simplify, nsimplify
 from sympy.simplify.trigsimp import trigsimp
 from sympy.tensor.indexed import Indexed
 from sympy.physics.units import meter
@@ -1583,6 +1583,7 @@ def test_action_verbs():
         (a*x**2 + b*x**2 + a*x - b*x + c).collect(x)
     assert apart(y/(y + 2)/(y + 1), y) == (y/(y + 2)/(y + 1)).apart(y)
     assert combsimp(y/(x + 2)/(x + 1)) == (y/(x + 2)/(x + 1)).combsimp()
+    assert hypersimp(gamma(n + 1), n) == (gamma(n + 1)).hypersimp(n) == n + 1
     assert gammasimp(gamma(x)/gamma(x-5)) == (gamma(x)/gamma(x-5)).gammasimp()
     assert factor(x**2 + 5*x + 6) == (x**2 + 5*x + 6).factor()
     assert refine(sqrt(x**2)) == sqrt(x**2).refine()
