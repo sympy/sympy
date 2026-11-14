@@ -1247,7 +1247,10 @@ def find_substitutions(integrand, symbol, u_var):
             substituted.has_free(symbol) and
             # avoid redundant rational function shift
             not integrand.is_rational_function(symbol) and
-            u.is_polynomial(symbol) and degree(u, symbol) == 1
+            u.is_polynomial(symbol) and degree(u, symbol) == 1 and
+            # substituting a linear factor of the integrand only rescales
+            # the variable, which can make integration by parts loop
+            all((f/u).cancel().has_free(symbol) for f in Mul.make_args(integrand))
         ):
             a = u.coeff(symbol)
             b = u.subs(symbol, 0)
