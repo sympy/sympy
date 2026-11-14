@@ -831,6 +831,35 @@ EVALUATED_MATRIX_EXPRESSION_PAIRS = [
 ]
 
 
+UNEVALUATED_EXPRESSION_PAIRS = [
+    (r"-(-1)", _Mul(-1, -1)),
+    (r"-(x + y)", _Mul(-1, _Add(x, y))),
+    (r"1 = 1", Eq(1, 1, evaluate=False)),
+    (r"1 \neq 2", Ne(1, 2, evaluate=False)),
+    (r"1 < 2", Lt(1, 2, evaluate=False)),
+    (r"1 \leq 2", Le(1, 2, evaluate=False)),
+    (r"2 > 1", Gt(2, 1, evaluate=False)),
+    (r"2 \geq 1", Ge(2, 1, evaluate=False)),
+    (r"1 < 2 < 3", And(Lt(1, 2, evaluate=False), Lt(2, 3, evaluate=False), evaluate=False)),
+    (r"1 \in \mathbb{R}", Contains(1, S.Reals, evaluate=False)),
+    (r"1 \notin \mathbb{R}", Not(Contains(1, S.Reals, evaluate=False), evaluate=False)),
+    (r"\sin 0", sin(0, evaluate=False)),
+    (r"\sin^2 0", _Pow(sin(0, evaluate=False), 2)),
+    (r"\sin^{-1} 0", asin(0, evaluate=False)),
+    (r"\cosh 0", cosh(0, evaluate=False)),
+    (r"\exp 0", _exp(0)),
+    (r"\ln 1", _log(1)),
+    (r"\log_{10} 100", _log(100, 10)),
+    (r"\lg 100", _log(100, 10)),
+    (r"\lfloor 2 \rfloor", floor(2, evaluate=False)),
+    (r"\lceil 2 \rceil", ceiling(2, evaluate=False)),
+    (r"\min(1, 2)", _Min(1, 2)),
+    (r"\max(1, 2)", _Max(1, 2)),
+    (r"\operatorname{erf}(0)", erf(0, evaluate=False)),
+    (r"\operatorname{sgn} 1", sign(1, evaluate=False)),
+    (r"90^\circ", _Mul(90, _Mul(pi, _Pow(180, -1)))),
+]
+
 def test_symbol_expressions():
     for latex_str, sympy_expr in SYMBOL_EXPRESSION_PAIRS:
         assert parse_latex_lark(latex_str, evaluate=False) == sympy_expr, latex_str
@@ -1291,6 +1320,10 @@ def test_matrix_expressions():
     for latex_str, sympy_expr in EVALUATED_MATRIX_EXPRESSION_PAIRS:
         assert parse_latex_lark(latex_str) == sympy_expr, latex_str
 
+
+def test_unevaluated_expressions():
+    for latex_str, sympy_expr in UNEVALUATED_EXPRESSION_PAIRS:
+        assert parse_latex_lark(latex_str, evaluate=False) == sympy_expr, latex_str
 
 def test_latex_cases_environment_error():
     from sympy.parsing.latex import parse_latex, LaTeXParsingError
