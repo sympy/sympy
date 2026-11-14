@@ -336,18 +336,16 @@ class TransformToSymPyExpr(Transformer):
     def factors_after_argument(self, tokens):
         return _FactorsAfterArgument(tokens[0], tokens[1])
 
-    def _apply(self, function, argument, exponent=None):
-        # ``function`` applied to the argument of a function command and raised to
-        # ``exponent``, as in ``\sin^2 x``, and multiplied by the factors that follow
-        # the argument when it is read as the first factor alone, as in ``\sin x y``.
-        # All the functions read from commands are applied here, so that each of them
-        # is called with ``evaluate``.
-        if isinstance(argument, _FactorsAfterArgument):
-            return self._multiply(self._apply(function, argument.argument, exponent),
-                                  argument.factors)
-        result = function(argument, evaluate=self.evaluate)
-        if exponent is not None:
-            result = sympy.Pow(result, exponent, evaluate=self.evaluate)
+    def _apply(self, f, arg, exp=None):
+        # Returns (f(arg))**exp, passing ``evaluate`` to f and to the power. Every
+        # function read from a command is called here, so that it gets ``evaluate``.
+        # In the reading of ``\sin x y`` as ``sin(x)*y``, ``arg`` holds ``x`` and the
+        # factors ``y`` after it, and the result is f(x)**exp*y.
+        if isinstance(arg, _FactorsAfterArgument):
+            return self._multiply(self._apply(f, arg.argument, exp), arg.factors)
+        result = f(arg, evaluate=self.evaluate)
+        if exp is not None:
+            result = sympy.Pow(result, exp, evaluate=self.evaluate)
         return result
 
     def superscript(self, tokens):
