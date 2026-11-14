@@ -1328,12 +1328,31 @@ def test_Piecewise_rewrite_as_ITE():
                ) == ITE(x < 1, a, ITE(y < 1, c, b))
     assert _ITE((a, x < 0), (b, Or(x < oo, y < 1))
                ) == ITE(x < 0, a, b)
+    # A Boolean symbol is not a condition on a real variable, so it
+    # must not be treated as covering all reals (issue 24961)
+    assert _ITE((a, y), (b, True)) == ITE(y, a, b)
+    assert _ITE((a, y), (b, x < 1), (c, True)
+               ) == ITE(y, a, ITE(x < 1, b, c))
+    assert _ITE((a, Or(y, x < 1)), (b, True)) == ITE(Or(y, x < 1), a, b)
+    p, q = symbols('p q')
+    assert _ITE((a, p & q), (b, p), (c, q), (d, True)
+               ) == ITE(p & q, a, ITE(p, b, ITE(q, c, d)))
     raises(TypeError, lambda: _ITE((x + 1, x < 1), (x, True)))
     # if `a` in the following were replaced with y then the coverage
     # is complete but something other than as_set would need to be
     # used to detect this
     raises(NotImplementedError, lambda: _ITE((x, x < y), (y, x >= a)))
     raises(ValueError, lambda: _ITE((a, x < 2), (b, x > 3)))
+
+
+def test_issue_24961():
+    p, q, a, b, c, d = symbols('p q a b c d')
+    x = Piecewise((a, p & q), (b, p), (c, q), (d, True))
+    y = Piecewise((1, x <= 1), (2, x <= 2), (3, True))
+    assert y == Piecewise(
+        (1, ITE(p & q, a <= 1, ITE(p, b <= 1, ITE(q, c <= 1, d <= 1)))),
+        (2, ITE(p & q, a <= 2, ITE(p, b <= 2, ITE(q, c <= 2, d <= 2)))),
+        (3, True))
 
 
 def test_Piecewise_replace_relational_27538():
