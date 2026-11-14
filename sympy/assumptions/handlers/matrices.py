@@ -9,10 +9,10 @@ from sympy.assumptions import Q
 from sympy.assumptions.ask import _ask_recursive
 from sympy.assumptions.handlers import test_closed_group
 from sympy.matrices import MatrixBase
-from sympy.matrices.expressions import (BlockMatrix, BlockDiagMatrix, Determinant,
-    DiagMatrix, DiagonalMatrix, HadamardProduct, Identity, Inverse, MatAdd, MatMul,
-    MatPow, MatrixExpr, MatrixSlice, MatrixSymbol, OneMatrix, Trace, Transpose,
-    ZeroMatrix)
+from sympy.matrices.expressions import (Adjoint, BlockMatrix, BlockDiagMatrix, Conjugate,
+    Determinant, DiagMatrix, DiagonalMatrix, HadamardProduct, Identity, Inverse,
+    MatAdd, MatMul, MatPow, MatrixExpr, MatrixSlice, MatrixSymbol, OneMatrix,
+    Trace, Transpose, ZeroMatrix)
 from sympy.matrices.expressions.blockmatrix import reblock_2x2
 from sympy.matrices.expressions.factorizations import Factorization
 from sympy.matrices.expressions.fourier import DFT
@@ -152,7 +152,7 @@ def _(expr, assumptions):
 def _(expr, assumptions):
     return expr.shape[0] == 1 and expr.shape[1] == 1
 
-@InvertiblePredicate.register(Transpose)
+@InvertiblePredicate.register_many(Transpose, Adjoint, Conjugate)
 def _(expr, assumptions):
     return _ask_recursive(Q.invertible(expr.arg), assumptions)
 
@@ -297,7 +297,7 @@ def _(expr, assumptions):
     if Q.unitary(expr) in conjuncts(assumptions):
         return True
 
-@UnitaryPredicate.register_many(Inverse, Transpose)
+@UnitaryPredicate.register_many(Inverse, Transpose, Adjoint, Conjugate)
 def _(expr, assumptions):
     return _ask_recursive(Q.unitary(expr.arg), assumptions)
 
@@ -349,7 +349,7 @@ def _(expr, assumptions):
 def _(expr, assumptions):
     return expr.shape[0] == 1 and expr.shape[1] == 1
 
-@FullRankPredicate.register_many(Inverse, Transpose)
+@FullRankPredicate.register_many(Inverse, Transpose, Adjoint, Conjugate)
 def _(expr, assumptions):
     return _ask_recursive(Q.fullrank(expr.arg), assumptions)
 
@@ -575,7 +575,7 @@ def _(expr, assumptions):
 def _(expr, assumptions):
     return expr.shape[0] == 1 and expr.shape[1] == 1
 
-@DiagonalPredicate.register_many(Inverse, Transpose)
+@DiagonalPredicate.register_many(Inverse, Transpose, Adjoint, Conjugate)
 def _(expr, assumptions):
     return _ask_recursive(Q.diagonal(expr.arg), assumptions)
 

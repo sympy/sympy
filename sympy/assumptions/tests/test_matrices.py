@@ -30,6 +30,8 @@ def test_invertible():
     assert _ask_recursive(Q.invertible(X*Z), Q.invertible(X) & Q.invertible(Z)) is True
     assert _ask_recursive(Q.invertible(X.T)) is None
     assert _ask_recursive(Q.invertible(X.T), Q.invertible(X)) is True
+    assert _ask_recursive(Q.invertible(X.adjoint()), Q.invertible(X)) is True
+    assert _ask_recursive(Q.invertible(X.conjugate()), Q.invertible(X)) is True
     assert _ask_recursive(Q.invertible(X.I)) is True
     assert _ask_recursive(Q.invertible(Identity(3))) is True
     assert _ask_recursive(Q.invertible(ZeroMatrix(3, 3))) is False
@@ -122,11 +124,15 @@ def test_orthogonal():
 def test_unitary():
     _test_orthogonal_unitary(Q.unitary)
     assert _ask_recursive(Q.unitary(X), Q.orthogonal(X)) is True
+    assert _ask_recursive(Q.unitary(X.adjoint()), Q.unitary(X)) is True
+    assert _ask_recursive(Q.unitary(X.conjugate()), Q.unitary(X)) is True
 
 def test_fullrank():
     assert _ask_recursive(Q.fullrank(X), Q.fullrank(X)) is True
     assert _ask_recursive(Q.fullrank(X**2), Q.fullrank(X)) is True
     assert _ask_recursive(Q.fullrank(X.T), Q.fullrank(X)) is True
+    assert _ask_recursive(Q.fullrank(X.adjoint()), Q.fullrank(X)) is True
+    assert _ask_recursive(Q.fullrank(X.conjugate()), Q.fullrank(X)) is True
     assert _ask_recursive(Q.fullrank(X)) is None
     assert _ask_recursive(Q.fullrank(Y)) is None
     assert _ask_recursive(Q.fullrank(X*Z), Q.fullrank(X) & Q.fullrank(Z)) is True

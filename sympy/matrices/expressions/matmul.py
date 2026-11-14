@@ -494,6 +494,9 @@ def refine_MatMul(expr, assumptions):
     >>> with assuming(Q.orthogonal(X)):
     ...     print(refine(expr))
     I
+    >>> with assuming(Q.unitary(X)):
+    ...     print(refine(X * X.adjoint()))
+    I
     """
     newargs = []
     exprargs = []
@@ -506,10 +509,10 @@ def refine_MatMul(expr, assumptions):
 
     last = exprargs[0]
     for arg in exprargs[1:]:
-        if arg == last.T and ask(Q.orthogonal(arg), assumptions):
-            last = Identity(arg.shape[0])
-        elif arg == last.conjugate() and ask(Q.unitary(arg), assumptions):
-            last = Identity(arg.shape[0])
+        if arg == last.T and ask(Q.orthogonal(arg) | Q.orthogonal(last), assumptions):
+            last = Identity(last.shape[0])
+        elif arg == last.adjoint() and ask(Q.unitary(arg) | Q.unitary(last), assumptions):
+            last = Identity(last.shape[0])
         else:
             newargs.append(last)
             last = arg
