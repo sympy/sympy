@@ -514,3 +514,8 @@ def test_zeta_printing_issue_14820():
 def test_automatic_rewrite():
     assert octave_code(Li(x)) == '(logint(x) - logint(2))'
     assert octave_code(erf2(x, y)) == '(erf(y) - erf(x))'
+
+
+def test_unevaluated_reciprocal_denominator():
+    expr = Mul(x, Pow(Pow(y, -1), -1, evaluate=False), evaluate=False)
+    assert mcode(expr) == "x./(1./y)"
