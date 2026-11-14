@@ -298,3 +298,70 @@ def test_matrix_expression_from_index_summation():
 
     expr = Sum(A[i1, i2]*B[i2, 0], (i2, 0, k-1))
     assert MatrixExpr.from_index_summation(expr, i1) == MatrixElement(A*B, i1, 0)
+
+
+def test_negative_indexing():
+    from sympy.matrices.expressions.special import Identity
+    from sympy.matrices.expressions.funcmatrix import FunctionMatrix
+    from sympy.matrices.expressions.blockmatrix import BlockMatrix
+    from sympy.core.function import Lambda
+
+    # Item E1-2 / E3-11 from #30900: negative index normalization in MatrixExpr.__getitem__
+    I3 = Identity(3)
+    assert I3[-1, 2] == 1
+    assert I3[-1, -1] == 1
+    assert I3[-2, 1] == 1
+    assert I3[-3, 0] == 1
+    assert I3[-1, 0] == 0
+    assert I3[-1] == 1
+    assert I3[-2] == 0
+    raises(IndexError, lambda: I3[-4, 0])
+    raises(IndexError, lambda: I3[0, -4])
+
+    Xs = MatrixSymbol('Xs', 10, 10)
+    assert Xs[-1, -1] == Xs[9, 9]
+    assert Xs[-1, 0] == Xs[9, 0]
+    assert Xs[0, -1] == Xs[0, 9]
+    assert Xs[2:5, 3:6][-1, -1] == Xs[4, 5]
+    assert Xs[2:5, 3:6][-1, 0] == Xs[4, 3]
+    assert Xs[-1] == Xs[9, 9]
+    assert Xs[-10] == Xs[9, 0]
+    raises(IndexError, lambda: Xs[-101])
+
+    # Derivatives of MatrixElement from negative indexing
+    W2 = MatrixSymbol('W2', 2, 2)
+    assert W2[-1, 0] == W2[1, 0]
+    assert W2[-1, 0].diff(W2[1, 0]) == 1
+    assert W2[-2, -2] == W2[0, 0]
+    assert W2[-1, -1] == W2[1, 1]
+
+    # Matrix product with negative indices
+    A3 = MatrixSymbol('A3', 3, 3)
+    B3 = MatrixSymbol('B3', 3, 3)
+    assert (A3*B3)[-1, 0] == (A3*B3).as_explicit()[-1, 0]
+    assert (A3*B3)[-1, -1] == (A3*B3).as_explicit()[-1, -1]
+
+    # FunctionMatrix
+    FM = FunctionMatrix(3, 3, Lambda((i, j), i + j))
+    assert FM[-1, 0] == 2
+    assert FM[-1, -1] == 4
+
+    # Symbolic matrix shapes
+    n_sym, m_sym = symbols('n_sym m_sym')
+    M_sym = MatrixSymbol('M_sym', n_sym, m_sym)
+    assert M_sym[-1, -1] == MatrixElement(M_sym, n_sym - 1, m_sym - 1)
+    assert M_sym[-1, -1] == M_sym[n_sym - 1, m_sym - 1]
+    assert M_sym[-1, 0] == MatrixElement(M_sym, n_sym - 1, 0)
+    assert M_sym[0, -1] == MatrixElement(M_sym, 0, m_sym - 1)
+
+    M_col3 = MatrixSymbol('M_col3', n_sym, 3)
+    assert M_col3[-1] == MatrixElement(M_col3, n_sym - 1, 2)
+    assert M_col3[-2] == MatrixElement(M_col3, n_sym - 1, 1)
+    assert M_col3[-3] == MatrixElement(M_col3, n_sym - 1, 0)
+    assert M_col3[-4] == MatrixElement(M_col3, n_sym - 2, 2)
+
+    # BlockMatrix
+    BM = BlockMatrix([[A3, B3], [B3, A3]])
+    assert BM[-1, -1] == A3[2, 2]
+    assert BM[-1, 0] == B3[2, 0]
+    assert BM[0, -1] == B3[0, 2]

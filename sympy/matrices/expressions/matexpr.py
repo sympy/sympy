@@ -303,6 +303,10 @@ class MatrixExpr(Expr):
                 return MatrixSlice(self, i, j)
             i, j = _sympify(i), _sympify(j)
             if self.valid_index(i, j) != False:
+                if self.rows is not None and (i < 0) == True:
+                    i += self.rows
+                if self.cols is not None and (j < 0) == True:
+                    j += self.cols
                 return self._entry(i, j)
             else:
                 raise IndexError("Invalid indices (%s, %s)" % (i, j))
@@ -318,6 +322,10 @@ class MatrixExpr(Expr):
             i = key // cols
             j = key % cols
             if self.valid_index(i, j) != False:
+                if self.rows is not None and (i < 0) == True:
+                    i += self.rows
+                if self.cols is not None and (j < 0) == True:
+                    j += self.cols
                 return self._entry(i, j)
             else:
                 raise IndexError("Invalid index %s" % key)
@@ -576,6 +584,11 @@ class MatrixElement(Expr):
                     raise TypeError("First argument of MatrixElement should be a matrix")
             if not getattr(name, 'valid_index', lambda n, m: True)(n, m):
                 raise IndexError('indices out of range')
+            if isinstance(name, MatrixExpr):
+                if name.rows is not None and (n < 0) == True:
+                    n += name.rows
+                if name.cols is not None and (m < 0) == True:
+                    m += name.cols
         obj = Expr.__new__(cls, name, n, m)
         return obj
 
