@@ -3,6 +3,7 @@
 This file assumes knowledge of Basic and little else.
 """
 from __future__ import annotations
+from sympy.core.expr import UnevaluatedExpr
 from sympy.utilities.iterables import sift
 from .util import new
 
@@ -161,7 +162,7 @@ def flatten(expr, new=new):
     return new(expr.__class__, *args)
 
 
-def rebuild(expr):
+def rebuild(expr, release=True):
     """ Rebuild a SymPy tree.
 
     Explanation
@@ -170,8 +171,14 @@ def rebuild(expr):
     This function recursively calls constructors in the expression tree.
     This forces canonicalization and removes ugliness introduced by the use of
     Basic.__new__
+
+    If ``release=True`` (default is ``False``) then the UnevaluatedExpr
+    wrapper will be removed, too.
     """
     if expr.is_Atom:
         return expr
-    else:
-        return expr.func(*list(map(rebuild, expr.args)))
+
+    if isinstance(expr, UnevaluatedExpr):
+        return rebuild(expr.args[0], release=True) if release else expr
+
+    return expr.func(*(rebuild(a, release=release) for a in expr.args))
