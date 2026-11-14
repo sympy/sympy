@@ -1013,6 +1013,20 @@ def evalf_trig(v: cos | sin | tan, prec: int, options: OPT_DICT) -> TMP_RES:
             return y, None, prec, None
 
 
+def evalf_reciprocal_trig(v: Expr, prec: int, options: OPT_DICT) -> TMP_RES:
+    """
+    This function handles sec, csc and cot as reciprocals of cos, sin
+    and tan.
+
+    """
+    from .power import Pow
+    from sympy.functions.elementary.trigonometric import (
+        cos, cot, csc, sec, sin, tan)
+    func = {sec: cos, csc: sin, cot: tan}[v.func]
+    return evalf_pow(Pow(func(v.args[0], evaluate=False), -1, evaluate=False),
+        prec, options)
+
+
 def evalf_log(expr: 'log', prec: int, options: OPT_DICT) -> TMP_RES:
     if len(expr.args)>1:
         expr = expr.doit()
@@ -1486,7 +1500,8 @@ def _create_evalf_table():
     from sympy.functions.elementary.exponential import exp, log
     from sympy.functions.elementary.integers import ceiling, floor
     from sympy.functions.elementary.piecewise import Piecewise
-    from sympy.functions.elementary.trigonometric import atan, cos, sin, tan
+    from sympy.functions.elementary.trigonometric import (
+        atan, cos, cot, csc, sec, sin, tan)
     from sympy.integrals.integrals import Integral
     evalf_table = {
         Symbol: evalf_symbol,
@@ -1509,6 +1524,9 @@ def _create_evalf_table():
         cos: evalf_trig,
         sin: evalf_trig,
         tan: evalf_trig,
+        sec: evalf_reciprocal_trig,
+        csc: evalf_reciprocal_trig,
+        cot: evalf_reciprocal_trig,
 
         Add: evalf_add,
         Mul: evalf_mul,

@@ -23,7 +23,8 @@ from sympy.functions.elementary.exponential import (exp, log)
 from sympy.functions.elementary.hyperbolic import (acosh, cosh)
 from sympy.functions.elementary.integers import (ceiling, floor)
 from sympy.functions.elementary.miscellaneous import (Max, sqrt)
-from sympy.functions.elementary.trigonometric import (acos, atan, cos, sin, tan)
+from sympy.functions.elementary.trigonometric import (acos, atan, cos, cot, csc,
+    sec, sin, tan)
 from sympy.integrals.integrals import (Integral, integrate)
 from sympy.polys.polytools import factor
 from sympy.polys.rootoftools import CRootOf
@@ -877,3 +878,16 @@ def test_issue_13365():
     t = Symbol('t', integer=True, nonnegative=True)
     s2 = Sum(1.9**t * t / factorial(t), (t, 0, oo))
     assert abs((s2 - 19*exp(Rational(19, 10))/10).evalf()) < 1e-12
+
+
+def test_issue_29850():
+    a = 231*pi/500 + 26944
+    assert str(csc(a).evalf(2)) == '-89.'
+    assert str(cot(a).evalf(2)) == '89.'
+    assert str(sec(a + pi/2).evalf(2)) == '89.'
+    assert comp(csc(a).evalf(30),
+        Float('-89.0810623457336444180505378103', 30), 1e-28)
+    assert comp(cot(a).evalf(30),
+        Float('89.0754493036351994987869567940', 30), 1e-28)
+    assert str(csc(x).evalf(3, subs={x: a})) == '-89.1'
+    assert (Abs(atan(11774*sec(19*pi/500 - 26944))) < 0) is S.false
