@@ -2,6 +2,7 @@ from __future__ import annotations
 from sympy.core.sympify import _sympify
 
 from sympy.matrices.expressions import MatrixExpr
+from sympy.matrices.expressions.special import ZeroMatrix
 from sympy.core import S, Eq, Ge
 from sympy.core.mul import Mul
 from sympy.functions.special.tensor_functions import KroneckerDelta
@@ -199,8 +200,10 @@ class DiagMatrix(MatrixExpr):
         from sympy.matrices.dense import eye
         from sympy.matrices.matrixbase import MatrixBase
         vector = self._vector
+        if vector.is_ZeroMatrix:
+            return ZeroMatrix(*self.shape)
         # This accounts for shape (1, 1) and identity matrices, among others:
-        if ask(Q.diagonal(vector)):
+        if vector.shape == self.shape and ask(Q.diagonal(vector)):
             return vector
         if isinstance(vector, MatrixBase):
             ret = eye(max(vector.shape))

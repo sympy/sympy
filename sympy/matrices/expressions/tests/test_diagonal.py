@@ -6,7 +6,7 @@ from sympy.core.symbol import Symbol
 from sympy.functions.special.tensor_functions import KroneckerDelta
 from sympy.matrices.dense import Matrix
 from sympy.matrices.expressions.matmul import MatMul
-from sympy.matrices.expressions.special import Identity
+from sympy.matrices.expressions.special import Identity, ZeroMatrix
 from sympy.testing.pytest import raises
 
 
@@ -155,3 +155,16 @@ def test_DiagMatrix():
     assert expr.doit() == result
     expr = DiagMatrix(a.T)
     assert expr.doit() == result
+
+
+def test_DiagMatrix_zero_vector():
+    size = Symbol('size', integer=True, positive=True)
+    for dim in (0, 1, 3, size):
+        expected = ZeroMatrix(dim, dim)
+        for vector in (ZeroMatrix(dim, 1), ZeroMatrix(1, dim)):
+            assert DiagMatrix(vector).doit() == expected
+            assert diagonalize_vector(vector) == expected
+
+    for vector in (Matrix.zeros(3, 1), Matrix.zeros(1, 3)):
+        expr = DiagMatrix(vector)
+        assert expr.doit() == expr.as_explicit() == Matrix.zeros(3, 3)
