@@ -916,7 +916,14 @@ def test_logitnormal():
     x = Symbol('x')
 
     assert density(X)(x) == sqrt(2)*exp(-(-mu + log(x/(1 - x)))**2/(2*s**2))/(2*sqrt(pi)*s*x*(1 - x))
-    assert cdf(X)(x) == erf(sqrt(2)*(-mu + log(x/(1 - x)))/(2*s))/2 + S(1)/2
+    assert cdf(X)(x) == Piecewise(
+        (S.Zero, x <= 0),
+        (erf(sqrt(2)*(-mu + log(x/(1 - x)))/(2*s))/2 + S.Half, x < 1),
+        (S.One, True))
+
+    Y = LogitNormal('y', 1, 2)
+    assert cdf(Y)(-1) == 0
+    assert cdf(Y)(2) == 1
 
 def test_lognormal():
     mean = Symbol('mu', real=True)
