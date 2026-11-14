@@ -8,8 +8,8 @@ from sympy.external.gmpy import GROUND_TYPES
 
 from sympy.core import S, Add, Mul, Pow, Eq, Expr
 from sympy.core.coreerrors import NonCommutativeExpression
-from sympy.core.exprtools import (_decompose_exprs, decompose_power,
-    decompose_power_rat)
+from sympy.core.exprtools import (_decompose_exprs, _is_expanded_term,
+    decompose_power, decompose_power_rat)
 from sympy.core.numbers import _illegal
 from sympy.polys.polyerrors import PolynomialError, GeneratorsError
 from sympy.polys.polyoptions import build_options
@@ -220,11 +220,12 @@ def _not_a_coeff(expr):
     return  # could be
 
 
-def _parallel_dict_from_expr_if_gens(exprs, opt):
+def _parallel_dict_from_expr_if_gens(exprs, opt, expanded=False):
     """Transform expressions into a multinomial form given generators.
 
     The expressions are assumed to have been validated as commutative by
-    the caller.
+    the caller. If ``expanded`` is True, None is returned as soon as a
+    term is found that ``expand`` might change.
     """
     k, indices = len(opt.gens), {}
 
@@ -240,6 +241,9 @@ def _parallel_dict_from_expr_if_gens(exprs, opt):
             expr = expr.lhs - expr.rhs
 
         for term in Add.make_args(expr):
+            if expanded and not _is_expanded_term(term):
+                return None
+
             coeff, monom = [], [0]*k
 
             for factor in Mul.make_args(term):
@@ -259,6 +263,8 @@ def _parallel_dict_from_expr_if_gens(exprs, opt):
                     except KeyError:
                         if not factor.has_free(*opt.gens):
                             coeff.append(factor)
+                        elif expanded:
+                            return None
                         else:
                             raise PolynomialError("%s contains an element of "
                                                   "the set of generators." % factor)
@@ -275,11 +281,12 @@ def _parallel_dict_from_expr_if_gens(exprs, opt):
     return polys, opt.gens
 
 
-def _parallel_dict_from_expr_no_gens(exprs, opt):
+def _parallel_dict_from_expr_no_gens(exprs, opt, expanded=False):
     """Transform expressions into a multinomial form and figure out generators.
 
     Noncommutative expressions are rejected while their factors are
-    decomposed.
+    decomposed. If ``expanded`` is True, None is returned as soon as a
+    term is found that ``expand`` might change.
     """
     if opt.domain is not None:
         def _is_coeff(f):
@@ -296,9 +303,14 @@ def _parallel_dict_from_expr_no_gens(exprs, opt):
 
     decompose = decompose_power if opt.series is False else decompose_power_rat
     try:
-        factor_data, _ = _decompose_exprs(exprs, _is_coeff, decompose)
+        decomposition = _decompose_exprs(exprs, _is_coeff, decompose, expanded)
     except NonCommutativeExpression:
         raise PolynomialError('non-commutative expressions are not supported')
+
+    if decomposition is None:
+        return None
+
+    factor_data, _ = decomposition
 
     gens, polys = set(), []
 
@@ -380,9 +392,40 @@ def parallel_dict_from_expr(exprs, **args):
     return reps, opt.gens
 
 
-def _parallel_dict_from_expr(exprs, opt):
-    """Transform expressions into a multinomial form. """
+def _convert_if_expanded(exprs, opt):
+    """Convert ``exprs`` as they are if ``expand`` would not change them.
+
+    Return ``(reps, gens)``, or None if an expression is not a commutative
+    ``Expr`` or has a term that ``expand`` might change.
+    """
+    if not all(isinstance(expr, Expr) and expr.is_commutative for expr in exprs):
+        return None
+
+    if opt.gens:
+        return _parallel_dict_from_expr_if_gens(exprs, opt, expanded=True)
+    else:
+        return _parallel_dict_from_expr_no_gens(exprs, opt, expanded=True)
+
+
+def _parallel_dict_from_expr(exprs, opt, twice=()):
+    """Transform expressions into a multinomial form.
+
+    Unless ``opt.expand`` is False, the expressions are expanded, but only
+    if one of them has a term that ``expand`` might change. Those at the
+    indices in ``twice`` are then expanded twice.
+    """
     if opt.expand is not False:
+        result = _convert_if_expanded(exprs, opt)
+
+        if result is not None:
+            reps, gens = result
+            return reps, opt.clone({'gens': gens})
+
+        if twice:
+            exprs = [ expr.expand() if i in twice else expr
+                      for i, expr in enumerate(exprs) ]
+            return _parallel_dict_from_expr(exprs, opt)
+
         exprs = [ expr.expand() for expr in exprs ]
 
     if opt.gens:
@@ -401,15 +444,30 @@ def dict_from_expr(expr, **args):
     return rep, opt.gens
 
 
-def _dict_from_expr(expr, opt):
-    """Transform an expression into a multinomial form. """
+def _dict_from_expr(expr, opt, twice=False):
+    """Transform an expression into a multinomial form.
+
+    Unless ``opt.expand`` is False, the expression is expanded, but only
+    if it has a term that ``expand`` might change, and twice if ``twice``
+    is True.
+    """
     if expr.is_commutative is False:
         raise PolynomialError('non-commutative expressions are not supported')
 
     if opt.expand is not False:
         if not isinstance(expr, (Expr, Eq)):
             raise PolynomialError('expression must be of type Expr')
+
+        result = _convert_if_expanded((expr,), opt)
+
+        if result is not None:
+            (rep,), gens = result
+            return rep, opt.clone({'gens': gens})
+
         expr = expr.expand()
+
+        if twice:
+            return _dict_from_expr(expr, opt)
 
     if opt.gens:
         rep, gens = _dict_from_expr_if_gens(expr, opt)
