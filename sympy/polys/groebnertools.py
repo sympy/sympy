@@ -31,6 +31,10 @@ def groebner(seq, ring, method=None):
     except KeyError:
         raise ValueError("'%s' is not a valid Groebner bases algorithm (valid are 'buchberger' and 'f5b')" % method)
 
+    seq = [s for s in seq if not s.is_zero]
+    if not seq:
+        return []
+
     domain, orig = ring.domain, None
 
     if not domain.is_Field or not domain.has_assoc_Field:
