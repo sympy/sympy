@@ -78,8 +78,11 @@ Let us take this example
 
 The parser can be used as follows::
 
+    >>> import os
+    >>> import sympy.parsing.autolev as autolev_mod
     >>> from sympy.parsing.autolev import parse_autolev
-    >>> sympy_code = parse_autolev(open('double_pendulum.al'), include_numeric=True)
+    >>> example_file = os.path.join(autolev_mod.__path__[0], 'test-examples', 'pydy-example-repo', 'double_pendulum.al')
+    >>> sympy_code = parse_autolev(open(example_file), include_numeric=True)
 
     # The include_pydy flag is False by default. Setting it to True will
     # enable PyDy simulation code to be outputted if applicable.
