@@ -84,14 +84,13 @@ class TransformToSymPyExpr(Transformer):
 
     def __init__(self, visit_tokens=True, evaluate=True, locals=None):
         super().__init__(visit_tokens)
-        locals = dict(locals or {})
-        for command in locals:
+        self.evaluate = evaluate
+        self.locals = {} if locals is None else locals
+        for command in self.locals:
             if not (command in self._constants or command in self._trigonometric_functions
                     or command in self._exponential_functions
                     or re.fullmatch(r"\\operatorname\{[a-zA-Z]+\}", command)):
                 raise ValueError("The reading of %s cannot be overridden." % command)
-        self.evaluate = evaluate
-        self.locals = locals
 
     _constants = {"\\pi": sympy.pi, "\\mathrm{e}": sympy.E, "\\infty": sympy.oo,
                   "\\imaginaryunit": sympy.I}
