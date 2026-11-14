@@ -9,7 +9,8 @@ from sympy.functions import sin
 from sympy.integrals.integrals import Integral
 from sympy.series.order import Order
 
-from sympy.printing.precedence import precedence, PRECEDENCE
+from sympy.printing.precedence import (precedence, precedence_traditional,
+    PRECEDENCE)
 
 x, y = symbols("x,y")
 
@@ -32,6 +33,8 @@ def test_Integral():
 def test_Mul():
     assert precedence(x*y) == PRECEDENCE["Mul"]
     assert precedence(-x*y) == PRECEDENCE["Add"]
+    assert precedence_traditional(x*y) == PRECEDENCE["Mul"]
+    assert precedence_traditional(-x*y) == PRECEDENCE["Add"]
 
 
 def test_Number():
