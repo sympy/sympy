@@ -692,12 +692,14 @@ def evalf_mul(v: 'Mul', prec: int, options: OPT_DICT) -> TMP_RES:
 
     # see if any argument is NaN or oo and thus warrants a special return
     has_zero = False
-    special = []
+    special: list[tuple[int, int, int, int]] = []
+    has_complex_infinity = False
+    negative = False
     from .numbers import Float
     for arg in flat_factors:
         result = evalf(arg, prec, options)
         if result is S.ComplexInfinity:
-            special.append(result)
+            has_complex_infinity = True
             continue
         if result[0] is None:
             if result[1] is None:
@@ -707,15 +709,28 @@ def evalf_mul(v: 'Mul', prec: int, options: OPT_DICT) -> TMP_RES:
         if num is S.NaN:
             return fnan, None, prec, None
         if num.is_infinite:
-            special.append(num)
-    if special:
+            special.append(result[0])
+        elif result[1] is None and result[0][0]:
+            negative = not negative
+    if special or has_complex_infinity:
         if has_zero:
             return fnan, None, prec, None
-        from .mul import Mul
-        return evalf(Mul(*special), prec + 4, {})
+
+        if has_complex_infinity:
+            return S.ComplexInfinity
+
+        negative_sign = negative
+        for s in special:
+            if s[0]:
+                negative_sign = not negative_sign
+
+        result = special[0]
+        if negative_sign != bool(result[0]):
+            result = mpf_neg(result)
+        return result, None, prec, None
+
     if has_zero:
         return None, None, None, None
-
     # With guard digits, multiplication in the real case does not destroy
     # accuracy. This is also true in the complex case when considering the
     # total accuracy; however accuracy for the real or imaginary parts
