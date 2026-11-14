@@ -8,6 +8,20 @@ from sympy.polys.orderings import lex
 from sympy.polys.polyerrors import DomainError
 from sympy.polys.polyconfig import query
 
+def _simplify_coefficients(f, ring):
+    domain = ring.domain
+    if not domain.is_FractionField or not f:
+        return f
+
+    terms = {}
+    for monom, coeff in f.items():
+        if hasattr(coeff, 'cancel'):
+            terms[monom] = coeff.cancel()
+        else:
+            terms[monom] = coeff
+
+    return ring.from_dict(terms)
+
 def groebner(seq, ring, method=None):
     """
     Computes Groebner basis for a set of polynomials in `K[X]`.
@@ -89,6 +103,9 @@ def _buchberger(f, ring):
     .. [4] [Cox97]_
 
     """
+    if ring.domain.is_FractionField:
+        f=[_simplify_coefficients(p,ring) for p in f]
+
     order = ring.order
 
     monomial_mul = ring.monomial_mul
@@ -108,7 +125,8 @@ def _buchberger(f, ring):
             return None
         else:
             h = h.monic()
-
+            if ring.domain.is_FractionField:
+                h = _simplify_coefficients(h, ring)
             if h not in I:
                 I[h] = len(f)
                 f.append(h)
@@ -598,6 +616,8 @@ def _f5b(F, ring):
     .. [2] Thomas Becker, Volker Weispfenning, Groebner bases: A computational
            approach to commutative algebra, 1993, p. 203, 216
     """
+    if ring.domain.is_FractionField:
+        F=[_simplify_coefficients(p,ring)for p in F]
     order = ring.order
 
     # reduce polynomials (like in Mario Pernici's implementation) (Becker, Weispfenning, p. 203)
@@ -642,6 +662,9 @@ def _f5b(F, ring):
         p = lbp(Sign(p), Polyn(p).monic(), k + 1)
 
         if Polyn(p):
+            if ring.domain.is_FractionField:
+                poly_p = _simplify_coefficients(Polyn(p), ring)
+                p = lbp(Sign(p), poly_p, k + 1)
             # remove old critical pairs, that become redundant when adding p:
             indices = []
             for i, cp in enumerate(CP):

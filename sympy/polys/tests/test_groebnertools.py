@@ -532,3 +532,17 @@ def test_is_reduced():
     assert is_reduced([f, g], R) ==  False
     G = groebner([f, g], R)
     assert is_reduced(G, R) == True
+
+def test_issue_30609():
+    from sympy.core.symbol import symbols
+    from sympy.polys.polytools import groebner
+
+    x, y, b, c = symbols('x y b c')
+
+    f1 = (1 + x * y) * y + b
+    f2 = x**2 * y + c
+
+    G = groebner([f1, f2], x, y, order='lex')
+
+    assert len(G) > 0
+    assert all(g.has(b) or g.has(c) for g in G)
