@@ -1104,6 +1104,31 @@ def test_Pow_is_integer():
     assert ((2*x + 2*x**3)*x/10).is_integer is None
     assert ((2*x + 2*x**3)*x/2).is_integer
 
+    ir = Symbol('ir', irrational=True)
+    assert (ir**2).is_integer is None
+
+
+def test_Pow_is_rational():
+    ir = Symbol('ir', irrational=True)
+
+    # sqrt(2)**2 == 2 is rational but sqrt(2)**3 == 2*sqrt(2) is not,
+    # so no rationality can be deduced for a power of an irrational
+    assert (ir**2).is_rational is None
+    assert (ir**2).is_irrational is None
+    assert (ir**(-2)).is_rational is None
+    assert (ir**2).is_prime is None
+
+    # but a specific irrational number in canonical form raised to a
+    # nonzero integer power is irrational
+    assert (pi**(-2)).is_rational is False
+
+    # A sum need not be in canonical form, though: 1/(sqrt(2) - 1) - 1
+    # equals sqrt(2), whose square is rational, so nothing can be
+    # deduced for a power of an Add base
+    b = 1/(sqrt(2) - 1) - 1
+    assert (b**2).is_rational is None
+    assert ((1 - 2*sqrt(2))**(-1)).is_rational is None
+
 
 def test_Pow_is_real():
     x = Symbol('x', real=True)
@@ -1268,6 +1293,18 @@ def test_Pow_is_even_odd():
 
     assert (k**x).is_odd is None
     assert (n**x).is_odd is None
+
+    ir = Symbol('ir', irrational=True)
+    assert (ir**2).is_even is None
+    assert (ir**2).is_odd is None
+    assert (ir**3).is_even is None
+    assert (ir**3).is_odd is None
+
+    y = Symbol('y', integer=False)
+    assert (y**2).is_even is None
+    assert (y**2).is_odd is None
+    assert (y**3).is_even is None
+    assert (y**3).is_odd is None
 
 
 def test_Pow_is_negative_positive():
