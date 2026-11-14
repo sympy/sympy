@@ -2230,6 +2230,15 @@ def test_nsolve():
     raises(TypeError, lambda: nsolve(x < 0.5, x, 1))
 
 
+def test_nsolve_with_symbolic_guess():
+    assert abs(nsolve(sin(x), x, pi) - pi.evalf()) < 1e-14
+    assert abs(nsolve(sin(x), x, pi, prec=30) - pi.evalf(30)) < 1e-29
+    assert abs(nsolve(sin(x), x, sqrt(10)) - 3.141592653589793) < 1e-14
+    sol = nsolve((x**2 - 2, y**2 - 4), (x, y), (sqrt(2), sqrt(4)))
+    assert abs(sol[0] - sqrt(2).evalf()) < 1e-14
+    assert abs(sol[1] - 2) < 1e-14
+
+
 @slow
 def test_high_order_multivariate():
     assert len(solve(a*x**3 - x + 1, x)) == 3

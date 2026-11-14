@@ -54,7 +54,7 @@ from sympy.utilities.lambdify import lambdify
 from sympy.utilities.misc import filldedent, debugf
 from sympy.utilities.iterables import (connected_components,
     generate_bell, uniq, iterable, is_sequence, subsets, flatten, sift)
-from sympy.external.mpmath import conserve_mpmath_dps, findroot
+from sympy.external.mpmath import conserve_mpmath_dps, findroot, mp, mpnumeric
 
 from sympy.solvers.polysys import solve_poly_system
 
@@ -3108,6 +3108,20 @@ def nsolve(*args, dict=False, **kwargs):
         f = Matrix(f).T
     if iterable(x0):
         x0 = list(x0)
+    # mpmath cannot convert SymPy numbers (e.g. pi) to its mpf type, so
+    # evaluate the initial guesses at the working precision
+    def as_mp_number(value):
+        if isinstance(value, (mpnumeric, str)):
+            return value
+        evaluated = sympify(value).n(mp.dps)
+        if evaluated.is_real:
+            return mp.mpf(str(evaluated))
+        re, im = evaluated.as_real_imag()
+        return mp.mpc(mp.mpf(str(re)), mp.mpf(str(im)))
+    if isinstance(x0, list):
+        x0 = [as_mp_number(x0i) for x0i in x0]
+    else:
+        x0 = as_mp_number(x0)
     if not isinstance(f, Matrix):
         # assume it's a SymPy expression
         if isinstance(f, Eq):
