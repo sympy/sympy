@@ -1560,7 +1560,7 @@ class Expr(Basic, EvalfMixin):
                     return l1[:i]
             return l1[:]
 
-        def find(l, sub, first=True):
+        def find(l: list[Expr], sub: list[Expr], first: bool = True) -> int | None:
             """ Find where list sub appears in list l. When ``first`` is True
             the first occurrence from the left is returned, else the last
             occurrence is returned. Return None if sub is not in l.
@@ -1579,7 +1579,7 @@ class Expr(Basic, EvalfMixin):
             """
             if not sub or not l or len(sub) > len(l):
                 return None
-            n = len(sub)
+            n: int = len(sub)
             if not first:
                 l.reverse()
                 sub.reverse()
@@ -1639,7 +1639,7 @@ class Expr(Basic, EvalfMixin):
             if not co:
                 return S.Zero
             if all(n == co[0][1] for r, n in co):
-                ii = find(co[0][1], nx, right)
+                ii: None | int = find(co[0][1], nx, right)
                 if ii is not None:
                     if not right:
                         return Mul(Add(*[Mul(*r) for r, c in co]), Mul(*co[0][1][:ii]))
