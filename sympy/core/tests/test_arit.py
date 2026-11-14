@@ -2467,7 +2467,7 @@ def test_issue_18507():
 
 def test_issue_17130():
     e = Add(b, -b, I, -I, evaluate=False)
-    assert e.is_zero is None # ideally this would be True
+    assert e.is_zero
 
 
 def test_issue_21034():
