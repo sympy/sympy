@@ -550,6 +550,52 @@ def test_Subs():
         f(x, g(x)), g(x))*Derivative(g(x), x) + Subs(Derivative(
         f(y, g(x)), y), y, x)
 
+
+
+def test_Subs_composite_arguments_derivative():
+    x, y, z = symbols('x y z')
+    f = Function('f')
+
+    # Regression test: differentiating a function with multiple
+    # composite arguments must not introduce spurious free symbols.
+    result = f(x + y, x*y).diff(y).diff(x)
+    assert result.free_symbols == {x, y}
+
+    # Check that repeated differentiation with different composite
+    # arguments and differentiation orders does not introduce
+    # unexpected free symbols.
+    cases = [
+        # Different differentiation order.
+        (f(x + y, x*y), (x, y), {x, y}),
+
+        # Composite arguments involving powers and constants.
+        (f(x**2 + y, x*y + 1), (y, x), {x, y}),
+
+        # Multiple arguments containing the same composite expression.
+        (f(x + y, x + y), (y, x), {x, y}),
+
+        # Three composite arguments with overlapping free symbols.
+        (f(x + y, x*y, x*z + y), (y, x), {x, y, z}),
+
+        # Nested composite expressions.
+        (f((x + y)**2, x*y + x), (y, x), {x, y}),
+
+        # Repeated differentiation of the same expression.
+        (f(x + y, x*y), (y, x, y), {x, y}),
+
+        # Different powers and a different differentiation order.
+        (f(x**2 + y**2, x*y + y**3), (x, y, x), {x, y}),
+    ]
+
+    for expr, variables, allowed_symbols in cases:
+        result = expr
+        for variable in variables:
+            result = result.diff(variable)
+
+        assert result.free_symbols <= allowed_symbols
+
+
+
 def test_doitdoit():
     done = Derivative(f(x, g(x)), x, g(x)).doit()
     assert done == done.doit()
