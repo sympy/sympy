@@ -86,6 +86,9 @@ class Ordinal(Basic):
     args: tuple[OmegaPower, ...]
 
     def __new__(cls, *terms: OmegaPower):
+        if len(terms) == 0 and cls is Ordinal:
+            return ord0
+
         obj = super().__new__(cls, *terms)
         powers = [i.exp for i in obj.args]
         if not all(powers[i] >= powers[i+1] for i in range(len(powers) - 1)):
@@ -98,14 +101,10 @@ class Ordinal(Basic):
 
     @property
     def leading_term(self) -> OmegaPower:
-        if self == ord0:
-            raise ValueError("ordinal zero has no leading term")
         return self.terms[0]
 
     @property
     def trailing_term(self) -> OmegaPower:
-        if self == ord0:
-            raise ValueError("ordinal zero has no trailing term")
         return self.terms[-1]
 
     @property
@@ -162,29 +161,6 @@ class Ordinal(Basic):
 
     def __ge__(self, other: Ordinal | Integer | int) -> bool:
         return not self < other
-
-    def __str__(self) -> str:
-        net_str = ""
-        if self == ord0:
-            return 'ord0'
-        for plus_count, i in enumerate(self.terms):
-            if plus_count:
-                net_str += " + "
-
-            if i.exp == ord0:
-                net_str += str(i.mult)
-            elif i.exp == 1:
-                net_str += 'w'
-            elif len(i.exp.terms) > 1 or i.exp.is_limit_ordinal:
-                net_str += 'w**(%s)'%i.exp
-            else:
-                net_str += 'w**%s'%i.exp
-
-            if not i.mult == 1 and not i.exp == ord0:
-                net_str += '*%s'%i.mult
-        return(net_str)
-
-    __repr__ = __str__
 
     def __add__(self, other: Ordinal | Integer | int) -> Ordinal:
         if not isinstance(other, Ordinal):
@@ -329,6 +305,14 @@ class OrdinalZero(Ordinal):
     def __new__(cls):
         return Ordinal.__new__(cls)
 
+    @property
+    def leading_term(self) -> OmegaPower:
+        raise ValueError("OrdinalZero has no leading term")
+
+    @property
+    def trailing_term(self) -> OmegaPower:
+        raise ValueError("OrdinalZero has no trailing term")
+
 
 class OrdinalOmega(Ordinal):
     """The ordinal omega which forms the base of all ordinals in cantor normal form.
@@ -351,4 +335,5 @@ class OrdinalOmega(Ordinal):
 
 
 ord0 = OrdinalZero()
-omega = OrdinalOmega()
+w = OrdinalOmega()
+omega = w
