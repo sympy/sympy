@@ -138,3 +138,10 @@ def test_issue_14950():
     eqn = x + x0
     assert nsolve(eqn, x, x0) == nfloat(-x0)
     assert nsolve(eqn.T, x.T, x0.T) == nfloat(-x0)
+
+def test_issue_31039():
+    x, y = symbols('x y')
+    raises(TypeError, lambda: nsolve(sin(x), x, pi))
+    raises(TypeError, lambda: nsolve(sin(x), x, (3, pi)))
+    raises(TypeError, lambda: nsolve([sin(x), y - 1], [x, y], [pi, 1]))
+    assert abs(nsolve(sin(x), x, pi.n(2)) - pi) < 1e-15

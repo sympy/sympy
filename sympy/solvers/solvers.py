@@ -21,7 +21,7 @@ from sympy.core.function import (expand_mul, expand_log, Derivative,
                                  Function, expand_power_exp, _mexpand, expand,
                                  expand_func)
 from sympy.core.logic import fuzzy_not, fuzzy_and
-from sympy.core.numbers import Float, Rational, _illegal
+from sympy.core.numbers import Float, Number, Rational, _illegal
 from sympy.core.intfunc import integer_log, ilcm
 from sympy.core.power import Pow
 from sympy.core.relational import Eq, Ne
@@ -3108,6 +3108,13 @@ def nsolve(*args, dict=False, **kwargs):
         f = Matrix(f).T
     if iterable(x0):
         x0 = list(x0)
+
+    for g in (x0 if isinstance(x0, list) else [x0]):
+        if isinstance(g, Expr) and not isinstance(g, Number) and g is not S.ImaginaryUnit:
+            raise TypeError(
+                f"Initial guess must be a Number or Python number, got {type(g).__name__}"
+            )
+
     if not isinstance(f, Matrix):
         # assume it's a SymPy expression
         if isinstance(f, Eq):
