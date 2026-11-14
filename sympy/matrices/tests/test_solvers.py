@@ -161,6 +161,18 @@ def test_QRsolve():
     soln = A.QRsolve(b)
     assert soln == x
 
+    # issue 31096: complex matrices require conjugate transpose Q.H
+    A = Matrix([[1, I], [I, 2]])
+    b = Matrix([1, 1])
+    soln = A.QRsolve(b)
+    assert simplify(A*soln - b) == Matrix([[0], [0]])
+    assert simplify(A.inv(method='QR') * A) == eye(2)
+
+    A = Matrix([[1 + I, 2], [3, 4 - I], [I, 1]])
+    x = Matrix([2 - I, 1 + 2*I])
+    b = A*x
+    assert simplify(A.QRsolve(b) - x) == Matrix([[0], [0]])
+
 def test_errors():
     raises(ShapeError, lambda: Matrix([1]).LUsolve(Matrix([[1, 2], [3, 4]])))
 
