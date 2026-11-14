@@ -1,5 +1,5 @@
 from __future__ import annotations
-from sympy.core import S, Pow
+from sympy.core import S
 from sympy.core.function import (Derivative, AppliedUndef, diff)
 from sympy.core.relational import Equality, Eq
 from sympy.core.symbol import Dummy
