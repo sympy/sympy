@@ -61,8 +61,10 @@ class TypeC(Standard_Cartan):
         [0, 1, -1]
 
         """
+        n = self.rank()
+        if i < 0 or i > n:
+            raise ValueError(f"Lie algebra C{n} has {n} simple roots")
 
-        n = self.n
         if i < n:
             return self.basic_root(i-1,i)
         else:

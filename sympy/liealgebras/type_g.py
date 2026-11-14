@@ -47,6 +47,10 @@ class TypeG(Standard_Cartan):
         [0, 1, -1]
 
         """
+        n = self.rank()
+        if i < 0 or i > n:
+            raise ValueError(f"Lie algebra G{n} has {n} simple roots")
+
         if i == 1:
             return [0, 1, -1]
         else:

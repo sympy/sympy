@@ -67,8 +67,10 @@ class TypeD(Standard_Cartan):
         [0, 1, -1, 0]
 
         """
+        n = self.rank()
+        if i < 0 or i > n:
+            raise ValueError(f"Lie algebra D{n} has {n} simple roots")
 
-        n = self.n
         if i < n:
             return self.basic_root(i-1, i)
         else:

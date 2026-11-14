@@ -70,6 +70,9 @@ class TypeA(Standard_Cartan):
         [1, -1, 0, 0, 0]
 
         """
+        n = self.rank()
+        if i < 0 or i > n:
+            raise ValueError(f"Lie algebra A{n} has {n} simple roots")
 
         return self.basic_root(i-1, i)
 

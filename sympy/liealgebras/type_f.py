@@ -60,8 +60,11 @@ class TypeF(Standard_Cartan):
         [0, 0, 0, 1]
 
         """
+        n = self.rank()
+        if i < 0 or i > n:
+            raise ValueError(f"Lie algebra F{n} has {n} simple roots")
 
-        if i < 3 and i > 0:
+        if i < 3:
             return self.basic_root(i, i+1)
         if i == 3:
             root = [0]*4
@@ -70,7 +73,6 @@ class TypeF(Standard_Cartan):
         if i == 4:
             root = [Rational(1, 2), Rational(-1, 2), Rational(-1, 2), Rational(-1, 2)]
             return root
-        raise ValueError("F_4 has four simple roots")
 
     def positive_roots(self) -> dict[int, list[int] | list[Rational]]:
         """Generate all the positive roots of A_n
