@@ -9,7 +9,6 @@ from sympy.concrete.summations import Sum
 from sympy.core.function import Derivative, Function
 from sympy.core.numbers import E, oo, Rational
 from sympy.core.power import Pow
-from sympy.core.parameters import evaluate
 from sympy.core.relational import GreaterThan, LessThan, StrictGreaterThan, StrictLessThan, Unequality
 from sympy.core.symbol import Symbol
 from sympy.functions.combinatorial.factorials import binomial, factorial
@@ -248,9 +247,9 @@ UNEVALUATED_FRACTION_EXPRESSION_PAIRS = [
     (r"\frac{a}{b}", a / b),
     (r"\dfrac{a}{b}", a / b),
     (r"\tfrac{a}{b}", a / b),
-    (r"\frac12", _Mul(1, _Pow(2, -1))),
-    (r"\frac12y", _Mul(_Mul(1, _Pow(2, -1)), y)),
-    (r"\frac1234", _Mul(_Mul(1, _Pow(2, -1)), 34)),
+    (r"\frac12", _Pow(2, -1)),
+    (r"\frac12y", _Mul(_Pow(2, -1), y)),
+    (r"\frac1234", _Mul(_Pow(2, -1), 34)),
     (r"\frac2{3}", _Mul(2, _Pow(3, -1))),
     (r"\frac{a + b}{c}", _Mul(a + b, _Pow(c, -1))),
     (r"\frac{7}{3}", _Mul(7, _Pow(3, -1)))
@@ -290,7 +289,7 @@ RELATION_EXPRESSION_PAIRS = [
 
 UNEVALUATED_POWER_EXPRESSION_PAIRS = [
     (r"x^2", x ** 2),
-    (r"x^\frac{1}{2}", _Pow(x, _Mul(1, _Pow(2, -1)))),
+    (r"x^\frac{1}{2}", _Pow(x, _Pow(2, -1))),
     (r"x^{3 + 1}", x ** _Add(3, 1)),
     (r"\pi^{|xy|}", Symbol('pi') ** _Abs(x * y)),
     (r"5^0 - 4^0", _Add(_Pow(5, 0), _Mul(-1, _Pow(4, 0)))),
@@ -319,28 +318,28 @@ SUPERSCRIPT_IMPLICIT_MUL_PAIRS = [
 ]
 
 UNEVALUATED_INTEGRAL_EXPRESSION_PAIRS = [
-    (r"\int x dx", Integral(_Mul(1, x), x)),
-    (r"\int x \, dx", Integral(_Mul(1, x), x)),
-    (r"\int x d\theta", Integral(_Mul(1, x), theta)),
-    (r"\int (x^2 - y)dx", Integral(_Mul(1, x ** 2 - y), x)),
-    (r"\int x + a dx", Integral(_Mul(1, _Add(x, a)), x)),
-    (r"\int da", Integral(_Mul(1, 1), a)),
-    (r"\int_0^7 dx", Integral(_Mul(1, 1), (x, 0, 7))),
-    (r"\int\limits_{0}^{1} x dx", Integral(_Mul(1, x), (x, 0, 1))),
-    (r"\int_a^b x dx", Integral(_Mul(1, x), (x, a, b))),
-    (r"\int^b_a x dx", Integral(_Mul(1, x), (x, a, b))),
-    (r"\int_{a}^b x dx", Integral(_Mul(1, x), (x, a, b))),
-    (r"\int^{b}_a x dx", Integral(_Mul(1, x), (x, a, b))),
-    (r"\int_{a}^{b} x dx", Integral(_Mul(1, x), (x, a, b))),
-    (r"\int^{b}_{a} x dx", Integral(_Mul(1, x), (x, a, b))),
+    (r"\int x dx", Integral(x, x)),
+    (r"\int x \, dx", Integral(x, x)),
+    (r"\int x d\theta", Integral(x, theta)),
+    (r"\int (x^2 - y)dx", Integral(x ** 2 - y, x)),
+    (r"\int x + a dx", Integral(_Add(x, a), x)),
+    (r"\int da", Integral(1, a)),
+    (r"\int_0^7 dx", Integral(1, (x, 0, 7))),
+    (r"\int\limits_{0}^{1} x dx", Integral(x, (x, 0, 1))),
+    (r"\int_a^b x dx", Integral(x, (x, a, b))),
+    (r"\int^b_a x dx", Integral(x, (x, a, b))),
+    (r"\int_{a}^b x dx", Integral(x, (x, a, b))),
+    (r"\int^{b}_a x dx", Integral(x, (x, a, b))),
+    (r"\int_{a}^{b} x dx", Integral(x, (x, a, b))),
+    (r"\int^{b}_{a} x dx", Integral(x, (x, a, b))),
     (r"\int_{f(a)}^{f(b)} f(z) dz", Integral(f(z), (z, f(a), f(b)))),
-    (r"\int a + b + c dx", Integral(_Mul(1, _Add(_Add(a, b), c)), x)),
-    (r"\int \frac{dz}{z}", Integral(_Mul(1, _Mul(1, Pow(z, -1))), z)),
-    (r"\int \frac{3 dz}{z}", Integral(_Mul(1, _Mul(3, _Pow(z, -1))), z)),
-    (r"\int \frac{1}{x} dx", Integral(_Mul(1, _Mul(1, Pow(x, -1))), x)),
+    (r"\int a + b + c dx", Integral(_Add(_Add(a, b), c), x)),
+    (r"\int \frac{dz}{z}", Integral(_Pow(z, -1), z)),
+    (r"\int \frac{3 dz}{z}", Integral(_Mul(3, _Pow(z, -1)), z)),
+    (r"\int \frac{1}{x} dx", Integral(_Pow(x, -1), x)),
     (r"\int \frac{1}{a} + \frac{1}{b} dx",
-     Integral(_Mul(1, _Add(_Mul(1, _Pow(a, -1)), _Mul(1, Pow(b, -1)))), x)),
-    (r"\int \frac{1}{x} + 1 dx", Integral(_Mul(1, _Add(_Mul(1, _Pow(x, -1)), 1)), x))
+     Integral(_Add(_Pow(a, -1), _Pow(b, -1)), x)),
+    (r"\int \frac{1}{x} + 1 dx", Integral(_Add(_Pow(x, -1), 1), x))
 ]
 
 EVALUATED_INTEGRAL_EXPRESSION_PAIRS = [
@@ -431,7 +430,7 @@ UNEVALUATED_LIMIT_EXPRESSION_PAIRS = [
     (r"\lim_{x \to 3^{-}} a", Limit(a, x, 3, dir="-")),
     (r"\lim_{x \to 3^+} a", Limit(a, x, 3, dir="+")),
     (r"\lim_{x \to 3^-} a", Limit(a, x, 3, dir="-")),
-    (r"\lim_{x \to \infty} \frac{1}{x}", Limit(_Mul(1, _Pow(x, -1)), x, oo))
+    (r"\lim_{x \to \infty} \frac{1}{x}", Limit(_Pow(x, -1), x, oo))
 ]
 
 EVALUATED_LIMIT_EXPRESSION_PAIRS = [
@@ -441,7 +440,7 @@ EVALUATED_LIMIT_EXPRESSION_PAIRS = [
 UNEVALUATED_SQRT_EXPRESSION_PAIRS = [
     (r"\sqrt{x}", sqrt(x)),
     (r"\sqrt{x + b}", sqrt(_Add(x, b))),
-    (r"\sqrt[3]{\sin x}", _Pow(sin(x), _Pow(3, -1))),
+    (r"\sqrt[3]{\sin x}", _Pow(sin(x), Rational(1, 3))),
     # the above test needed to be handled differently than the ones below because root
     # acts differently if its second argument is a number
     (r"\sqrt[y]{\sin x}", root(sin(x), y)),
@@ -480,13 +479,13 @@ EVALUATED_FACTORIAL_EXPRESSION_PAIRS = [
 ]
 
 UNEVALUATED_SUM_EXPRESSION_PAIRS = [
-    (r"\sum_{k = 1}^{3} c", Sum(_Mul(1, c), (k, 1, 3))),
-    (r"\sum_{k = 1}^3 c", Sum(_Mul(1, c), (k, 1, 3))),
-    (r"\sum^{3}_{k = 1} c", Sum(_Mul(1, c), (k, 1, 3))),
-    (r"\sum^3_{k = 1} c", Sum(_Mul(1, c), (k, 1, 3))),
-    (r"\sum_{k = 1}^{10} k^2", Sum(_Mul(1, k ** 2), (k, 1, 10))),
+    (r"\sum_{k = 1}^{3} c", Sum(c, (k, 1, 3))),
+    (r"\sum_{k = 1}^3 c", Sum(c, (k, 1, 3))),
+    (r"\sum^{3}_{k = 1} c", Sum(c, (k, 1, 3))),
+    (r"\sum^3_{k = 1} c", Sum(c, (k, 1, 3))),
+    (r"\sum_{k = 1}^{10} k^2", Sum(k ** 2, (k, 1, 10))),
     (r"\sum_{n = 0}^{\infty} \frac{1}{n!}",
-     Sum(_Mul(1, _Mul(1, _Pow(_factorial(n), -1))), (n, 0, oo)))
+     Sum(_Pow(_factorial(n), -1), (n, 0, oo)))
 ]
 
 EVALUATED_SUM_EXPRESSION_PAIRS = [
@@ -834,8 +833,7 @@ EVALUATED_MATRIX_EXPRESSION_PAIRS = [
 
 def test_symbol_expressions():
     for latex_str, sympy_expr in SYMBOL_EXPRESSION_PAIRS:
-        with evaluate(False):
-            assert parse_latex_lark(latex_str) == sympy_expr, latex_str
+        assert parse_latex_lark(latex_str, evaluate=False) == sympy_expr, latex_str
 
 
 def test_primes_after_subscript():
@@ -862,8 +860,7 @@ def test_unsupported_subscript_expressions():
 
 def test_simple_expressions():
     for latex_str, sympy_expr in UNEVALUATED_SIMPLE_EXPRESSION_PAIRS:
-        with evaluate(False):
-            assert parse_latex_lark(latex_str) == sympy_expr, latex_str
+        assert parse_latex_lark(latex_str, evaluate=False) == sympy_expr, latex_str
 
     for latex_str, sympy_expr in EVALUATED_SIMPLE_EXPRESSION_PAIRS:
         assert parse_latex_lark(latex_str) == sympy_expr, latex_str
@@ -871,8 +868,7 @@ def test_simple_expressions():
 
 def test_fraction_expressions():
     for latex_str, sympy_expr in UNEVALUATED_FRACTION_EXPRESSION_PAIRS:
-        with evaluate(False):
-            assert parse_latex_lark(latex_str) == sympy_expr, latex_str
+        assert parse_latex_lark(latex_str, evaluate=False) == sympy_expr, latex_str
 
     for latex_str, sympy_expr in EVALUATED_FRACTION_EXPRESSION_PAIRS:
         assert parse_latex_lark(latex_str) == sympy_expr, latex_str
@@ -880,16 +876,14 @@ def test_fraction_expressions():
 
 def test_relation_expressions():
     for latex_str, sympy_expr in RELATION_EXPRESSION_PAIRS:
-        with evaluate(False):
-            assert parse_latex_lark(latex_str) == sympy_expr, latex_str
+        assert parse_latex_lark(latex_str, evaluate=False) == sympy_expr, latex_str
 
 def test_power_expressions():
     expected_failures = {3}
     for i, (latex_str, sympy_expr) in enumerate(UNEVALUATED_POWER_EXPRESSION_PAIRS):
         if i in expected_failures:
             continue
-        with evaluate(False):
-            assert parse_latex_lark(latex_str) == sympy_expr, latex_str
+        assert parse_latex_lark(latex_str, evaluate=False) == sympy_expr, latex_str
 
     for i, (latex_str, sympy_expr) in enumerate(EVALUATED_POWER_EXPRESSION_PAIRS):
         if i in expected_failures:
@@ -899,8 +893,7 @@ def test_power_expressions():
 
 def test_superscript_implicit_multiplication():
     for latex_str, sympy_expr in SUPERSCRIPT_IMPLICIT_MUL_PAIRS:
-        with evaluate(False):
-            assert parse_latex_lark(latex_str) == sympy_expr, latex_str
+        assert parse_latex_lark(latex_str, evaluate=False) == sympy_expr, latex_str
 
 
 def test_integral_expressions():
@@ -908,8 +901,7 @@ def test_integral_expressions():
     for i, (latex_str, sympy_expr) in enumerate(UNEVALUATED_INTEGRAL_EXPRESSION_PAIRS):
         if i in expected_failures:
             continue
-        with evaluate(False):
-            assert parse_latex_lark(latex_str) == sympy_expr, i
+        assert parse_latex_lark(latex_str, evaluate=False) == sympy_expr, i
 
     for i, (latex_str, sympy_expr) in enumerate(EVALUATED_INTEGRAL_EXPRESSION_PAIRS):
         if i in expected_failures:
@@ -922,8 +914,7 @@ def test_derivative_expressions():
     for i, (latex_str, sympy_expr) in enumerate(DERIVATIVE_EXPRESSION_PAIRS):
         if i in expected_failures:
             continue
-        with evaluate(False):
-            assert parse_latex_lark(latex_str) == sympy_expr, latex_str
+        assert parse_latex_lark(latex_str, evaluate=False) == sympy_expr, latex_str
 
     for i, (latex_str, sympy_expr) in enumerate(DERIVATIVE_EXPRESSION_PAIRS):
         if i in expected_failures:
@@ -939,39 +930,33 @@ def test_ambiguous_trigonometric_expressions():
 
 def test_trigonometric_expressions():
     for latex_str, sympy_expr in TRIGONOMETRIC_EXPRESSION_PAIRS:
-        with evaluate(False):
-            assert parse_latex_lark(latex_str) == sympy_expr, latex_str
+        assert parse_latex_lark(latex_str, evaluate=False) == sympy_expr, latex_str
 
 
 def test_inverse_trigonometric_expressions():
     for latex_str, sympy_expr in INVERSE_TRIGONOMETRIC_EXPRESSION_PAIRS:
-        with evaluate(False):
-            assert parse_latex_lark(latex_str) == sympy_expr, latex_str
+        assert parse_latex_lark(latex_str, evaluate=False) == sympy_expr, latex_str
 
 
 def test_hyperbolic_expressions():
     for latex_str, sympy_expr in HYPERBOLIC_EXPRESSION_PAIRS:
-        with evaluate(False):
-            assert parse_latex_lark(latex_str) == sympy_expr, latex_str
+        assert parse_latex_lark(latex_str, evaluate=False) == sympy_expr, latex_str
 
 
 @XFAIL
 def test_unsupported_hyperbolic_expressions():
     for latex_str, sympy_expr in UNSUPPORTED_HYPERBOLIC_EXPRESSION_PAIRS:
-        with evaluate(False):
-            assert parse_latex_lark(latex_str) == sympy_expr, latex_str
+        assert parse_latex_lark(latex_str, evaluate=False) == sympy_expr, latex_str
 
 
 def test_limit_expressions():
     for latex_str, sympy_expr in UNEVALUATED_LIMIT_EXPRESSION_PAIRS:
-        with evaluate(False):
-            assert parse_latex_lark(latex_str) == sympy_expr, latex_str
+        assert parse_latex_lark(latex_str, evaluate=False) == sympy_expr, latex_str
 
 
 def test_square_root_expressions():
     for latex_str, sympy_expr in UNEVALUATED_SQRT_EXPRESSION_PAIRS:
-        with evaluate(False):
-            assert parse_latex_lark(latex_str) == sympy_expr, latex_str
+        assert parse_latex_lark(latex_str, evaluate=False) == sympy_expr, latex_str
 
     for latex_str, sympy_expr in EVALUATED_SQRT_EXPRESSION_PAIRS:
         assert parse_latex_lark(latex_str) == sympy_expr, latex_str
@@ -979,8 +964,7 @@ def test_square_root_expressions():
 
 def test_factorial_expressions():
     for latex_str, sympy_expr in UNEVALUATED_FACTORIAL_EXPRESSION_PAIRS:
-        with evaluate(False):
-            assert parse_latex_lark(latex_str) == sympy_expr, latex_str
+        assert parse_latex_lark(latex_str, evaluate=False) == sympy_expr, latex_str
 
     for latex_str, sympy_expr in EVALUATED_FACTORIAL_EXPRESSION_PAIRS:
         assert parse_latex_lark(latex_str) == sympy_expr, latex_str
@@ -988,8 +972,7 @@ def test_factorial_expressions():
 
 def test_sum_expressions():
     for latex_str, sympy_expr in UNEVALUATED_SUM_EXPRESSION_PAIRS:
-        with evaluate(False):
-            assert parse_latex_lark(latex_str) == sympy_expr, latex_str
+        assert parse_latex_lark(latex_str, evaluate=False) == sympy_expr, latex_str
 
     for latex_str, sympy_expr in EVALUATED_SUM_EXPRESSION_PAIRS:
         assert parse_latex_lark(latex_str) == sympy_expr, latex_str
@@ -1003,8 +986,7 @@ def test_unsupported_sum_expressions():
 
 def test_product_expressions():
     for latex_str, sympy_expr in UNEVALUATED_PRODUCT_EXPRESSION_PAIRS:
-        with evaluate(False):
-            assert parse_latex_lark(latex_str) == sympy_expr, latex_str
+        assert parse_latex_lark(latex_str, evaluate=False) == sympy_expr, latex_str
 
 @XFAIL
 def test_applied_function_expressions():
@@ -1013,14 +995,12 @@ def test_applied_function_expressions():
     for i, (latex_str, sympy_expr) in enumerate(APPLIED_FUNCTION_EXPRESSION_PAIRS):
         if i in expected_failures:
             continue
-        with evaluate(False):
-            assert parse_latex_lark(latex_str) == sympy_expr, latex_str
+        assert parse_latex_lark(latex_str, evaluate=False) == sympy_expr, latex_str
 
 
 def test_common_function_expressions():
     for latex_str, sympy_expr in UNEVALUATED_COMMON_FUNCTION_EXPRESSION_PAIRS:
-        with evaluate(False):
-            assert parse_latex_lark(latex_str) == sympy_expr, latex_str
+        assert parse_latex_lark(latex_str, evaluate=False) == sympy_expr, latex_str
 
     for latex_str, sympy_expr in EVALUATED_COMMON_FUNCTION_EXPRESSION_PAIRS:
         assert parse_latex_lark(latex_str) == sympy_expr, latex_str
@@ -1029,14 +1009,12 @@ def test_common_function_expressions():
 @XFAIL
 def test_unsupported_conjugate_expressions():
     for latex_str, sympy_expr in UNSUPPORTED_CONJUGATE_EXPRESSION_PAIRS:
-        with evaluate(False):
-            assert parse_latex_lark(latex_str) == sympy_expr, latex_str
+        assert parse_latex_lark(latex_str, evaluate=False) == sympy_expr, latex_str
 
 
 def test_spacing():
     for latex_str, sympy_expr in SPACING_RELATED_EXPRESSION_PAIRS:
-        with evaluate(False):
-            assert parse_latex_lark(latex_str) == sympy_expr, latex_str
+        assert parse_latex_lark(latex_str, evaluate=False) == sympy_expr, latex_str
 
 
 def test_negthinspace_not_equal_conflict():
@@ -1267,8 +1245,7 @@ def test_unknown_commands():
 
 def test_binomial_expressions():
     for latex_str, sympy_expr in UNEVALUATED_BINOMIAL_EXPRESSION_PAIRS:
-        with evaluate(False):
-            assert parse_latex_lark(latex_str) == sympy_expr, latex_str
+        assert parse_latex_lark(latex_str, evaluate=False) == sympy_expr, latex_str
 
     for latex_str, sympy_expr in EVALUATED_BINOMIAL_EXPRESSION_PAIRS:
         assert parse_latex_lark(latex_str) == sympy_expr, latex_str
@@ -1276,15 +1253,13 @@ def test_binomial_expressions():
 
 def test_miscellaneous_expressions():
     for latex_str, sympy_expr in MISCELLANEOUS_EXPRESSION_PAIRS:
-        with evaluate(False):
-            assert parse_latex_lark(latex_str) == sympy_expr, latex_str
+        assert parse_latex_lark(latex_str, evaluate=False) == sympy_expr, latex_str
 
 
 def test_square_bracket_multiplication():
     for latex_str, sympy_expr in SQUARE_BRACKET_EXPRESSION_PAIRS:
-        with evaluate(False):
-            result = parse_latex_lark(latex_str)
-            assert result == sympy_expr, f"Failed for {latex_str}: got {result}, expected {sympy_expr}"
+        result = parse_latex_lark(latex_str, evaluate=False)
+        assert result == sympy_expr, f"Failed for {latex_str}: got {result}, expected {sympy_expr}"
 
     for latex_str, sympy_expr in EVALUATED_SQUARE_BRACKET_EXPRESSION_PAIRS:
         result = parse_latex_lark(latex_str)
@@ -1293,32 +1268,29 @@ def test_square_bracket_multiplication():
 
 def test_literal_brace_multiplication():
     for latex_str, sympy_expr in LITERAL_BRACE_EXPRESSION_PAIRS:
-        with evaluate(False):
-            result = parse_latex_lark(latex_str)
-            assert result == sympy_expr, f"Failed for {latex_str}"
+        result = parse_latex_lark(latex_str, evaluate=False)
+        assert result == sympy_expr, f"Failed for {latex_str}"
 
 
 def test_mixed_bracket_brace_multiplication():
     for latex_str, sympy_expr in MIXED_BRACKET_BRACE_EXPRESSION_PAIRS:
-        with evaluate(False):
-            result = parse_latex_lark(latex_str)
-            assert result == sympy_expr, \
-                f"Failed for {latex_str}: got {result}, expected {sympy_expr}"
+        result = parse_latex_lark(latex_str, evaluate=False)
+        assert result == sympy_expr, \
+            f"Failed for {latex_str}: got {result}, expected {sympy_expr}"
 
 
 def test_literal_complex_number_expressions():
     for latex_str, sympy_expr in UNEVALUATED_LITERAL_COMPLEX_NUMBER_EXPRESSION_PAIRS:
-        with evaluate(False):
-            assert parse_latex_lark(latex_str) == sympy_expr, latex_str
+        assert parse_latex_lark(latex_str, evaluate=False) == sympy_expr, latex_str
 
 
 def test_matrix_expressions():
     for latex_str, sympy_expr in UNEVALUATED_MATRIX_EXPRESSION_PAIRS:
-        with evaluate(False):
-            assert parse_latex_lark(latex_str) == sympy_expr, latex_str
+        assert parse_latex_lark(latex_str, evaluate=False) == sympy_expr, latex_str
 
     for latex_str, sympy_expr in EVALUATED_MATRIX_EXPRESSION_PAIRS:
         assert parse_latex_lark(latex_str) == sympy_expr, latex_str
+
 
 def test_latex_cases_environment_error():
     from sympy.parsing.latex import parse_latex, LaTeXParsingError
