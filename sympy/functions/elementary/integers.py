@@ -1,11 +1,12 @@
 from __future__ import annotations
+from typing import TYPE_CHECKING, ClassVar
 
 from sympy.core.basic import Basic
 from sympy.core.expr import Expr
 
 from sympy.core import Add, S
 from sympy.core.evalf import get_integer_part, PrecisionExhausted
-from sympy.core.function import DefinedFunction
+from sympy.core.function import ExprFunction1Arg
 from sympy.core.logic import fuzzy_or, fuzzy_and
 from sympy.core.numbers import Integer, int_valued
 from sympy.core.relational import Gt, Lt, Ge, Le, Relational, is_eq, is_le, is_lt
@@ -18,13 +19,17 @@ from sympy.multipledispatch import dispatch
 ###############################################################################
 
 
-class RoundFunction(DefinedFunction):
+class RoundFunction(ExprFunction1Arg):
     """Abstract base class for rounding functions."""
 
-    args: tuple[Expr]
+    _dir: ClassVar[int]
+
+    if TYPE_CHECKING:
+        @classmethod
+        def _eval_const_number(cls, arg: Expr) -> Expr | None: ...
 
     @classmethod
-    def eval(cls, arg):
+    def eval(cls, arg: Expr) -> Expr | None:
         if (v := cls._eval_number(arg)) is not None:
             return v
         if (v := cls._eval_const_number(arg)) is not None:
@@ -45,10 +50,10 @@ class RoundFunction(DefinedFunction):
         intof = lambda x: int(x) if int_valued(x) else (
             x if x.is_integer else None)
         for t in Add.make_args(arg):
-            if t.is_imaginary and (i := intof(im(t))) is not None:
-                ipart += i*S.ImaginaryUnit
-            elif (i := intof(t)) is not None:
-                ipart += i
+            if t.is_imaginary and (integer_part := intof(im(t))) is not None:
+                ipart += integer_part*S.ImaginaryUnit
+            elif (integer_part := intof(t)) is not None:
+                ipart += integer_part
             elif t.is_number:
                 npart += t
             else:
@@ -63,9 +68,9 @@ class RoundFunction(DefinedFunction):
             npart.is_real and (spart.is_imaginary or (S.ImaginaryUnit*spart).is_real) or
                 npart.is_imaginary and spart.is_real):
             try:
-                r, i = get_integer_part(
+                real_int, imag_int = get_integer_part(
                     npart, cls._dir, {}, return_ints=True)
-                ipart += Integer(r) + Integer(i)*S.ImaginaryUnit
+                ipart += Integer(real_int) + Integer(imag_int)*S.ImaginaryUnit
                 npart = S.Zero
             except (PrecisionExhausted, NotImplementedError):
                 pass
@@ -79,6 +84,8 @@ class RoundFunction(DefinedFunction):
             return ipart + spart
         else:
             return ipart + cls(spart, evaluate=False)
+
+        return None
 
     @classmethod
     def _eval_number(cls, arg):
@@ -493,7 +500,7 @@ def _eval_is_eq(lhs, rhs): # noqa:F811
     return is_eq(lhs.rewrite(floor), rhs) or is_eq(lhs.rewrite(frac),rhs)
 
 
-class frac(DefinedFunction):
+class frac(ExprFunction1Arg):
     r"""Represents the fractional part of x
 
     For real numbers it is defined [1]_ as
@@ -543,7 +550,7 @@ class frac(DefinedFunction):
 
     """
     @classmethod
-    def eval(cls, arg):
+    def eval(cls, arg: Expr) -> Expr | None:
         from sympy.calculus.accumulationbounds import AccumBounds
 
         def _eval(arg):
