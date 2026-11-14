@@ -24,7 +24,7 @@ from sympy.external.mpmath import prec_to_dps, giant_steps as _giant_steps, mpf_
 if TYPE_CHECKING:
     from typing import Any, Hashable, TypeVar, SupportsIndex
     from typing_extensions import Self
-    from .numbers import Number
+    from .numbers import Number, Zero
     from sympy.core.basic import Tbasic
     from sympy.logic.boolalg import Boolean
 
@@ -1668,24 +1668,25 @@ class Expr(Basic, EvalfMixin):
                         return Add(*[Mul(*(list(r) + n[:-len(end) + ii])) for r, n in co])
                     else:
                         return Mul(*end[ii + len(nx):])
-            # look for single match
-            hit = None
-            for i, (r, nc) in enumerate(co):
-                ii = find(nc, nx, right)
-                if ii is not None:
-                    if not hit:
-                        hit = ii, r, nc
-                    else:
-                        break
-            else:
-                if hit:
-                    ii, r, nc = hit
-                    if not right:
-                        return Mul(*(list(r) + nc[:ii]))
-                    else:
-                        return Mul(*nc[ii + len(nx):])
 
-            return S.Zero
+            # look for single match
+            returnMe: Expr | Zero | None = None
+
+            while co and returnMe != S.Zero:
+                r, nc = co.pop()
+                ii = find(nc, nx, first=right)
+
+                if ii is not None:
+                    if returnMe is None:
+                        if right:
+                            returnMe = Mul(*nc[ii + len(nx):None])
+                        else:
+                            returnMe = Mul(*r, *nc[0:ii])
+                    else:
+                        returnMe = S.Zero
+
+            return returnMe or S.Zero
+
 
     def as_expr(self, *gens):
         """
