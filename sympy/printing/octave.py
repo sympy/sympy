@@ -200,6 +200,8 @@ class OctaveCodePrinter(CodePrinter):
             return sign + multjoin(a, a_str)
         elif len(b) == 1:
             divsym = '/' if b[0].is_number else './'
+            if b[0].is_Pow and b[0].exp.is_negative:
+                b_str[0] = "(%s)" % b_str[0]
             return sign + multjoin(a, a_str) + divsym + b_str[0]
         else:
             divsym = '/' if all(bi.is_number for bi in b) else './'

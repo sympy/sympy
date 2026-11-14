@@ -389,3 +389,8 @@ def test_MatrixElement_printing():
 
     F = C[0, 0].subs(C, A - B)
     assert(julia_code(F) == "(A - B)[1,1]")
+
+
+def test_unevaluated_reciprocal_denominator():
+    expr = Mul(x, Pow(Pow(y, -1), -1, evaluate=False), evaluate=False)
+    assert julia_code(expr) == "x ./ (1 ./ y)"

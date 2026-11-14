@@ -562,3 +562,14 @@ def test_piecewise_assign_to():
 
     assert pyprint == 'x = ((a + b) if c else (0))'
     assert symprint == 'x = ((a + b) if c else (0))'
+
+
+def test_unevaluated_reciprocal_denominator():
+    from sympy.core import Mul
+    expr = Mul(x, Pow(Pow(y, -1), -1, evaluate=False), evaluate=False)
+    assert pycode(expr) == 'x/(1/y)'
+    assert pycode(-expr) == '-x/(1/y)'
+    import math
+    half = Mul(x, Pow(Pow(y, -S.Half), -1, evaluate=False), evaluate=False)
+    assert eval(pycode(half), {'x': 3.0, 'y': 4.0, 'math': math}) == 6.0
+    assert eval(pycode(expr), {'x': 3.0, 'y': 4.0}) == 12.0

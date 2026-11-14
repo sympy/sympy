@@ -890,3 +890,8 @@ def test_ccode_array_like_containers():
 def test_ccode__isinf_isnan():
     assert ccode(isinf(x)) == 'isinf(x)'
     assert ccode(isnan(x)) == 'isnan(x)'
+
+
+def test_unevaluated_reciprocal_denominator():
+    expr = Mul(x, Pow(Pow(y, -1), -1, evaluate=False), evaluate=False)
+    assert ccode(expr) == "x/(1.0/y)"

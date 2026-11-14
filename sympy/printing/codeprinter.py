@@ -593,6 +593,10 @@ class CodePrinter(StrPrinter):
         if not b:
             return sign + '*'.join(a_str)
         elif len(b) == 1:
+            # A negative power prints as a quotient, which would otherwise
+            # be divided by in turn: x/(1/y), not x/1/y.
+            if b[0].is_Pow and b[0].exp.is_negative:
+                b_str[0] = "(%s)" % b_str[0]
             return sign + '*'.join(a_str) + "/" + b_str[0]
         else:
             return sign + '*'.join(a_str) + "/(%s)" % '*'.join(b_str)
