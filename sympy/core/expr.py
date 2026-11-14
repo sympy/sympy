@@ -22,7 +22,7 @@ from sympy.external.mpmath import prec_to_dps, giant_steps as _giant_steps, mpf_
 
 
 if TYPE_CHECKING:
-    from typing import Any, Hashable, TypeVar
+    from typing import Any, Hashable, TypeVar, SupportsIndex
     from typing_extensions import Self
     from .numbers import Number
     from sympy.core.basic import Tbasic
@@ -1404,7 +1404,7 @@ class Expr(Basic, EvalfMixin):
                                  [ci for ci in c if list(self.args).count(ci) > 1])
         return [c, nc]
 
-    def coeff(self, x: Expr | complex, n=1, right=False, _first=True):
+    def coeff(self, x: Expr | complex, n: SupportsIndex = 1, right: bool = False, _first: bool = True) -> Expr:
         """
         Returns the coefficient from the term(s) containing ``x**n``. If ``n``
         is zero then all terms independent of ``x`` will be returned.
@@ -1608,7 +1608,7 @@ class Expr(Basic, EvalfMixin):
             d = Add(*[i for i in Add.make_args(self.as_independent(xe)[1])
                 if all(xi in Mul.make_args(i) for xi in xargs)])
             rv = d.coeff(xe, right=right, _first=False)
-            if not rv.is_Add or not right:
+            if not isinstance(rv, Add) or not right:
                 return rv
             c_part, nc_part = zip(*[i.args_cnc() for i in rv.args])
             if has_variety(c_part):
@@ -1631,10 +1631,9 @@ class Expr(Basic, EvalfMixin):
                 else:
                     co.append((resid, nc))
         if one_c:
-            if co2 == []:
+            if not co2:
                 return S.Zero
-            elif co2:
-                return Add(*co2)
+            return Add(*co2)
         else:  # both nc
             # now check the non-comm parts
             if not co:
@@ -1671,20 +1670,20 @@ class Expr(Basic, EvalfMixin):
                         return Mul(*end[ii + len(nx):])
             # look for single match
             hit = None
-            for i, (r, n) in enumerate(co):
-                ii = find(n, nx, right)
+            for i, (r, nc) in enumerate(co):
+                ii = find(nc, nx, right)
                 if ii is not None:
                     if not hit:
-                        hit = ii, r, n
+                        hit = ii, r, nc
                     else:
                         break
             else:
                 if hit:
-                    ii, r, n = hit
+                    ii, r, nc = hit
                     if not right:
-                        return Mul(*(list(r) + n[:ii]))
+                        return Mul(*(list(r) + nc[:ii]))
                     else:
-                        return Mul(*n[ii + len(nx):])
+                        return Mul(*nc[ii + len(nx):])
 
             return S.Zero
 
