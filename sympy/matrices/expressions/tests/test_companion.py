@@ -47,3 +47,18 @@ def test_as_explicit():
         ImmutableDenseMatrix([[0, -c0], [1, -c1]])
     assert CompanionMatrix(Poly([1, c2, c1, c0], x)).as_explicit() == \
         ImmutableDenseMatrix([[0, 0, -c0], [1, 0, -c1], [0, 1, -c2]])
+
+
+def test_entry_operations():
+    from sympy.core.symbol import symbols
+    from sympy.functions.elementary.complexes import conjugate
+    from sympy.matrices.expressions import Transpose, Adjoint
+    c0, c1, c2 = symbols('c0:3')
+    x = Symbol('x')
+    A = CompanionMatrix(Poly([1, c2, c1, c0], x))
+    assert Transpose(A)[2, 0] == -c0
+    assert Transpose(A)[0, 1] == 1
+    assert Adjoint(A)[2, 0] == -conjugate(c0)
+    assert (A * A)[0, 0] == 0
+    assert (A * A)[1, 0] == 0
+    assert (A * A)[2, 0] == 1
