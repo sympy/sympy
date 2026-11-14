@@ -1,7 +1,6 @@
 from __future__ import annotations
 
-from operator import lt
-from typing import Callable, cast
+from typing import cast
 
 from sympy.core import Basic, Integer, S
 
@@ -33,12 +32,6 @@ class OmegaPower(Basic):
     def mult(self) -> Integer:
         return self.args[1]
 
-    def _compare_term(self, other: OmegaPower, op: Callable) -> bool:
-        if self.exp == other.exp:
-            return op(self.mult, other.mult)
-        else:
-            return op(self.exp, other.exp)
-
     def __eq__(self, other: object) -> bool:
         if not isinstance(other, OmegaPower):
             if not isinstance(other, (Integer, int)):
@@ -55,7 +48,10 @@ class OmegaPower(Basic):
                 other = OmegaPower(0, other)
             except TypeError:
                 return NotImplemented
-        return self._compare_term(other, lt)
+        if self.exp == other.exp:
+            return bool(self.mult < other.mult)
+        else:
+            return bool(self.exp < other.exp)
 
 
 class Ordinal(Basic):
