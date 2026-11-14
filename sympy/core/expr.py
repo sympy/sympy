@@ -1,8 +1,9 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, overload, Literal
-from collections.abc import Iterable, Mapping
+from collections import defaultdict
+from collections.abc import Iterable
 from functools import reduce
+from typing import TYPE_CHECKING, overload
 import re
 
 from .sympify import sympify, _sympify
@@ -22,15 +23,14 @@ from sympy.external.mpmath import prec_to_dps, giant_steps as _giant_steps, mpf_
 
 
 if TYPE_CHECKING:
-    from typing import Any, Hashable, TypeVar
+    from collections.abc import Mapping
+    from sympy.core.numbers import Zero, Number
+    from typing import Any, Hashable, TypeVar, Literal, SupportsIndex
     from typing_extensions import Self
-    from .numbers import Number
     from sympy.core.basic import Tbasic
     from sympy.logic.boolalg import Boolean
 
     Texpr = TypeVar("Texpr", bound='Expr')
-
-from collections import defaultdict
 
 
 def _corem(eq, c):  # helper for extract_additively
@@ -1404,7 +1404,7 @@ class Expr(Basic, EvalfMixin):
                                  [ci for ci in c if list(self.args).count(ci) > 1])
         return [c, nc]
 
-    def coeff(self, x: Expr | complex, n=1, right=False, _first=True):
+    def coeff(self, x: Expr | complex, n: SupportsIndex = 1, right: bool = False, _first: bool = True) -> Expr:
         """
         Returns the coefficient from the term(s) containing ``x**n``. If ``n``
         is zero then all terms independent of ``x`` will be returned.
@@ -1560,7 +1560,7 @@ class Expr(Basic, EvalfMixin):
                     return l1[:i]
             return l1[:]
 
-        def find(l, sub, first=True):
+        def find(l: list[Expr], sub: list[Expr], first: bool = True) -> int | None:
             """ Find where list sub appears in list l. When ``first`` is True
             the first occurrence from the left is returned, else the last
             occurrence is returned. Return None if sub is not in l.
@@ -1579,7 +1579,7 @@ class Expr(Basic, EvalfMixin):
             """
             if not sub or not l or len(sub) > len(l):
                 return None
-            n = len(sub)
+            n: int = len(sub)
             if not first:
                 l.reverse()
                 sub.reverse()
@@ -1608,7 +1608,7 @@ class Expr(Basic, EvalfMixin):
             d = Add(*[i for i in Add.make_args(self.as_independent(xe)[1])
                 if all(xi in Mul.make_args(i) for xi in xargs)])
             rv = d.coeff(xe, right=right, _first=False)
-            if not rv.is_Add or not right:
+            if not isinstance(rv, Add) or not right:
                 return rv
             c_part, nc_part = zip(*[i.args_cnc() for i in rv.args])
             if has_variety(c_part):
@@ -1631,16 +1631,15 @@ class Expr(Basic, EvalfMixin):
                 else:
                     co.append((resid, nc))
         if one_c:
-            if co2 == []:
+            if not co2:
                 return S.Zero
-            elif co2:
-                return Add(*co2)
+            return Add(*co2)
         else:  # both nc
             # now check the non-comm parts
             if not co:
                 return S.Zero
             if all(n == co[0][1] for r, n in co):
-                ii = find(co[0][1], nx, right)
+                ii: None | int = find(co[0][1], nx, right)
                 if ii is not None:
                     if not right:
                         return Mul(Add(*[Mul(*r) for r, c in co]), Mul(*co[0][1][:ii]))
@@ -1669,24 +1668,25 @@ class Expr(Basic, EvalfMixin):
                         return Add(*[Mul(*(list(r) + n[:-len(end) + ii])) for r, n in co])
                     else:
                         return Mul(*end[ii + len(nx):])
-            # look for single match
-            hit = None
-            for i, (r, n) in enumerate(co):
-                ii = find(n, nx, right)
-                if ii is not None:
-                    if not hit:
-                        hit = ii, r, n
-                    else:
-                        break
-            else:
-                if hit:
-                    ii, r, n = hit
-                    if not right:
-                        return Mul(*(list(r) + n[:ii]))
-                    else:
-                        return Mul(*n[ii + len(nx):])
 
-            return S.Zero
+            # look for single match
+            returnMe: Expr | Zero | None = None
+
+            while co and returnMe != S.Zero:
+                r, nc = co.pop()
+                index: int | None = find(nc, nx, first=right)
+
+                if index is not None:
+                    if returnMe is None:
+                        if right:
+                            returnMe = Mul(*nc[index + len(nx):None])
+                        else:
+                            returnMe = Mul(*r, *nc[0:index])
+                    else:
+                        returnMe = S.Zero
+
+            return returnMe or S.Zero
+
 
     def as_expr(self, *gens):
         """
@@ -3964,7 +3964,7 @@ class Expr(Basic, EvalfMixin):
         #     575000000000000.0
         # which rounds to integer
         #    5750000000000000
-        # And now we can round to the desired digt, e.g. at
+        # And now we can round to the desired digit, e.g. at
         # the second from the left and we get
         #    5800000000000000
         # and rescaling that gives
