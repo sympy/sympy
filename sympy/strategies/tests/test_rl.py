@@ -4,6 +4,7 @@ from sympy.strategies.rl import (
     rm_id, glom, flatten, unpack, sort, distribute, subs, rebuild)
 from sympy.core.basic import Basic
 from sympy.core.add import Add
+from sympy.core.expr import UnevaluatedExpr
 from sympy.core.mul import Mul
 from sympy.core.symbol import symbols
 from sympy.abc import x
@@ -75,5 +76,8 @@ def test_subs():
 
 
 def test_rebuild():
-    expr = Basic.__new__(Add, S(1), S(2))
+    expr = Basic.__new__(Add, S(1), S(2))  # 1 + 2
     assert rebuild(expr) == 3
+    uexpr = Basic.__new__(UnevaluatedExpr, Basic.__new__(Add, S(1), S(2)))
+    assert rebuild(uexpr) == uexpr
+    assert rebuild(uexpr, release=True) == 3
