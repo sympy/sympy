@@ -1,7 +1,6 @@
 from __future__ import annotations
 from sympy import Integer
 from sympy.sets.ordinals import Ordinal, OrdinalOmega, OrdinalZero, OmegaPower, ord0, omega
-from sympy.sets.ordinals import Ordinal, OrdinalOmega, OrdinalZero, OmegaPower, ord0, omega
 from sympy.testing.pytest import raises
 
 
@@ -25,6 +24,9 @@ def test_hash_finite():
             assert hash(term) == hash(value)
             assert term == sympy_integer
             assert hash(term) == hash(sympy_integer)
+            assert len({value, term}) == 1
+            assert {value: 'value'}[term] == 'value'
+            assert {term: 'term'}[value] == 'term'
 
 
 def test_hash_omega():
