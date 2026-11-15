@@ -829,4 +829,3 @@ def test_dup_count_real_roots_unsupported_domain():
     x, a, b, c = symbols("x a b c")
     p = Poly(x**7 + a*x**3 + b*x**2 + c, x)
     raises(DomainError, lambda: p.count_roots())
-
