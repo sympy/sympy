@@ -21,6 +21,7 @@ from sympy.core.function import (expand_mul, expand_log, Derivative,
                                  Function, expand_power_exp, _mexpand, expand,
                                  expand_func)
 from sympy.core.logic import fuzzy_not, fuzzy_and
+from sympy.core.evalf import pure_complex
 from sympy.core.numbers import Float, Rational, _illegal
 from sympy.core.intfunc import integer_log, ilcm
 from sympy.core.power import Pow
@@ -3108,6 +3109,14 @@ def nsolve(*args, dict=False, **kwargs):
         f = Matrix(f).T
     if iterable(x0):
         x0 = list(x0)
+
+    for i in (x0 if isinstance(x0, list) else [x0]):
+        if isinstance(i, Expr) and pure_complex(i, or_real=True) is None:
+            raise TypeError(
+                "You must evaluate numeric initial guesses; "
+                "e.g. use pi.n() instead of pi"
+            )
+
     if not isinstance(f, Matrix):
         # assume it's a SymPy expression
         if isinstance(f, Eq):
