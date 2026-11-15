@@ -303,6 +303,10 @@ class MatrixExpr(Expr):
                 return MatrixSlice(self, i, j)
             i, j = _sympify(i), _sympify(j)
             if self.valid_index(i, j) != False:
+                if (i < 0) == True and self.rows is not None:
+                    i = i + self.rows
+                if (j < 0) == True and self.cols is not None:
+                    j = j + self.cols
                 return self._entry(i, j)
             else:
                 raise IndexError("Invalid indices (%s, %s)" % (i, j))
@@ -315,9 +319,15 @@ class MatrixExpr(Expr):
                     Single indexing is only supported when the number
                     of columns is known.'''))
             key = _sympify(key)
+            if (key < 0) == True and isinstance(rows, Integer):
+                key = key + rows * cols
             i = key // cols
             j = key % cols
             if self.valid_index(i, j) != False:
+                if (i < 0) == True and self.rows is not None:
+                    i = i + self.rows
+                if (j < 0) == True and self.cols is not None:
+                    j = j + self.cols
                 return self._entry(i, j)
             else:
                 raise IndexError("Invalid index %s" % key)

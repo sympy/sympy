@@ -592,3 +592,20 @@ def test_matrixsymbol_solving():
     assert (-(-A + B) - A + B - Z).simplify() == Z
     assert (-(-A + B) - A + B - Z).expand() == Z
     assert (A*(A + B) + B*(A.T + B.T)).expand() == A**2 + A*B + B*A.T + B*B.T
+
+
+def test_matrixexpr_negative_indexing():
+    I3 = Identity(3)
+    assert I3[-1, 2] == 1
+    assert I3[-1, -1] == 1
+    assert I3[-1] == 1
+
+    W = MatrixSymbol('W', 2, 2)
+    assert W[-1, 0] == W[1, 0]
+    assert W[-1, -1] == W[1, 1]
+    assert W[-1, 0].diff(W[1, 0]) == 1
+
+    Xs = MatrixSymbol('Xs', 10, 10)
+    sub = Xs[2:5, 3:6]
+    assert sub[-1, -1] == Xs[4, 5]
+
