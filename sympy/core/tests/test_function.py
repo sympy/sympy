@@ -505,6 +505,8 @@ def test_Subs():
     assert len(Subs(f(x, y), (x, y), (0, 1)).variables) == 2
     assert Subs(f(x, y), (x, y), (0, 1)).point == Tuple(0, 1)
 
+    assert Subs(x + Symbol('_0'), x, 0) != Subs(2*x, x, 0)
+
     assert Subs(f(x), x, 0) == Subs(f(y), y, 0)
     assert Subs(f(x, y), (x, y), (0, 1)) == Subs(f(x, y), (y, x), (1, 0))
     assert Subs(f(x)*y, (x, y), (0, 1)) == Subs(f(y)*x, (y, x), (0, 1))
