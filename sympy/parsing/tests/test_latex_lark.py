@@ -1343,7 +1343,6 @@ def test_determinant_expressions():
         assert parse_latex_lark(latex_str, evaluate=False) == sympy_expr, latex_str
 
 
-@XFAIL
 def test_adjoint_expressions():
     for latex_str, sympy_expr in ADJOINT_EXPRESSION_PAIRS:
         assert parse_latex_lark(latex_str) == sympy_expr, latex_str

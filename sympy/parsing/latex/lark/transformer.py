@@ -376,7 +376,7 @@ class TransformToSymPyExpr(Transformer):
             if sup == sympy.Symbol("T"):
                 return sympy.Transpose(base)
             if sup == sympy.Symbol("H"):
-                return sympy.adjoint(base)
+                return sympy.Adjoint(base)
             if isprime(sup):
                 sup = sup.value
                 if len(sup) % 2 == 0:
@@ -389,18 +389,14 @@ class TransformToSymPyExpr(Transformer):
                 return sympy.Transpose(base)
             if isstar(sup):
                 sup = sup.value
-                # need .doit() in order to be consistent with
-                # sympy.adjoint() which returns the evaluated adjoint
-                # of a matrix
                 if len(sup) % 2 == 0:
-                    return base.doit()
-                return sympy.adjoint(base)
+                    return base
+                return sympy.Adjoint(base)
             if iscmdstar(sup):
                 sup = sup.value
-                # need .doit() for same reason as above
                 if (len(sup)/len(r"\ast")) % 2 == 0:
-                    return base.doit()
-                return sympy.adjoint(base)
+                    return base
+                return sympy.Adjoint(base)
 
         if isprime(sup) or iscmdprime(sup) or isstar(sup) or iscmdstar(sup):
             raise LaTeXParsingError(f"{base} with superscript {sup} is not understood.")
