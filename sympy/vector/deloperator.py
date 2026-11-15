@@ -3,6 +3,7 @@ from sympy.core import Basic
 from sympy.vector.operators import gradient, divergence, curl
 from sympy.printing.pretty.stringpict import prettyForm
 
+
 class Del(Basic):
     """
     Represents the vector differential operator, usually represented in
