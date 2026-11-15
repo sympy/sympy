@@ -290,7 +290,8 @@ class MatrixExpr(Expr):
         return (is_valid(i) and is_valid(j) and
                 (self.rows is None or
                 (i >= -self.rows) != False and (i < self.rows) != False) and
-                (j >= -self.cols) != False and (j < self.cols) != False)
+                (self.cols is None or
+                (j >= -self.cols) != False and (j < self.cols) != False))
 
     def __getitem__(self, key):
         if not isinstance(key, tuple) and isinstance(key, slice):
@@ -303,6 +304,10 @@ class MatrixExpr(Expr):
                 return MatrixSlice(self, i, j)
             i, j = _sympify(i), _sympify(j)
             if self.valid_index(i, j) != False:
+                if (i < 0) is S.true and self.rows is not None:
+                    i = i + self.rows
+                if (j < 0) is S.true and self.cols is not None:
+                    j = j + self.cols
                 return self._entry(i, j)
             else:
                 raise IndexError("Invalid indices (%s, %s)" % (i, j))
@@ -310,14 +315,18 @@ class MatrixExpr(Expr):
             # row-wise decomposition of matrix
             rows, cols = self.shape
             # allow single indexing if number of columns is known
-            if not isinstance(cols, Integer):
+            if not isinstance(cols, Integer) or cols <= 0:
                 raise IndexError(filldedent('''
                     Single indexing is only supported when the number
-                    of columns is known.'''))
+                    of columns is known and positive.'''))
             key = _sympify(key)
             i = key // cols
             j = key % cols
             if self.valid_index(i, j) != False:
+                if (i < 0) is S.true and self.rows is not None:
+                    i = i + self.rows
+                if (j < 0) is S.true and self.cols is not None:
+                    j = j + self.cols
                 return self._entry(i, j)
             else:
                 raise IndexError("Invalid index %s" % key)
@@ -576,6 +585,12 @@ class MatrixElement(Expr):
                     raise TypeError("First argument of MatrixElement should be a matrix")
             if not getattr(name, 'valid_index', lambda n, m: True)(n, m):
                 raise IndexError('indices out of range')
+            if (hasattr(name, 'rows') and name.rows is not None
+                    and (n < 0) is S.true):
+                n = n + name.rows
+            if (hasattr(name, 'cols') and name.cols is not None
+                    and (m < 0) is S.true):
+                m = m + name.cols
         obj = Expr.__new__(cls, name, n, m)
         return obj
 

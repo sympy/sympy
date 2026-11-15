@@ -228,6 +228,13 @@ def test_single_indexing():
     assert A[1] == A[0, 1]
     assert A[int(1)] == A[0, 1]
     assert A[3] == A[1, 0]
+    assert A[-1] == A[1, 2]
+    assert A[-2] == A[1, 1]
+    assert A[-3] == A[1, 0]
+    assert A[-4] == A[0, 2]
+    assert A[-5] == A[0, 1]
+    assert A[-6] == A[0, 0]
+    raises(IndexError, lambda: A[-7])
     assert list(A[:2, :2]) == [A[0, 0], A[0, 1], A[1, 0], A[1, 1]]
     raises(IndexError, lambda: A[6])
     raises(IndexError, lambda: A[n])
@@ -235,6 +242,9 @@ def test_single_indexing():
     raises(IndexError, lambda: B[1])
     B = MatrixSymbol('B', n, 3)
     assert B[3] == B[1, 0]
+    assert B[-1] == B[n - 1, 2]
+    assert B[-3] == B[n - 1, 0]
+    assert B[-4] == B[n - 2, 2]
 
 
 def test_MatrixElement_commutative():
@@ -592,3 +602,74 @@ def test_matrixsymbol_solving():
     assert (-(-A + B) - A + B - Z).simplify() == Z
     assert (-(-A + B) - A + B - Z).expand() == Z
     assert (A*(A + B) + B*(A.T + B.T)).expand() == A**2 + A*B + B*A.T + B*B.T
+
+
+def test_issue_31107():
+    from sympy.core.function import Lambda
+    from sympy.matrices.expressions.funcmatrix import FunctionMatrix
+    from sympy.matrices.expressions.blockmatrix import BlockMatrix
+
+    # 1. Identity matrix
+    I3 = Identity(3)
+    assert I3[-1, 2] == 1
+    assert I3[-1, -1] == 1
+    assert I3[-1] == 1
+    assert I3[-2, 1] == 1
+    assert I3[-2, 0] == 0
+    assert I3.as_explicit()[-1, 2] == 1
+    I_n = Identity(n)
+    assert I_n[-1, -1] == 1
+    assert I_n[-1, n - 1] == 1
+
+    # 2. FunctionMatrix
+    i_sym, j_sym = symbols('i_sym j_sym')
+    FM = FunctionMatrix(3, 3, Lambda((i_sym, j_sym), i_sym + 10*j_sym))
+    assert FM[-1, 0] == 2
+    assert FM[-1, -1] == 22
+    assert FM.as_explicit()[-1, 0] == 2
+
+    # 3. MatrixSlice
+    Xs = MatrixSymbol('Xs', 10, 10)
+    sub = Xs[2:5, 3:6]
+    assert sub[-1, -1] == Xs[4, 5]
+    assert sub[-3, -3] == Xs[2, 3]
+    assert sub[-1, 0] == Xs[4, 3]
+    assert sub.as_explicit()[-1, -1] == Xs[4, 5]
+
+    # 4. MatrixSymbol & MatrixElement differentiation, equality, normalization
+    W = MatrixSymbol('W', 2, 2)
+    assert W[-1, 0] == W[1, 0]
+    assert W[-1, -1] == W[1, 1]
+    assert W[-1, 0].diff(W[1, 0]) == 1
+    assert W[-1, 0].diff(W[-1, 0]) == 1
+    assert W[-1, 0] - W[1, 0] == 0
+    assert MatrixElement(W, -1, 0) == W[1, 0]
+    assert MatrixElement(W, -1, -1) == W[1, 1]
+
+    # Symbolic dimensions
+    SymMat = MatrixSymbol('SymMat', n, m)
+    assert SymMat[-1, 0] == SymMat[n - 1, 0]
+    assert SymMat[0, -1] == SymMat[0, m - 1]
+    assert SymMat[-1, -2] == SymMat[n - 1, m - 2]
+    assert SymMat[-1, 0].diff(SymMat[n - 1, 0]) == 1
+    assert MatrixElement(SymMat, -1, 0) == SymMat[n - 1, 0]
+
+    # 5. MatMul, Transpose, BlockMatrix
+    A3 = MatrixSymbol('A3', 3, 3)
+    B3 = MatrixSymbol('B3', 3, 3)
+    expected_matmul = (A3[2, 0]*B3[0, 0] + A3[2, 1]*B3[1, 0] +
+                       A3[2, 2]*B3[2, 0])
+    assert (A3 * B3)[-1, 0] == expected_matmul
+    assert (A3.T)[-1, 0] == A3[0, 2]
+
+    BM = BlockMatrix([[A3, B3], [B3, A3]])
+    assert BM[-1, -1] == A3[2, 2]
+    assert BM[-1, 0] == B3[2, 0]
+
+    # 6. Out of bounds index error
+    raises(IndexError, lambda: W[-3, 0])
+    raises(IndexError, lambda: W[0, -3])
+    raises(IndexError, lambda: W[2, 0])
+    raises(IndexError, lambda: W[-5])
+    raises(IndexError, lambda: MatrixElement(W, -3, 0))
+    raises(IndexError, lambda: MatrixElement(W, 0, -3))
