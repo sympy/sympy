@@ -2333,6 +2333,10 @@ class Subs(Expr):
     >>> s, ss
     (Subs(x, x, 0), Subs(y, y, 0))
     """
+
+    # Ensure generated substitution symbols do not collide with existing free symbols in the expression.
+
+
     def __new__(cls, expr, variables, point, **assumptions):
         if not is_sequence(variables, Tuple):
             variables = [variables]
@@ -2383,9 +2387,9 @@ class Subs(Expr):
             # because the new symbol that would be created is _1 but _1
             # is already mapped to 0 so __0 and __1 are used for the new
             # symbols
-            if any(r in expr.free_symbols and
-                   r in variables and
-                   Symbol(pre + mystr(point[variables.index(r)])) != r
+            if any(r in expr.free_symbols and (
+                   r not in variables or
+                   s_pts[point[variables.index(r)]] != r)
                    for _, r in reps):
                 pre += "_"
                 continue
@@ -2510,8 +2514,13 @@ class Subs(Expr):
         return super().__hash__()
 
     def _hashable_content(self):
-        return (self._expr.xreplace(self.canonical_variables),
-            ) + tuple(ordered([(v, p) for v, p in
+        # Include substitution metadata to distinguish Subs objects that may otherwise have identical canonicalized expressions.
+
+        return (
+            self._expr.xreplace(self.canonical_variables),
+            len(self.variables),
+            tuple(sorted(self.point, key=default_sort_key)),
+        ) + tuple(ordered([(v, p) for v, p in
             zip(self.variables, self.point) if not self.expr.has(v)]))
 
     def _eval_subs(self, old, new):
