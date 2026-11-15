@@ -13,8 +13,7 @@ license-files = ["LICENSE", "LICENSES_BUNDLED.txt"]
 keywords = ["Math", "CAS"]
 # Keep in sync with sympy/__init__.py.
 requires-python = ">=3.10"
-# Set upper bound when making the release branch.
-dependencies = ["mpmath>=1.1.0"]
+dependencies = ["mpmath>=1.1.0,<1.5"]
 classifiers = [
     "Operating System :: OS Independent",
     "Programming Language :: Python",
