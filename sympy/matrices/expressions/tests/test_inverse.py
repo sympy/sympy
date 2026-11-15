@@ -51,6 +51,7 @@ def test_inverse_non_invertible():
 
 def test_refine():
     assert refine(C.I, Q.orthogonal(C)) == C.T
+    assert refine(C.I, Q.unitary(C)) == C.adjoint()
 
 
 def test_inverse_matpow_canonicalization():
