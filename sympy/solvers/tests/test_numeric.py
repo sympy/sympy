@@ -145,3 +145,6 @@ def test_issue_31039():
     raises(TypeError, lambda: nsolve(sin(x), x, (3, pi)))
     raises(TypeError, lambda: nsolve([sin(x), y - 1], [x, y], [pi, 1]))
     assert abs(nsolve(sin(x), x, pi.n(2)) - pi) < 1e-15
+    assert nsolve(x - 1 + I, x, 1 - I/2) == 1.0 - 1.0*I
+    assert nsolve(x - 1 + I, x, '42') == 1.0 - 1.0*I
+    assert nsolve(x - 1 + I, x, 42) == 1.0 - 1.0*I
