@@ -7,6 +7,7 @@ from sympy.printing.pretty import pretty as xpretty
 from sympy.vector import CoordSys3D, Del, Vector, express
 from sympy.abc import a, b, c
 from sympy.testing.pytest import XFAIL
+from sympy.vector import Del
 
 
 def pretty(expr):
@@ -264,3 +265,10 @@ def test_custom_names():
     assert A.x._pretty_form == 'x_A'
     assert A.i._latex_form == r'\mathbf{{i}_{A}}'
     assert A.x._latex_form == r"\mathbf{\hat{x}_{A}}"
+
+def test_del_printing():
+    delop = Del()
+    assert str(delop) == 'delop'
+    assert pretty(delop) == 'delop'
+    assert upretty(delop) == '\u2207'
+    assert latex(delop) == r'\nabla'
