@@ -657,10 +657,14 @@ class Function(Application, Expr):
             da = a.diff(s)
             if da.is_zero:
                 continue
+            if getattr(da, 'shape', ()) != () or getattr(da, 'is_Matrix', False) or not getattr(da, 'is_scalar', True):
+                return None
             try:
                 df = self.fdiff(i)
             except ArgumentIndexError:
                 df = Function.fdiff(self, i)
+            if getattr(df, 'shape', ()) != () or getattr(df, 'is_Matrix', False) or not getattr(df, 'is_scalar', True):
+                return None
             l.append(df * da)
         return Add(*l)
 
