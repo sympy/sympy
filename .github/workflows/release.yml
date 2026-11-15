@@ -61,7 +61,7 @@ jobs:
               subprocess.run(['git', 'merge-base', '--is-ancestor', 'HEAD', 'origin/master'], check=True)
           previous = ''
           if tagged:
-              tags = subprocess.check_output(['git', 'tag', '--merged', 'HEAD'], text=True).splitlines()
+              tags = subprocess.check_output(['git', 'tag', '--list', 'sympy-*'], text=True).splitlines()
               stable = [Version(t[6:]) for t in tags if re.fullmatch(r'sympy-\d+\.\d+\.\d+', t)]
               previous = str(max(v for v in stable if v < parsed))
           values = {
@@ -104,7 +104,7 @@ jobs:
           pip install --upgrade setuptools pip wheel build
           pip install .
           if [[ "$GITHUB_REF_TYPE" == tag ]]; then
-            bin/mailmap_check.py
+            bin/mailmap_check.py --check-authors
             git diff --exit-code
           fi
           mkdir -p "release-$release_version"
