@@ -1753,12 +1753,9 @@ def is_ge(lhs, rhs, assumptions=None):
     True
     """
     from sympy.assumptions.wrapper import AssumptionsWrapper, is_extended_nonnegative
-
     if not (isinstance(lhs, Expr) and isinstance(rhs, Expr)):
         raise TypeError("Can only compare inequalities with Expr")
-
     retval = _eval_is_ge(lhs, rhs)
-
     if retval is not None:
         return retval
     else:
@@ -1769,18 +1766,22 @@ def is_ge(lhs, rhs, assumptions=None):
             if n2 in (S.Infinity, S.NegativeInfinity):
                 n2 = float(n2)
             return n2 >= 0
-
         _lhs = AssumptionsWrapper(lhs, assumptions)
         _rhs = AssumptionsWrapper(rhs, assumptions)
         if _lhs.is_extended_real and _rhs.is_extended_real:
+            # Guard against infinite symbols with ambiguous signs
+            if (_lhs.is_infinite and _lhs.is_extended_positive is None and _lhs.is_extended_negative is None) or \
+               (_rhs.is_infinite and _rhs.is_extended_positive is None and _rhs.is_extended_negative is None):
+                return None
             if (_lhs.is_infinite and _lhs.is_extended_positive) or (_rhs.is_infinite and _rhs.is_extended_negative):
                 return True
+            if (_lhs.is_infinite and _lhs.is_extended_negative) or (_rhs.is_infinite and _rhs.is_extended_positive):
+                return False
             diff = lhs - rhs
             if diff is not S.NaN:
                 rv = is_extended_nonnegative(diff, assumptions)
                 if rv is not None:
                     return rv
-
 
 def is_neq(lhs, rhs, assumptions=None):
     """Fuzzy bool for lhs does not equal rhs.
