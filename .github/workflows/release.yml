@@ -289,19 +289,19 @@ jobs:
         if: ${{ needs.metadata.outputs.final != 'true' }}
         env:
           GH_TOKEN: ${{ github.token }}
-        run: >
-          gh release create "$GITHUB_REF_NAME" dist/* --verify-tag
-              --prerelease
-              --title "SymPy $release_version"
+        run: |
+          gh release create "$GITHUB_REF_NAME" dist/* --verify-tag \
+              --prerelease \
+              --title "SymPy $release_version" \
               --notes "See https://github.com/sympy/sympy/wiki/release-notes-for-$final_release_version for release notes"
 
       - name: Create Final GitHub release
         if: ${{ needs.metadata.outputs.final == 'true' }}
         env:
           GH_TOKEN: ${{ github.token }}
-        run: >
-          gh release create "$GITHUB_REF_NAME" dist/* --verify-tag
-              --title "SymPy $release_version"
+        run: |
+          gh release create "$GITHUB_REF_NAME" dist/* --verify-tag \
+              --title "SymPy $release_version" \
               --notes "See https://github.com/sympy/sympy/wiki/release-notes-for-$final_release_version for release notes"
 
   # -------------------- Update the docs repository ---------------- #
@@ -344,10 +344,10 @@ jobs:
           path: dist
 
       - name: Update the docs
-        run: >
-          release/update_docs.py
-          sympy_doc
-          "dist/sympy-docs-html-$release_version.zip"
-          "$release_version"
-          "$dev_version"
+        run: |
+          release/update_docs.py \
+          sympy_doc \
+          "dist/sympy-docs-html-$release_version.zip" \
+          "$release_version" \
+          "$dev_version" \
           --push
