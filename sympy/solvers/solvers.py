@@ -3110,10 +3110,11 @@ def nsolve(*args, dict=False, **kwargs):
     if iterable(x0):
         x0 = list(x0)
 
-    for g in (x0 if isinstance(x0, list) else [x0]):
-        if isinstance(g, Expr) and not isinstance(g, Number) and g is not S.ImaginaryUnit:
+    for i in (x0 if isinstance(x0, list) else [x0]):
+        if isinstance(i, Expr) and pure_complex(i, or_real=True) is None:
             raise TypeError(
-                f"Initial guess must be a Number or Python number, got {type(g).__name__}"
+                "You must evaluate numeric initial guesses; "
+                "e.g. use pi.n() instead of pi"
             )
 
     if not isinstance(f, Matrix):
