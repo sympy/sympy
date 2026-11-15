@@ -96,6 +96,7 @@ git_whitelist = {
     # This stuff :)
     'release/.gitignore',
     'release/README.md',
+    'release/README-v3.md',
     'release/compare_tar_against_git.py',
     'release/update_docs.py',
     'release/build_docs.py',

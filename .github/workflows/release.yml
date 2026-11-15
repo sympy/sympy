@@ -151,7 +151,7 @@ jobs:
 
       - name: Use the installed version module for release docs
         run: |
-          python - <<'PYTHON'
+          python -I - <<'PYTHON'
           from importlib.metadata import distribution
           from pathlib import Path
           source = distribution('sympy').locate_file('sympy/release.py')
@@ -215,7 +215,7 @@ jobs:
         run: pip install pytest pytest-xdist hypothesis
 
       - name: Run tests after install
-        run: python -c 'import sys, sympy; sys.exit(not sympy.test(parallel=True))'
+        run: python -c 'import sys, sympy; sys.exit(sympy.test(parallel=True))'
 
   # -------------------- Upload to PyPI proper --------------------- #
 
