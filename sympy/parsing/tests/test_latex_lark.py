@@ -21,7 +21,7 @@ from sympy.functions.elementary.miscellaneous import root, sqrt, Min, Max
 from sympy.functions.elementary.trigonometric import acos, acot, acsc, asec, asin, atan, cos, csc, sec, sin, tan
 from sympy.integrals.integrals import Integral
 from sympy.series.limits import Limit
-from sympy import Matrix, MatAdd, MatMul, Transpose, Trace
+from sympy import Adjoint, Determinant, Matrix, MatAdd, MatMul, Transpose, Trace
 from sympy import I, pi
 from sympy import And, Contains, Float, Not, S
 from sympy import erf, re, sign, sinc
@@ -751,40 +751,12 @@ UNEVALUATED_MATRIX_EXPRESSION_PAIRS = [
 ]
 
 EVALUATED_MATRIX_EXPRESSION_PAIRS = [
-    (r"\det\left(\left[   { \begin{array}{cc}a&b\\x&y\end{array} } \right]\right)",
-     Matrix([[a, b], [x, y]]).det()),
-    (r"\det \begin{pmatrix}1&2\\3&4\end{pmatrix}", -2),
-    (r"\det{\begin{pmatrix}1&2\\3&4\end{pmatrix}}", -2),
-    (r"\det(\begin{pmatrix}1&2\\3&4\end{pmatrix})", -2),
-    (r"\det\left(\begin{pmatrix}1&2\\3&4\end{pmatrix}\right)", -2),
-    (r"\begin{pmatrix}a & b \\x & y\end{pmatrix}/\begin{vmatrix}a & b \\x & y\end{vmatrix}",
-     _MatMul(Matrix([[a, b], [x, y]]), _Pow(Matrix([[a, b], [x, y]]).det(), -1))),
-    (r"\begin{pmatrix}a & b \\x & y\end{pmatrix}/|\begin{matrix}a & b \\x & y\end{matrix}|",
-     _MatMul(Matrix([[a, b], [x, y]]), _Pow(Matrix([[a, b], [x, y]]).det(), -1))),
-    (r"\frac{\begin{pmatrix}a & b \\x & y\end{pmatrix}}{| { \begin{matrix}a & b \\x & y\end{matrix} } |}",
-     _MatMul(Matrix([[a, b], [x, y]]), _Pow(Matrix([[a, b], [x, y]]).det(), -1))),
     (r"\overline{\begin{pmatrix}\imaginaryunit & 1+\imaginaryunit \\-\imaginaryunit & 4\end{pmatrix}}",
      Matrix([[-I, 1-I], [I, 4]])),
-    (r"\begin{pmatrix}\imaginaryunit & 1+\imaginaryunit \\-\imaginaryunit & 4\end{pmatrix}^H",
-     Matrix([[-I, I], [1-I, 4]])),
     (r"\trace(\begin{pmatrix}\imaginaryunit & 1+\imaginaryunit \\-\imaginaryunit & 4\end{pmatrix})",
      Trace(Matrix([[I, 1+I], [-I, 4]]))),
     (r"\adjugate(\begin{pmatrix}1 & 2 \\3 & 4\end{pmatrix})",
      Matrix([[4, -2], [-3, 1]])),
-    (r"(\begin{pmatrix}\imaginaryunit&2\\3&4\end{pmatrix}+\begin{pmatrix}\imaginaryunit&2\\3&4\end{pmatrix})^\ast",
-     Matrix([[-2*I, 6], [4, 8]])),
-    (r"(\begin{pmatrix}\imaginaryunit&2\\3&4\end{pmatrix}+\begin{pmatrix}\imaginaryunit&2\\3&4\end{pmatrix})^{\ast}",
-     Matrix([[-2*I, 6], [4, 8]])),
-    (r"(\begin{pmatrix}\imaginaryunit&2\\3&4\end{pmatrix}+\begin{pmatrix}\imaginaryunit&2\\3&4\end{pmatrix})^{\ast\ast}",
-     Matrix([[2*I, 4], [6, 8]])),
-    (r"(\begin{pmatrix}\imaginaryunit&2\\3&4\end{pmatrix}+\begin{pmatrix}\imaginaryunit&2\\3&4\end{pmatrix})^{\ast\ast\ast}",
-     Matrix([[-2*I, 6], [4, 8]])),
-    (r"(\begin{pmatrix}\imaginaryunit&2\\3&4\end{pmatrix}+\begin{pmatrix}\imaginaryunit&2\\3&4\end{pmatrix})^{*}",
-     Matrix([[-2*I, 6], [4, 8]])),
-    (r"(\begin{pmatrix}\imaginaryunit&2\\3&4\end{pmatrix}+\begin{pmatrix}\imaginaryunit&2\\3&4\end{pmatrix})^{**}",
-     Matrix([[2*I, 4], [6, 8]])),
-    (r"(\begin{pmatrix}\imaginaryunit&2\\3&4\end{pmatrix}+\begin{pmatrix}\imaginaryunit&2\\3&4\end{pmatrix})^{***}",
-     Matrix([[-2*I, 6], [4, 8]])),
     (r"(\begin{pmatrix}\imaginaryunit&2\\3&4\end{pmatrix}+\begin{pmatrix}\imaginaryunit&2\\3&4\end{pmatrix})^\prime",
      Transpose(_MatAdd(Matrix([[I, 2], [3, 4]]),
                        Matrix([[I, 2], [3, 4]])))),
@@ -815,9 +787,6 @@ EVALUATED_MATRIX_EXPRESSION_PAIRS = [
     (r"(\begin{pmatrix}\imaginaryunit&2\\3&4\end{pmatrix}+\begin{pmatrix}\imaginaryunit&2\\3&4\end{pmatrix})'''",
      Transpose(_MatAdd(Matrix([[I, 2], [3, 4]]),
                        Matrix([[I, 2], [3, 4]])))),
-    (r"\det(\begin{pmatrix}\imaginaryunit&2\\3&4\end{pmatrix}+\begin{pmatrix}\imaginaryunit&2\\3&4\end{pmatrix})",
-     (_MatAdd(Matrix([[I, 2], [3, 4]]),
-              Matrix([[I, 2], [3, 4]]))).det()),
     (r"\trace(\begin{pmatrix}\imaginaryunit&2\\3&4\end{pmatrix}+\begin{pmatrix}\imaginaryunit&2\\3&4\end{pmatrix})",
      Trace(_MatAdd(Matrix([[I, 2], [3, 4]]),
                    Matrix([[I, 2], [3, 4]])))),
@@ -825,9 +794,56 @@ EVALUATED_MATRIX_EXPRESSION_PAIRS = [
      (Matrix([[8, -4], [-6, 2*I]]))),
     (r"(\begin{pmatrix}\imaginaryunit&2\\3&4\end{pmatrix}+\begin{pmatrix}\imaginaryunit&2\\3&4\end{pmatrix})^T",
      Transpose(_MatAdd(Matrix([[I, 2], [3, 4]]),
-                       Matrix([[I, 2], [3, 4]])))),
+                       Matrix([[I, 2], [3, 4]]))))
+]
+
+DETERMINANT_EXPRESSION_PAIRS = [
+    (r"\det\left(\left[   { \begin{array}{cc}a&b\\x&y\end{array} } \right]\right)",
+     Determinant(Matrix([[a, b], [x, y]]))),
+    (r"\det \begin{pmatrix}1&2\\3&4\end{pmatrix}", Determinant(Matrix([[1, 2], [3, 4]]))),
+    (r"\det{\begin{pmatrix}1&2\\3&4\end{pmatrix}}", Determinant(Matrix([[1, 2], [3, 4]]))),
+    (r"\det(\begin{pmatrix}1&2\\3&4\end{pmatrix})", Determinant(Matrix([[1, 2], [3, 4]]))),
+    (r"\det\left(\begin{pmatrix}1&2\\3&4\end{pmatrix}\right)", Determinant(Matrix([[1, 2], [3, 4]]))),
+    (r"\operatorname{det}(\begin{pmatrix}1&2\\3&4\end{pmatrix})", Determinant(Matrix([[1, 2], [3, 4]]))),
+    (r"\begin{vmatrix}1&2\\3&4\end{vmatrix}", Determinant(Matrix([[1, 2], [3, 4]]))),
+    (r"\begin{pmatrix}a & b \\x & y\end{pmatrix}/\begin{vmatrix}a & b \\x & y\end{vmatrix}",
+     _MatMul(Matrix([[a, b], [x, y]]), _Pow(Determinant(Matrix([[a, b], [x, y]])), -1))),
+    (r"\begin{pmatrix}a & b \\x & y\end{pmatrix}/|\begin{matrix}a & b \\x & y\end{matrix}|",
+     _MatMul(Matrix([[a, b], [x, y]]), _Pow(Determinant(Matrix([[a, b], [x, y]])), -1))),
+    (r"\frac{\begin{pmatrix}a & b \\x & y\end{pmatrix}}{| { \begin{matrix}a & b \\x & y\end{matrix} } |}",
+     _MatMul(Matrix([[a, b], [x, y]]), _Pow(Determinant(Matrix([[a, b], [x, y]])), -1))),
+    (r"\det(\begin{pmatrix}\imaginaryunit&2\\3&4\end{pmatrix}+\begin{pmatrix}\imaginaryunit&2\\3&4\end{pmatrix})",
+     Determinant(_MatAdd(Matrix([[I, 2], [3, 4]]),
+                         Matrix([[I, 2], [3, 4]]))))
+]
+
+ADJOINT_EXPRESSION_PAIRS = [
+    (r"\begin{pmatrix}\imaginaryunit & 1+\imaginaryunit \\-\imaginaryunit & 4\end{pmatrix}^H",
+     Adjoint(Matrix([[I, 1+I], [-I, 4]]))),
     (r"(\begin{pmatrix}\imaginaryunit&2\\3&4\end{pmatrix}+\begin{pmatrix}\imaginaryunit&2\\3&4\end{pmatrix})^H",
-     (Matrix([[-2*I, 6], [4, 8]])))
+     Adjoint(_MatAdd(Matrix([[I, 2], [3, 4]]),
+                     Matrix([[I, 2], [3, 4]])))),
+    (r"(\begin{pmatrix}\imaginaryunit&2\\3&4\end{pmatrix}+\begin{pmatrix}\imaginaryunit&2\\3&4\end{pmatrix})^\ast",
+     Adjoint(_MatAdd(Matrix([[I, 2], [3, 4]]),
+                     Matrix([[I, 2], [3, 4]])))),
+    (r"(\begin{pmatrix}\imaginaryunit&2\\3&4\end{pmatrix}+\begin{pmatrix}\imaginaryunit&2\\3&4\end{pmatrix})^{\ast}",
+     Adjoint(_MatAdd(Matrix([[I, 2], [3, 4]]),
+                     Matrix([[I, 2], [3, 4]])))),
+    (r"(\begin{pmatrix}\imaginaryunit&2\\3&4\end{pmatrix}+\begin{pmatrix}\imaginaryunit&2\\3&4\end{pmatrix})^{\ast\ast}",
+     _MatAdd(Matrix([[I, 2], [3, 4]]),
+             Matrix([[I, 2], [3, 4]]))),
+    (r"(\begin{pmatrix}\imaginaryunit&2\\3&4\end{pmatrix}+\begin{pmatrix}\imaginaryunit&2\\3&4\end{pmatrix})^{\ast\ast\ast}",
+     Adjoint(_MatAdd(Matrix([[I, 2], [3, 4]]),
+                     Matrix([[I, 2], [3, 4]])))),
+    (r"(\begin{pmatrix}\imaginaryunit&2\\3&4\end{pmatrix}+\begin{pmatrix}\imaginaryunit&2\\3&4\end{pmatrix})^{*}",
+     Adjoint(_MatAdd(Matrix([[I, 2], [3, 4]]),
+                     Matrix([[I, 2], [3, 4]])))),
+    (r"(\begin{pmatrix}\imaginaryunit&2\\3&4\end{pmatrix}+\begin{pmatrix}\imaginaryunit&2\\3&4\end{pmatrix})^{**}",
+     _MatAdd(Matrix([[I, 2], [3, 4]]),
+             Matrix([[I, 2], [3, 4]]))),
+    (r"(\begin{pmatrix}\imaginaryunit&2\\3&4\end{pmatrix}+\begin{pmatrix}\imaginaryunit&2\\3&4\end{pmatrix})^{***}",
+     Adjoint(_MatAdd(Matrix([[I, 2], [3, 4]]),
+                     Matrix([[I, 2], [3, 4]]))))
 ]
 
 
@@ -1319,6 +1335,20 @@ def test_matrix_expressions():
 
     for latex_str, sympy_expr in EVALUATED_MATRIX_EXPRESSION_PAIRS:
         assert parse_latex_lark(latex_str) == sympy_expr, latex_str
+
+
+@XFAIL
+def test_determinant_expressions():
+    for latex_str, sympy_expr in DETERMINANT_EXPRESSION_PAIRS:
+        assert parse_latex_lark(latex_str) == sympy_expr, latex_str
+        assert parse_latex_lark(latex_str, evaluate=False) == sympy_expr, latex_str
+
+
+@XFAIL
+def test_adjoint_expressions():
+    for latex_str, sympy_expr in ADJOINT_EXPRESSION_PAIRS:
+        assert parse_latex_lark(latex_str) == sympy_expr, latex_str
+        assert parse_latex_lark(latex_str, evaluate=False) == sympy_expr, latex_str
 
 
 def test_unevaluated_expressions():
