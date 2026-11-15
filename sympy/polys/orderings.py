@@ -295,6 +295,9 @@ class _ItemGetter:
             return False
         return self.seq == other.seq
 
+    def __hash__(self):
+        return hash(self.seq)
+
 
 def build_product_order(arg, gens):
     """

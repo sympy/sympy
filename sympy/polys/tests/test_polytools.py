@@ -54,7 +54,7 @@ from sympy.polys.fields import field
 from sympy.polys.domains import FF, ZZ, QQ, ZZ_I, QQ_I, RR, EX, EXRAW
 from sympy.polys.domains.realfield import RealField
 from sympy.polys.domains.complexfield import ComplexField
-from sympy.polys.orderings import lex, grlex, grevlex
+from sympy.polys.orderings import lex, grlex, grevlex, build_product_order
 
 from sympy.combinatorics.galois import S4TransitiveSubgroups
 from sympy.core.add import Add
@@ -3749,6 +3749,14 @@ def test_reduced():
     assert isinstance(r, Poly)
     assert r.as_expr() == 1
     assert all(q.is_zero for q in Q)
+
+
+def test_groebner_product_order():
+    order = build_product_order((("lex", x), ("grlex", y, z)), [x, y, z])
+    basis = groebner([x*y - z, y**2 - x], x, y, z, order=order)
+    assert basis == [x - y**2, y**3 - z]
+    assert basis.order == order
+    assert basis.reduce(x*y - z)[1] == 0
 
 
 def test_groebner():

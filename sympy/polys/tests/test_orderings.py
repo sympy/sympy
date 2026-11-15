@@ -123,3 +123,12 @@ def test_build_product_order():
 
     assert build_product_order((("grlex", x, y), ("grlex", z, t)), [x, y, z, t]) == \
         build_product_order((("grlex", x, y), ("grlex", z, t)), [x, y, z, t])
+
+
+def test_build_product_order_hash():
+    order = build_product_order((("lex", x), ("grlex", y, z)), [x, y, z])
+    equal_order = build_product_order((("lex", x), ("grlex", y, z)), [x, y, z])
+    different_order = build_product_order((("lex", y), ("grlex", x, z)), [x, y, z])
+    assert order == equal_order
+    assert hash(order) == hash(equal_order)
+    assert len({order, equal_order, different_order}) == 2
