@@ -835,13 +835,13 @@ class TransformToSymPyExpr(Transformer):
             return self._apply(self._determinant, tokens[1])
 
         if len(tokens) == 3: # | A |
-            return self.matrix(tokens).det()
+            return sympy.Determinant(self.matrix(tokens))
 
     def _determinant(self, matrix, evaluate=True):
         if not self._obj_is_sympy_Matrix(matrix):
             raise LaTeXParsingError("Cannot take determinant of non-matrix.")
 
-        return matrix.det()
+        return sympy.Determinant(matrix)
 
     def trace(self, tokens):
         return self._apply(self._trace, tokens[1])

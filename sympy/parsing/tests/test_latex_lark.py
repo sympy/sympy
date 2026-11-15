@@ -1337,7 +1337,6 @@ def test_matrix_expressions():
         assert parse_latex_lark(latex_str) == sympy_expr, latex_str
 
 
-@XFAIL
 def test_determinant_expressions():
     for latex_str, sympy_expr in DETERMINANT_EXPRESSION_PAIRS:
         assert parse_latex_lark(latex_str) == sympy_expr, latex_str
