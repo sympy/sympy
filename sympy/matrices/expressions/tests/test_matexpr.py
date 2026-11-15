@@ -592,3 +592,67 @@ def test_matrixsymbol_solving():
     assert (-(-A + B) - A + B - Z).simplify() == Z
     assert (-(-A + B) - A + B - Z).expand() == Z
     assert (A*(A + B) + B*(A.T + B.T)).expand() == A**2 + A*B + B*A.T + B*B.T
+
+
+def test_negative_indexing_normalization():
+    # Issue #31107: Negative index normalization in MatrixExpr and MatrixElement
+    from sympy.matrices.expressions.special import Identity
+    from sympy.matrices.expressions.funcmatrix import FunctionMatrix
+    from sympy.core.function import Lambda
+
+    # 1. Identity
+    I3 = Identity(3)
+    assert I3[-1, -1] == 1
+    assert I3[-1, 2] == 1
+    assert I3[-2, 1] == 1
+    assert I3[-3, 0] == 1
+    assert I3[2, -1] == 1
+    assert I3[-1] == 1
+    assert I3[-2] == 0
+    assert I3[-9] == 1
+
+    # 2. FunctionMatrix
+    i, j = symbols('i j')
+    FM = FunctionMatrix(3, 3, Lambda((i, j), i + 10*j))
+    assert FM[-1, 0] == 2
+    assert FM[0, -1] == 20
+    assert FM[-1, -1] == 22
+    assert FM[-1, -1] == FM.as_explicit()[-1, -1]
+
+    # 3. MatrixSlice
+    Xs = MatrixSymbol('Xs', 10, 10)
+    sub = Xs[2:5, 3:6]
+    assert sub[-1, -1] == Xs[4, 5]
+    assert sub[-1, 0] == Xs[4, 3]
+    assert sub[0, -1] == Xs[2, 5]
+
+    # 4. MatrixSymbol equivalence and differentiation
+    W = MatrixSymbol('W', 2, 2)
+    assert W[-1, 0] == W[1, 0]
+    assert W[0, -1] == W[0, 1]
+    assert W[-1, -1] == W[1, 1]
+    assert W[-1, 0].diff(W[1, 0]) == 1
+    assert W[-1, 0] - W[1, 0] == 0
+    assert MatrixElement(W, -1, 0) == W[1, 0]
+
+    # 5. MatMul expansion
+    A = MatrixSymbol('A', 3, 3)
+    B = MatrixSymbol('B', 3, 3)
+    assert (A * B)[-1, 0] == A[2, 0]*B[0, 0] + A[2, 1]*B[1, 0] + A[2, 2]*B[2, 0]
+
+    # 6. Flat indexing bounds and normalization
+    M = MatrixSymbol('M', 2, 2)
+    assert M[-1] == M[1, 1]
+    assert M[-2] == M[1, 0]
+    assert M[-3] == M[0, 1]
+    assert M[-4] == M[0, 0]
+    raises(IndexError, lambda: M[-5])
+    raises(IndexError, lambda: M[4])
+
+    # 7. Symbolic shapes
+    n, m = symbols('n m', integer=True, positive=True)
+    S = MatrixSymbol('S', n, m)
+    assert S[-1, 0] == S[n - 1, 0]
+    assert S[0, -1] == S[0, m - 1]
+    assert S[-1, -1] == S[n - 1, m - 1]
+    assert MatrixElement(S, -1, -1) == S[n - 1, m - 1]
