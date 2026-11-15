@@ -334,3 +334,46 @@ def test_KroneckerProduct_power():
     # Identity and ZeroMatrix combinations
     assert KroneckerProduct(Identity(n), Identity(m))**2 == Identity(n*m)
     assert KroneckerProduct(ZeroMatrix(n, n), A)**2 == ZeroMatrix(n**2, n**2)
+
+
+def test_kronecker_combine_add_with_nonkrons():
+    # Issue #30900 (item E2-8): combine_kronecker failed with TypeError
+    # when adding KroneckerProduct and non-Kronecker terms
+    F = MatrixSymbol('F', n*m, n*m)
+    kp1 = KroneckerProduct(A, B)
+    kp2 = KroneckerProduct(B, B)
+    assert combine_kronecker(kp1 + kp2 + F) == KroneckerProduct(A + B, B) + F
+    assert combine_kronecker(kp1 + F) == kp1 + F
+
+
+def test_kronecker_extract_commutative_matmul():
+    # Issue #30900 (item E2-6): KroneckerProduct(2*A*B, C).doit() failed
+    # because extract_commutative built scalar Mul on non-commutative matrix factors
+    D = MatrixSymbol('D', k, n)
+    kp1 = KroneckerProduct(2*A*C, B)
+    assert kp1.doit() == 2 * KroneckerProduct(A*C, B)
+
+    kp2 = KroneckerProduct(2*A*C, 3*C*D)
+    assert kp2.doit() == 6 * KroneckerProduct(A*C, C*D)
+
+    kp3 = KroneckerProduct(2*A, 3*B)
+    assert kp3.doit() == 6 * KroneckerProduct(A, B)
+
+
+def test_kronecker_combine_mul_partial_matching():
+    # Chained Kronecker products where initial pairs don't match shape,
+    # but subsequent adjacent pairs do
+    X1 = MatrixSymbol('X1', 2, 2)
+    X2 = MatrixSymbol('X2', 2, 2)
+    X3 = MatrixSymbol('X3', 2, 2)
+    A1 = MatrixSymbol('A1', 2, 3)
+    A2 = MatrixSymbol('A2', 4, 5)
+    B1 = MatrixSymbol('B1', 3, 2)
+    B2 = MatrixSymbol('B2', 5, 4)
+
+    kp_X = KroneckerProduct(X1, X2, X3)
+    kp_A = KroneckerProduct(A1, A2)
+    kp_B = KroneckerProduct(B1, B2)
+
+    res = combine_kronecker(kp_X * kp_A * kp_B)
+    assert res == kp_X * KroneckerProduct(A1*B1, A2*B2)
