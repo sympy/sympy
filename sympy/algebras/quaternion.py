@@ -66,7 +66,7 @@ def _is_extrinsic(seq: str) -> bool:
 
 def leading_sign(*xs: Expr) -> Expr:
     """The sign of the first nonzero argument, and 1 if there is none."""
-    result = S.One
+    result: Expr = S.One
     for x in reversed(xs):
         s = sign(x)
         # Keep the running value when x is zero, replace it by sign(x) otherwise.
