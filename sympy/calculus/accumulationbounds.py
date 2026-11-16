@@ -524,7 +524,8 @@ class AccumulationBounds(Expr):
                             return AccumBounds(self.max**other, oo)
                         if self.max.is_zero:
                             return AccumBounds(self.min**other, oo)
-                        return (1/self)**(-other)
+                        return AccumBounds(
+                            Min(self.min**other, self.max**other), oo)
                     return AccumBounds(
                         S.Zero, Max(self.min**other, self.max**other))
                 elif other % 2 == 1:
