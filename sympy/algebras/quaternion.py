@@ -64,6 +64,16 @@ def _is_extrinsic(seq: str) -> bool:
     return extrinsic
 
 
+def leading_sign(*xs: Expr) -> Expr:
+    """The sign of the first nonzero argument, and 1 if there is none."""
+    result = S.One
+    for x in reversed(xs):
+        s = sign(x)
+        # Keep the running value when x is zero, replace it by sign(x) otherwise.
+        result = s + (1 - s**2) * result
+    return result
+
+
 class Quaternion(Expr):
     """Provides basic quaternion operations.
     Quaternion objects can be instantiated as ``Quaternion(a, b, c, d)``
@@ -679,7 +689,7 @@ class Quaternion(Expr):
         >>> M = Matrix([[cos(x), -sin(x), 0], [sin(x), cos(x), 0], [0, 0, 1]])
         >>> q = trigsimp(Quaternion.from_rotation_matrix(M))
         >>> q
-        sqrt(2)*sqrt(cos(x) + 1)/2 + 0*i + 0*j + sqrt(2 - 2*cos(x))*sign(sin(x))/2*k
+        sqrt(2)*sqrt(cos(x) + 1)/2 + 0*i + 0*j + sqrt(2 - 2*cos(x))*(-sign(sin(x))**2 + sign(sin(x)) + 1)/2*k
 
         """
 
@@ -690,21 +700,21 @@ class Quaternion(Expr):
         c = sqrt(absQ - M[0, 0] + M[1, 1] - M[2, 2]) / 2
         d = sqrt(absQ - M[0, 0] - M[1, 1] + M[2, 2]) / 2
 
-        if a.is_zero or a == 0:
-            if b.is_zero is False or b != 0:
-                s10 = M[0, 1] + M[1, 0]
-                s20 = M[0, 2] + M[2, 0]
-                c = c * sign(s10) if s10 != 0 else c
-                d = d * sign(s20) if s20 != 0 else d
-            elif c.is_zero is False or c != 0:
-                s21 = M[1, 2] + M[2, 1]
-                d = d * sign(s21) if s21 != 0 else d
-        else:
-            b = b * sign(M[2, 1] - M[1, 2])
-            c = c * sign(M[0, 2] - M[2, 0])
-            d = d * sign(M[1, 0] - M[0, 1])
+        # Mixed products
+        ab = M[2, 1] - M[1, 2]
+        ac = M[0, 2] - M[2, 0]
+        ad = M[1, 0] - M[0, 1]
 
-        return Quaternion(a, b, c, d)
+        bc = M[0, 1] + M[1, 0]
+        bd = M[0, 2] + M[2, 0]
+        cd = M[1, 2] + M[2, 1]
+
+        # Relative signs
+        sign_b = leading_sign(ab)
+        sign_c = leading_sign(ac, bc)
+        sign_d = leading_sign(ad, bd, cd)
+
+        return Quaternion(a, b * sign_b, c * sign_c, d * sign_d)
 
     def __add__(self, other: SExpr | Quaternion) -> Quaternion:
         return self.add(other)
