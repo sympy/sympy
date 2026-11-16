@@ -155,6 +155,9 @@ def crt2(m, v, mm, e, s, symmetric=False):
 
     See ``crt1`` for usage.
 
+    The sequences of moduli and residues must have the same length;
+    otherwise, a ValueError is raised.
+
     Examples
     ========
 
@@ -171,6 +174,12 @@ def crt2(m, v, mm, e, s, symmetric=False):
     sympy.ntheory.modular.crt1
 
     """
+
+    m = list(m)
+    v = list(v)
+
+    if len(m) != len(v):
+        raise ValueError("Moduli and residues must have the same length.")
 
     result = gf_crt2(v, m, mm, e, s, ZZ)
 

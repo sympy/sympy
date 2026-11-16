@@ -22,6 +22,18 @@ def test_crt():
     raises(ValueError, lambda: crt([2, 3], [1], check=False))
     raises(ValueError, lambda: crt([2], [1, 2], check=False))
 
+    # crt2 requires moduli and residues of equal length as well.
+    mm, e, s = crt1([2, 3])
+    raises(ValueError, lambda: crt2([2, 3], [1], mm, e, s))
+    raises(ValueError, lambda: crt2([2], [1, 2], mm, e, s))
+    raises(ValueError, lambda: crt2(iter([2, 3]), iter([1]), mm, e, s))
+    raises(ValueError, lambda: crt2(iter([2]), iter([1, 2]), mm, e, s))
+    assert crt2(iter([2, 3]), iter([1, 2]), mm, e, s) == (5, 6)
+
+    # crt also accepts iterators while validating their lengths.
+    raises(ValueError, lambda: crt(iter([2, 3]), iter([1])))
+    assert crt(iter([2, 3]), iter([1, 2])) == (5, 6)
+
 
 def test_modular():
     assert solve_congruence(*list(zip([3, 4, 2], [12, 35, 17]))) == (1719, 7140)
