@@ -33,7 +33,49 @@ def test_quaternion_construction():
     M = Matrix([[cos(phi), -sin(phi), 0], [sin(phi), cos(phi), 0], [0, 0, 1]])
     q3 = trigsimp(Quaternion.from_rotation_matrix(M))
     assert q3 == Quaternion(
-        sqrt(2)*sqrt(cos(phi) + 1)/2, 0, 0, sqrt(2 - 2*cos(phi))*sign(sin(phi))/2)
+        sqrt(2)*sqrt(cos(phi) + 1)/2, 0, 0, sqrt(2 - 2*cos(phi))*(-sign(sin(phi))**2 + sign(sin(phi)) + 1)/2)
+
+    # 180-degree rotations (symmetric rotation matrices)
+    Rx = Matrix([[1, 0, 0], [0, -1, 0], [0, 0, -1]])
+    Ry = Matrix([[-1, 0, 0], [0, 1, 0], [0, 0, -1]])
+    Rz = Matrix([[-1, 0, 0], [0, -1, 0], [0, 0, 1]])
+    assert Quaternion.from_rotation_matrix(Rx) == Quaternion(0, 1, 0, 0)
+    assert Quaternion.from_rotation_matrix(Ry) == Quaternion(0, 0, 1, 0)
+    assert Quaternion.from_rotation_matrix(Rz) == Quaternion(0, 0, 0, 1)
+
+    for q_orig in [
+        Quaternion(0, 1, 0, 0),
+        Quaternion(0, 0, 1, 0),
+        Quaternion(0, 0, 0, 1),
+        Quaternion(0, sqrt(2)/2, sqrt(2)/2, 0),
+        Quaternion(0, sqrt(3)/3, sqrt(3)/3, sqrt(3)/3),
+    ]:
+        R_mat = q_orig.to_rotation_matrix()
+        q_rec = Quaternion.from_rotation_matrix(R_mat)
+        assert q_rec.norm() == 1
+        assert (R_mat - q_rec.to_rotation_matrix()).applyfunc(simplify) == Matrix.zeros(3, 3)
+
+    # Substitution consistency for symbolic rotation matrices (including 180-degree rotations)
+    _s = Symbol("t", real=True)
+    _m = Matrix([
+        [cos(2 * _s), sin(2 * _s), 0],
+        [sin(2 * _s), -cos(2 * _s), 0],
+        [0, 0, -1]
+    ])
+    for angle in [0, pi / 6, pi / 4, pi / 3, pi / 2, 2 * pi / 3, 3 * pi / 4, pi]:
+        q_sub_first = Quaternion.from_rotation_matrix(_m.subs(_s, angle))
+        q_sym_sub = Quaternion.from_rotation_matrix(_m).subs(_s, angle)
+        assert q_sub_first == q_sym_sub
+
+    _m2 = Matrix([
+        [-1, 0, 0],
+        [0, cos(2 * _s), sin(2 * _s)],
+        [0, sin(2 * _s), -cos(2 * _s)]
+    ])
+    for angle in [0, pi / 6, pi / 4, pi / 3, pi / 2, 2 * pi / 3, 3 * pi / 4, pi]:
+        q_sub_first = Quaternion.from_rotation_matrix(_m2.subs(_s, angle))
+        q_sym_sub = Quaternion.from_rotation_matrix(_m2).subs(_s, angle)
+        assert q_sub_first == q_sym_sub
 
     nc = Symbol('nc', commutative=False)
     raises(ValueError, lambda: Quaternion(w, x, nc, z))
@@ -491,3 +533,20 @@ def test_issue_30560():
     # Inverse components should be purely real
     inv = q.inverse()
     assert not inv.has(I)
+
+
+def test_leading_sign():
+    from sympy.algebras.quaternion import leading_sign
+    assert leading_sign() == 1
+    assert leading_sign(0) == 1
+    assert leading_sign(0, 0) == 1
+    assert leading_sign(5) == 1
+    assert leading_sign(-3) == -1
+    assert leading_sign(0, 4) == 1
+    assert leading_sign(0, -7) == -1
+    assert leading_sign(0, 0, -2) == -1
+    assert leading_sign(3, -5) == 1
+    assert leading_sign(-3, 5) == -1
+
+    _x = Symbol('x')
+    assert leading_sign(_x) == -sign(_x)**2 + sign(_x) + 1
