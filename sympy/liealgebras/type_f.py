@@ -3,7 +3,7 @@ from __future__ import annotations
 from typing import Literal
 
 from .cartan_type import Standard_Cartan
-from sympy.core.backend import Rational
+from sympy.core.backend import Rational, Matrix
 
 
 class TypeF(Standard_Cartan):
@@ -28,7 +28,7 @@ class TypeF(Standard_Cartan):
         return 4
 
 
-    def basic_root(self, i: int, j: int) -> list[int]:
+    def basic_root(self, i: int, j: int) -> Matrix:
         """Generate roots with 1 in ith position and -1 in jth position
 
         """
@@ -37,9 +37,9 @@ class TypeF(Standard_Cartan):
         root = [0]*n
         root[i] = 1
         root[j] = -1
-        return root
+        return Matrix([root])
 
-    def simple_root(self, i: int) -> list[int] | list[Rational]:
+    def simple_root(self, i: int) -> Matrix:
         """The ith simple root of F_4
 
         Every lie algebra has a unique root system.
@@ -57,24 +57,23 @@ class TypeF(Standard_Cartan):
         >>> from sympy.liealgebras.cartan_type import CartanType
         >>> c = CartanType("F4")
         >>> c.simple_root(3)
-        [0, 0, 0, 1]
+        Matrix([[0, 0, 0, 1]])
 
         """
         n = self.rank()
-        if i < 0 or i > n:
-            raise ValueError(f"Lie algebra F{n} has {n} simple roots")
-
-        if i < 3:
+        if 0 < i < 3:
             return self.basic_root(i, i+1)
         if i == 3:
             root = [0]*4
             root[3] = 1
-            return root
+            return Matrix([root])
         if i == 4:
             root = [Rational(1, 2), Rational(-1, 2), Rational(-1, 2), Rational(-1, 2)]
-            return root
+            return Matrix([root])
 
-    def positive_roots(self) -> dict[int, list[int] | list[Rational]]:
+        raise ValueError(f"Lie algebra F{n} has {n} simple roots")
+
+    def positive_roots(self) -> dict[int, Matrix]:
         """Generate all the positive roots of A_n
 
         This is half of all of the roots of F_4; by multiplying all the
@@ -86,13 +85,13 @@ class TypeF(Standard_Cartan):
         >>> from sympy.liealgebras.cartan_type import CartanType
         >>> c = CartanType("A3")
         >>> c.positive_roots()
-        {1: [1, -1, 0, 0], 2: [1, 0, -1, 0], 3: [1, 0, 0, -1], 4: [0, 1, -1, 0],
-                5: [0, 1, 0, -1], 6: [0, 0, 1, -1]}
+        {1: Matrix([[1, -1, 0, 0]]), 2: Matrix([[1, 0, -1, 0]]), 3: Matrix([[1, 0, 0, -1]]), 4: Matrix([[0, 1, -1, 0]]),
+                5: Matrix([[0, 1, 0, -1]]), 6: Matrix([[0, 0, 1, -1]])}
 
         """
 
         n = self.n
-        posroots: dict[int, list[int] | list[Rational]] = {}
+        posroots: dict[int, Matrix] = {}
         k = 0
         for i in range(0, n-1):
             for j in range(i+1, n):
@@ -107,21 +106,21 @@ class TypeF(Standard_Cartan):
             k += 1
             root = [0]*n
             root[i] = 1
-            posroots[k] = root
+            posroots[k] = Matrix([root])
 
         k += 1
-        root = [Rational(1, 2)]*n
+        root = Matrix([[Rational(1, 2)]*n])
         posroots[k] = root
         for i in range(1, 4):
             k += 1
             root = [Rational(1, 2)]*n
             root[i] = Rational(-1, 2)
-            posroots[k] = root
+            posroots[k] = Matrix([root])
 
-        posroots[k+1] = [Rational(1, 2), Rational(1, 2), Rational(-1, 2), Rational(-1, 2)]
-        posroots[k+2] = [Rational(1, 2), Rational(-1, 2), Rational(1, 2), Rational(-1, 2)]
-        posroots[k+3] = [Rational(1, 2), Rational(-1, 2), Rational(-1, 2), Rational(1, 2)]
-        posroots[k+4] = [Rational(1, 2), Rational(-1, 2), Rational(-1, 2), Rational(-1, 2)]
+        posroots[k+1] = Matrix([[Rational(1, 2), Rational(1, 2), Rational(-1, 2), Rational(-1, 2)]])
+        posroots[k+2] = Matrix([[Rational(1, 2), Rational(-1, 2), Rational(1, 2), Rational(-1, 2)]])
+        posroots[k+3] = Matrix([[Rational(1, 2), Rational(-1, 2), Rational(-1, 2), Rational(1, 2)]])
+        posroots[k+4] = Matrix([[Rational(1, 2), Rational(-1, 2), Rational(-1, 2), Rational(-1, 2)]])
 
         return posroots
 

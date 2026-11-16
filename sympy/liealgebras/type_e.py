@@ -4,7 +4,7 @@ import itertools
 from typing import Literal
 
 from .cartan_type import Standard_Cartan
-from sympy.core.backend import Rational
+from sympy.core.backend import Rational, Matrix
 
 class TypeE(Standard_Cartan):
 
@@ -27,7 +27,7 @@ class TypeE(Standard_Cartan):
 
         return 8
 
-    def basic_root(self, i: int, j: int) -> list[int]:
+    def basic_root(self, i: int, j: int) -> Matrix:
         """
         This is a method just to generate roots
         with a -1 in the ith position and a 1
@@ -38,9 +38,9 @@ class TypeE(Standard_Cartan):
         root = [0]*8
         root[i] = -1
         root[j] = 1
-        return root
+        return Matrix([root])
 
-    def simple_root(self, i: int) -> list[int] | list[Rational]:
+    def simple_root(self, i: int) -> Matrix:
         """
         Every Lie algebra has a unique root system.
         Given a root system Q, there is a subset of the
@@ -67,7 +67,7 @@ class TypeE(Standard_Cartan):
         >>> from sympy.liealgebras.cartan_type import CartanType
         >>> c = CartanType("E6")
         >>> c.simple_root(2)
-        [-1, 1, 0, 0, 0, 0, 0, 0]
+        Matrix([[-1, 1, 0, 0, 0, 0, 0, 0]])
         """
         n = self.rank()
         if i < 0 or i > n:
@@ -85,9 +85,9 @@ class TypeE(Standard_Cartan):
             [1, 1, 0, 0, 0, 0, 0, 0]]
 
         roots = e8[:self.rank() - 1] + [e8[-1]]
-        return roots[i-1]
+        return Matrix([roots[i-1]])
 
-    def positive_roots(self) -> dict[int, list[int] | list[Rational]]:
+    def positive_roots(self) -> dict[int, Matrix]:
         """
         This method generates all the positive roots of
         A_n.  This is half of all of the roots of E_n;
@@ -100,13 +100,13 @@ class TypeE(Standard_Cartan):
         >>> from sympy.liealgebras.cartan_type import CartanType
         >>> c = CartanType("A3")
         >>> c.positive_roots()
-        {1: [1, -1, 0, 0], 2: [1, 0, -1, 0], 3: [1, 0, 0, -1], 4: [0, 1, -1, 0],
-                5: [0, 1, 0, -1], 6: [0, 0, 1, -1]}
+        {1: Matrix([[1, -1, 0, 0]]), 2: Matrix([[1, 0, -1, 0]]), 3: Matrix([[1, 0, 0, -1]]), 4: Matrix([[0, 1, -1, 0]]),
+                5: Matrix([[0, 1, 0, -1]]), 6: Matrix([[0, 0, 1, -1]])}
         """
         n = self.n
         neghalf = Rational(-1, 2)
         poshalf = Rational(1, 2)
-        posroots: dict[int, list[int] | list[Rational]] = {}
+        posroots: dict[int, Matrix] = {}
 
         if n == 6:
             k = 0
@@ -136,7 +136,7 @@ class TypeE(Standard_Cartan):
                         root[3] = neghalf
                     if e == 1:
                         root[4] = neghalf
-                    posroots[k] = root[:]
+                    posroots[k] = Matrix([root])
             return posroots
         if n == 7:
             k = 0
@@ -151,7 +151,7 @@ class TypeE(Standard_Cartan):
                     posroots[k] = root
 
             k += 1
-            posroots[k] = [0, 0, 0, 0, 0, 1, 1, 0]
+            posroots[k] = Matrix([[0, 0, 0, 0, 0, 1, 1, 0]])
             root = [poshalf, poshalf, poshalf, poshalf, poshalf,
                     neghalf, neghalf, poshalf]
             for a, b, c, d, e, f in itertools.product(
@@ -170,7 +170,7 @@ class TypeE(Standard_Cartan):
                         root[4] = neghalf
                     if f == 1:
                         root[5] = poshalf
-                    posroots[k] = root[:]
+                    posroots[k] = Matrix([root])
             return posroots
         else:
             k = 0
@@ -205,7 +205,7 @@ class TypeE(Standard_Cartan):
                         root[5] = poshalf
                     if g == 1:
                         root[6] = poshalf
-                    posroots[k] = root[:]
+                    posroots[k] = Matrix([root])
             return posroots
 
 

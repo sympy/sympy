@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from sympy.core.backend import Matrix
 from .cartan_type import Standard_Cartan
 
 
@@ -25,7 +26,7 @@ class TypeD(Standard_Cartan):
 
         return self.n
 
-    def basic_root(self, i: int, j: int) -> list[int]:
+    def basic_root(self, i: int, j: int) -> Matrix:
         """
         This is a method just to generate roots
         with a 1 iin the ith position and a -1
@@ -37,9 +38,9 @@ class TypeD(Standard_Cartan):
         root = [0]*n
         root[i] = 1
         root[j] = -1
-        return root
+        return Matrix([root])
 
-    def simple_root(self, i: int) -> list[int]:
+    def simple_root(self, i: int) -> Matrix:
         """
         Every lie algebra has a unique root system.
         Given a root system Q, there is a subset of the
@@ -64,7 +65,7 @@ class TypeD(Standard_Cartan):
         >>> from sympy.liealgebras.cartan_type import CartanType
         >>> c = CartanType("D4")
         >>> c.simple_root(2)
-        [0, 1, -1, 0]
+        Matrix([[0, 1, -1, 0]])
 
         """
         n = self.rank()
@@ -77,10 +78,10 @@ class TypeD(Standard_Cartan):
             root = [0]*n
             root[n-2] = 1
             root[n-1] = 1
-            return root
+            return Matrix([root])
 
 
-    def positive_roots(self) -> dict[int, list[int]]:
+    def positive_roots(self) -> dict[int,  Matrix]:
         """
         This method generates all the positive roots of
         A_n.  This is half of all of the roots of D_n
@@ -93,12 +94,12 @@ class TypeD(Standard_Cartan):
         >>> from sympy.liealgebras.cartan_type import CartanType
         >>> c = CartanType("A3")
         >>> c.positive_roots()
-        {1: [1, -1, 0, 0], 2: [1, 0, -1, 0], 3: [1, 0, 0, -1], 4: [0, 1, -1, 0],
-                5: [0, 1, 0, -1], 6: [0, 0, 1, -1]}
+        {1: Matrix([[1, -1, 0, 0]]), 2: Matrix([[1, 0, -1, 0]]), 3: Matrix([[1, 0, 0, -1]]), 4: Matrix([[0, 1, -1, 0]]),
+                5: Matrix([[0, 1, 0, -1]]), 6: Matrix([[0, 0, 1, -1]])}
         """
 
         n = self.n
-        posroots: dict[int, list[int]] = {}
+        posroots: dict[int, Matrix] = {}
         k = 0
         for i in range(0, n-1):
             for j in range(i+1, n):

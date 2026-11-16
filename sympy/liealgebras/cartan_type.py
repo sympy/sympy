@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import cast, final, Literal, Mapping, TYPE_CHECKING
+from typing import cast, final, Literal, TYPE_CHECKING
 
 from sympy.core import sympify, Atom, Basic, Rational
 from sympy.matrices.dense import eye, Matrix
@@ -91,12 +91,12 @@ class Standard_Cartan(Atom):
         """
         return self._series
 
-    def simple_root(self, i: int) -> list[int] | list[Rational]:
+    def simple_root(self, i: int) -> Matrix:
         raise NotImplementedError(
             "simple_root is implemented by subclasses of Standard_Cartan"
         )
 
-    def positive_roots(self) -> Mapping[int, list[int] | list[Rational]]:
+    def positive_roots(self) -> dict[int, Matrix]:
         raise NotImplementedError(
             "positive_roots is implemented by subclasses of Standard_Cartan"
         )
@@ -121,14 +121,13 @@ class Standard_Cartan(Atom):
         """
         n = self.rank()
         simple_roots = [self.simple_root(i) for i in range(1,n+1)]
-        d = len(simple_roots[0])
 
-        norms: list[int] | list[Rational] = [sympify(sum(simple_roots[i][k] ** 2 for k in range(d))) for i in range(n)] #type: ignore
+        norms: list[int] | list[Rational] = [simple_roots[i].dot(simple_roots[i]) for i in range(n)] #type: ignore
 
         cartan_matrix: Matrix = 2*eye(n)
         for i in range(n):
             for j in range(i + 1, n):
-                root_sum: Rational = sympify(sum(2*simple_roots[i][k] * simple_roots[j][k] for k in range(d))) #type: ignore
+                root_sum: Rational = 2*simple_roots[i].dot(simple_roots[j]) #type: ignore
                 cartan_matrix[i, j] = root_sum / norms[j]
                 cartan_matrix[j, i] = root_sum / norms[i]
 
