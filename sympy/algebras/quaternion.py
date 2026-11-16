@@ -690,9 +690,19 @@ class Quaternion(Expr):
         c = sqrt(absQ - M[0, 0] + M[1, 1] - M[2, 2]) / 2
         d = sqrt(absQ - M[0, 0] - M[1, 1] + M[2, 2]) / 2
 
-        b = b * sign(M[2, 1] - M[1, 2])
-        c = c * sign(M[0, 2] - M[2, 0])
-        d = d * sign(M[1, 0] - M[0, 1])
+        if a.is_zero or a == 0:
+            if b.is_zero is False or b != 0:
+                s10 = M[0, 1] + M[1, 0]
+                s20 = M[0, 2] + M[2, 0]
+                c = c * sign(s10) if s10 != 0 else c
+                d = d * sign(s20) if s20 != 0 else d
+            elif c.is_zero is False or c != 0:
+                s21 = M[1, 2] + M[2, 1]
+                d = d * sign(s21) if s21 != 0 else d
+        else:
+            b = b * sign(M[2, 1] - M[1, 2])
+            c = c * sign(M[0, 2] - M[2, 0])
+            d = d * sign(M[1, 0] - M[0, 1])
 
         return Quaternion(a, b, c, d)
 

@@ -35,6 +35,26 @@ def test_quaternion_construction():
     assert q3 == Quaternion(
         sqrt(2)*sqrt(cos(phi) + 1)/2, 0, 0, sqrt(2 - 2*cos(phi))*sign(sin(phi))/2)
 
+    # 180-degree rotations (symmetric rotation matrices)
+    Rx = Matrix([[1, 0, 0], [0, -1, 0], [0, 0, -1]])
+    Ry = Matrix([[-1, 0, 0], [0, 1, 0], [0, 0, -1]])
+    Rz = Matrix([[-1, 0, 0], [0, -1, 0], [0, 0, 1]])
+    assert Quaternion.from_rotation_matrix(Rx) == Quaternion(0, 1, 0, 0)
+    assert Quaternion.from_rotation_matrix(Ry) == Quaternion(0, 0, 1, 0)
+    assert Quaternion.from_rotation_matrix(Rz) == Quaternion(0, 0, 0, 1)
+
+    for q_orig in [
+        Quaternion(0, 1, 0, 0),
+        Quaternion(0, 0, 1, 0),
+        Quaternion(0, 0, 0, 1),
+        Quaternion(0, sqrt(2)/2, sqrt(2)/2, 0),
+        Quaternion(0, sqrt(3)/3, sqrt(3)/3, sqrt(3)/3),
+    ]:
+        R_mat = q_orig.to_rotation_matrix()
+        q_rec = Quaternion.from_rotation_matrix(R_mat)
+        assert q_rec.norm() == 1
+        assert (R_mat - q_rec.to_rotation_matrix()).applyfunc(simplify) == Matrix.zeros(3, 3)
+
     nc = Symbol('nc', commutative=False)
     raises(ValueError, lambda: Quaternion(w, x, nc, z))
 
