@@ -138,3 +138,28 @@ class Standard_Cartan(Atom):
         raise NotImplementedError(
             "dynkin_diagram is implemented by subclasses of Standard_Cartan"
         )
+
+def _positive_root_coefficients(cartan_matrix: Matrix):
+    n = cartan_matrix.rows
+
+    simple_roots = [tuple(1 if i == j else 0 for j in range(n)) for i in range(n)]
+    positive_roots = set(simple_roots)
+    queue = list(simple_roots)
+
+    while queue:
+        beta = queue.pop(0)
+
+        # reflect beta
+        for i in range(n):
+            pairing = sum(beta[j] * cartan_matrix[j, i] for j in range(n))
+
+            new_beta = list(beta)
+            new_beta[i] -= pairing
+            new_beta = tuple(new_beta)
+
+            if new_beta not in positive_roots and all(c >= 0 for c in new_beta):
+                positive_roots.add(new_beta)
+                queue.append(new_beta)
+
+    # sot by height, and antilex within height
+    return sorted(positive_roots, key=lambda beta: (-sum(beta), beta),reverse=True)
