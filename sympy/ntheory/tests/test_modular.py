@@ -17,6 +17,11 @@ def test_crt():
 
     assert crt([656, 350], [811, 133], symmetric=True) == (-56917, 114800)
 
+    raises(ValueError, lambda: crt([2, 3], [1]))
+    raises(ValueError, lambda: crt([2], [1, 2]))
+    raises(ValueError, lambda: crt([2, 3], [1], check=False))
+    raises(ValueError, lambda: crt([2], [1, 2], check=False))
+
 
 def test_modular():
     assert solve_congruence(*list(zip([3, 4, 2], [12, 35, 17]))) == (1719, 7140)
