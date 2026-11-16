@@ -824,7 +824,7 @@ class Poly(Basic):
 
         return f.per(result)
 
-    def to_field(f):
+    def to_field(f) -> Poly:
         """
         Make the ground domain a field.
 
@@ -928,7 +928,7 @@ class Poly(Basic):
         """
         return [f.rep.dom.to_sympy(c) for c in f.rep.coeffs(order=order)]
 
-    def monoms(f, order=None):
+    def monoms(f, order=None) -> list[tuple[int, ...]]:
         """
         Returns all non-zero monomials from ``f`` in lex order.
 
@@ -1284,7 +1284,7 @@ class Poly(Basic):
 
         return f.new(result, *_gens)
 
-    def terms_gcd(f):
+    def terms_gcd(f) -> tuple[tuple[int, ...], Poly]:
         """
         Remove GCD of terms from the polynomial ``f``.
 
@@ -6872,7 +6872,8 @@ def _generic_factor(expr, gens, args, method):
     return _symbolic_factor(sympify(expr), opt, method)
 
 
-def to_rational_coeffs(f):
+def to_rational_coeffs(f: Poly) -> (
+        tuple[Expr, Expr, None, Poly] | tuple[None, None, Expr, Poly] | None):
     """
     try to transform a polynomial to have rational coefficients
 
