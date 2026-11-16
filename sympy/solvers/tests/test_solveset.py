@@ -3485,17 +3485,20 @@ def test_solve_modular_power_integer_domain():
         (1, 3, -3, 2, 0, 1), (4, 2, -1, -3, -2, 0),
         (2, 2, -1, -3, 1, 0), (2, 2, 0, 4, 1, 0),
     ]
-    for a, b, c, m, r, shift in cases:
+    for coefficient, base, offset, modulus, remainder, shift in cases:
         for evaluate in (True, False):
-            expr = Mod(a*b**(x + shift) + c, m, evaluate=evaluate) - r
+            dividend = coefficient*base**(x + shift) + offset
+            expr = Mod(dividend, modulus, evaluate=evaluate) - remainder
             for domain in (S.Integers, Range(-6, 7, 2)):
                 result = solveset(expr, x, domain)
                 assert not isinstance(result, ConditionSet), (
-                    a, b, c, m, r, shift, evaluate, domain, expr, result)
-                for k in range(-12, 13):
-                    value = a*Fraction(b)**(k + shift) + c
-                    expected = value % m == r and k in domain
-                    assert (k in result) == expected, (expr, domain, k, result)
+                    coefficient, base, offset, modulus, remainder,
+                    shift, evaluate, domain, expr, result)
+                for exponent in range(-12, 13):
+                    value = coefficient*Fraction(base)**(exponent + shift) + offset
+                    expected = value % modulus == remainder and exponent in domain
+                    assert (exponent in result) == expected, (
+                        expr, domain, exponent, result)
 
     term = Mod(2*2**x - 1, 42, evaluate=False)
     assert solveset(Eq(2*term, 0, evaluate=False), x, S.Integers) == FiniteSet(-1)
