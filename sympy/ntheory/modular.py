@@ -80,6 +80,14 @@ def crt(m, v, symmetric=False, check=True):
     solve_congruence
     sympy.polys.galoistools.gf_crt : low level crt routine used by this routine
     """
+    if not hasattr(m, '__len__'):
+        m = list(m)
+    if not hasattr(v, '__len__'):
+        v = list(v)
+
+    if len(m) != len(v):
+        raise ValueError("m and v must have the same length")
+
     if check:
         m = list(map(as_int, m))
         v = list(map(as_int, v))
@@ -162,6 +170,13 @@ def crt2(m, v, mm, e, s, symmetric=False):
     sympy.ntheory.modular.crt1
 
     """
+    if not hasattr(m, '__len__'):
+        m = list(m)
+    if not hasattr(v, '__len__'):
+        v = list(v)
+
+    if len(m) != len(v):
+        raise ValueError("m and v must have the same length")
 
     result = gf_crt2(v, m, mm, e, s, ZZ)
 
