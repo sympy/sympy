@@ -156,6 +156,64 @@ class Standard_Cartan(Atom):
         return cartan_matrix
 
 
+    def cocartan_matrix(self) -> Matrix:
+        r"""
+        Returns the Cocartan matrix. The Cocartan matrix
+        row elements, $c_i$, are built from covectors of simple roots, $\alpha_i$.
+
+        .. math::
+            c_i = 2 \alpha_i / \langle \alpha_i, \alpha_i \rangle
+
+        This relationship is helpful in defining the orthogonal base where
+        multiplying by some weight, $w_j$, yields the unit matrix.
+
+        .. math::
+            \langle c_i, w_j \rangle = \delta_{ij}
+
+        """
+        simple_roots = [self.simple_root(i) for i in range(1, self.rank() + 1)]
+        return Matrix([
+                2 * x / x.dot(x) for x in simple_roots])
+
+    def omega_matrix(self) -> Matrix:
+        """
+        Returns the omega matrix whose rows are built from
+        the fundamental weights of the algebra in the orthogonal
+        basis.
+        """
+        return self.cocartan_matrix().pinv().T
+
+
+    def fundamental_weight(self, i: int) -> Matrix:
+        r"""
+        Returns the i'th fundamental weight of the algebra in the
+        orthogonal basis.
+
+        Note: To match consistency with simple roots, i starts at 1.
+
+        Explanation
+        ===========
+        The weights of an algebra, lambda, can be
+        written as a linear combination of the simple roots, $\alpha_i$.
+        The following theorem,
+
+        .. math::
+            a_i = 2\langle\lambda, \alpha_i \rangle / \langle\alpha_i, \alpha_i \rangle
+
+
+        where $a_i$ are the Dynkin labels.  The fundamental weights
+        of the algebra are the weights, lambda, with the smallest $a_i >= 0$.
+        Note that if $\lambda_i==\alpha_i$, then the Dynkin labels become
+        the elements of the Cartan matrix.
+
+        Sources
+        =======
+        - https://en.wikipedia.org/wiki/Weight_(representation_theory)
+        - http://www.math.columbia.edu/~woit/notes11.pdf
+        """
+        return self.omega_matrix().row(i - 1) 
+
+
     def dynkin_diagram(self) -> str:
         raise NotImplementedError(
             "dynkin_diagram is implemented by subclasses of Standard_Cartan"
