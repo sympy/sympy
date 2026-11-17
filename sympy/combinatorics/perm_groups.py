@@ -4171,9 +4171,7 @@ class PermutationGroup(Basic):
             init_subgroup = PermutationGroup([identity])
         if tests is None:
             trivial_test = lambda x: True
-            tests = []
-            for i in range(base_len):
-                tests.append(trivial_test)
+            tests = [trivial_test] * base_len
         # line 1: more initializations.
         res = init_subgroup
         f = base_len - 1
