@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from typing import cast, final, Literal, TYPE_CHECKING
 
-from sympy.core import sympify, Atom, Basic, Rational
+from sympy.core import Atom, Basic, Rational
 from sympy.matrices.dense import eye, Matrix
 
 if TYPE_CHECKING:
