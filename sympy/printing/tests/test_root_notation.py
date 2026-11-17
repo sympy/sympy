@@ -1,4 +1,4 @@
-# Tests for root_notation flag in printers
+from __future__ import annotations
 
 import sympy as sp
 from sympy import Rational
