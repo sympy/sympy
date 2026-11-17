@@ -145,62 +145,19 @@ class WeylGroup(Atom):
 
         >>> from sympy.liealgebras.weyl_group import WeylGroup
         >>> b = WeylGroup("B4")
-        >>> b.element_order('r1*r4*r2')
+        >>> b.element_order("r1*r4*r2")
         4
         """
-        n = self.cartan_type.rank()
-        if self.cartan_type.series == "A":
-            a = self.matrix_form(weylelt)
-            order = 1
-            while a != eye(n+1):
-                a *= self.matrix_form(weylelt)
-                order += 1
-            return order
+        n = len(self.cartan_type.simple_root(1))
+        identity: Matrix = eye(n)
+        a = self.matrix_form(weylelt)
 
-        if self.cartan_type.series == "D":
-            a = self.matrix_form(weylelt)
-            order = 1
-            while a != eye(n):
-                a *= self.matrix_form(weylelt)
-                order += 1
-            return order
+        order = 1
+        while a != identity:
+            a *= self.matrix_form(weylelt)
+            order += 1
+        return order
 
-        if self.cartan_type.series == "E":
-            a = self.matrix_form(weylelt)
-            order = 1
-            while a != eye(8):
-                a *= self.matrix_form(weylelt)
-                order += 1
-            return order
-
-        if self.cartan_type.series == "G":
-            reflections = self.delete_doubles(weylelt)
-            if len(reflections) % 2 == 1:
-                return 2
-            elif len(reflections) == 0:
-                return 1
-            else:
-                p = len(reflections) // 2
-                return 6 // igcd(p, 6)
-
-        if self.cartan_type.series == 'F':
-            a = self.matrix_form(weylelt)
-            order = 1
-            while a != eye(4):
-                a *= self.matrix_form(weylelt)
-                order += 1
-            return order
-
-
-        if self.cartan_type.series in ("B", "C"):
-            a = self.matrix_form(weylelt)
-            order = 1
-            while a != eye(n):
-                a *= self.matrix_form(weylelt)
-                order += 1
-            return order
-
-        raise ValueError(f"Invalid Cartan type: {self.cartan_type.series}{n}")
 
     def delete_doubles(self, reflections: str | list[str]) -> list[str]:
         """
@@ -214,7 +171,7 @@ class WeylGroup(Atom):
         >>> g = WeylGroup("A3")
         >>> g.delete_doubles(["r1", "r2", "r2", "r3"])
         ['1', '3']
-        >>> g.delete_doubles("r1*r3*r3*r1"])
+        >>> g.delete_doubles("r1*r3*r3*r1")
         []
         """
         if isinstance(reflections, str):
