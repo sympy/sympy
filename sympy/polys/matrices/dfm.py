@@ -6,9 +6,11 @@ is a placeholder class that raises NotImplementedError when instantiated.
 """
 from __future__ import annotations
 
+from typing import TYPE_CHECKING
+
 from sympy.external.gmpy import GROUND_TYPES
 
-if GROUND_TYPES == "flint":  # pragma: no cover
+if TYPE_CHECKING or GROUND_TYPES == "flint":  # pragma: no cover
     # When python-flint is installed we will try to use it for dense matrices
     # if the domain is supported by python-flint.
     from ._dfm import DFM
@@ -31,6 +33,4 @@ else: # pragma: no cover
         def _get_flint_func(cls, domain):
             raise NotImplementedError("DFM requires GROUND_TYPES=flint.")
 
-    # mypy really struggles with this kind of conditional type assignment.
-    # Maybe there is a better way to annotate this rather than type: ignore.
-    DFM = DFM_dummy # type: ignore
+    DFM = DFM_dummy

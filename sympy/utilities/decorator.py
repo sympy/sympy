@@ -1,7 +1,7 @@
 """Useful utility decorators. """
 from __future__ import annotations
 
-from typing import TypeVar
+from typing import TYPE_CHECKING, TypeVar
 import sys
 import types
 import inspect
@@ -11,6 +11,9 @@ from functools import wraps
 from sympy.external.mpmath import conserve_mpmath_dps # noqa: F401
 
 from sympy.utilities.exceptions import sympy_deprecation_warning
+
+if TYPE_CHECKING:
+    from typing import Callable, Sequence
 
 
 T = TypeVar('T')
@@ -117,8 +120,12 @@ class no_attrs_in_subclass:
         raise AttributeError
 
 
-def doctest_depends_on(exe=None, modules=None, disable_viewers=None,
-                       python_version=None, ground_types=None):
+def doctest_depends_on(exe: Sequence[str] | None = None,
+                       modules: Sequence[str] | None = None,
+                       disable_viewers: Sequence[str] | None = None,
+                       python_version: tuple[int, ...] | None = None,
+                       ground_types: Sequence[str] | None = None,
+                       ) -> Callable[[T], T]:
     """
     Adds metadata about the dependencies which need to be met for doctesting
     the docstrings of the decorated objects.
@@ -132,7 +139,7 @@ def doctest_depends_on(exe=None, modules=None, disable_viewers=None,
     ``python_version`` should be the minimum Python version required, as a tuple
     (like ``(3, 0)``)
     """
-    dependencies = {}
+    dependencies: dict[str, Sequence[str] | tuple[int, ...]] = {}
     if exe is not None:
         dependencies['executables'] = exe
     if modules is not None:
