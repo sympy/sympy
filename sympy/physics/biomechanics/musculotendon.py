@@ -815,7 +815,8 @@ class MusculotendonBase(ForceActuator, _NamedMixin):
             self._fl_T = self.curves.tendon_force_length.with_defaults(self._l_T_tilde)
         else:
             self._fl_T = self.curves.tendon_force_length(self._l_T_tilde, *fl_T_constants)
-        self._dF_T_tilde_dt = self._fl_T.diff(self._l_T_tilde)*self._v_T_tilde
+        assert self._fl_T.args[0] == self._l_T_tilde  # sanity check on fdiff(1)
+        self._dF_T_tilde_dt = self._fl_T.fdiff(1)*self._v_T_tilde
 
         self._state_vars = Matrix([self._F_T_tilde])
         self._input_vars = zeros(0, 1)
