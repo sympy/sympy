@@ -321,11 +321,8 @@ class TableForm:
         """
         # Check heading:
         if self._headings[1]:
-            new_line = []
-            for i in range(self._w):
-                # Format the item somehow if needed:
-                new_line.append(str(self._headings[1][i]))
-            self._headings[1] = new_line
+            self._headings[1] = [
+                str(self._headings[1][i]) for i in range(self._w)]
 
         alignments = []
         if self._headings[0]:
