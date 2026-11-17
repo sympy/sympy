@@ -1194,3 +1194,11 @@ def test_dsolve_symbols_iterator():
     K1 = Symbol('K1')
     sol = dsolve(eq, symbols=numbered_symbols(prefix='K', start=1))
     assert sol == Eq(f(x), K1*exp(x))
+
+def test_dsolve_symbols_iterator_2nd_order():
+    f = Function('f')
+    x = symbols('x')
+    eq = Eq(Derivative(f(x), (x, 2)), -f(x))
+    K1, K2 = symbols('K1 K2')
+    sol = dsolve(eq, symbols=numbered_symbols(prefix='K', start=1))
+    assert sol == Eq(f(x), K1*sin(x) + K2*cos(x))
