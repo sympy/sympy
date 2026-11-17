@@ -1680,6 +1680,10 @@ def test_latex_NDimArray():
 
         assert latex(M) == r"x"
 
+        assert latex(ArrayType([])) == r"\left[\begin{matrix}\end{matrix}\right]"
+        assert latex(ArrayType([], (0, 2))) == r"\left[\begin{matrix}\end{matrix}\right]"
+        assert latex(ArrayType([], (2, 0))) == r"\left[\begin{matrix}\end{matrix}\right]"
+
         M = ArrayType([[1 / x, y], [z, w]])
         M1 = ArrayType([1 / x, y, z])
 

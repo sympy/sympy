@@ -1986,6 +1986,9 @@ class LatexPrinter(Printer):
         def block(content, ncols):
             return block_str.replace('%COLS%', 'c'*ncols) % content
 
+        if 0 in expr.shape:
+            return block("", 0)
+
         level_str: list[list[str]] = [[] for i in range(expr.ndim + 1)]
         shape_ranges = [list(range(i)) for i in expr.shape]
         for outer_i in itertools.product(*shape_ranges):
