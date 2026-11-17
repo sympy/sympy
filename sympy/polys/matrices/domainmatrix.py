@@ -11,7 +11,7 @@ as unifying matrices with different domains.
 """
 from __future__ import annotations
 
-from typing import overload, TYPE_CHECKING
+from typing import overload, TYPE_CHECKING, Generic
 
 from collections import Counter
 from functools import reduce
@@ -37,6 +37,7 @@ from .exceptions import (
 from .domainscalar import DomainScalar
 
 from sympy.polys.domains import ZZ, EXRAW, QQ
+from sympy.polys.domains.domain import Er, Es
 
 from sympy.polys.densearith import dup_mul, dup_exquo_ground
 from sympy.polys.densebasic import dup_convert
@@ -59,6 +60,10 @@ from .dfm import DFM
 from .rref import _dm_rref, _dm_rref_den
 
 if TYPE_CHECKING:
+    from typing import Any, Iterator, Sequence, Callable, Mapping, TypeGuard
+    from sympy.polys.matrices._typing import FlatNzData
+    from sympy.core.expr import Expr
+    from sympy.matrices.dense import MutableDenseMatrix
     from ..domains import Domain
 
 
@@ -68,7 +73,7 @@ else:
     __doctest_skip__ = ['DomainMatrix.from_list']
 
 
-def DM(rows, domain):
+def DM(rows: Sequence[Sequence[Any]], domain: Domain[Es]) -> DomainMatrix[Es]:
     """Convenient alias for DomainMatrix.from_list
 
     Examples
@@ -87,7 +92,7 @@ def DM(rows, domain):
     return DomainMatrix.from_list(rows, domain)
 
 
-class DomainMatrix:
+class DomainMatrix(Generic[Er]):
     r"""
     Associate Matrix with :py:class:`~.Domain`
 
@@ -135,11 +140,11 @@ class DomainMatrix:
     Poly
 
     """
-    rep: SDM | DDM | DFM
+    rep: SDM[Er] | DDM[Er] | DFM[Er]
     shape: tuple[int, int]
-    domain: Domain
+    domain: Domain[Er]
 
-    def __new__(cls, rows, shape, domain, *, fmt=None):
+    def __new__(cls, rows: list[list[Er]] | dict[int, dict[int, Er]], shape: tuple[int, int], domain: Domain[Er], *, fmt: str | None = None) -> DomainMatrix[Er]:
         """
         Creates a :py:class:`~.DomainMatrix`.
 
@@ -157,6 +162,7 @@ class DomainMatrix:
             If any of rows, shape and domain are not provided
 
         """
+        rep: SDM[Er] | DDM[Er] | DFM[Er]
         if isinstance(rows, (DDM, SDM, DFM)):
             raise TypeError("Use from_rep to initialise from SDM/DDM")
         elif isinstance(rows, list):
@@ -193,15 +199,15 @@ class DomainMatrix:
         return (self.__class__, args)
 
     @overload
-    def __getitem__(self, key: tuple[int, int]) -> DomainScalar: ...
+    def __getitem__(self, key: tuple[int, int]) -> DomainScalar[Er]: ...
     @overload
-    def __getitem__(self, key: tuple[slice, int]) -> DomainMatrix: ...
+    def __getitem__(self, key: tuple[slice, int]) -> DomainMatrix[Er]: ...
     @overload
-    def __getitem__(self, key: tuple[int, slice]) -> DomainMatrix: ...
+    def __getitem__(self, key: tuple[int, slice]) -> DomainMatrix[Er]: ...
     @overload
-    def __getitem__(self, key: tuple[slice, slice]) -> DomainMatrix: ...
+    def __getitem__(self, key: tuple[slice, slice]) -> DomainMatrix[Er]: ...
 
-    def __getitem__(self, key: tuple[slice | int, slice | int]) -> DomainMatrix | DomainScalar:
+    def __getitem__(self, key: tuple[slice | int, slice | int]) -> DomainMatrix[Er] | DomainScalar[Er]:
         i, j = key
         m, n = self.shape
         if not (isinstance(i, slice) or isinstance(j, slice)):
@@ -220,13 +226,13 @@ class DomainMatrix:
 
         return self.from_rep(self.rep.extract_slice(i, j))
 
-    def getitem_sympy(self, i, j):
+    def getitem_sympy(self, i: int, j: int) -> Expr:
         return self.domain.to_sympy(self.rep.getitem(i, j))
 
-    def extract(self, rowslist, colslist):
+    def extract(self, rowslist: Sequence[int], colslist: Sequence[int]) -> DomainMatrix[Er]:
         return self.from_rep(self.rep.extract(rowslist, colslist))
 
-    def __setitem__(self, key, value):
+    def __setitem__(self, key: tuple[int, int], value: Er) -> None:
         i, j = key
         if not self.domain.of_type(value):
             raise TypeError
@@ -236,7 +242,7 @@ class DomainMatrix:
             raise NotImplementedError
 
     @classmethod
-    def from_rep(cls, rep):
+    def from_rep(cls, rep: SDM[Es] | DDM[Es] | DFM[Es]) -> DomainMatrix[Es]:
         """Create a new DomainMatrix efficiently from DDM/SDM.
 
         Examples
@@ -287,7 +293,7 @@ class DomainMatrix:
         """
         if not (isinstance(rep, (DDM, SDM)) or (DFM is not None and isinstance(rep, DFM))):
             raise TypeError("rep should be of type DDM or SDM")
-        self = super().__new__(cls)
+        self: DomainMatrix[Es] = object.__new__(DomainMatrix)
         self.rep = rep
         self.shape = rep.shape
         self.domain = rep.domain
@@ -295,7 +301,7 @@ class DomainMatrix:
 
     @classmethod
     @doctest_depends_on(ground_types=['python', 'gmpy'])
-    def from_list(cls, rows, domain):
+    def from_list(cls, rows: Sequence[Sequence[Any]], domain: Domain[Es]) -> DomainMatrix[Es]:
         r"""
         Convert a list of lists into a DomainMatrix
 
@@ -335,7 +341,7 @@ class DomainMatrix:
         """
         nrows = len(rows)
         ncols = 0 if not nrows else len(rows[0])
-        conv = lambda e: domain(*e) if isinstance(e, tuple) else domain(e)
+        conv: Callable[[Any], Es] = lambda e: domain(*e) if isinstance(e, tuple) else domain(e)
         domain_rows = [[conv(e) for e in row] for row in rows]
         return DomainMatrix(domain_rows, (nrows, ncols), domain)
 
@@ -513,10 +519,10 @@ class DomainMatrix:
         dom, elements_dom = construct_domain(elements, **opts)
         return self.from_flat_nz(elements_dom, data, dom)
 
-    def copy(self):
+    def copy(self) -> DomainMatrix[Er]:
         return self.from_rep(self.rep.copy())
 
-    def convert_to(self, K):
+    def convert_to(self, K: Domain[Es]) -> DomainMatrix[Es]:
         r"""
         Change the domain of DomainMatrix to desired domain or field
 
@@ -546,10 +552,11 @@ class DomainMatrix:
         DomainMatrix([[1, 2], [3, 4]], (2, 2), ZZ_I)
 
         """
-        if K == self.domain:
+        if _has_domain(self, K):
             return self.copy()
 
         rep = self.rep
+        rep_K: SDM[Es] | DDM[Es] | DFM[Es]
 
         # The DFM, DDM and SDM types do not do any implicit conversions so we
         # manage switching between DDM and DFM here.
@@ -591,7 +598,7 @@ class DomainMatrix:
         K = self.domain.get_field()
         return self.convert_to(K)
 
-    def to_sparse(self):
+    def to_sparse(self) -> DomainMatrix[Er]:
         """
         Return a sparse DomainMatrix representation of *self*.
 
@@ -612,7 +619,7 @@ class DomainMatrix:
 
         return self.from_rep(self.rep.to_sdm())
 
-    def to_dense(self):
+    def to_dense(self) -> DomainMatrix[Er]:
         """
         Return a dense DomainMatrix representation of *self*.
 
@@ -636,7 +643,7 @@ class DomainMatrix:
 
         return self.from_rep(rep.to_dfm_or_ddm())
 
-    def to_ddm(self):
+    def to_ddm(self) -> DDM[Er]:
         """
         Return a :class:`~.DDM` representation of *self*.
 
@@ -661,7 +668,7 @@ class DomainMatrix:
         """
         return self.rep.to_ddm()
 
-    def to_sdm(self):
+    def to_sdm(self) -> SDM[Er]:
         """
         Return a :class:`~.SDM` representation of *self*.
 
@@ -687,7 +694,7 @@ class DomainMatrix:
         return self.rep.to_sdm()
 
     @doctest_depends_on(ground_types=['flint'])
-    def to_dfm(self):
+    def to_dfm(self) -> DFM[Er]:
         """
         Return a :class:`~.DFM` representation of *self*.
 
@@ -713,7 +720,7 @@ class DomainMatrix:
         return self.rep.to_dfm()
 
     @doctest_depends_on(ground_types=['flint'])
-    def to_dfm_or_ddm(self):
+    def to_dfm_or_ddm(self) -> DFM[Er] | DDM[Er]:
         """
         Return a :class:`~.DFM` or :class:`~.DDM` representation of *self*.
 
@@ -834,7 +841,7 @@ class DomainMatrix:
             matrices = DomainMatrix._unify_fmt(*matrices, fmt=fmt)
         return matrices
 
-    def to_Matrix(self):
+    def to_Matrix(self) -> MutableDenseMatrix:
         r"""
         Convert DomainMatrix to Matrix
 
@@ -878,7 +885,7 @@ class DomainMatrix:
 
         return MutableDenseMatrix._fromrep(rep)
 
-    def to_list(self):
+    def to_list(self) -> list[list[Er]]:
         """
         Convert :class:`DomainMatrix` to list of lists.
 
@@ -892,7 +899,7 @@ class DomainMatrix:
         """
         return self.rep.to_list()
 
-    def to_list_flat(self):
+    def to_list_flat(self) -> list[Er]:
         """
         Convert :class:`DomainMatrix` to flat list.
 
@@ -916,7 +923,7 @@ class DomainMatrix:
         return self.rep.to_list_flat()
 
     @classmethod
-    def from_list_flat(cls, elements, shape, domain):
+    def from_list_flat(cls, elements: list[Es], shape: tuple[int, int], domain: Domain[Es]) -> DomainMatrix[Es]:
         """
         Create :class:`DomainMatrix` from flat list.
 
@@ -940,7 +947,7 @@ class DomainMatrix:
         ddm = DDM.from_list_flat(elements, shape, domain)
         return cls.from_rep(ddm.to_dfm_or_ddm())
 
-    def to_flat_nz(self):
+    def to_flat_nz(self) -> tuple[list[Er], FlatNzData]:
         """
         Convert :class:`DomainMatrix` to list of nonzero elements and data.
 
@@ -989,7 +996,7 @@ class DomainMatrix:
         """
         return self.rep.to_flat_nz()
 
-    def from_flat_nz(self, elements, data, domain):
+    def from_flat_nz(self, elements: list[Es], data: FlatNzData, domain: Domain[Es]) -> DomainMatrix[Es]:
         """
         Reconstruct :class:`DomainMatrix` after calling :meth:`to_flat_nz`.
 
@@ -1003,7 +1010,7 @@ class DomainMatrix:
         rep = self.rep.from_flat_nz(elements, data, domain)
         return self.from_rep(rep)
 
-    def to_dod(self):
+    def to_dod(self) -> dict[int, dict[int, Er]]:
         """
         Convert :class:`DomainMatrix` to dictionary of dictionaries (dod) format.
 
@@ -1039,7 +1046,7 @@ class DomainMatrix:
         return self.rep.to_dod()
 
     @classmethod
-    def from_dod(cls, dod, shape, domain):
+    def from_dod(cls, dod: Mapping[int, Mapping[int, Es]], shape: tuple[int, int], domain: Domain[Es]) -> DomainMatrix[Es]:
         """
         Create sparse :class:`DomainMatrix` from dict of dict (dod) format.
 
@@ -1053,7 +1060,16 @@ class DomainMatrix:
         """
         return cls.from_rep(SDM.from_dod(dod, shape, domain))
 
-    def from_dod_like(self, dod, domain=None):
+    @overload
+    def from_dod_like(self, dod: Mapping[int, Mapping[int, Er]], domain: None = None) -> DomainMatrix[Er]: ...
+    @overload
+    def from_dod_like(self, dod: Mapping[int, Mapping[int, Es]], domain: Domain[Es]) -> DomainMatrix[Es]: ...
+
+    def from_dod_like(
+        self,
+        dod: Mapping[int, Mapping[int, Any]],
+        domain: Domain[Es] | None = None,
+    ) -> DomainMatrix[Er] | DomainMatrix[Es]:
         """
         Create :class:`DomainMatrix` like ``self`` from dict of dict (dod) format.
 
@@ -1066,10 +1082,10 @@ class DomainMatrix:
         from_dod
         """
         if domain is None:
-            domain = self.domain
+            return self.from_rep(self.rep.from_dod(dod, self.shape, self.domain))
         return self.from_rep(self.rep.from_dod(dod, self.shape, domain))
 
-    def to_dok(self):
+    def to_dok(self) -> dict[tuple[int, int], Er]:
         """
         Convert :class:`DomainMatrix` to dictionary of keys (dok) format.
 
@@ -1101,7 +1117,7 @@ class DomainMatrix:
         return self.rep.to_dok()
 
     @classmethod
-    def from_dok(cls, dok, shape, domain):
+    def from_dok(cls, dok: Mapping[tuple[int, int], Es], shape: tuple[int, int], domain: Domain[Es]) -> DomainMatrix[Es]:
         """
         Create :class:`DomainMatrix` from dictionary of keys (dok) format.
 
@@ -1114,7 +1130,7 @@ class DomainMatrix:
         """
         return cls.from_rep(SDM.from_dok(dok, shape, domain))
 
-    def iter_values(self):
+    def iter_values(self) -> Iterator[Er]:
         """
         Iterate over nonzero elements of the matrix.
 
@@ -1136,7 +1152,7 @@ class DomainMatrix:
         """
         return self.rep.iter_values()
 
-    def iter_items(self):
+    def iter_items(self) -> Iterator[tuple[tuple[int, int], Er]]:
         """
         Iterate over indices and values of nonzero elements of the matrix.
 
@@ -1158,7 +1174,7 @@ class DomainMatrix:
         """
         return self.rep.iter_items()
 
-    def nnz(self):
+    def nnz(self) -> int:
         """
         Number of nonzero elements in the matrix.
 
@@ -1173,31 +1189,31 @@ class DomainMatrix:
         """
         return self.rep.nnz()
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return 'DomainMatrix(%s, %r, %r)' % (str(self.rep), self.shape, self.domain)
 
-    def transpose(self):
+    def transpose(self) -> DomainMatrix[Er]:
         """Matrix transpose of ``self``"""
         return self.from_rep(self.rep.transpose())
 
-    def conjugate(self):
+    def conjugate(self) -> DomainMatrix[Er]:
         """Entrywise conjugate of ``self``"""
         return self.from_rep(self.rep.conjugate())
 
-    def adjoint(self):
+    def adjoint(self) -> DomainMatrix[Er]:
         """Matrix adjoint of ``self``"""
         return self.from_rep(self.rep.adjoint())
 
-    def flat(self):
+    def flat(self) -> list[Er]:
         rows, cols = self.shape
         return [self[i,j].element for i in range(rows) for j in range(cols)]
 
     @property
-    def is_zero_matrix(self):
+    def is_zero_matrix(self) -> bool:
         return self.rep.is_zero_matrix()
 
     @property
-    def is_upper(self):
+    def is_upper(self) -> bool:
         """
         Says whether this matrix is upper-triangular. True can be returned
         even if the matrix is not square.
@@ -1205,7 +1221,7 @@ class DomainMatrix:
         return self.rep.is_upper()
 
     @property
-    def is_lower(self):
+    def is_lower(self) -> bool:
         """
         Says whether this matrix is lower-triangular. True can be returned
         even if the matrix is not square.
@@ -1213,7 +1229,7 @@ class DomainMatrix:
         return self.rep.is_lower()
 
     @property
-    def is_diagonal(self):
+    def is_diagonal(self) -> bool:
         """
         True if the matrix is diagonal.
 
@@ -1239,7 +1255,7 @@ class DomainMatrix:
         """
         return self.rep.is_diagonal()
 
-    def diagonal(self):
+    def diagonal(self) -> list[Er]:
         """
         Get the diagonal entries of the matrix as a list.
 
@@ -1261,7 +1277,7 @@ class DomainMatrix:
         return self.rep.diagonal()
 
     @property
-    def is_square(self):
+    def is_square(self) -> bool:
         """
         True if the matrix is square.
         """
@@ -1347,9 +1363,18 @@ class DomainMatrix:
         A, *B = A.unify(*B, fmt='dense')
         return DomainMatrix.from_rep(A.rep.vstack(*(Bk.rep for Bk in B)))
 
-    def applyfunc(self, func, domain=None):
+    @overload
+    def applyfunc(self, func: Callable[[Er], Er], domain: None = None) -> DomainMatrix[Er]: ...
+    @overload
+    def applyfunc(self, func: Callable[[Er], Es], domain: Domain[Es]) -> DomainMatrix[Es]: ...
+
+    def applyfunc(
+        self,
+        func: Callable[[Er], Any],
+        domain: Domain[Es] | None = None,
+    ) -> DomainMatrix[Er] | DomainMatrix[Es]:
         if domain is None:
-            domain = self.domain
+            return self.from_rep(self.rep.applyfunc(func, self.domain))
         return self.from_rep(self.rep.applyfunc(func, domain))
 
     def __add__(A, B):
@@ -1364,7 +1389,7 @@ class DomainMatrix:
         A, B = A.unify(B, fmt='dense')
         return A.sub(B)
 
-    def __neg__(A):
+    def __neg__(A) -> DomainMatrix[Er]:
         return A.neg()
 
     def __mul__(A, B):
@@ -1389,7 +1414,7 @@ class DomainMatrix:
         else:
             return NotImplemented
 
-    def __pow__(A, n):
+    def __pow__(A, n: int) -> DomainMatrix[Er]:
         """A ** n"""
         if not isinstance(n, int):
             return NotImplemented
@@ -1409,7 +1434,7 @@ class DomainMatrix:
             msg = "Type mismatch: %s %s %s" % (type(a.rep), op, type(b.rep))
             raise DMFormatError(msg)
 
-    def add(A, B):
+    def add(A, B: DomainMatrix[Er]) -> DomainMatrix[Er]:
         r"""
         Adds two DomainMatrix matrices of the same Domain
 
@@ -1456,10 +1481,19 @@ class DomainMatrix:
 
         """
         A._check('+', B, A.shape, B.shape)
-        return A.from_rep(A.rep.add(B.rep))
+        a = A.rep
+        b = B.rep
+        if isinstance(a, DDM) and isinstance(b, DDM):
+            return A.from_rep(a.add(b))
+        elif isinstance(a, SDM) and isinstance(b, SDM):
+            return A.from_rep(a.add(b))
+        elif isinstance(a, DFM) and isinstance(b, DFM):
+            return A.from_rep(a.add(b))
+        msg = "Type mismatch: %s %s %s" % (type(a), '+', type(b))
+        raise DMFormatError(msg)
 
 
-    def sub(A, B):
+    def sub(A, B: DomainMatrix[Er]) -> DomainMatrix[Er]:
         r"""
         Subtracts two DomainMatrix matrices of the same Domain
 
@@ -1506,9 +1540,18 @@ class DomainMatrix:
 
         """
         A._check('-', B, A.shape, B.shape)
-        return A.from_rep(A.rep.sub(B.rep))
+        a = A.rep
+        b = B.rep
+        if isinstance(a, DDM) and isinstance(b, DDM):
+            return A.from_rep(a.sub(b))
+        elif isinstance(a, SDM) and isinstance(b, SDM):
+            return A.from_rep(a.sub(b))
+        elif isinstance(a, DFM) and isinstance(b, DFM):
+            return A.from_rep(a.sub(b))
+        msg = "Type mismatch: %s %s %s" % (type(a), '-', type(b))
+        raise DMFormatError(msg)
 
-    def neg(A):
+    def neg(A) -> DomainMatrix[Er]:
         r"""
         Returns the negative of DomainMatrix
 
@@ -1538,7 +1581,7 @@ class DomainMatrix:
         """
         return A.from_rep(A.rep.neg())
 
-    def mul(A, b):
+    def mul(A, b: Er) -> DomainMatrix[Er]:
         r"""
         Performs term by term multiplication for the second DomainMatrix
         w.r.t first DomainMatrix. Returns a DomainMatrix whose rows are
@@ -1577,10 +1620,10 @@ class DomainMatrix:
         """
         return A.from_rep(A.rep.mul(b))
 
-    def rmul(A, b):
+    def rmul(A, b: Er) -> DomainMatrix[Er]:
         return A.from_rep(A.rep.rmul(b))
 
-    def matmul(A, B):
+    def matmul(A, B: DomainMatrix[Er]) -> DomainMatrix[Er]:
         r"""
         Performs matrix multiplication of two DomainMatrix matrices
 
@@ -1619,9 +1662,18 @@ class DomainMatrix:
         """
 
         A._check('*', B, A.shape[1], B.shape[0])
-        return A.from_rep(A.rep.matmul(B.rep))
+        a = A.rep
+        b = B.rep
+        if isinstance(a, DDM) and isinstance(b, DDM):
+            return A.from_rep(a.matmul(b))
+        elif isinstance(a, SDM) and isinstance(b, SDM):
+            return A.from_rep(a.matmul(b))
+        elif isinstance(a, DFM) and isinstance(b, DFM):
+            return A.from_rep(a.matmul(b))
+        msg = "Type mismatch: %s %s %s" % (type(a), '*', type(b))
+        raise DMFormatError(msg)
 
-    def _scalarmul(A, lamda, reverse):
+    def _scalarmul(A, lamda: Er, reverse: bool) -> DomainMatrix[Er]:
         if lamda == A.domain.zero and (not (A.domain.is_EXRAW)):
             return DomainMatrix.zeros(A.shape, A.domain)
         elif lamda == A.domain.one:
@@ -1631,15 +1683,24 @@ class DomainMatrix:
         else:
             return A.mul(lamda)
 
-    def scalarmul(A, lamda):
+    def scalarmul(A, lamda: Er) -> DomainMatrix[Er]:
         return A._scalarmul(lamda, reverse=False)
 
-    def rscalarmul(A, lamda):
+    def rscalarmul(A, lamda: Er) -> DomainMatrix[Er]:
         return A._scalarmul(lamda, reverse=True)
 
-    def mul_elementwise(A, B):
+    def mul_elementwise(A, B: DomainMatrix[Er]) -> DomainMatrix[Er]:
         assert A.domain == B.domain
-        return A.from_rep(A.rep.mul_elementwise(B.rep))
+        a = A.rep
+        b = B.rep
+        if isinstance(a, DDM) and isinstance(b, DDM):
+            return A.from_rep(a.mul_elementwise(b))
+        elif isinstance(a, SDM) and isinstance(b, SDM):
+            return A.from_rep(a.mul_elementwise(b))
+        elif isinstance(a, DFM):
+            return A.from_rep(a.mul_elementwise(b.to_dfm()))
+        msg = "Type mismatch: %s %s %s" % (type(a), '*', type(b))
+        raise DMFormatError(msg)
 
     def __truediv__(A, lamda):
         """ Method for Scalar Division"""
@@ -1660,7 +1721,7 @@ class DomainMatrix:
 
         return A.mul(1 / lamda.element)
 
-    def pow(A, n):
+    def pow(A, n: int) -> DomainMatrix[Er]:
         r"""
         Computes A**n
 
@@ -2098,7 +2159,7 @@ class DomainMatrix:
 
         return (M_numers, M_denoms)
 
-    def content(self):
+    def content(self) -> Er:
         """
         Return the gcd of the elements of the matrix.
 
@@ -2123,7 +2184,7 @@ class DomainMatrix:
         elements, _ = self.to_flat_nz()
         return dup_content(elements, K)
 
-    def primitive(self):
+    def primitive(self) -> tuple[Er, DomainMatrix[Er]]:
         """
         Factor out gcd of the elements of a matrix.
 
@@ -2546,7 +2607,7 @@ class DomainMatrix:
         null_rep, nonpivots = self.rep.nullspace_from_rref(pivots)
         return self.from_rep(null_rep)
 
-    def inv(self):
+    def inv(self) -> DomainMatrix[Er]:
         r"""
         Finds the inverse of the DomainMatrix if exists
 
@@ -2591,7 +2652,7 @@ class DomainMatrix:
         inv = self.rep.inv()
         return self.from_rep(inv)
 
-    def det(self):
+    def det(self) -> Er:
         r"""
         Returns the determinant of a square :class:`DomainMatrix`.
 
@@ -3339,7 +3400,7 @@ class DomainMatrix:
         R = self.from_rep(ddm_r)
         return Q, R
 
-    def lu_solve(self, rhs):
+    def lu_solve(self, rhs: DomainMatrix[Er]) -> DomainMatrix[Er]:
         r"""
         Solver for DomainMatrix x in the A*x = B
 
@@ -3799,7 +3860,7 @@ class DomainMatrix:
     def ground_eigenvects(self):
         """
         Return the eigenvalues in the ground domain together with
-        their algebraic multiplicites and eigenvectors.
+        their algebraic multiplicities and eigenvectors.
 
         Examples
         ========
@@ -3821,7 +3882,7 @@ class DomainMatrix:
         return result
 
     @classmethod
-    def eye(cls, shape, domain):
+    def eye(cls, shape: int | tuple[int, int], domain: Domain[Es]) -> DomainMatrix[Es]:
         r"""
         Return identity matrix of size n or shape (m, n).
 
@@ -3839,7 +3900,7 @@ class DomainMatrix:
         return cls.from_rep(SDM.eye(shape, domain))
 
     @classmethod
-    def diag(cls, diagonal, domain, shape=None):
+    def diag(cls, diagonal: Sequence[Es], domain: Domain[Es], shape: tuple[int, int] | None = None) -> DomainMatrix[Es]:
         r"""
         Return diagonal matrix with entries from ``diagonal``.
 
@@ -3858,7 +3919,7 @@ class DomainMatrix:
         return cls.from_rep(SDM.diag(diagonal, domain, shape))
 
     @classmethod
-    def zeros(cls, shape, domain, *, fmt='sparse'):
+    def zeros(cls, shape: tuple[int, int], domain: Domain[Es], *, fmt: str = 'sparse') -> DomainMatrix[Es]:
         """Returns a zero DomainMatrix of size shape, belonging to the specified domain
 
         Examples
@@ -3873,7 +3934,7 @@ class DomainMatrix:
         return cls.from_rep(SDM.zeros(shape, domain))
 
     @classmethod
-    def ones(cls, shape, domain):
+    def ones(cls, shape: tuple[int, int], domain: Domain[Es]) -> DomainMatrix[Es]:
         """Returns a DomainMatrix of 1s, of size shape, belonging to the specified domain
 
         Examples
@@ -4035,6 +4096,10 @@ class DomainMatrix:
         """
         reduced, transform = A.rep.lll_transform(delta=delta)
         return DomainMatrix.from_rep(reduced), DomainMatrix.from_rep(transform)
+
+
+def _has_domain(M: DomainMatrix[Er], K: Domain[Es]) -> TypeGuard[DomainMatrix[Es]]:
+    return K == M.domain
 
 
 def _collect_factors(factors_list):
