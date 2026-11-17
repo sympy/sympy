@@ -295,6 +295,8 @@ class LRASolver():
             if not expr.free_symbols:
                 raise UnhandledInput(f"{prop} could not be simplified")
 
+            expr = expr.expand()
+
             if prop.function in [Q.ge, Q.gt]:
                 expr = -expr
 

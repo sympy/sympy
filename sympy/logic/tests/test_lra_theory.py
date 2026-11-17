@@ -764,3 +764,24 @@ def test_backtracking_empty_history():
     lra, _ = LRASolver.from_encoded_cnf(enc, testing_mode=True)
 
     raises(ValueError, lambda: lra.backtrack())
+
+
+def test_undistributed_constant_products():
+    from sympy.core.numbers import pi
+    from sympy.functions.elementary.miscellaneous import sqrt
+    from sympy.assumptions.ask import ask
+    from sympy.core.symbol import Symbol
+
+    xr = Symbol('xr', real=True)
+    assert ask(Q.positive(xr), Q.gt(2*(xr + 1), 0)) is None
+    assert ask(Q.positive(xr), Q.gt(pi*(xr + 1), 0)) is None
+    assert ask(Q.positive(xr), Q.gt(pi*(xr - 1), 0)) is True
+    assert ask(Q.positive(xr), Q.gt(sqrt(2)*(xr - 1), 0)) is True
+    assert ask(Q.positive(xr), Q.gt(sqrt(2)*(xr + 1), 0)) is None
+
+    # Test direct EncodedCNF conversion without crash
+    enc = EncodedCNF()
+    enc.from_cnf(CNF.from_prop(Q.gt(pi*(xr + 1), 0)))
+    solver, conflicts = LRASolver.from_encoded_cnf(enc, testing_mode=True)
+    assert solver is not None
+    assert conflicts == []
