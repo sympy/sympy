@@ -2740,9 +2740,9 @@ def test_factor():
     assert factor_list(1) == (1, [])
     assert factor_list(6) == (6, [])
     assert factor_list(sqrt(3), x) == (sqrt(3), [])
-    assert factor_list((-1)**x, x) == (1, [(-1, x)])
-    assert factor_list((2*x)**y, x) == (1, [(2, y), (x, y)])
-    assert factor_list(sqrt(x*y), x) == (1, [(x*y, S.Half)])
+    raises(PolificationFailed, lambda: factor_list((-1)**x, x))
+    raises(PolificationFailed, lambda: factor_list((2*x)**y, x))
+    raises(PolificationFailed, lambda: factor_list(sqrt(x*y), x))
 
     assert factor(6) == 6 and factor(6).is_Integer
 
@@ -2767,6 +2767,21 @@ def test_factor():
     p = Symbol('p', positive=True)
     i = Symbol('i', integer=True)
     r = Symbol('r', real=True)
+    r_unassumed = Symbol('r')
+
+    for f in [(x + 1)**r, x*(x + 1)**r, (x**r)*(x + 1)**r,
+              (x + 1)**r_unassumed,
+              sqrt(x + 1), (x + 1)**S.Half]:
+        raises(PolificationFailed, lambda: factor_list(f))
+        raises(PolificationFailed, lambda: sqf_list(f))
+
+    assert factor_list(1/(x + 1)**2, frac=True) == (1, [], [(x + 1, 2)])
+    assert sqf_list(1/(x + 1)**2, frac=True) == (1, [], [(x + 1, 2)])
+
+    assert factor(sqrt(x + 1)) == sqrt(x + 1)
+    assert factor(x*(x + 1)**r) == x*(x + 1)**r
+    assert sqf(sqrt(x + 1)) == sqrt(x + 1)
+    assert sqf(x*(x + 1)**r) == x*(x + 1)**r
 
     assert factor(sqrt(x*y)).is_Pow is True
 

@@ -6743,7 +6743,7 @@ def _factors_product(factors):
     return Mul(*[f.as_expr()**k for f, k in factors])
 
 
-def _symbolic_factor_list(expr, opt, method):
+def _symbolic_factor_list(expr, opt, method, allow_non_integer_exp=False):
     """Helper function for :func:`_symbolic_factor`. """
     coeff, factors = S.One, []
 
@@ -6758,6 +6758,8 @@ def _symbolic_factor_list(expr, opt, method):
             if base.is_Number and exp.is_Number:
                 coeff *= arg
                 continue
+            if not exp.is_Integer and not allow_non_integer_exp:
+                raise PolificationFailed(opt, arg, arg)
             if base.is_Number:
                 factors.append((base, exp))
                 continue
@@ -6809,7 +6811,9 @@ def _symbolic_factor(expr, opt, method):
     if isinstance(expr, Expr):
         if hasattr(expr,'_eval_factor'):
             return expr._eval_factor()
-        coeff, factors = _symbolic_factor_list(together(expr, fraction=opt['fraction']), opt, method)
+        coeff, factors = _symbolic_factor_list(
+            together(expr, fraction=opt['fraction']), opt, method,
+            allow_non_integer_exp=True)
         return _keep_coeff(coeff, _factors_product(factors))
     elif hasattr(expr, 'args'):
         return expr.func(*[_symbolic_factor(arg, opt, method) for arg in expr.args])
