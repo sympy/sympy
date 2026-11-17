@@ -30,7 +30,7 @@ from sympy.logic.boolalg import And, Or, Not, Xor, true, false, Boolean
 from sympy.utilities.decorator import deprecated
 from sympy.utilities.exceptions import sympy_deprecation_warning
 from sympy.utilities.iterables import (iproduct, sift, roundrobin, iterable,
-                                       subsets)
+                                       subsets, uniq)
 from sympy.utilities.misc import func_name, filldedent
 
 if TYPE_CHECKING:
@@ -1515,7 +1515,7 @@ class Union(Set, LatticeOp):
         return all(arg.is_iterable for arg in self.args)
 
     def __iter__(self):
-        return roundrobin(*(iter(arg) for arg in self.args))
+        return uniq(roundrobin(*(iter(arg) for arg in self.args)))
 
 
 class Intersection(Set, LatticeOp):
