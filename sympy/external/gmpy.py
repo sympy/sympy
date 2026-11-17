@@ -400,6 +400,21 @@ if TYPE_CHECKING:
         def __getitem__(self, index: int, /) -> _Tground: ...
         def coeffs(self) -> list[_Tground]: ...
 
+    class FLINT_MAT_P(Protocol[_Tground]):
+        """Protocol for FLINT matrix methods used in DFM."""
+        def nrows(self) -> int: ...
+        def ncols(self) -> int: ...
+        def __getitem__(self, index: tuple[int, int], /) -> _Tground: ...
+        def __setitem__(self, index: tuple[int, int], value: _Tground, /) -> None: ...
+        def entries(self) -> list[_Tground]: ...
+        def tolist(self) -> list[list[_Tground]]: ...
+        def transpose(self) -> Self: ...
+        def __neg__(self) -> Self: ...
+        def __add__(self, other: Self, /) -> Self: ...
+        def __sub__(self, other: Self, /) -> Self: ...
+        def __mul__(self, other: Self | _Tground, /) -> Self: ...
+        def __rmul__(self, other: _Tground, /) -> Self: ...
+
     class _POLY_DUMMY(Generic[_Tground]):
         def str(self, ascending: bool = False, var: str = "x") -> str: ...
         def __iter__(self) -> Iterator[_Tground]: ...
@@ -606,15 +621,20 @@ if TYPE_CHECKING:
     # flint polynomial types satisfy our POLY_P protocol.
     try:
         from flint import fmpq as _flint_fmpq
+        from flint import fmpq_mat as _flint_fmpq_mat
         from flint import fmpq_poly as _flint_fmpq_poly
         from flint import fmpq_series as _flint_fmpq_series
         from flint import fmpz as _flint_fmpz
+        from flint import fmpz_mat as _flint_fmpz_mat
         from flint import fmpz_mod as _flint_fmpz_mod
+        from flint import fmpz_mod_ctx as _flint_fmpz_mod_ctx
+        from flint import fmpz_mod_mat as _flint_fmpz_mod_mat
         from flint import fmpz_mod_poly as _flint_fmpz_mod_poly
         from flint import fmpz_mod_poly_ctx as _flint_fmpz_mod_poly_ctx
         from flint import fmpz_poly as _flint_fmpz_poly
         from flint import fmpz_series as _flint_fmpz_series
         from flint import nmod as _flint_nmod
+        from flint import nmod_mat as _flint_nmod_mat
         from flint import nmod_poly as _flint_nmod_poly
     except ImportError:
         pass
@@ -625,6 +645,10 @@ if TYPE_CHECKING:
         _fmpz_mod_poly: POLY_P[_flint_fmpz_mod] = _flint_fmpz_mod_poly(1, _flint_fmpz_mod_poly_ctx(2))
         _fmpz_series: SERIES_P[_flint_fmpz] = _flint_fmpz_series([1, 2], prec=3)
         _fmpq_series: SERIES_P[_flint_fmpq] = _flint_fmpq_series([1, 2], prec=3)
+        _fmpz_mat: FLINT_MAT_P[_flint_fmpz] = _flint_fmpz_mat(1, 1)
+        _fmpq_mat: FLINT_MAT_P[_flint_fmpq] = _flint_fmpq_mat(1, 1)
+        _nmod_mat: FLINT_MAT_P[_flint_nmod] = _flint_nmod_mat(1, 1, 2)
+        _fmpz_mod_mat: FLINT_MAT_P[_flint_fmpz_mod] = _flint_fmpz_mod_mat(1, 1, _flint_fmpz_mod_ctx(2))
 
     # Reverse-compatibility checks for SymPy dummy classes used under
     # TYPE_CHECKING in ringflint and related modules.
