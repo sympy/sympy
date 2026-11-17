@@ -223,10 +223,42 @@ class Piecewise(DefinedFunction):
     def _eval_simplify(self, **kwargs):
         return piecewise_simplify(self, **kwargs)
 
+    
     def _eval_as_leading_term(self, x, logx, cdir):
+        from sympy.functions.elementary.complexes import re
+        from sympy.functions.elementary.exponential import log
+
+        t = Dummy('t', positive=True)
+        L = Dummy('L', negative=True)
+        from_right = not re(cdir).is_negative
+        pt = t if from_right else -t
+
+        def decide(relation):
+            try:
+                leading_term = (relation.lhs - relation.rhs).as_leading_term(x, cdir=cdir)
+                if from_right:
+                    leading_term = leading_term.subs(log(x), L)
+                res = relation.func(leading_term.subs(x, pt), S.Zero)
+                if res in (S.true, S.false):
+                    return res
+            except (NotImplementedError, TypeError):
+                pass
+            try:
+                res = relation.subs(x, pt)
+            except TypeError:
+                return relation
+            return res if res in (S.true, S.false) else relation
+        
         for e, c in self.args:
-            if c == True or c.subs(x, 0) == True:
-                return e.as_leading_term(x)
+            c = c.replace(lambda a: isinstance(a, Relational), decide)
+            if c == True:
+                return e.as_leading_term(x, logx=logx, cdir=cdir)
+            if c == False:
+                continue
+            raise NotImplementedError(
+                "cannot decide condition %s near %s = 0" % (c, x))
+        
+        raise NotImplementedError("no condition of %s holds near %s = 0" % (self, x))
 
     def _eval_adjoint(self):
         return self.func(*[(e.adjoint(), c) for e, c in self.args])
