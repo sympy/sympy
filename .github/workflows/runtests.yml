@@ -206,14 +206,16 @@ jobs:
 
       # dependencies to install in all Python versions:
       - run: |
-          pip install numpy numexpr matplotlib bpython ipython cython   \
+          pip install numpy matplotlib bpython ipython cython           \
                       wurlitzer autowrap lxml lark z3-solver pycosat    \
                       jax jaxlib libclang scipy                         \
                       'antlr4-python3-runtime==4.11.*'                  \
                       symengine                                         \
-                      numba llvmlite pymc                               \
+                      numba llvmlite                                    \
                       gmpy2                                             \
-                      uncertainties
+                      uncertainties                                     \
+                      'numexpr; python_version < "3.15"'                \
+                      'pymc; python_version < "3.15"'
 
       - run: pip install .
 
