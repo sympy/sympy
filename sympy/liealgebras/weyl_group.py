@@ -174,24 +174,14 @@ class WeylGroup(Atom):
             return order
 
         if self.cartan_type.series == "G":
-            elts = list(weylelt)
-            reflections = elts[1::3]
-            m = self.delete_doubles(reflections)
-            while self.delete_doubles(m) != m:
-                m = self.delete_doubles(m)
-                reflections = m
+            reflections = self.delete_doubles(weylelt)
             if len(reflections) % 2 == 1:
                 return 2
-
             elif len(reflections) == 0:
                 return 1
-
             else:
-                if len(reflections) == 1:
-                    return 2
-                else:
-                    p = len(reflections) // 2
-                    return 6 // igcd(p, 6)
+                p = len(reflections) // 2
+                return 6 // igcd(p, 6)
 
         if self.cartan_type.series == 'F':
             a = self.matrix_form(weylelt)
@@ -212,19 +202,31 @@ class WeylGroup(Atom):
 
         raise ValueError(f"Invalid Cartan type: {self.cartan_type.series}{n}")
 
-    def delete_doubles(self, reflections: list[str]) -> list[str]:
+    def delete_doubles(self, reflections: str | list[str]) -> list[str]:
         """
         This is a helper method for determining the order of an element in the
         Weyl group of G2.  It takes a Weyl element and if repeated simple reflections
         in it, it deletes them.
+
+        Examples
+        ========
+        >>> from sympy.liealgebras.weyl_group import WeylGroup
+        >>> g = WeylGroup("A3")
+        >>> g.delete_doubles(["r1", "r2", "r2", "r3"])
+        ['1', '3']
+        >>> g.delete_doubles("r1*r3*r3*r1"])
+        []
         """
-        copy = list(reflections)
-        for counter, elt in enumerate(copy):
-            if counter < len(copy)-1:
-                if copy[counter + 1] == elt:
-                    del copy[counter]
-                    del copy[counter]
-        return copy
+        if isinstance(reflections, str):
+            reflections = reflections.split("*")
+        stack: list[str] = []
+        for el in reflections:
+            el = el.removeprefix("r")
+            if stack and stack[-1] == el:
+                stack.pop()
+            else:
+                stack.append(el)
+        return stack
 
 
     def matrix_form(self, weylelt: str) -> Matrix:
@@ -249,8 +251,7 @@ class WeylGroup(Atom):
         [0, 0, 1,  0]])
 
         """
-        elts = list(weylelt)
-        reflections = elts[1::3]
+        reflections = self.delete_doubles(weylelt)
         n = self.cartan_type.rank()
         if self.cartan_type.series == 'A':
             matrixform = eye(n+1)
