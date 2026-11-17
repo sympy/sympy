@@ -14,7 +14,8 @@ def test_type_D():
     assert c.simple_root(3) == Matrix([[0, 0, 1, -1]])
     diag = "    3\n    0\n    |\n    |\n0---0---0\n1   2   4"
     assert diag == c.dynkin_diagram()
-    assert c.positive_roots() == {1: Matrix([[1, -1, 0, 0]]), 2: Matrix([[1, 1, 0, 0]]),
-            3: Matrix([[1, 0, -1, 0]]), 4: Matrix([[1, 0, 1, 0]]), 5: Matrix([[1, 0, 0, -1]]), 6: Matrix([[1, 0, 0, 1]]),
-            7: Matrix([[0, 1, -1, 0]]), 8: Matrix([[0, 1, 1, 0]]), 9: Matrix([[0, 1, 0, -1]]), 10: Matrix([[0, 1, 0, 1]]),
-            11: Matrix([[0, 0, 1, -1]]), 12: Matrix([[0, 0, 1, 1]])}
+    assert c.positive_roots() == [
+        Matrix([[1, -1, 0, 0]]), Matrix([[0, 1, -1, 0]]), Matrix([[0, 0, 1, -1]]), Matrix([[0, 0, 1, 1]]),
+        Matrix([[1, 0, -1, 0]]), Matrix([[0, 1, 0, -1]]), Matrix([[0, 1, 0, 1]]), Matrix([[1, 0, 0, -1]]),
+        Matrix([[1, 0, 0, 1]]), Matrix([[0, 1, 1, 0]]), Matrix([[1, 0, 1, 0]]), Matrix([[1, 1, 0, 0]])
+        ]

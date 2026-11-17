@@ -96,10 +96,22 @@ class Standard_Cartan(Atom):
             "simple_root is implemented by subclasses of Standard_Cartan"
         )
 
-    def positive_roots(self) -> dict[int, Matrix]:
-        raise NotImplementedError(
-            "positive_roots is implemented by subclasses of Standard_Cartan"
-        )
+    @final
+    def positive_roots(self) -> list[Matrix]:
+        """Returns the set of all positive roots that are greater
+        than zero in weight from the root system.
+        """
+        positive_root_coeffs = _positive_root_coefficients(self.cartan_matrix())
+        positive_roots: list[Matrix] = []
+        for coeffs in positive_root_coeffs:
+            weighted_roots: list[Matrix] = [
+                coeff * self.simple_root(i + 1) for i, coeff in enumerate(coeffs) if coeff != 0
+                ]
+            root = weighted_roots.pop()
+            while weighted_roots:
+                root += weighted_roots.pop()
+            positive_roots.append(root)
+        return positive_roots
 
     @final
     def cartan_matrix(self) -> Matrix:
@@ -151,11 +163,11 @@ def _positive_root_coefficients(cartan_matrix: Matrix):
 
         # reflect beta
         for i in range(n):
-            pairing = sum(beta[j] * cartan_matrix[j, i] for j in range(n))
+            pairing = int(sum(beta[j] * cartan_matrix[j, i] for j in range(n)))
 
-            new_beta = list(beta)
-            new_beta[i] -= pairing
-            new_beta = tuple(new_beta)
+            new_beta_list = list(beta)
+            new_beta_list[i] -= pairing
+            new_beta = tuple(new_beta_list)
 
             if new_beta not in positive_roots and all(c >= 0 for c in new_beta):
                 positive_roots.add(new_beta)

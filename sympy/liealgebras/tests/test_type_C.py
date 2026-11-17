@@ -15,9 +15,9 @@ def test_type_C():
     assert t.dimension() == 3
     diag = "0---0---0=<=0\n1   2   3   4"
     assert c.dynkin_diagram() == diag
-    assert c.positive_roots() == {1: Matrix([[1, -1, 0, 0]]), 2: Matrix([[1, 1, 0, 0]]),
-            3: Matrix([[1, 0, -1, 0]]), 4: Matrix([[1, 0, 1, 0]]), 5: Matrix([[1, 0, 0, -1]]),
-            6: Matrix([[1, 0, 0, 1]]), 7: Matrix([[0, 1, -1, 0]]), 8: Matrix([[0, 1, 1, 0]]),
-            9: Matrix([[0, 1, 0, -1]]), 10: Matrix([[0, 1, 0, 1]]), 11: Matrix([[0, 0, 1, -1]]),
-            12: Matrix([[0, 0, 1, 1]]), 13: Matrix([[2, 0, 0, 0]]), 14: Matrix([[0, 2, 0, 0]]), 15: Matrix([[0, 0, 2, 0]]),
-            16: Matrix([[0, 0, 0, 2]])}
+    assert c.positive_roots() == [
+        Matrix([[1, -1, 0, 0]]), Matrix([[0, 1, -1, 0]]), Matrix([[0, 0, 1, -1]]), Matrix([[0, 0, 0, 2]]),
+        Matrix([[1, 0, -1, 0]]), Matrix([[0, 1, 0, -1]]), Matrix([[0, 0, 1, 1]]), Matrix([[1, 0, 0, -1]]),
+        Matrix([[0, 1, 0, 1]]), Matrix([[0, 0, 2, 0]]), Matrix([[1, 0, 0, 1]]), Matrix([[0, 1, 1, 0]]),
+        Matrix([[1, 0, 1, 0]]), Matrix([[0, 2, 0, 0]]), Matrix([[1, 1, 0, 0]]), Matrix([[2, 0, 0, 0]]),
+        ]

@@ -80,37 +80,6 @@ class TypeD(Standard_Cartan):
             root[n-1] = 1
             return Matrix([root])
 
-
-    def positive_roots(self) -> dict[int,  Matrix]:
-        """
-        This method generates all the positive roots of
-        A_n.  This is half of all of the roots of D_n
-        by multiplying all the positive roots by -1 we
-        get the negative roots.
-
-        Examples
-        ========
-
-        >>> from sympy.liealgebras.cartan_type import CartanType
-        >>> c = CartanType("A3")
-        >>> c.positive_roots()
-        {1: Matrix([[1, -1, 0, 0]]), 2: Matrix([[1, 0, -1, 0]]), 3: Matrix([[1, 0, 0, -1]]), 4: Matrix([[0, 1, -1, 0]]),
-                5: Matrix([[0, 1, 0, -1]]), 6: Matrix([[0, 0, 1, -1]])}
-        """
-
-        n = self.n
-        posroots: dict[int, Matrix] = {}
-        k = 0
-        for i in range(0, n-1):
-            for j in range(i+1, n):
-                k += 1
-                posroots[k] = self.basic_root(i, j)
-                k += 1
-                root = self.basic_root(i, j)
-                root[j] = 1
-                posroots[k] = root
-        return posroots
-
     def roots(self) -> int:
         """
         Returns the total number of roots for D_n"

@@ -13,5 +13,7 @@ def test_type_G():
     assert c.dimension() == 3
     diag = "0≡<≡0\n1   2"
     assert diag == c.dynkin_diagram()
-    assert c.positive_roots() == {1: Matrix([[0, 1, -1]]), 2: Matrix([[1, -2, 1]]), 3: Matrix([[1, -1, 0]]),
-            4: Matrix([[1, 0, 1]]), 5: Matrix([[1, 1, -2]]), 6: Matrix([[2, -1, -1]])}
+    assert c.positive_roots() == [
+        Matrix([[0, 1, -1]]), Matrix([[1, -2, 1]]), Matrix([[1, -1, 0]]),
+        Matrix([[1, 0, -1]]), Matrix([[1, 1, -2]]), Matrix([[2, -1, -1]]),
+        ]

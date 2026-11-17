@@ -56,27 +56,6 @@ class TypeG(Standard_Cartan):
         else:
             return Matrix([[1, -2, 1]])
 
-    def positive_roots(self) -> dict[int,  Matrix]:
-        """Generate all the positive roots of A_n
-
-        This is half of all of the roots of A_n; by multiplying all the
-        positive roots by -1 we get the negative roots.
-
-        Examples
-        ========
-
-        >>> from sympy.liealgebras.cartan_type import CartanType
-        >>> c = CartanType("A3")
-        >>> c.positive_roots()
-        {1: Matrix([[1, -1, 0, 0]]), 2: Matrix([[1, 0, -1, 0]]), 3: Matrix([[1, 0, 0, -1]]), 4: Matrix([[0, 1, -1, 0]]),
-                5: Matrix([[0, 1, 0, -1]]), 6: Matrix([[0, 0, 1, -1]])}
-
-        """
-
-        roots = {1: Matrix([[0, 1, -1]]), 2: Matrix([[1, -2, 1]]), 3: Matrix([[1, -1, 0]]), 4: Matrix([[1, 0, 1]]),
-                5: Matrix([[1, 1, -2]]), 6: Matrix([[2, -1, -1]])}
-        return roots
-
     def roots(self) -> int:
         """
         Returns the total number of roots of G_2"

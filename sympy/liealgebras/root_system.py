@@ -86,24 +86,18 @@ class RootSystem(Atom):
         return roots
 
 
-    def all_roots(self) -> dict[int, Matrix]:
+    def all_roots(self) -> list[Matrix]:
         """Generate all the roots of a given root system
 
-        The result is a dictionary where the keys are integer numbers.  It
-        generates the roots by getting the dictionary of all positive roots
+        The result is a list of matrices representing the roots.  It
+        generates the roots by getting the list of all positive roots
         from the bases classes, and then taking each root, and multiplying it
-        by -1 and adding it to the dictionary.  In this way all the negative
+        by -1 and adding it to the list.  In this way all the negative
         roots are generated.
 
         """
-        alpha = {**self.cartan_type.positive_roots()}
-        keys = list(alpha.keys())
-        k = max(keys)
-        for val in keys:
-            k += 1
-            root = alpha[val]
-            newroot: Matrix = Matrix([[-x for x in root]])
-            alpha[k] = newroot
+        alpha = self.cartan_type.positive_roots()
+        alpha.extend([-root for root in alpha])
         return alpha
 
     def root_space(self) -> str:
@@ -176,7 +170,7 @@ class RootSystem(Atom):
         """
         alpha = self.all_roots()
         newroot = Matrix([[r1 + r2 for r1, r2 in zip(root1, root2)]])
-        if newroot in alpha.values():
+        if newroot in alpha:
             return newroot
         else:
             return "The sum of these two roots is not a root"

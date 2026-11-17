@@ -14,5 +14,7 @@ def test_type_A():
     assert c.lie_algebra() == "su(4)"
     diag = "0---0---0\n1   2   3"
     assert c.dynkin_diagram() == diag
-    assert c.positive_roots() == {1: Matrix([[1, -1, 0, 0]]), 2: Matrix([[1, 0, -1, 0]]),
-            3: Matrix([[1, 0, 0, -1]]), 4: Matrix([[0, 1, -1, 0]]), 5: Matrix([[0, 1, 0, -1]]), 6: Matrix([[0, 0, 1, -1]])}
+    assert c.positive_roots() == [
+        Matrix([[1, -1, 0, 0]]), Matrix([[0, 1, -1, 0]]), Matrix([[0, 0, 1, -1]]),
+        Matrix([[1, 0, -1, 0]]), Matrix([[0, 1, 0, -1]]), Matrix([[1, 0, 0, -1]]),
+        ]

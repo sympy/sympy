@@ -16,11 +16,13 @@ def test_type_F():
     assert c.basis() == 52
     diag = "0---0=>=0---0\n" + "   ".join(str(i) for i in range(1, 5))
     assert c.dynkin_diagram() == diag
-    assert c.positive_roots() == {1: Matrix([[1, -1, 0, 0]]), 2: Matrix([[1, 1, 0, 0]]), 3: Matrix([[1, 0, -1, 0]]),
-            4: Matrix([[1, 0, 1, 0]]), 5: Matrix([[1, 0, 0, -1]]), 6: Matrix([[1, 0, 0, 1]]), 7: Matrix([[0, 1, -1, 0]]),
-            8: Matrix([[0, 1, 1, 0]]), 9: Matrix([[0, 1, 0, -1]]), 10: Matrix([[0, 1, 0, 1]]), 11: Matrix([[0, 0, 1, -1]]),
-            12: Matrix([[0, 0, 1, 1]]), 13: Matrix([[1, 0, 0, 0]]), 14: Matrix([[0, 1, 0, 0]]), 15: Matrix([[0, 0, 1, 0]]),
-            16: Matrix([[0, 0, 0, 1]]), 17: Matrix([[S.Half, S.Half, S.Half, S.Half]]), 18: Matrix([[S.Half, -S.Half, S.Half, S.Half]]),
-            19: Matrix([[S.Half, S.Half, -S.Half, S.Half]]), 20: Matrix([[S.Half, S.Half, S.Half, -S.Half]]), 21: Matrix([[S.Half, S.Half, -S.Half, -S.Half]]),
-            22: Matrix([[S.Half, -S.Half, S.Half, -S.Half]]), 23: Matrix([[S.Half, -S.Half, -S.Half, S.Half]]),
-            24: Matrix([[S.Half, -S.Half, -S.Half, -S.Half]])}
+    assert c.positive_roots() == [
+        Matrix([[0, 1, -1, 0]]), Matrix([[0, 0, 1, -1]]), Matrix([[0, 0, 0, 1]]),
+        Matrix([[S.Half, -S.Half, -S.Half, -S.Half]]), Matrix([[0, 1, 0, -1]]), Matrix([[0, 0, 1, 0]]),
+        Matrix([[S.Half, -S.Half, -S.Half, S.Half]]), Matrix([[0, 1, 0, 0]]), Matrix([[0, 0, 1, 1]]),
+        Matrix([[S.Half, -S.Half, S.Half, -S.Half]]), Matrix([[0, 1, 0, 1]]), Matrix([[S.Half, S.Half, -S.Half, -S.Half]]),
+        Matrix([[S.Half, -S.Half, S.Half, S.Half]]), Matrix([[0, 1, 1, 0]]), Matrix([[S.Half, S.Half, -S.Half, S.Half]]),
+        Matrix([[1, -1, 0, 0]]), Matrix([[S.Half, S.Half, S.Half, -S.Half]]), Matrix([[1, 0, -1, 0]]),
+        Matrix([[S.Half, S.Half, S.Half, S.Half]]), Matrix([[1, 0, 0, -1]]), Matrix([[1, 0, 0, 0]]),
+        Matrix([[1, 0, 0, 1]]), Matrix([[1, 0, 1, 0]]), Matrix([[1, 1, 0, 0]])
+        ]
