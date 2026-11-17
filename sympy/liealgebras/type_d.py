@@ -109,6 +109,6 @@ class TypeD(Standard_Cartan):
         diag += " "*4*(n-3) + "0\n"
         diag += " "*4*(n-3) +"|\n"
         diag += " "*4*(n-3) + "|\n"
-        diag += "---".join("0" for i in range(1,n)) + "\n"
+        diag += "---".join("0" for _ in range(1,n)) + "\n"
         diag += "   ".join(str(i) for i in range(1, n-1)) + "   "+str(n)
         return diag
