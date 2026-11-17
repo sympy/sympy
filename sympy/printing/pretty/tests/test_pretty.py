@@ -3490,6 +3490,11 @@ def test_pretty_ndim_arrays():
         assert pretty(M) == "x"
         assert upretty(M) == "x"
 
+        assert pretty(ArrayType([])) == "[]"
+        assert upretty(ArrayType([])) == "[]"
+        assert pretty(ArrayType([], (0, 2))) == "[]"
+        assert pretty(ArrayType([], (2, 0))) == "[]"
+
         M = ArrayType([[1/x, y], [z, w]])
         M1 = ArrayType([1/x, y, z])
 

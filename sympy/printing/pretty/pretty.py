@@ -1281,6 +1281,9 @@ class PrettyPrinter(Printer):
         if expr.ndim == 0:
             return self._print(expr[()])
 
+        if 0 in expr.shape:
+            return prettyForm('[]')
+
         level_str = [[]] + [[] for i in range(expr.ndim)]
         shape_ranges = [list(range(i)) for i in expr.shape]
         # leave eventual matrix elements unflattened
