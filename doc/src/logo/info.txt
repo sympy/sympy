@@ -1,0 +1,12 @@
+The real source is `sympy-use-text.svg`.
+
+The `sympy.svg` is "text to path" version of `sympy-use-text.svg`.
+To create it from `sympy-use-text.svg` do (you have to install
+the Computer Modern fonts first):
+
+Inkscape
+1. Run Inkscape.
+2. Open `sympy-use-text.svg`
+3. Ctrl-A
+4. Shift-Ctrl-C
+5. Save As `sympy.svg`

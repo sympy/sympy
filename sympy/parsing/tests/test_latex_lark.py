@@ -1,0 +1,1331 @@
+from __future__ import annotations
+from sympy.testing.pytest import XFAIL, raises
+from sympy.parsing.latex.lark import parse_latex_lark, parse_latex_lark_all
+from sympy.parsing.latex.errors import LaTeXParsingError
+from sympy.external import import_module
+
+from sympy.concrete.products import Product
+from sympy.concrete.summations import Sum
+from sympy.core.function import Derivative, Function
+from sympy.core.numbers import E, oo, Rational
+from sympy.core.power import Pow
+from sympy.core.parameters import evaluate
+from sympy.core.relational import GreaterThan, LessThan, StrictGreaterThan, StrictLessThan, Unequality
+from sympy.core.symbol import Symbol
+from sympy.functions.combinatorial.factorials import binomial, factorial
+from sympy.functions.elementary.complexes import Abs, conjugate
+from sympy.functions.elementary.exponential import exp, log
+from sympy.functions.elementary.hyperbolic import (acosh, acoth, acsch, asech, asinh, atanh, cosh, coth, csch,
+    sech, sinh, tanh)
+from sympy.functions.elementary.integers import ceiling, floor
+from sympy.functions.elementary.miscellaneous import root, sqrt, Min, Max
+from sympy.functions.elementary.trigonometric import acos, acot, acsc, asec, asin, atan, cos, csc, sec, sin, tan
+from sympy.integrals.integrals import Integral
+from sympy.series.limits import Limit
+from sympy import Matrix, MatAdd, MatMul, Transpose, Trace
+from sympy import I, pi
+from sympy import And, Contains, Float, Not, S
+from sympy import erf, re, sign, sinc
+
+from sympy.core.relational import Eq, Ne, Lt, Le, Gt, Ge
+from sympy.physics.quantum import Bra, Ket, InnerProduct
+from sympy.abc import x, y, z, a, b, c, d, h, t, k, n, v
+
+from .test_latex import theta, f, _Add, _Mul, _Pow, _Sqrt, _Conjugate, _Abs, _factorial, _exp, _binomial
+
+lark = import_module("lark")
+
+# disable tests if lark is not present
+disabled = lark is None
+
+# shorthand definitions that are only needed for the Lark LaTeX parser
+def _Min(*args):
+    return Min(*args, evaluate=False)
+
+
+def _Max(*args):
+    return Max(*args, evaluate=False)
+
+
+def _log(a, b=E):
+    if b == E:
+        return log(a, evaluate=False)
+    else:
+        return log(a, b, evaluate=False)
+
+
+def _MatAdd(a, b):
+    return MatAdd(a, b, evaluate=False)
+
+
+def _MatMul(a, b):
+    return MatMul(a, b, evaluate=False)
+
+
+# These LaTeX strings should parse to the corresponding SymPy expression
+SYMBOL_EXPRESSION_PAIRS = [
+    (r"x_0", Symbol('x_{0}')),
+    (r"x_{1}", Symbol('x_{1}')),
+    (r"x_a", Symbol('x_{a}')),
+    (r"x_{b}", Symbol('x_{b}')),
+    (r"h_\theta", Symbol('h_{theta}')),
+    (r"h_{\theta}", Symbol('h_{theta}')),
+    (r"y_1''", Symbol("y_{1}''")),
+    (r"\mathit{x}", Symbol('x')),
+    (r"\mathit{test}", Symbol('test')),
+    (r"\mathit{TEST}", Symbol('TEST')),
+    (r"\mathit{HELLO world}", Symbol('HELLO world')),
+    (r"a'", Symbol("a'")),
+    (r"a''", Symbol("a''")),
+    (r"\alpha'", Symbol("alpha'")),
+    (r"\alpha''", Symbol("alpha''")),
+    (r"a_b", Symbol("a_{b}")),
+    (r"a_b'", Symbol("a_{b}'")),
+    (r"a'_b", Symbol("a'_{b}")),
+    (r"a'_b'", Symbol("a'_{b}'")),
+    (r"a_{b'}", Symbol("a_{b'}")),
+    (r"a_{b'}'", Symbol("a_{b'}'")),
+    (r"a'_{b'}", Symbol("a'_{b'}")),
+    (r"a'_{b'}'", Symbol("a'_{b'}'")),
+    (r"\mathit{foo}'", Symbol("foo'")),
+    (r"\mathit{foo'}", Symbol("foo'")),
+    (r"\mathit{foo'}'", Symbol("foo''")),
+    (r"a_b''", Symbol("a_{b}''")),
+    (r"a''_b", Symbol("a''_{b}")),
+    (r"a''_b'''", Symbol("a''_{b}'''")),
+    (r"a_{b''}", Symbol("a_{b''}")),
+    (r"a_{b''}''", Symbol("a_{b''}''")),
+    (r"a''_{b''}", Symbol("a''_{b''}")),
+    (r"a''_{b''}'''", Symbol("a''_{b''}'''")),
+    (r"\mathit{foo}''", Symbol("foo''")),
+    (r"\mathit{foo''}", Symbol("foo''")),
+    (r"\mathit{foo''}'''", Symbol("foo'''''")),
+    (r"a_\alpha", Symbol("a_{alpha}")),
+    (r"a_\alpha'", Symbol("a_{alpha}'")),
+    (r"a'_\alpha", Symbol("a'_{alpha}")),
+    (r"a'_\alpha'", Symbol("a'_{alpha}'")),
+    (r"a_{\alpha'}", Symbol("a_{alpha'}")),
+    (r"a_{\alpha'}'", Symbol("a_{alpha'}'")),
+    (r"a'_{\alpha'}", Symbol("a'_{alpha'}")),
+    (r"a'_{\alpha'}'", Symbol("a'_{alpha'}'")),
+    (r"a_\alpha''", Symbol("a_{alpha}''")),
+    (r"a''_\alpha", Symbol("a''_{alpha}")),
+    (r"a''_\alpha'''", Symbol("a''_{alpha}'''")),
+    (r"a_{\alpha''}", Symbol("a_{alpha''}")),
+    (r"a_{\alpha''}''", Symbol("a_{alpha''}''")),
+    (r"a''_{\alpha''}", Symbol("a''_{alpha''}")),
+    (r"a''_{\alpha''}'''", Symbol("a''_{alpha''}'''")),
+    (r"\alpha_b", Symbol("alpha_{b}")),
+    (r"\alpha_b'", Symbol("alpha_{b}'")),
+    (r"\alpha'_b", Symbol("alpha'_{b}")),
+    (r"\alpha'_b'", Symbol("alpha'_{b}'")),
+    (r"\alpha_{b'}", Symbol("alpha_{b'}")),
+    (r"\alpha_{b'}'", Symbol("alpha_{b'}'")),
+    (r"\alpha'_{b'}", Symbol("alpha'_{b'}")),
+    (r"\alpha'_{b'}'", Symbol("alpha'_{b'}'")),
+    (r"\alpha_b''", Symbol("alpha_{b}''")),
+    (r"\alpha''_b", Symbol("alpha''_{b}")),
+    (r"\alpha''_b'''", Symbol("alpha''_{b}'''")),
+    (r"\alpha_{b''}", Symbol("alpha_{b''}")),
+    (r"\alpha_{b''}''", Symbol("alpha_{b''}''")),
+    (r"\alpha''_{b''}", Symbol("alpha''_{b''}")),
+    (r"\alpha''_{b''}'''", Symbol("alpha''_{b''}'''")),
+    (r"\alpha_\beta", Symbol("alpha_{beta}")),
+    (r"\alpha_{\beta}", Symbol("alpha_{beta}")),
+    (r"\alpha_{\beta'}", Symbol("alpha_{beta'}")),
+    (r"\alpha_{\beta''}", Symbol("alpha_{beta''}")),
+    (r"\alpha'_\beta", Symbol("alpha'_{beta}")),
+    (r"\alpha'_{\beta}", Symbol("alpha'_{beta}")),
+    (r"\alpha'_{\beta'}", Symbol("alpha'_{beta'}")),
+    (r"\alpha'_{\beta''}", Symbol("alpha'_{beta''}")),
+    (r"\alpha''_\beta", Symbol("alpha''_{beta}")),
+    (r"\alpha''_{\beta}", Symbol("alpha''_{beta}")),
+    (r"\alpha''_{\beta'}", Symbol("alpha''_{beta'}")),
+    (r"\alpha''_{\beta''}", Symbol("alpha''_{beta''}")),
+    (r"\alpha_\beta'", Symbol("alpha_{beta}'")),
+    (r"\alpha_{\beta}'", Symbol("alpha_{beta}'")),
+    (r"\alpha_{\beta'}'", Symbol("alpha_{beta'}'")),
+    (r"\alpha_{\beta''}'", Symbol("alpha_{beta''}'")),
+    (r"\alpha'_\beta'", Symbol("alpha'_{beta}'")),
+    (r"\alpha'_{\beta}'", Symbol("alpha'_{beta}'")),
+    (r"\alpha'_{\beta'}'", Symbol("alpha'_{beta'}'")),
+    (r"\alpha'_{\beta''}'", Symbol("alpha'_{beta''}'")),
+    (r"\alpha''_\beta'", Symbol("alpha''_{beta}'")),
+    (r"\alpha''_{\beta}'", Symbol("alpha''_{beta}'")),
+    (r"\alpha''_{\beta'}'", Symbol("alpha''_{beta'}'")),
+    (r"\alpha''_{\beta''}'", Symbol("alpha''_{beta''}'")),
+    (r"\alpha_\beta''", Symbol("alpha_{beta}''")),
+    (r"\alpha_{\beta}''", Symbol("alpha_{beta}''")),
+    (r"\alpha_{\beta'}''", Symbol("alpha_{beta'}''")),
+    (r"\alpha_{\beta''}''", Symbol("alpha_{beta''}''")),
+    (r"\alpha'_\beta''", Symbol("alpha'_{beta}''")),
+    (r"\alpha'_{\beta}''", Symbol("alpha'_{beta}''")),
+    (r"\alpha'_{\beta'}''", Symbol("alpha'_{beta'}''")),
+    (r"\alpha'_{\beta''}''", Symbol("alpha'_{beta''}''")),
+    (r"\alpha''_\beta''", Symbol("alpha''_{beta}''")),
+    (r"\alpha''_{\beta}''", Symbol("alpha''_{beta}''")),
+    (r"\alpha''_{\beta'}''", Symbol("alpha''_{beta'}''")),
+    (r"\alpha''_{\beta''}''", Symbol("alpha''_{beta''}''"))
+
+]
+
+# primes written after or before the subscript render the same,
+# so the two lists give the same symbols
+PRIMES_AFTER_SUBSCRIPT_PAIRS = [
+    (r"y_1'", Symbol("y_{1}'")),
+    (r"y_1''", Symbol("y_{1}''")),
+    (r"y_{1}''", Symbol("y_{1}''")),
+    (r"\theta_1'", Symbol("theta_{1}'")),
+    (r"y_\theta'", Symbol("y_{theta}'")),
+    (r"y_{\theta}'", Symbol("y_{theta}'")),
+]
+
+PRIMES_BEFORE_SUBSCRIPT_PAIRS = [
+    (r"y'_1", Symbol("y_{1}'")),
+    (r"y''_1", Symbol("y_{1}''")),
+    (r"y''_{1}", Symbol("y_{1}''")),
+    (r"\theta'_1", Symbol("theta_{1}'")),
+    (r"y'_\theta", Symbol("y_{theta}'")),
+    (r"y'_{\theta}", Symbol("y_{theta}'")),
+]
+
+SUBSCRIPT_EXPRESSION_PAIRS = [
+    (r"a_{2n}", Symbol("a_{2n}")),
+    (r"a_{2 n}", Symbol("a_{2n}")),
+    (r"a_{n-1}", Symbol("a_{n-1}"))
+]
+
+UNSUPPORTED_SUBSCRIPT_EXPRESSION_PAIRS = [
+    (r"a_{n^2}", Symbol("a_{n^2}")),
+    (r"a_{n/2}", Symbol("a_{n/2}")),
+    (r"a_{\alpha+1}", Symbol("a_{alpha+1}")),
+    (r"a_{i_j}", Symbol("a_{i_j}"))
+]
+
+UNEVALUATED_SIMPLE_EXPRESSION_PAIRS = [
+    (r"0", 0),
+    (r"1", 1),
+    (r"-3.14", -3.14),
+    (r"(-7.13)(1.5)", _Mul(-7.13, 1.5)),
+    (r"1+1", _Add(1, 1)),
+    (r"0+1", _Add(0, 1)),
+    (r"1*2", _Mul(1, 2)),
+    (r"0*1", _Mul(0, 1)),
+    (r"x", x),
+    (r"2x", 2 * x),
+    (r"3x - 1", _Add(_Mul(3, x), -1)),
+    (r"-c", -c),
+    (r"\infty", oo),
+    (r"a \cdot b", a * b),
+    (r"1 \times 2 ", _Mul(1, 2)),
+    (r"a / b", a / b),
+    (r"a \div b", a / b),
+    (r"a + b", a + b),
+    (r"a + b - a", _Add(a + b, -a)),
+    (r"(x + y) z", _Mul(_Add(x, y), z)),
+    (r"a'b+ab'", _Add(_Mul(Symbol("a'"), b), _Mul(a, Symbol("b'"))))
+]
+
+EVALUATED_SIMPLE_EXPRESSION_PAIRS = [
+    (r"(-7.13)(1.5)", -10.695),
+    (r"1+1", 2),
+    (r"0+1", 1),
+    (r"1*2", 2),
+    (r"0*1", 0),
+    (r"2x", 2 * x),
+    (r"3x - 1", 3 * x - 1),
+    (r"-c", -c),
+    (r"a \cdot b", a * b),
+    (r"1 \times 2 ", 2),
+    (r"a / b", a / b),
+    (r"a \div b", a / b),
+    (r"a + b", a + b),
+    (r"a + b - a", b),
+    (r"(x + y) z", (x + y) * z),
+]
+
+UNEVALUATED_FRACTION_EXPRESSION_PAIRS = [
+    (r"\frac{a}{b}", a / b),
+    (r"\dfrac{a}{b}", a / b),
+    (r"\tfrac{a}{b}", a / b),
+    (r"\frac12", _Mul(1, _Pow(2, -1))),
+    (r"\frac12y", _Mul(_Mul(1, _Pow(2, -1)), y)),
+    (r"\frac1234", _Mul(_Mul(1, _Pow(2, -1)), 34)),
+    (r"\frac2{3}", _Mul(2, _Pow(3, -1))),
+    (r"\frac{a + b}{c}", _Mul(a + b, _Pow(c, -1))),
+    (r"\frac{7}{3}", _Mul(7, _Pow(3, -1)))
+]
+
+EVALUATED_FRACTION_EXPRESSION_PAIRS = [
+    (r"\frac{a}{b}", a / b),
+    (r"\dfrac{a}{b}", a / b),
+    (r"\tfrac{a}{b}", a / b),
+    (r"\frac12", Rational(1, 2)),
+    (r"\frac12y", y / 2),
+    (r"\frac1234", 17),
+    (r"\frac2{3}", Rational(2, 3)),
+    (r"\frac{a + b}{c}", (a + b) / c),
+    (r"\frac{7}{3}", Rational(7, 3))
+]
+
+RELATION_EXPRESSION_PAIRS = [
+    (r"x = y", Eq(x, y)),
+    (r"x \neq y", Ne(x, y)),
+    (r"x \ne y", Ne(x, y)),
+    (r"x < y", Lt(x, y)),
+    (r"x > y", Gt(x, y)),
+    (r"x \leq y", Le(x, y)),
+    (r"x \geq y", Ge(x, y)),
+    (r"x \le y", Le(x, y)),
+    (r"x \ge y", Ge(x, y)),
+    (r"x \leqslant y", Le(x, y)),
+    (r"x \geqslant y", Ge(x, y)),
+    (r"x \leqq y", Le(x, y)),
+    (r"x \geqq y", Ge(x, y)),
+    (r"x < y", StrictLessThan(x, y)),
+    (r"x \leq y", LessThan(x, y)),
+    (r"x > y", StrictGreaterThan(x, y)),
+    (r"x \geq y", GreaterThan(x, y)),
+    (r"x \neq y", Unequality(x, y)), # same as 2nd one in the list
+    (r"x \ne y", Unequality(x, y)),
+    (r"a^2 + b^2 = c^2", Eq(a**2 + b**2, c**2))
+]
+
+UNEVALUATED_POWER_EXPRESSION_PAIRS = [
+    (r"x^2", x ** 2),
+    (r"x^\frac{1}{2}", _Pow(x, _Mul(1, _Pow(2, -1)))),
+    (r"x^{3 + 1}", x ** _Add(3, 1)),
+    (r"\pi^{|xy|}", Symbol('pi') ** _Abs(x * y)),
+    (r"5^0 - 4^0", _Add(_Pow(5, 0), _Mul(-1, _Pow(4, 0)))),
+    (r"x^\circ", _Mul(x, _Mul(pi, _Pow(180, -1)))),
+    (r"x^{\circ}", _Mul(x, _Mul(pi, _Pow(180, -1)))),
+    (r"180^\circ", _Mul(180, _Mul(pi, _Pow(180, -1))))
+]
+
+EVALUATED_POWER_EXPRESSION_PAIRS = [
+    (r"x^2", x ** 2),
+    (r"x^\frac{1}{2}", sqrt(x)),
+    (r"x^{3 + 1}", x ** 4),
+    (r"\pi^{|xy|}", Symbol('pi') ** _Abs(x * y)),
+    (r"5^0 - 4^0", 0),
+    (r"x^\circ", pi*x/180),
+    (r"x^{\circ}", pi*x/180),
+    (r"180^\circ", pi)
+]
+
+SUPERSCRIPT_IMPLICIT_MUL_PAIRS = [
+    (r"a^{2}bc",    _Mul(_Pow(a, 2), _Mul(b, c))),
+    (r"a^{2}*bc",   _Mul(_Pow(a, 2), _Mul(b, c))),
+    (r"a^{2}*b*c",  _Mul(_Mul(_Pow(a, 2), b), c)),
+    (r"a^{2}b^{3}", _Mul(_Pow(a, 2), _Pow(b, 3))),
+    (r"2^{3}bc",    _Mul(_Pow(2, 3), _Mul(b, c))),
+]
+
+UNEVALUATED_INTEGRAL_EXPRESSION_PAIRS = [
+    (r"\int x dx", Integral(_Mul(1, x), x)),
+    (r"\int x \, dx", Integral(_Mul(1, x), x)),
+    (r"\int x d\theta", Integral(_Mul(1, x), theta)),
+    (r"\int (x^2 - y)dx", Integral(_Mul(1, x ** 2 - y), x)),
+    (r"\int x + a dx", Integral(_Mul(1, _Add(x, a)), x)),
+    (r"\int da", Integral(_Mul(1, 1), a)),
+    (r"\int_0^7 dx", Integral(_Mul(1, 1), (x, 0, 7))),
+    (r"\int\limits_{0}^{1} x dx", Integral(_Mul(1, x), (x, 0, 1))),
+    (r"\int_a^b x dx", Integral(_Mul(1, x), (x, a, b))),
+    (r"\int^b_a x dx", Integral(_Mul(1, x), (x, a, b))),
+    (r"\int_{a}^b x dx", Integral(_Mul(1, x), (x, a, b))),
+    (r"\int^{b}_a x dx", Integral(_Mul(1, x), (x, a, b))),
+    (r"\int_{a}^{b} x dx", Integral(_Mul(1, x), (x, a, b))),
+    (r"\int^{b}_{a} x dx", Integral(_Mul(1, x), (x, a, b))),
+    (r"\int_{f(a)}^{f(b)} f(z) dz", Integral(f(z), (z, f(a), f(b)))),
+    (r"\int a + b + c dx", Integral(_Mul(1, _Add(_Add(a, b), c)), x)),
+    (r"\int \frac{dz}{z}", Integral(_Mul(1, _Mul(1, Pow(z, -1))), z)),
+    (r"\int \frac{3 dz}{z}", Integral(_Mul(1, _Mul(3, _Pow(z, -1))), z)),
+    (r"\int \frac{1}{x} dx", Integral(_Mul(1, _Mul(1, Pow(x, -1))), x)),
+    (r"\int \frac{1}{a} + \frac{1}{b} dx",
+     Integral(_Mul(1, _Add(_Mul(1, _Pow(a, -1)), _Mul(1, Pow(b, -1)))), x)),
+    (r"\int \frac{1}{x} + 1 dx", Integral(_Mul(1, _Add(_Mul(1, _Pow(x, -1)), 1)), x))
+]
+
+EVALUATED_INTEGRAL_EXPRESSION_PAIRS = [
+    (r"\int x dx", Integral(x, x)),
+    (r"\int x \, dx", Integral(x, x)),
+    (r"\int x d\theta", Integral(x, theta)),
+    (r"\int (x^2 - y)dx", Integral(x ** 2 - y, x)),
+    (r"\int x + a dx", Integral(x + a, x)),
+    (r"\int da", Integral(1, a)),
+    (r"\int_0^7 dx", Integral(1, (x, 0, 7))),
+    (r"\int\limits_{0}^{1} x dx", Integral(x, (x, 0, 1))),
+    (r"\int_a^b x dx", Integral(x, (x, a, b))),
+    (r"\int^b_a x dx", Integral(x, (x, a, b))),
+    (r"\int_{a}^b x dx", Integral(x, (x, a, b))),
+    (r"\int^{b}_a x dx", Integral(x, (x, a, b))),
+    (r"\int_{a}^{b} x dx", Integral(x, (x, a, b))),
+    (r"\int^{b}_{a} x dx", Integral(x, (x, a, b))),
+    (r"\int_{f(a)}^{f(b)} f(z) dz", Integral(f(z), (z, f(a), f(b)))),
+    (r"\int a + b + c dx", Integral(a + b + c, x)),
+    (r"\int \frac{dz}{z}", Integral(Pow(z, -1), z)),
+    (r"\int \frac{3 dz}{z}", Integral(3 * Pow(z, -1), z)),
+    (r"\int \frac{1}{x} dx", Integral(1 / x, x)),
+    (r"\int \frac{1}{a} + \frac{1}{b} dx", Integral(1 / a + 1 / b, x)),
+    (r"\int \frac{1}{a} - \frac{1}{b} dx", Integral(1 / a - 1 / b, x)),
+    (r"\int \frac{1}{x} + 1 dx", Integral(1 / x + 1, x))
+]
+
+DERIVATIVE_EXPRESSION_PAIRS = [
+    (r"\frac{d}{dx} x", Derivative(x, x)),
+    (r"\frac{d}{dt} x", Derivative(x, t)),
+    (r"\frac{d}{dx} ( \tan x )", Derivative(tan(x), x)),
+    (r"\frac{d f(x)}{dx}", Derivative(f(x), x)),
+    (r"\frac{d\theta(x)}{dx}", Derivative(Function('theta')(x), x))
+]
+
+# read as ambiguous, although the superscript of the argument binds tighter than the function
+AMBIGUOUS_TRIGONOMETRIC_EXPRESSION_PAIRS = [
+    (r"\sin^2 x^2", sin(x ** 2) ** 2)
+]
+
+TRIGONOMETRIC_EXPRESSION_PAIRS = [
+    (r"\sin \theta", sin(theta)),
+    (r"\sin(\theta)", sin(theta)),
+    (r"\sin^{-1} a", asin(a)),
+    (r"\sin a \cos b", _Mul(sin(a), cos(b))),
+    (r"\sin \cos \theta", sin(cos(theta))),
+    (r"\sin(\cos \theta)", sin(cos(theta))),
+    (r"(\csc x)(\sec y)", csc(x) * sec(y)),
+    (r"\frac{\sin{x}}2", _Mul(sin(x), _Pow(2, -1))),
+    (r"\sin^{2} x", _Pow(sin(x), 2)),
+    (r"\sin^n x", _Pow(sin(x), n)),
+    (r"\sin^{-2} x", _Pow(sin(x), -2)),
+    (r"\cos^2(x)", _Pow(cos(x), 2))
+]
+
+INVERSE_TRIGONOMETRIC_EXPRESSION_PAIRS = [
+    (r"\arcsin x", asin(x)),
+    (r"\arccos x", acos(x)),
+    (r"\arctan x", atan(x)),
+    (r"\arccsc x", acsc(x)),
+    (r"\arcsec x", asec(x)),
+    (r"\arccot x", acot(x))
+]
+
+HYPERBOLIC_EXPRESSION_PAIRS = [
+    (r"\sech x", sech(x)),
+    (r"\csch x", csch(x)),
+    (r"\arsinh x", asinh(x)),
+    (r"\arcosh x", acosh(x)),
+    (r"\artanh x", atanh(x)),
+    (r"\arcsinh x", asinh(x)),
+    (r"\arccosh x", acosh(x))
+]
+
+UNSUPPORTED_HYPERBOLIC_EXPRESSION_PAIRS = [
+    (r"\arcoth x", acoth(x)),
+    (r"\arsech x", asech(x)),
+    (r"\arcsch x", acsch(x))
+]
+
+UNEVALUATED_LIMIT_EXPRESSION_PAIRS = [
+    (r"\lim_{x \to 3} a", Limit(a, x, 3, dir="+-")),
+    (r"\lim_{x \rightarrow 3} a", Limit(a, x, 3, dir="+-")),
+    (r"\lim_{x \Rightarrow 3} a", Limit(a, x, 3, dir="+-")),
+    (r"\lim_{x \longrightarrow 3} a", Limit(a, x, 3, dir="+-")),
+    (r"\lim_{x \Longrightarrow 3} a", Limit(a, x, 3, dir="+-")),
+    (r"\lim_{x \to 3^{+}} a", Limit(a, x, 3, dir="+")),
+    (r"\lim_{x \to 3^{-}} a", Limit(a, x, 3, dir="-")),
+    (r"\lim_{x \to 3^+} a", Limit(a, x, 3, dir="+")),
+    (r"\lim_{x \to 3^-} a", Limit(a, x, 3, dir="-")),
+    (r"\lim_{x \to \infty} \frac{1}{x}", Limit(_Mul(1, _Pow(x, -1)), x, oo))
+]
+
+EVALUATED_LIMIT_EXPRESSION_PAIRS = [
+    (r"\lim_{x \to \infty} \frac{1}{x}", Limit(1 / x, x, oo))
+]
+
+UNEVALUATED_SQRT_EXPRESSION_PAIRS = [
+    (r"\sqrt{x}", sqrt(x)),
+    (r"\sqrt{x + b}", sqrt(_Add(x, b))),
+    (r"\sqrt[3]{\sin x}", _Pow(sin(x), _Pow(3, -1))),
+    # the above test needed to be handled differently than the ones below because root
+    # acts differently if its second argument is a number
+    (r"\sqrt[y]{\sin x}", root(sin(x), y)),
+    (r"\sqrt[\theta]{\sin x}", root(sin(x), theta)),
+    (r"\sqrt{\frac{12}{6}}", _Sqrt(_Mul(12, _Pow(6, -1))))
+]
+
+EVALUATED_SQRT_EXPRESSION_PAIRS = [
+    (r"\sqrt{x}", sqrt(x)),
+    (r"\sqrt{x + b}", sqrt(x + b)),
+    (r"\sqrt[3]{\sin x}", root(sin(x), 3)),
+    (r"\sqrt[y]{\sin x}", root(sin(x), y)),
+    (r"\sqrt[\theta]{\sin x}", root(sin(x), theta)),
+    (r"\sqrt{\frac{12}{6}}", sqrt(2))
+]
+
+UNEVALUATED_FACTORIAL_EXPRESSION_PAIRS = [
+    (r"x!", _factorial(x)),
+    (r"100!", _factorial(100)),
+    (r"\theta!", _factorial(theta)),
+    (r"(x + 1)!", _factorial(_Add(x, 1))),
+    (r"(x!)!", _factorial(_factorial(x))),
+    (r"x!!!", _factorial(_factorial(_factorial(x)))),
+    (r"5!7!", _Mul(_factorial(5), _factorial(7)))
+]
+
+EVALUATED_FACTORIAL_EXPRESSION_PAIRS = [
+    (r"x!", factorial(x)),
+    (r"100!", factorial(100)),
+    (r"\theta!", factorial(theta)),
+    (r"(x + 1)!", factorial(x + 1)),
+    (r"(x!)!", factorial(factorial(x))),
+    (r"x!!!", factorial(factorial(factorial(x)))),
+    (r"5!7!", factorial(5) * factorial(7)),
+    (r"24! \times 24!", factorial(24) * factorial(24))
+]
+
+UNEVALUATED_SUM_EXPRESSION_PAIRS = [
+    (r"\sum_{k = 1}^{3} c", Sum(_Mul(1, c), (k, 1, 3))),
+    (r"\sum_{k = 1}^3 c", Sum(_Mul(1, c), (k, 1, 3))),
+    (r"\sum^{3}_{k = 1} c", Sum(_Mul(1, c), (k, 1, 3))),
+    (r"\sum^3_{k = 1} c", Sum(_Mul(1, c), (k, 1, 3))),
+    (r"\sum_{k = 1}^{10} k^2", Sum(_Mul(1, k ** 2), (k, 1, 10))),
+    (r"\sum_{n = 0}^{\infty} \frac{1}{n!}",
+     Sum(_Mul(1, _Mul(1, _Pow(_factorial(n), -1))), (n, 0, oo)))
+]
+
+EVALUATED_SUM_EXPRESSION_PAIRS = [
+    (r"\sum_{k = 1}^{3} c", Sum(c, (k, 1, 3))),
+    (r"\sum_{k = 1}^3 c", Sum(c, (k, 1, 3))),
+    (r"\sum^{3}_{k = 1} c", Sum(c, (k, 1, 3))),
+    (r"\sum^3_{k = 1} c", Sum(c, (k, 1, 3))),
+    (r"\sum_{k = 1}^{10} k^2", Sum(k ** 2, (k, 1, 10))),
+    (r"\sum_{n = 0}^{\infty} \frac{1}{n!}", Sum(1 / factorial(n), (n, 0, oo)))
+]
+
+UNSUPPORTED_SUM_EXPRESSION_PAIRS = [
+    (r"\sum_{k = 0}^{k = n} k", Sum(k, (k, 0, n))),
+    (r"\sum^{k = n}_{k = 0} k", Sum(k, (k, 0, n))),
+    (r"\prod_{k = 1}^{k = n} k", Product(k, (k, 1, n)))
+]
+
+UNEVALUATED_PRODUCT_EXPRESSION_PAIRS = [
+    (r"\prod_{a = b}^{c} x", Product(x, (a, b, c))),
+    (r"\prod_{a = b}^c x", Product(x, (a, b, c))),
+    (r"\prod^{c}_{a = b} x", Product(x, (a, b, c))),
+    (r"\prod^c_{a = b} x", Product(x, (a, b, c)))
+]
+
+APPLIED_FUNCTION_EXPRESSION_PAIRS = [
+    (r"f(x)", f(x)),
+    (r"f(x, y)", f(x, y)),
+    (r"f(x, y, z)", f(x, y, z)),
+    (r"f'_1(x)", Function("f_{1}'")(x)),
+    (r"f_{1}''(x+y)", Function("f_{1}''")(x + y)),
+    (r"h_{\theta}(x_0, x_1)",
+     Function('h_{theta}')(Symbol('x_{0}'), Symbol('x_{1}')))
+]
+
+UNEVALUATED_COMMON_FUNCTION_EXPRESSION_PAIRS = [
+    (r"|x|", _Abs(x)),
+    (r"||x||", _Abs(Abs(x))),
+    (r"|x||y|", _Abs(x) * _Abs(y)),
+    (r"||x||y||", _Abs(_Abs(x) * _Abs(y))),
+    (r"\lfloor x \rfloor", floor(x)),
+    (r"\lceil x \rceil", ceiling(x)),
+    (r"\exp x", _exp(x)),
+    (r"\exp(x)", _exp(x)),
+    (r"\lg x", _log(x, 10)),
+    (r"\ln x", _log(x)),
+    (r"\ln(xy)", _log(x * y)),
+    (r"\log x", _log(x)),
+    (r"\log(xy)", _log(x * y)),
+    (r"\log_{2} x", _log(x, 2)),
+    (r"\log_{a} x", _log(x, a)),
+    (r"\log_{11} x", _log(x, 11)),
+    (r"\log_{a^2} x", _log(x, _Pow(a, 2))),
+    (r"\log_2 x", _log(x, 2)),
+    (r"\log_a x", _log(x, a)),
+    (r"\overline{z}", _Conjugate(z)),
+    (r"\overline{\overline{z}}", _Conjugate(_Conjugate(z))),
+    (r"\overline{x + y}", _Conjugate(_Add(x, y))),
+    (r"\overline{x} + \overline{y}", _Conjugate(x) + _Conjugate(y)),
+    (r"\overline1", _Conjugate(1)),
+    (r"\min(a, b)", _Min(a, b)),
+    (r"\min(a, b, c - d, xy)", _Min(a, b, c - d, x * y)),
+    (r"\max(a, b)", _Max(a, b)),
+    (r"\max(a, b, c - d, xy)", _Max(a, b, c - d, x * y)),
+    # physics things don't have an `evaluate=False` variant
+    (r"\langle x |", Bra('x')),
+    (r"| x \rangle", Ket('x')),
+    (r"\langle x | y \rangle", InnerProduct(Bra('x'), Ket('y'))),
+]
+
+EVALUATED_COMMON_FUNCTION_EXPRESSION_PAIRS = [
+    (r"|x|", Abs(x)),
+    (r"||x||", Abs(Abs(x))),
+    (r"|x||y|", Abs(x) * Abs(y)),
+    (r"||x||y||", Abs(Abs(x) * Abs(y))),
+    (r"\lfloor x \rfloor", floor(x)),
+    (r"\lceil x \rceil", ceiling(x)),
+    (r"\exp x", exp(x)),
+    (r"\exp(x)", exp(x)),
+    (r"\lg x", log(x, 10)),
+    (r"\ln x", log(x)),
+    (r"\ln(xy)", log(x * y)),
+    (r"\log x", log(x)),
+    (r"\log(xy)", log(x * y)),
+    (r"\log_{2} x", log(x, 2)),
+    (r"\log_{a} x", log(x, a)),
+    (r"\log_{11} x", log(x, 11)),
+    (r"\log_{a^2} x", log(x, _Pow(a, 2))),
+    (r"\log_2 x", log(x, 2)),
+    (r"\log_a x", log(x, a)),
+    (r"\overline{z}", conjugate(z)),
+    (r"\overline{\overline{z}}", conjugate(conjugate(z))),
+    (r"\overline{x + y}", conjugate(x + y)),
+    (r"\overline{x} + \overline{y}", conjugate(x) + conjugate(y)),
+    (r"\overline1", 1),
+    (r"\min(a, b)", Min(a, b)),
+    (r"\min(a, b, c - d, xy)", Min(a, b, c - d, x * y)),
+    (r"\max(a, b)", Max(a, b)),
+    (r"\max(a, b, c - d, xy)", Max(a, b, c - d, x * y)),
+    (r"\langle x |", Bra('x')),
+    (r"| x \rangle", Ket('x')),
+    (r"\langle x | y \rangle", InnerProduct(Bra('x'), Ket('y'))),
+]
+
+UNSUPPORTED_CONJUGATE_EXPRESSION_PAIRS = [
+    (r"\overline x", _Conjugate(x)),
+    (r"\overline12", _Mul(_Conjugate(1), 2))
+]
+
+SPACING_RELATED_EXPRESSION_PAIRS = [
+    (r"a \, b", _Mul(a, b)),
+    (r"a \thinspace b", _Mul(a, b)),
+    (r"a \: b", _Mul(a, b)),
+    (r"a \medspace b", _Mul(a, b)),
+    (r"a \; b", _Mul(a, b)),
+    (r"a \thickspace b", _Mul(a, b)),
+    (r"a \quad b", _Mul(a, b)),
+    (r"a \qquad b", _Mul(a, b)),
+    (r"a \! b", _Mul(a, b)),
+    (r"a \negthinspace b", _Mul(a, b)),
+    (r"a \negmedspace b", _Mul(a, b)),
+    (r"a \negthickspace b", _Mul(a, b))
+]
+
+UNEVALUATED_BINOMIAL_EXPRESSION_PAIRS = [
+    (r"\binom{n}{k}", _binomial(n, k)),
+    (r"\tbinom{n}{k}", _binomial(n, k)),
+    (r"\dbinom{n}{k}", _binomial(n, k)),
+    (r"\binom{n}{0}", _binomial(n, 0)),
+    (r"x^\binom{n}{k}", _Pow(x, _binomial(n, k))),
+    (r"\binom1k", _binomial(1, k)),
+    (r"\binom12", _binomial(1, 2)),
+    (r"\binom{n}2", _binomial(n, 2)),
+    (r"\binom n{k}", _binomial(n, k)),
+    (r"\binom\alpha\beta", _binomial(Symbol("alpha"), Symbol("beta")))
+]
+
+EVALUATED_BINOMIAL_EXPRESSION_PAIRS = [
+    (r"\binom{n}{k}", binomial(n, k)),
+    (r"\tbinom{n}{k}", binomial(n, k)),
+    (r"\dbinom{n}{k}", binomial(n, k)),
+    (r"\binom{n}{0}", binomial(n, 0)),
+    (r"x^\binom{n}{k}", x ** binomial(n, k)),
+    (r"\binom1k", binomial(1, k)),
+    (r"\binom12", 0),
+    (r"\binom{n}2", binomial(n, 2)),
+    (r"\binom n{k}", binomial(n, k)),
+    (r"\binom\alpha\beta", binomial(Symbol("alpha"), Symbol("beta")))
+]
+
+MISCELLANEOUS_EXPRESSION_PAIRS = [
+    (r"\left(x + y\right) z", _Mul(_Add(x, y), z)),
+    (r"\left( x + y\right ) z", _Mul(_Add(x, y), z)),
+    (r"\left(  x + y\right ) z", _Mul(_Add(x, y), z)),
+]
+
+SQUARE_BRACKET_EXPRESSION_PAIRS = [
+    (r"[x+y]z", _Mul(_Add(x, y), z)),
+    (r"[a+b]c", _Mul(_Add(a, b), c)),
+    (r"[x]y", _Mul(x, y)),
+    (r"[a+b][c+d]", _Mul(_Add(a, b), _Add(c, d))),
+    (r"[x][y]", _Mul(x, y)),
+    (r"[x+y]a", _Mul(_Add(x, y), a)),
+    (r"[a]b", _Mul(a, b)),
+]
+
+EVALUATED_SQUARE_BRACKET_EXPRESSION_PAIRS = [
+    (r"[x+y]z", (x + y) * z),
+    (r"[a+b]c", (a + b) * c),
+    (r"[x]y", x * y),
+    (r"[a+b][c+d]", (a + b) * (c + d)),
+    (r"[x][y]", x * y),
+    (r"[2+3]x", 5 * x),
+]
+
+LITERAL_BRACE_EXPRESSION_PAIRS = [
+    (r"\{x+y\}z", _Mul(_Add(x, y), z)),
+    (r"\{a\}b", _Mul(a, b)),
+    (r"\{x+y\}\{a+b\}", _Mul(_Add(x, y), _Add(a, b))),
+]
+
+MIXED_BRACKET_BRACE_EXPRESSION_PAIRS = [
+    (r"[x+y]\{a+b\}", _Mul(_Add(x, y), _Add(a, b))),
+    (r"\{a+b\}[x+y]", _Mul(_Add(a, b), _Add(x, y))),
+    (r"[x]\{y\}", _Mul(x, y)),
+    (r"\{a\}[b]", _Mul(a, b)),
+]
+
+UNEVALUATED_LITERAL_COMPLEX_NUMBER_EXPRESSION_PAIRS = [
+    (r"\imaginaryunit^2", _Pow(I, 2)),
+    (r"|\imaginaryunit|", _Abs(I)),
+    (r"\overline{\imaginaryunit}", _Conjugate(I)),
+    (r"\imaginaryunit+\imaginaryunit", _Add(I, I)),
+    (r"\imaginaryunit-\imaginaryunit", _Add(I, -I)),
+    (r"\imaginaryunit*\imaginaryunit", _Mul(I, I)),
+    (r"\imaginaryunit/\imaginaryunit", _Mul(I, _Pow(I, -1))),
+    (r"(1+\imaginaryunit)/|1+\imaginaryunit|", _Mul(_Add(1, I), _Pow(_Abs(_Add(1, I)), -1)))
+]
+
+UNEVALUATED_MATRIX_EXPRESSION_PAIRS = [
+    (r"\begin{pmatrix}a & b \\x & y\end{pmatrix}",
+     Matrix([[a, b], [x, y]])),
+    (r"\begin{pmatrix}a & b \\x & y\\\end{pmatrix}",
+     Matrix([[a, b], [x, y]])),
+    (r"\begin{bmatrix}a & b \\x & y\end{bmatrix}",
+     Matrix([[a, b], [x, y]])),
+    (r"\left(\begin{matrix}a & b \\x & y\end{matrix}\right)",
+     Matrix([[a, b], [x, y]])),
+    (r"\left[\begin{matrix}a & b \\x & y\end{matrix}\right]",
+     Matrix([[a, b], [x, y]])),
+    (r"\left[\begin{array}{cc}a & b \\x & y\end{array}\right]",
+     Matrix([[a, b], [x, y]])),
+    (r"\left(\begin{array}{cc}a & b \\x & y\end{array}\right)",
+     Matrix([[a, b], [x, y]])),
+    (r"\left( { \begin{array}{cc}a & b \\x & y\end{array} } \right)",
+     Matrix([[a, b], [x, y]])),
+    (r"+\begin{pmatrix}a & b \\x & y\end{pmatrix}",
+     Matrix([[a, b], [x, y]])),
+    ((r"\begin{pmatrix}x & y \\a & b\end{pmatrix}+"
+      r"\begin{pmatrix}a & b \\x & y\end{pmatrix}"),
+     _MatAdd(Matrix([[x, y], [a, b]]), Matrix([[a, b], [x, y]]))),
+    (r"-\begin{pmatrix}a & b \\x & y\end{pmatrix}",
+     _MatMul(-1, Matrix([[a, b], [x, y]]))),
+    ((r"\begin{pmatrix}x & y \\a & b\end{pmatrix}-"
+      r"\begin{pmatrix}a & b \\x & y\end{pmatrix}"),
+     _MatAdd(Matrix([[x, y], [a, b]]), _MatMul(-1, Matrix([[a, b], [x, y]])))),
+    ((r"\begin{pmatrix}a & b & c \\x & y & z \\a & b & c \end{pmatrix}*"
+      r"\begin{pmatrix}x & y & z \\a & b & c \\a & b & c \end{pmatrix}*"
+      r"\begin{pmatrix}a & b & c \\x & y & z \\x & y & z \end{pmatrix}"),
+     _MatMul(_MatMul(Matrix([[a, b, c], [x, y, z], [a, b, c]]),
+                     Matrix([[x, y, z], [a, b, c], [a, b, c]])),
+             Matrix([[a, b, c], [x, y, z], [x, y, z]]))),
+    (r"\begin{pmatrix}a & b \\x & y\end{pmatrix}/2",
+     _MatMul(Matrix([[a, b], [x, y]]), _Pow(2, -1))),
+    (r"\begin{pmatrix}a & b \\x & y\end{pmatrix}^2",
+     _Pow(Matrix([[a, b], [x, y]]), 2)),
+    (r"\begin{pmatrix}a & b \\x & y\end{pmatrix}^{-1}",
+     _Pow(Matrix([[a, b], [x, y]]), -1)),
+    (r"\begin{pmatrix}a & b \\x & y\end{pmatrix}^T",
+     Transpose(Matrix([[a, b], [x, y]]))),
+    (r"\begin{pmatrix}a & b \\x & y\end{pmatrix}^{T}",
+     Transpose(Matrix([[a, b], [x, y]]))),
+    (r"\begin{pmatrix}a & b \\x & y\end{pmatrix}^\mathit{T}",
+     Transpose(Matrix([[a, b], [x, y]]))),
+    (r"\begin{pmatrix}1 & 2 \\3 & 4\end{pmatrix}^T",
+     Transpose(Matrix([[1, 2], [3, 4]]))),
+    ((r"(\begin{pmatrix}1 & 2 \\3 & 4\end{pmatrix}+"
+      r"\begin{pmatrix}1 & 2 \\3 & 4\end{pmatrix}^T)*"
+      r"\begin{bmatrix}1\\0\end{bmatrix}"),
+     _MatMul(_MatAdd(Matrix([[1, 2], [3, 4]]),
+                     Transpose(Matrix([[1, 2], [3, 4]]))),
+                Matrix([[1], [0]]))),
+    ((r"(\begin{pmatrix}a & b \\x & y\end{pmatrix}+"
+      r"\begin{pmatrix}x & y \\a & b\end{pmatrix})^2"),
+    _Pow(_MatAdd(Matrix([[a, b], [x, y]]),
+                 Matrix([[x, y], [a, b]])), 2)),
+    ((r"(\begin{pmatrix}a & b \\x & y\end{pmatrix}+"
+      r"\begin{pmatrix}x & y \\a & b\end{pmatrix})^T"),
+    Transpose(_MatAdd(Matrix([[a, b], [x, y]]),
+                      Matrix([[x, y], [a, b]])))),
+    (r"\overline{\begin{pmatrix}\imaginaryunit&2\\3&4\end{pmatrix}+\begin{pmatrix}\imaginaryunit&2\\3&4\end{pmatrix}}",
+     _Conjugate(_MatAdd(Matrix([[I, 2], [3, 4]]),
+                        Matrix([[I, 2], [3, 4]]))))
+]
+
+EVALUATED_MATRIX_EXPRESSION_PAIRS = [
+    (r"\det\left(\left[   { \begin{array}{cc}a&b\\x&y\end{array} } \right]\right)",
+     Matrix([[a, b], [x, y]]).det()),
+    (r"\det \begin{pmatrix}1&2\\3&4\end{pmatrix}", -2),
+    (r"\det{\begin{pmatrix}1&2\\3&4\end{pmatrix}}", -2),
+    (r"\det(\begin{pmatrix}1&2\\3&4\end{pmatrix})", -2),
+    (r"\det\left(\begin{pmatrix}1&2\\3&4\end{pmatrix}\right)", -2),
+    (r"\begin{pmatrix}a & b \\x & y\end{pmatrix}/\begin{vmatrix}a & b \\x & y\end{vmatrix}",
+     _MatMul(Matrix([[a, b], [x, y]]), _Pow(Matrix([[a, b], [x, y]]).det(), -1))),
+    (r"\begin{pmatrix}a & b \\x & y\end{pmatrix}/|\begin{matrix}a & b \\x & y\end{matrix}|",
+     _MatMul(Matrix([[a, b], [x, y]]), _Pow(Matrix([[a, b], [x, y]]).det(), -1))),
+    (r"\frac{\begin{pmatrix}a & b \\x & y\end{pmatrix}}{| { \begin{matrix}a & b \\x & y\end{matrix} } |}",
+     _MatMul(Matrix([[a, b], [x, y]]), _Pow(Matrix([[a, b], [x, y]]).det(), -1))),
+    (r"\overline{\begin{pmatrix}\imaginaryunit & 1+\imaginaryunit \\-\imaginaryunit & 4\end{pmatrix}}",
+     Matrix([[-I, 1-I], [I, 4]])),
+    (r"\begin{pmatrix}\imaginaryunit & 1+\imaginaryunit \\-\imaginaryunit & 4\end{pmatrix}^H",
+     Matrix([[-I, I], [1-I, 4]])),
+    (r"\trace(\begin{pmatrix}\imaginaryunit & 1+\imaginaryunit \\-\imaginaryunit & 4\end{pmatrix})",
+     Trace(Matrix([[I, 1+I], [-I, 4]]))),
+    (r"\adjugate(\begin{pmatrix}1 & 2 \\3 & 4\end{pmatrix})",
+     Matrix([[4, -2], [-3, 1]])),
+    (r"(\begin{pmatrix}\imaginaryunit&2\\3&4\end{pmatrix}+\begin{pmatrix}\imaginaryunit&2\\3&4\end{pmatrix})^\ast",
+     Matrix([[-2*I, 6], [4, 8]])),
+    (r"(\begin{pmatrix}\imaginaryunit&2\\3&4\end{pmatrix}+\begin{pmatrix}\imaginaryunit&2\\3&4\end{pmatrix})^{\ast}",
+     Matrix([[-2*I, 6], [4, 8]])),
+    (r"(\begin{pmatrix}\imaginaryunit&2\\3&4\end{pmatrix}+\begin{pmatrix}\imaginaryunit&2\\3&4\end{pmatrix})^{\ast\ast}",
+     Matrix([[2*I, 4], [6, 8]])),
+    (r"(\begin{pmatrix}\imaginaryunit&2\\3&4\end{pmatrix}+\begin{pmatrix}\imaginaryunit&2\\3&4\end{pmatrix})^{\ast\ast\ast}",
+     Matrix([[-2*I, 6], [4, 8]])),
+    (r"(\begin{pmatrix}\imaginaryunit&2\\3&4\end{pmatrix}+\begin{pmatrix}\imaginaryunit&2\\3&4\end{pmatrix})^{*}",
+     Matrix([[-2*I, 6], [4, 8]])),
+    (r"(\begin{pmatrix}\imaginaryunit&2\\3&4\end{pmatrix}+\begin{pmatrix}\imaginaryunit&2\\3&4\end{pmatrix})^{**}",
+     Matrix([[2*I, 4], [6, 8]])),
+    (r"(\begin{pmatrix}\imaginaryunit&2\\3&4\end{pmatrix}+\begin{pmatrix}\imaginaryunit&2\\3&4\end{pmatrix})^{***}",
+     Matrix([[-2*I, 6], [4, 8]])),
+    (r"(\begin{pmatrix}\imaginaryunit&2\\3&4\end{pmatrix}+\begin{pmatrix}\imaginaryunit&2\\3&4\end{pmatrix})^\prime",
+     Transpose(_MatAdd(Matrix([[I, 2], [3, 4]]),
+                       Matrix([[I, 2], [3, 4]])))),
+    (r"(\begin{pmatrix}\imaginaryunit&2\\3&4\end{pmatrix}+\begin{pmatrix}\imaginaryunit&2\\3&4\end{pmatrix})^{\prime}",
+     Transpose(_MatAdd(Matrix([[I, 2], [3, 4]]),
+                       Matrix([[I, 2], [3, 4]])))),
+    (r"(\begin{pmatrix}\imaginaryunit&2\\3&4\end{pmatrix}+\begin{pmatrix}\imaginaryunit&2\\3&4\end{pmatrix})^{\prime\prime}",
+     _MatAdd(Matrix([[I, 2], [3, 4]]),
+             Matrix([[I, 2], [3, 4]]))),
+    (r"(\begin{pmatrix}\imaginaryunit&2\\3&4\end{pmatrix}+\begin{pmatrix}\imaginaryunit&2\\3&4\end{pmatrix})^{\prime\prime\prime}",
+     Transpose(_MatAdd(Matrix([[I, 2], [3, 4]]),
+                       Matrix([[I, 2], [3, 4]])))),
+    (r"(\begin{pmatrix}\imaginaryunit&2\\3&4\end{pmatrix}+\begin{pmatrix}\imaginaryunit&2\\3&4\end{pmatrix})^{'}",
+     Transpose(_MatAdd(Matrix([[I, 2], [3, 4]]),
+                       Matrix([[I, 2], [3, 4]])))),
+    (r"(\begin{pmatrix}\imaginaryunit&2\\3&4\end{pmatrix}+\begin{pmatrix}\imaginaryunit&2\\3&4\end{pmatrix})^{''}",
+     _MatAdd(Matrix([[I, 2], [3, 4]]),
+             Matrix([[I, 2], [3, 4]]))),
+    (r"(\begin{pmatrix}\imaginaryunit&2\\3&4\end{pmatrix}+\begin{pmatrix}\imaginaryunit&2\\3&4\end{pmatrix})^{'''}",
+     Transpose(_MatAdd(Matrix([[I, 2], [3, 4]]),
+                       Matrix([[I, 2], [3, 4]])))),
+    (r"(\begin{pmatrix}\imaginaryunit&2\\3&4\end{pmatrix}+\begin{pmatrix}\imaginaryunit&2\\3&4\end{pmatrix})'",
+     Transpose(_MatAdd(Matrix([[I, 2], [3, 4]]),
+                       Matrix([[I, 2], [3, 4]])))),
+    (r"(\begin{pmatrix}\imaginaryunit&2\\3&4\end{pmatrix}+\begin{pmatrix}\imaginaryunit&2\\3&4\end{pmatrix})''",
+     _MatAdd(Matrix([[I, 2], [3, 4]]),
+             Matrix([[I, 2], [3, 4]]))),
+    (r"(\begin{pmatrix}\imaginaryunit&2\\3&4\end{pmatrix}+\begin{pmatrix}\imaginaryunit&2\\3&4\end{pmatrix})'''",
+     Transpose(_MatAdd(Matrix([[I, 2], [3, 4]]),
+                       Matrix([[I, 2], [3, 4]])))),
+    (r"\det(\begin{pmatrix}\imaginaryunit&2\\3&4\end{pmatrix}+\begin{pmatrix}\imaginaryunit&2\\3&4\end{pmatrix})",
+     (_MatAdd(Matrix([[I, 2], [3, 4]]),
+              Matrix([[I, 2], [3, 4]]))).det()),
+    (r"\trace(\begin{pmatrix}\imaginaryunit&2\\3&4\end{pmatrix}+\begin{pmatrix}\imaginaryunit&2\\3&4\end{pmatrix})",
+     Trace(_MatAdd(Matrix([[I, 2], [3, 4]]),
+                   Matrix([[I, 2], [3, 4]])))),
+    (r"\adjugate(\begin{pmatrix}\imaginaryunit&2\\3&4\end{pmatrix}+\begin{pmatrix}\imaginaryunit&2\\3&4\end{pmatrix})",
+     (Matrix([[8, -4], [-6, 2*I]]))),
+    (r"(\begin{pmatrix}\imaginaryunit&2\\3&4\end{pmatrix}+\begin{pmatrix}\imaginaryunit&2\\3&4\end{pmatrix})^T",
+     Transpose(_MatAdd(Matrix([[I, 2], [3, 4]]),
+                       Matrix([[I, 2], [3, 4]])))),
+    (r"(\begin{pmatrix}\imaginaryunit&2\\3&4\end{pmatrix}+\begin{pmatrix}\imaginaryunit&2\\3&4\end{pmatrix})^H",
+     (Matrix([[-2*I, 6], [4, 8]])))
+]
+
+
+def test_symbol_expressions():
+    for latex_str, sympy_expr in SYMBOL_EXPRESSION_PAIRS:
+        with evaluate(False):
+            assert parse_latex_lark(latex_str) == sympy_expr, latex_str
+
+
+def test_primes_after_subscript():
+    for latex_str, sympy_expr in PRIMES_AFTER_SUBSCRIPT_PAIRS:
+        assert parse_latex_lark(latex_str) == sympy_expr, latex_str
+
+
+@XFAIL
+def test_primes_before_subscript():
+    for latex_str, sympy_expr in PRIMES_BEFORE_SUBSCRIPT_PAIRS:
+        assert parse_latex_lark(latex_str) == sympy_expr, latex_str
+
+
+def test_subscript_expressions():
+    for latex_str, sympy_expr in SUBSCRIPT_EXPRESSION_PAIRS:
+        assert parse_latex_lark(latex_str) == sympy_expr, latex_str
+
+
+@XFAIL
+def test_unsupported_subscript_expressions():
+    for latex_str, sympy_expr in UNSUPPORTED_SUBSCRIPT_EXPRESSION_PAIRS:
+        assert parse_latex_lark(latex_str) == sympy_expr, latex_str
+
+
+def test_simple_expressions():
+    for latex_str, sympy_expr in UNEVALUATED_SIMPLE_EXPRESSION_PAIRS:
+        with evaluate(False):
+            assert parse_latex_lark(latex_str) == sympy_expr, latex_str
+
+    for latex_str, sympy_expr in EVALUATED_SIMPLE_EXPRESSION_PAIRS:
+        assert parse_latex_lark(latex_str) == sympy_expr, latex_str
+
+
+def test_fraction_expressions():
+    for latex_str, sympy_expr in UNEVALUATED_FRACTION_EXPRESSION_PAIRS:
+        with evaluate(False):
+            assert parse_latex_lark(latex_str) == sympy_expr, latex_str
+
+    for latex_str, sympy_expr in EVALUATED_FRACTION_EXPRESSION_PAIRS:
+        assert parse_latex_lark(latex_str) == sympy_expr, latex_str
+
+
+def test_relation_expressions():
+    for latex_str, sympy_expr in RELATION_EXPRESSION_PAIRS:
+        with evaluate(False):
+            assert parse_latex_lark(latex_str) == sympy_expr, latex_str
+
+def test_power_expressions():
+    expected_failures = {3}
+    for i, (latex_str, sympy_expr) in enumerate(UNEVALUATED_POWER_EXPRESSION_PAIRS):
+        if i in expected_failures:
+            continue
+        with evaluate(False):
+            assert parse_latex_lark(latex_str) == sympy_expr, latex_str
+
+    for i, (latex_str, sympy_expr) in enumerate(EVALUATED_POWER_EXPRESSION_PAIRS):
+        if i in expected_failures:
+            continue
+        assert parse_latex_lark(latex_str) == sympy_expr, latex_str
+
+
+def test_superscript_implicit_multiplication():
+    for latex_str, sympy_expr in SUPERSCRIPT_IMPLICIT_MUL_PAIRS:
+        with evaluate(False):
+            assert parse_latex_lark(latex_str) == sympy_expr, latex_str
+
+
+def test_integral_expressions():
+    expected_failures = {14}
+    for i, (latex_str, sympy_expr) in enumerate(UNEVALUATED_INTEGRAL_EXPRESSION_PAIRS):
+        if i in expected_failures:
+            continue
+        with evaluate(False):
+            assert parse_latex_lark(latex_str) == sympy_expr, i
+
+    for i, (latex_str, sympy_expr) in enumerate(EVALUATED_INTEGRAL_EXPRESSION_PAIRS):
+        if i in expected_failures:
+            continue
+        assert parse_latex_lark(latex_str) == sympy_expr, latex_str
+
+
+def test_derivative_expressions():
+    expected_failures = {3, 4}
+    for i, (latex_str, sympy_expr) in enumerate(DERIVATIVE_EXPRESSION_PAIRS):
+        if i in expected_failures:
+            continue
+        with evaluate(False):
+            assert parse_latex_lark(latex_str) == sympy_expr, latex_str
+
+    for i, (latex_str, sympy_expr) in enumerate(DERIVATIVE_EXPRESSION_PAIRS):
+        if i in expected_failures:
+            continue
+        assert parse_latex_lark(latex_str) == sympy_expr, latex_str
+
+
+@XFAIL
+def test_ambiguous_trigonometric_expressions():
+    for latex_str, sympy_expr in AMBIGUOUS_TRIGONOMETRIC_EXPRESSION_PAIRS:
+        assert parse_latex_lark(latex_str) == sympy_expr, latex_str
+
+
+def test_trigonometric_expressions():
+    for latex_str, sympy_expr in TRIGONOMETRIC_EXPRESSION_PAIRS:
+        with evaluate(False):
+            assert parse_latex_lark(latex_str) == sympy_expr, latex_str
+
+
+def test_inverse_trigonometric_expressions():
+    for latex_str, sympy_expr in INVERSE_TRIGONOMETRIC_EXPRESSION_PAIRS:
+        with evaluate(False):
+            assert parse_latex_lark(latex_str) == sympy_expr, latex_str
+
+
+def test_hyperbolic_expressions():
+    for latex_str, sympy_expr in HYPERBOLIC_EXPRESSION_PAIRS:
+        with evaluate(False):
+            assert parse_latex_lark(latex_str) == sympy_expr, latex_str
+
+
+@XFAIL
+def test_unsupported_hyperbolic_expressions():
+    for latex_str, sympy_expr in UNSUPPORTED_HYPERBOLIC_EXPRESSION_PAIRS:
+        with evaluate(False):
+            assert parse_latex_lark(latex_str) == sympy_expr, latex_str
+
+
+def test_limit_expressions():
+    for latex_str, sympy_expr in UNEVALUATED_LIMIT_EXPRESSION_PAIRS:
+        with evaluate(False):
+            assert parse_latex_lark(latex_str) == sympy_expr, latex_str
+
+
+def test_square_root_expressions():
+    for latex_str, sympy_expr in UNEVALUATED_SQRT_EXPRESSION_PAIRS:
+        with evaluate(False):
+            assert parse_latex_lark(latex_str) == sympy_expr, latex_str
+
+    for latex_str, sympy_expr in EVALUATED_SQRT_EXPRESSION_PAIRS:
+        assert parse_latex_lark(latex_str) == sympy_expr, latex_str
+
+
+def test_factorial_expressions():
+    for latex_str, sympy_expr in UNEVALUATED_FACTORIAL_EXPRESSION_PAIRS:
+        with evaluate(False):
+            assert parse_latex_lark(latex_str) == sympy_expr, latex_str
+
+    for latex_str, sympy_expr in EVALUATED_FACTORIAL_EXPRESSION_PAIRS:
+        assert parse_latex_lark(latex_str) == sympy_expr, latex_str
+
+
+def test_sum_expressions():
+    for latex_str, sympy_expr in UNEVALUATED_SUM_EXPRESSION_PAIRS:
+        with evaluate(False):
+            assert parse_latex_lark(latex_str) == sympy_expr, latex_str
+
+    for latex_str, sympy_expr in EVALUATED_SUM_EXPRESSION_PAIRS:
+        assert parse_latex_lark(latex_str) == sympy_expr, latex_str
+
+
+@XFAIL
+def test_unsupported_sum_expressions():
+    for latex_str, sympy_expr in UNSUPPORTED_SUM_EXPRESSION_PAIRS:
+        assert parse_latex_lark(latex_str) == sympy_expr, latex_str
+
+
+def test_product_expressions():
+    for latex_str, sympy_expr in UNEVALUATED_PRODUCT_EXPRESSION_PAIRS:
+        with evaluate(False):
+            assert parse_latex_lark(latex_str) == sympy_expr, latex_str
+
+@XFAIL
+def test_applied_function_expressions():
+    expected_failures = {0, 3, 4}  # 0 is ambiguous, and the others require not-yet-added features
+    # not sure why 1, and 2 are failing
+    for i, (latex_str, sympy_expr) in enumerate(APPLIED_FUNCTION_EXPRESSION_PAIRS):
+        if i in expected_failures:
+            continue
+        with evaluate(False):
+            assert parse_latex_lark(latex_str) == sympy_expr, latex_str
+
+
+def test_common_function_expressions():
+    for latex_str, sympy_expr in UNEVALUATED_COMMON_FUNCTION_EXPRESSION_PAIRS:
+        with evaluate(False):
+            assert parse_latex_lark(latex_str) == sympy_expr, latex_str
+
+    for latex_str, sympy_expr in EVALUATED_COMMON_FUNCTION_EXPRESSION_PAIRS:
+        assert parse_latex_lark(latex_str) == sympy_expr, latex_str
+
+
+@XFAIL
+def test_unsupported_conjugate_expressions():
+    for latex_str, sympy_expr in UNSUPPORTED_CONJUGATE_EXPRESSION_PAIRS:
+        with evaluate(False):
+            assert parse_latex_lark(latex_str) == sympy_expr, latex_str
+
+
+def test_spacing():
+    for latex_str, sympy_expr in SPACING_RELATED_EXPRESSION_PAIRS:
+        with evaluate(False):
+            assert parse_latex_lark(latex_str) == sympy_expr, latex_str
+
+
+def test_negthinspace_not_equal_conflict():
+    assert parse_latex_lark(r"a \negthinspace b") == a * b
+    assert parse_latex_lark(r"x \negthinspace y") == x * y
+    assert parse_latex_lark(r"x \negthinspace + y") == x + y
+
+    assert parse_latex_lark(r"a \negmedspace b") == a * b
+    assert parse_latex_lark(r"x \negmedspace y") == x * y
+    assert parse_latex_lark(r"x \negmedspace + y") == x + y
+
+    assert parse_latex_lark(r"a \negthickspace b") == a * b
+    assert parse_latex_lark(r"x \negthickspace y") == x * y
+    assert parse_latex_lark(r"x \negthickspace + y") == x + y
+
+    assert parse_latex_lark(r"x \ne y") == Ne(x, y)
+    assert parse_latex_lark(r"x \neq y") == Ne(x, y)
+
+    assert parse_latex_lark(r"\negthinspace x \ne y") == Ne(x, y)
+    assert parse_latex_lark(r"x \neq \negmedspace y") == Ne(x, y)
+
+
+def test_function_arguments():
+    assert parse_latex_lark(r"\tanh x") == tanh(x)
+    assert parse_latex_lark(r"\tanh(x)") == tanh(x)
+    assert parse_latex_lark(r"\sinh{x}") == sinh(x)
+    assert parse_latex_lark(r"\cosh x + 1") == cosh(x) + 1
+    assert parse_latex_lark(r"\sin x - 1") == sin(x) - 1
+    assert parse_latex_lark(r"\log x + 1") == log(x) + 1
+    assert parse_latex_lark(r"\sin x \cdot y") == sin(x)*y
+    assert parse_latex_lark(r"\sin x / 2") == sin(x)/2
+    assert parse_latex_lark(r"\sin x \cos y \tan z") == sin(x)*cos(y)*tan(z)
+    assert parse_latex_lark(r"\sin 2x") == sin(2*x)
+    assert parse_latex_lark(r"\sin -x") == -sin(x)
+    assert set(parse_latex_lark_all(r"\sin xy")) == {sin(x*y), y*sin(x)}
+    assert set(parse_latex_lark_all(r"\tan hk")) == {tan(h*k), k*tan(h)}
+    assert parse_latex_lark(r"\tanh^2 x") == tanh(x)**2
+    assert parse_latex_lark(r"\sinh^{-1} x") == asinh(x)
+    assert parse_latex_lark(r"\arctanh x") == atanh(x)
+    assert parse_latex_lark(r"\coth x") == coth(x)
+
+    for latex_str in [r"\tanh", r"\tanh^2"]:
+        with raises(lark.exceptions.UnexpectedInput):
+            parse_latex_lark(latex_str)
+
+
+def test_a_function_applies_to_all_the_factors_or_to_the_first():
+    # the product binds either tighter than the function or not at all
+    assert set(parse_latex_lark_all(r"\sin xyz")) == {sin(x*y*z), y*z*sin(x)}
+    assert set(parse_latex_lark_all(r"\sin x y z")) == {sin(x*y*z), y*z*sin(x)}
+    assert set(parse_latex_lark_all(r"\sin xyza")) == {sin(a*x*y*z), a*y*z*sin(x)}
+    assert set(parse_latex_lark_all(r"\sin^2 xyz")) == {sin(x*y*z)**2, y*z*sin(x)**2}
+    assert set(parse_latex_lark_all(r"\sin xyz \cos t")) == {sin(x*y*z)*cos(t), y*z*sin(x)*cos(t)}
+    assert set(parse_latex_lark_all(r"\ln xy")) == {log(x*y), y*log(x)}
+    # a product starting with a number is the argument: 2*sin(x) would be written 2\sin x
+    assert parse_latex_lark(r"\sin 2xy") == sin(2*x*y)
+    assert parse_latex_lark(r"\ln 2x") == log(2*x)
+    # an argument in parentheses ends there
+    assert parse_latex_lark(r"\sin(x) y") == y*sin(x)
+    assert parse_latex_lark(r"\sin (x) (y+1)") == (y + 1)*sin(x)
+    assert parse_latex_lark(r"\ln\left(x\right) y") == y*log(x)
+
+
+def test_readings_giving_the_same_expression_are_one():
+    assert parse_latex_lark(r"2x \cdot y") == 2*x*y
+
+
+def test_parse_latex_lark_all():
+    assert parse_latex_lark_all(r"x + y") == [x + y]
+    assert parse_latex_lark_all(r"2x \cdot y") == [2*x*y]
+    assert parse_latex_lark_all(r"\sin xy") == [sin(x*y), y*sin(x)]
+    assert parse_latex_lark_all(r"f^{-1}(x)") == [Function("f^{-1}")(x), x/Symbol("f")]
+    g = Function("g")
+    assert parse_latex_lark_all(r"\ln x y", locals={r"\ln": g}) == [g(x*y), y*g(x)]
+
+
+def test_parse_latex_lark_all_chooses_the_same_way_for_the_same_ambiguity():
+    assert parse_latex_lark_all(r"\cos ab + \sin xy") == [cos(a*b) + sin(x*y), b*cos(a) + y*sin(x)]
+    assert parse_latex_lark_all(r"\cos ab + \sin xyz") == [cos(a*b) + sin(x*y*z), b*cos(a) + y*z*sin(x)]
+    assert parse_latex_lark_all(r"\sin xy \cos ab") == [sin(x*y)*cos(a*b), b*y*sin(x)*cos(a)]
+    assert parse_latex_lark_all(r"\ln xy + \sin^2 ab") == [log(x*y) + sin(a*b)**2, y*log(x) + b*sin(a)**2]
+    assert parse_latex_lark_all(r"\sin xy = \cos ab") == [Eq(sin(x*y), cos(a*b)), Eq(y*sin(x), b*cos(a))]
+    F, G = Function("f^{-1}"), Function("g^{-1}")
+    assert parse_latex_lark_all(r"f^{-1}(x) + g^{-1}(y)") == [F(x) + G(y), x/Symbol("f") + y/Symbol("g")]
+    # different ambiguities give all the combinations
+    assert set(parse_latex_lark_all(r"\sin xy + f^{-1}(x)")) == {
+        sin(x*y) + F(x), sin(x*y) + x/Symbol("f"), y*sin(x) + F(x), y*sin(x) + x/Symbol("f")}
+
+
+def test_implicit_multiplication_after_a_delimited_factor():
+    assert parse_latex_lark(r"{\sin x} y") == y*sin(x)
+    assert parse_latex_lark(r"\sqrt{2} x") == sqrt(2)*x
+    assert parse_latex_lark(r"|x| y") == y*Abs(x)
+    assert parse_latex_lark(r"x!y") == y*factorial(x)
+    assert parse_latex_lark(r"(a+b)\sin x") == (a + b)*sin(x)
+    assert parse_latex_lark(r"(a+b)x^2") == x**2*(a + b)
+    assert parse_latex_lark(r"x [y]") == x*y
+    assert parse_latex_lark(r"[x]") == x
+    assert parse_latex_lark(r"\{x\}") == x
+    assert parse_latex_lark(r"x^2_1 y") == Symbol("x_{1}")**2*y
+    assert parse_latex_lark(r"\infty x") == oo*x
+    product = parse_latex_lark(r"\begin{pmatrix}1&2\\3&4\end{pmatrix}\begin{pmatrix}1\\2\end{pmatrix}")
+    assert product.doit() == Matrix([[5], [11]])
+
+
+def test_differentials():
+    assert parse_latex_lark(r"b d e") == b*d*Symbol("e")
+    assert parse_latex_lark(r"\frac{dy}{dx}") == Derivative(y, x)
+    assert parse_latex_lark(r"\frac{d^2}{dx^2} x^3") == Derivative(x**3, (x, 2))
+    assert parse_latex_lark(r"\frac{d^2 y}{dx^2}") == Derivative(y, (x, 2))
+    assert parse_latex_lark(r"\frac{d^n}{dx^n} x^3") == Derivative(x**3, (x, n))
+    # d is the first factor of a derivative
+    assert parse_latex_lark(r"\frac{a d}{d x}") == a/x
+    assert parse_latex_lark(r"\frac{d y}{x d}") == y/x
+    assert parse_latex_lark(r"\frac{d^2 y}{dx^3}") == d*y/x**3
+    for latex_str in [r"\frac{d}{dx}", r"\frac{d}{dx} + 1", r"2 \frac{d}{dx}", r"\frac{d}{dx} = 1",
+                      r"\sin \frac{d}{dx}"]:
+        with raises(LaTeXParsingError):
+            parse_latex_lark(latex_str)
+
+
+def test_symbols_and_constants():
+    assert parse_latex_lark(r"x_{10}") == Symbol("x_{10}")
+    assert parse_latex_lark(r"x_{i,j}") == Symbol("x_{i,j}")
+    assert parse_latex_lark(r"a_{n+1}") == Symbol("a_{n+1}")
+    assert parse_latex_lark(r"x^2_1") == Symbol("x_{1}")**2
+    assert parse_latex_lark(r"\sigma \iota") == Symbol("sigma")*Symbol("iota")
+    assert parse_latex_lark(r"\Gamma") == Symbol("Gamma")
+    assert parse_latex_lark(r".5") == Float("0.5")
+    assert parse_latex_lark(r"x + .5") == x + Float("0.5")
+    for latex_str in [r"1.5.5", r"1..5"]:
+        with raises(lark.exceptions.UnexpectedCharacters):
+            parse_latex_lark(latex_str)
+
+
+def test_pi_and_e():
+    assert parse_latex_lark(r"\pi") == pi
+    assert parse_latex_lark(r"2\pi r") == 2*pi*Symbol("r")
+    assert parse_latex_lark(r"\sin \pi x") == sin(pi*x)
+    assert parse_latex_lark(r"\frac\pi2") == pi/2
+    assert parse_latex_lark(r"\sqrt\pi") == sqrt(pi)
+    assert parse_latex_lark(r"\pi_1") == Symbol("pi_{1}")
+    assert parse_latex_lark(r"\pi'") == Symbol("pi'")
+    assert parse_latex_lark(r"x_\pi") == Symbol("x_{pi}")
+    assert parse_latex_lark(r"\varpi") == Symbol("varpi")
+    assert parse_latex_lark(r"\mathrm{e}") == E
+    assert parse_latex_lark(r"\mathrm{e}^x") == exp(x)
+    assert parse_latex_lark(r"\mathrm{e} x") == E*x
+    assert parse_latex_lark(r"\sin \mathrm{e} x") == sin(E*x)
+
+
+def test_overrides():
+    p, e = Symbol("pi"), Symbol("e")
+    assert parse_latex_lark(r"2\pi r", locals={r"\pi": p}) == 2*p*Symbol("r")
+    assert parse_latex_lark(r"\mathrm{e}^{\pi}", locals={r"\mathrm{e}": e}) == e**pi
+    assert parse_latex_lark(r"\imaginaryunit x", locals={r"\imaginaryunit": Symbol("j")}) == Symbol("j")*x
+    g = Function("g")
+    assert parse_latex_lark(r"\sin x + \cos x", locals={r"\sin": g}) == g(x) + cos(x)
+    assert parse_latex_lark(r"\sin^2 x", locals={r"\sin": g}) == g(x)**2
+    assert set(parse_latex_lark_all(r"\ln x y", locals={r"\ln": g})) == {g(x*y), y*g(x)}
+    assert parse_latex_lark(r"\log_2 x", locals={r"\log": g}) == g(x, 2)
+    assert parse_latex_lark(r"\operatorname{erf}(x)", locals={r"\operatorname{erf}": g}) == g(x)
+    assert parse_latex_lark(r"\operatorname{sin}(x, y)", locals={r"\operatorname{sin}": g}) == g(x, y)
+    assert parse_latex_lark(r"\operatorname{sin} x + \sin x", locals={r"\operatorname{sin}": g}) == g(x) + sin(x)
+    assert parse_latex_lark(r"2\pi r") == 2*pi*Symbol("r")
+    with raises(ValueError):
+        parse_latex_lark(r"\sqrt{x}", locals={r"\sqrt": g})
+
+
+def test_operators_and_relations():
+    assert parse_latex_lark(r"a+-b") == a - b
+    assert parse_latex_lark(r"a - -b") == a + b
+    assert parse_latex_lark(r"a = b = c") == And(Eq(a, b), Eq(b, c))
+    assert parse_latex_lark(r"x < y \le z") == And(Lt(x, y), Le(y, z))
+    assert parse_latex_lark(r"x \in \mathbb{R}") == Contains(x, S.Reals)
+    assert parse_latex_lark(r"n \notin \mathbb{N}") == Not(Contains(n, S.Naturals))
+    with raises(LaTeXParsingError):
+        parse_latex_lark(r"x \in \mathbb{P}")
+
+
+def test_arguments_without_braces_and_powers_of_functions():
+    assert parse_latex_lark(r"\sqrt x") == sqrt(x)
+    assert parse_latex_lark(r"\sqrt2") == sqrt(2)
+    assert parse_latex_lark(r"\binom nk") == binomial(n, k)
+    assert parse_latex_lark(r"\ln^2 x") == log(x)**2
+    assert parse_latex_lark(r"\log^2 x") == log(x)**2
+    i = Symbol("i")
+    assert parse_latex_lark(r"\sum_{i=-1}^{1} i") == Sum(i, (i, -1, 1))
+    assert set(parse_latex_lark_all(r"f^{-1}(x)")) == {Function("f^{-1}")(x), x/Symbol("f")}
+
+
+def test_operatorname():
+    assert parse_latex_lark(r"\operatorname{sin} x") == sin(x)
+    assert parse_latex_lark(r"\operatorname{sin}^2 x") == sin(x)**2
+    assert parse_latex_lark(r"\operatorname{sin}^{-1} x") == asin(x)
+    assert parse_latex_lark(r"\operatorname{arcsinh} x") == asinh(x)
+    assert parse_latex_lark(r"\operatorname{exp}(x) y") == y*exp(x)
+    assert parse_latex_lark(r"\operatorname{ln} x") == log(x)
+    assert parse_latex_lark(r"\operatorname{lg} x") == log(x, 10)
+    assert parse_latex_lark(r"\operatorname{min}(a, b)") == Min(a, b)
+    assert parse_latex_lark(r"\operatorname{ max } x") == x
+    assert parse_latex_lark(r"\operatorname{sin} x \operatorname{cos} y") == sin(x)*cos(y)
+    assert parse_latex_lark(r"\operatorname{tr}\begin{pmatrix}1&2\\3&4\end{pmatrix}") == Trace(Matrix([[1, 2], [3, 4]]))
+    assert parse_latex_lark(r"2\operatorname{erf}(x) + 1") == 2*erf(x) + 1
+    assert parse_latex_lark(r"\operatorname{sinc} x") == sinc(x)
+    assert parse_latex_lark(r"\operatorname{sgn}(x)") == sign(x)
+    assert parse_latex_lark(r"\operatorname{Re}(z)") == re(z)
+    assert parse_latex_lark(r"\operatorname{abs}(x)") == Abs(x)
+    assert parse_latex_lark(r"\operatorname{gcd}(a, b)") == Function("gcd")(a, b)
+    assert parse_latex_lark(r"\operatorname{f}(x, y)") == Function("f")(x, y)
+    assert parse_latex_lark(r"\operatorname{f}^2(x)") == Function("f")(x)**2
+    assert set(parse_latex_lark_all(r"\operatorname{f} x y")) == {Function("f")(x*y), y*Function("f")(x)}
+    for latex_str in [r"\operatorname{det} A", r"\operatorname{sin}(x, y)"]:
+        with raises(LaTeXParsingError):
+            parse_latex_lark(latex_str)
+
+
+def test_unknown_commands():
+    for latex_str in [r"\logv", r"\logv x", r"\lnx", r"\sinx", r"\tanhx", r"\arctanhx", r"\expx", r"\intx dx",
+                      r"\alphabeta", r"\thetax", r"\lefta", r"x \leqx", r"\sin\foo", r"\foo", r"\foo x", r"\foo{x}"]:
+        with raises(LaTeXParsingError):
+            parse_latex_lark(latex_str)
+
+    assert parse_latex_lark(r"\log v") == log(v)
+    assert parse_latex_lark(r"\alpha\beta") == Symbol("alpha")*Symbol("beta")
+    assert parse_latex_lark(r"\begin{pmatrix}a\\b\end{pmatrix}") == Matrix([[a], [b]])
+
+
+def test_binomial_expressions():
+    for latex_str, sympy_expr in UNEVALUATED_BINOMIAL_EXPRESSION_PAIRS:
+        with evaluate(False):
+            assert parse_latex_lark(latex_str) == sympy_expr, latex_str
+
+    for latex_str, sympy_expr in EVALUATED_BINOMIAL_EXPRESSION_PAIRS:
+        assert parse_latex_lark(latex_str) == sympy_expr, latex_str
+
+
+def test_miscellaneous_expressions():
+    for latex_str, sympy_expr in MISCELLANEOUS_EXPRESSION_PAIRS:
+        with evaluate(False):
+            assert parse_latex_lark(latex_str) == sympy_expr, latex_str
+
+
+def test_square_bracket_multiplication():
+    for latex_str, sympy_expr in SQUARE_BRACKET_EXPRESSION_PAIRS:
+        with evaluate(False):
+            result = parse_latex_lark(latex_str)
+            assert result == sympy_expr, f"Failed for {latex_str}: got {result}, expected {sympy_expr}"
+
+    for latex_str, sympy_expr in EVALUATED_SQUARE_BRACKET_EXPRESSION_PAIRS:
+        result = parse_latex_lark(latex_str)
+        assert result == sympy_expr, f"Failed for {latex_str}: got {result}, expected {sympy_expr}"
+
+
+def test_literal_brace_multiplication():
+    for latex_str, sympy_expr in LITERAL_BRACE_EXPRESSION_PAIRS:
+        with evaluate(False):
+            result = parse_latex_lark(latex_str)
+            assert result == sympy_expr, f"Failed for {latex_str}"
+
+
+def test_mixed_bracket_brace_multiplication():
+    for latex_str, sympy_expr in MIXED_BRACKET_BRACE_EXPRESSION_PAIRS:
+        with evaluate(False):
+            result = parse_latex_lark(latex_str)
+            assert result == sympy_expr, \
+                f"Failed for {latex_str}: got {result}, expected {sympy_expr}"
+
+
+def test_literal_complex_number_expressions():
+    for latex_str, sympy_expr in UNEVALUATED_LITERAL_COMPLEX_NUMBER_EXPRESSION_PAIRS:
+        with evaluate(False):
+            assert parse_latex_lark(latex_str) == sympy_expr, latex_str
+
+
+def test_matrix_expressions():
+    for latex_str, sympy_expr in UNEVALUATED_MATRIX_EXPRESSION_PAIRS:
+        with evaluate(False):
+            assert parse_latex_lark(latex_str) == sympy_expr, latex_str
+
+    for latex_str, sympy_expr in EVALUATED_MATRIX_EXPRESSION_PAIRS:
+        assert parse_latex_lark(latex_str) == sympy_expr, latex_str
+
+def test_latex_cases_environment_error():
+    from sympy.parsing.latex import parse_latex, LaTeXParsingError
+    from sympy.testing.pytest import raises
+    latex_string = r"\begin{cases} x=1 \\ y=2 \end{cases}"
+    with raises(LaTeXParsingError, match="The 'cases' environment is not currently supported"):
+        parse_latex(latex_string)

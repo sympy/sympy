@@ -1,0 +1,407 @@
+<?xml version='1.0' encoding='ISO-8859-1'?>
+<?xml-stylesheet type="text/xsl"
+	href="http://docbook.sourceforge.net/release/xsl/current/manpages/docbook.xsl"?>
+<!DOCTYPE refentry PUBLIC "-//OASIS//DTD DocBook XML V4.4//EN"
+	"http://www.oasis-open.org/docbook/xml/4.4/docbookx.dtd" [
+
+<!-- Process this file docbook2x-man:
+
+docbook2x-man isympy.xml
+
+this will generate isympy.1 in the current directory. -->
+
+  <!-- Fill in your name for FIRSTNAME and SURNAME.              -->
+  <!ENTITY dhfirstname "Fabian">
+  <!ENTITY dhsurname   "Seoane">
+  <!ENTITY dhemail     "fabian@fseoane.net">
+  <!-- dhusername could also be set to "&firstname; &surname;".  -->
+  <!ENTITY dhusername  "&dhfirstname; &dhsurname;">
+
+  <!-- Please adjust the date whenever revising the manpage.     -->
+  <!ENTITY dhdate      "2007-10-8">
+  <!ENTITY dhrelease   "unused">
+
+  <!-- TITLE should be something like "User commands",           -->
+  <!-- "&dhpackage; command-line reference" or similar (see e.g. -->
+  <!-- https://www.tldp.org/HOWTO/Man-Page/q2.html). But limit    -->
+  <!-- the length to 30 chars.                                   -->
+  <!ENTITY dhtitle     "&dhpackage; command-line reference">
+
+  <!ENTITY dhucpackage "isympy">
+  <!ENTITY dhpackage   "isympy">
+
+  <!-- If the application e.g. belongs to a package like X.org,  -->
+  <!-- this should be set to the its name instead.               -->
+  <!ENTITY dhproduct   "python-sympy">
+
+  <!-- SECTION should be 1-8, maybe w/ subsection other          -->
+  <!-- parameters are allowed: see man(7), man(1) and            -->
+  <!-- https://www.tldp.org/HOWTO/Man-Page/q2.html.               -->
+  <!ENTITY dhsection   "1">
+
+]>
+
+<refentry>
+	<refentryinfo>
+		<title>&dhtitle;</title>
+		<productname>&dhpackage;</productname>
+		<releaseinfo role="version">&dhrelease;</releaseinfo>
+		<date>&dhdate;</date>
+		<authorgroup>
+			<author>
+				<firstname>Ondrej</firstname>
+				<surname>Certik</surname>
+				<contrib>Design, programming.</contrib>
+				<address>
+					<email>ondrej@certik.cz</email>
+				</address>
+			</author>
+			<author>
+				<firstname>&dhfirstname;</firstname>
+				<surname>&dhsurname;</surname>
+				<contrib>Programming.</contrib>
+				<address>
+					<email>&dhemail;</email>
+				</address>
+			</author>
+		</authorgroup>
+		<copyright>
+			<year>2013</year>
+			<holder>SymPy Development Team</holder>
+		</copyright>
+		<legalnotice>
+			<para>Redistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met:</para>
+			<orderedlist>
+				<listitem>
+					<para>Redistributions of source code must retain the above copyright notice, this list of conditions and the following disclaimer.</para>
+				</listitem>
+				<listitem>
+					<para>Redistributions in binary form must reproduce the above copyright notice, this list of conditions and the following disclaimer in the documentation and/or other materials provided with the distribution.</para>
+				</listitem>
+			</orderedlist>
+			<para>THIS SOFTWARE IS PROVIDED BY THE AUTHOR &quot;AS IS&quot; AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.</para>
+		</legalnotice>
+	</refentryinfo>
+	<refmeta>
+		<refentrytitle>&dhucpackage;</refentrytitle>
+		<manvolnum>&dhsection;</manvolnum>
+	</refmeta>
+	<refnamediv>
+		<refname>&dhpackage;</refname>
+		<refpurpose>interactive shell for SymPy</refpurpose>
+	</refnamediv>
+	<refsynopsisdiv>
+		<cmdsynopsis>
+			<command>&dhpackage;</command>
+			<group choice="opt">
+				<arg choice="plain"><option>-c</option></arg>
+				<arg choice="plain"><option>--console</option></arg>
+			</group>
+   			<group choice="opt">
+				<arg choice="plain"><option>-p</option> <emphasis>ENCODING</emphasis></arg>
+				<arg choice="plain"><option>--pretty</option> <emphasis>ENCODING</emphasis></arg>
+			</group>
+			<group choice="opt">
+				<arg choice="plain"><option>-t</option> <emphasis>TYPE</emphasis></arg>
+				<arg choice="plain"><option>--types</option> <emphasis>TYPE</emphasis></arg>
+			</group>
+			<group choice="opt">
+				<arg choice="plain"><option>-o</option> <emphasis>ORDER</emphasis></arg>
+				<arg choice="plain"><option>--order</option> <emphasis>ORDER</emphasis></arg>
+			</group>
+			<group choice="opt">
+				<arg choice="plain"><option>-q</option></arg>
+				<arg choice="plain"><option>--quiet</option></arg>
+			</group>
+			<group choice="opt">
+				<arg choice="plain"><option>-d</option></arg>
+				<arg choice="plain"><option>--doctest</option></arg>
+			</group>
+			<group choice="opt">
+				<arg choice="plain"><option>-C</option></arg>
+				<arg choice="plain"><option>--no-cache</option></arg>
+			</group>
+			<group choice="opt">
+				<arg choice="plain"><option>-a</option></arg>
+				<arg choice="plain"><option>--auto</option></arg>
+			</group>
+			<group choice="opt">
+				<arg choice="plain"><option>-D</option></arg>
+				<arg choice="plain"><option>--debug</option></arg>
+			</group>
+            <group choice="opt">
+                -- <emphasis>PYTHONOPTIONS</emphasis>
+            </group>
+
+		</cmdsynopsis>
+		<cmdsynopsis>
+			<command>&dhpackage;</command>
+      <!-- Normally the help and version options make the programs stop
+			     right after outputting the requested information. -->
+			<group choice="opt">
+				<arg choice="plain">
+					<group choice="req">
+						<arg choice="plain"><option>-h</option></arg>
+						<arg choice="plain"><option>--help</option></arg>
+					</group>
+				</arg>
+				<arg choice="plain">
+					<group choice="req">
+						<arg choice="plain"><option>-v</option></arg>
+						<arg choice="plain"><option>--version</option></arg>
+					</group>
+				</arg>
+			</group>
+		</cmdsynopsis>
+	</refsynopsisdiv>
+	<refsect1 id="description">
+		<title>DESCRIPTION</title>
+    <para>isympy is a Python shell for SymPy. It is just a normal python shell
+        (ipython shell if you have the ipython package installed) that executes
+        the following commands so that you don't have to:
+    </para>
+
+    <programlisting>
+>>> from __future__ import division
+>>> from sympy import *
+>>> x, y, z = symbols("x,y,z")
+>>> k, m, n = symbols("k,m,n", integer=True)
+    </programlisting>
+
+    <para>So starting isympy is equivalent to starting python (or ipython) and
+    executing the above commands by hand. It is intended for easy and quick
+    experimentation with SymPy. For more complicated programs, it is recommended
+    to write a script and import things explicitly (using the "from sympy
+        import sin, log, Symbol, ..." idiom).</para>
+
+	</refsect1>
+	<refsect1 id="options">
+		<title>OPTIONS</title>
+		<variablelist>
+			<!-- Use the variablelist.term.separator and the
+			     variablelist.term.break.after parameters to
+			     control the term elements. -->
+			<varlistentry>
+				<term><option>-c <replaceable class="parameter">SHELL</replaceable></option></term>
+				<term><option>--console=<replaceable class="parameter">SHELL</replaceable></option></term>
+				<listitem>
+					<para>Use the specified shell (python or ipython) as
+                        console backend instead of the default one (ipython
+                        if present or python otherwise).</para>
+					<para>Example: isympy -c python</para>
+                    <para><replaceable class="parameter">SHELL</replaceable> could be either
+                          'ipython' or 'python'</para>
+				</listitem>
+			</varlistentry>
+            <varlistentry>
+				<term><option>-p <replaceable class="parameter">ENCODING</replaceable></option></term>
+				<term><option>--pretty=<replaceable class="parameter">ENCODING</replaceable></option></term>
+				<listitem>
+					<para>Setup pretty printing in SymPy. By default, the most pretty, unicode
+                        printing is enabled (if the terminal supports it). You can use less
+                        pretty ASCII printing instead or no pretty printing at all.</para>
+					<para>Example: isympy -p no</para>
+                    <para><replaceable class="parameter">ENCODING</replaceable> must be one of 'unicode',
+                    'ascii' or 'no'.</para>
+				</listitem>
+            </varlistentry>
+            <varlistentry>
+				<term><option>-t <replaceable class="parameter">TYPE</replaceable></option></term>
+				<term><option>--types=<replaceable class="parameter">TYPE</replaceable></option></term>
+				<listitem>
+					<para>Setup the ground types for the polys.  By default, gmpy ground types
+                    are used if gmpy2 or gmpy is installed, otherwise it falls back to python
+                    ground types, which are a little bit slower.  You can manually
+                    choose python ground types even if gmpy is installed (e.g., for testing purposes).</para>
+
+                    <para>Note that sympy ground types are not supported, and should be used
+                    only for experimental purposes.</para>
+
+                    <para>Note that the gmpy1 ground type is primarily intended for testing; it the
+                    use of gmpy even if gmpy2 is available.</para>
+
+                    <para>This is the same as setting the environment variable
+                    SYMPY_GROUND_TYPES to the given ground type (e.g.,
+                    SYMPY_GROUND_TYPES='gmpy')</para>
+
+                    <para>The ground types can be determined interactively from the variable
+                    sympy.polys.domains.GROUND_TYPES inside the isympy shell itself.</para>
+
+					<para>Example: isympy -t python</para>
+
+                    <para><replaceable class="parameter">TYPE</replaceable> must be one of 'gmpy',
+                    'gmpy1' or 'python'.</para>
+				</listitem>
+            </varlistentry>
+            <varlistentry>
+				<term><option>-o <replaceable class="parameter">ORDER</replaceable></option></term>
+				<term><option>--order=<replaceable class="parameter">ORDER</replaceable></option></term>
+				<listitem>
+					<para>Setup the ordering of terms for printing.  The default is lex, which
+                    orders terms lexicographically (e.g., x**2 + x + 1). You can choose
+                    other orderings, such as rev-lex, which will use reverse
+                    lexicographic ordering (e.g., 1 + x + x**2).</para>
+
+                    <para>Note that for very large expressions, ORDER='none' may speed up
+                    printing considerably, with the tradeoff that the order of the terms
+                    in the printed expression will have no canonical order</para>
+
+					<para>Example: isympy -o rev-lax</para>
+
+                    <para><replaceable class="parameter">ORDER</replaceable> must be one of 'lex', 'rev-lex', 'grlex',
+                    'rev-grlex', 'grevlex', 'rev-grevlex', 'old', or 'none'.</para>
+				</listitem>
+            </varlistentry>
+            <varlistentry>
+				<term><option>-q</option></term>
+				<term><option>--quiet</option></term>
+				<listitem>
+                    <para>
+                        Print only Python's and SymPy's versions to stdout at startup, and nothing else.
+                    </para>
+                </listitem>
+            </varlistentry>
+            <varlistentry>
+				<term><option>-d</option></term>
+				<term><option>--doctest</option></term>
+				<listitem>
+                    <para>
+                        Use the same format that should be used for doctests.  This is
+                        equivalent to '<emphasis>isympy -c python -p no</emphasis>'.
+                    </para>
+                </listitem>
+            </varlistentry>
+            <varlistentry>
+				<term><option>-C</option></term>
+				<term><option>--no-cache</option></term>
+				<listitem>
+                    <para>
+                        Disable the caching mechanism.  Disabling the cache may slow certain
+                        operations down considerably.  This is useful for testing the cache,
+                        or for benchmarking, as the cache can result in deceptive benchmark timings.
+                    </para>
+
+                    <para>
+                        This is the same as setting the environment variable SYMPY_USE_CACHE
+                        to 'no'.
+                    </para>
+                </listitem>
+            </varlistentry>
+            <varlistentry>
+				<term><option>-a</option></term>
+				<term><option>--auto</option></term>
+				<listitem>
+                    <para>
+                        Automatically create missing symbols.  Normally, typing a name of a
+                        Symbol that has not been instantiated first would raise NameError,
+                        but with this option enabled, any undefined name will be
+                        automatically created as a Symbol.  This only works in IPython 0.11.
+                    </para>
+                    <para>
+                        Note that this is intended only for interactive, calculator style
+                        usage. In a script that uses SymPy, Symbols should be instantiated
+                        at the top, so that it's clear what they are.
+                    </para>
+                    <para>
+                        This will not override any names that are already defined, which
+                        includes the single character letters represented by the mnemonic
+                        QCOSINE (see the "Gotchas and Pitfalls" document in the
+                        documentation). You can delete existing names by executing "del
+                        name" in the shell itself. You can see if a name is defined by typing
+                        "'name' in globals()".
+                    </para>
+                    <para>
+                        The Symbols that are created using this have default assumptions.
+                        If you want to place assumptions on symbols, you should create them
+                        using symbols() or var().
+                    </para>
+                    <para>
+                        Finally, this only works in the top level namespace. So, for
+                        example, if you define a function in isympy with an undefined
+                        Symbol, it will not work.
+                    </para>
+                </listitem>
+            </varlistentry>
+            <varlistentry>
+				<term><option>-D</option></term>
+				<term><option>--debug</option></term>
+				<listitem>
+                    <para>
+                        Enable debugging output.  This is the same as setting the
+                        environment variable SYMPY_DEBUG to 'True'.  The debug status is set
+                        in the variable SYMPY_DEBUG within isympy.
+                    </para>
+                </listitem>
+            </varlistentry>
+            <varlistentry>
+				<term>-- <replaceable class="parameter">PYTHONOPTIONS</replaceable></term>
+				<listitem>
+                    <para>
+                        These options will be passed on to <emphasis>ipython (1)</emphasis> shell.
+                         Only supported when ipython is being used (standard python shell not supported).
+                    </para>
+                    <para>
+                        Two dashes (--) are required to separate <emphasis>PYTHONOPTIONS</emphasis>
+                        from the other isympy options.
+                    </para>
+                    <para>
+                        For example, to run iSymPy without startup banner and colors:
+                    </para>
+                    <para>
+                        isympy -q -c ipython -- --colors=NoColor
+                    </para>
+                </listitem>
+            </varlistentry>
+            <varlistentry>
+				<term><option>-h</option></term>
+				<term><option>--help</option></term>
+				<listitem>
+                    <para>
+                        Print help output and exit.
+                    </para>
+                </listitem>
+            </varlistentry>
+            <varlistentry>
+				<term><option>-v</option></term>
+				<term><option>--version</option></term>
+				<listitem>
+                    <para>
+                        Print isympy version information and exit.
+                    </para>
+                </listitem>
+            </varlistentry>
+		</variablelist>
+	</refsect1>
+	<refsect1 id="files">
+		<title>FILES</title>
+		<variablelist>
+			<varlistentry>
+				<term><filename>${HOME}/.sympy-history</filename></term>
+				<listitem>
+					<para>Saves the history of commands when using the python
+                        shell as backend.</para>
+				</listitem>
+			</varlistentry>
+		</variablelist>
+	</refsect1>
+
+	<refsect1 id="bugs">
+		<!-- Or use this section to tell about upstream BTS. -->
+		<title>BUGS</title>
+		<para>The upstreams <acronym>BTS</acronym> can be found at <ulink
+                url="https://github.com/sympy/sympy/issues">https://github.com/sympy/sympy/issues</ulink>
+        Please report all bugs that you find in there, this will help improve
+        the overall quality of SymPy.</para>
+	</refsect1>
+	<refsect1 id="see_also">
+		<title>SEE ALSO</title>
+		<!-- In alphabetical order. -->
+		<para><citerefentry>
+				<refentrytitle>ipython</refentrytitle>
+				<manvolnum>1</manvolnum>
+			</citerefentry>, <citerefentry>
+				<refentrytitle>python</refentrytitle>
+				<manvolnum>1</manvolnum>
+			</citerefentry></para>
+	</refsect1>
+</refentry>

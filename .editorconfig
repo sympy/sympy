@@ -1,0 +1,32 @@
+root = true
+
+[*]
+end_of_line = lf
+insert_final_newline = true
+trim_trailing_whitespace = true
+charset = utf-8
+
+# Python files
+[*.py]
+indent_style = space
+indent_size = 4
+# isort plugin configuration
+known_first_party = sympy
+multi_line_output = 4
+default_section = THIRDPARTY
+skip = .eggs
+
+# RST files (used by sphinx)
+[*.rst]
+indent_style = space
+indent_size = 3
+
+# JSON, YML
+[*.{json,yml}]
+indent_style = space
+indent_size = 2
+
+# Tab indentation (no size specified)
+[Makefile]
+indent_type = tab
+indent_size = 8

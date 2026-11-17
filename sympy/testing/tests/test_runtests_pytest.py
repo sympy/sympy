@@ -1,0 +1,255 @@
+from __future__ import annotations
+import os
+import pathlib
+from pathlib import Path
+import pytest
+
+from sympy.testing.runtests_pytest import (
+    make_absolute_path,
+    sympy_dir,
+    update_args_with_paths,
+)
+
+
+class TestMakeAbsolutePath:
+
+    @staticmethod
+    @pytest.mark.parametrize(
+        'partial_path', ['sympy', 'sympy/core', r'sympy\core',
+                         'sympy/nonexistant_directory'],
+    )
+    def test_valid_partial_path(partial_path: str):
+        """Paths that start with `sympy` are valid."""
+        _ = make_absolute_path(partial_path)
+
+    @staticmethod
+    def test_backslash_absolute_path():
+        assert make_absolute_path(r'sympy\core') == str(Path(sympy_dir(), 'sympy/core'))
+
+    @staticmethod
+    @pytest.mark.parametrize(
+        'partial_path', ['not_sympy', 'also/not/sympy'],
+    )
+    def test_invalid_partial_path_raises_value_error(partial_path: str):
+        """A `ValueError` is raises on paths that don't start with `sympy`."""
+        with pytest.raises(ValueError):
+            _ = make_absolute_path(partial_path)
+
+
+@pytest.mark.skipif(
+    not Path(sympy_dir(), '.git').exists(),
+    reason='Path resolution tests require a Git checkout',
+)
+class TestUpdateArgsWithPaths:
+
+    @staticmethod
+    def test_no_paths():
+        """If no paths are passed, only `sympy` and `doc/src` are appended.
+
+        `sympy` and `doc/src` are the `testpaths` stated in `pytest.ini`. They
+        need to be manually added as if any path-related arguments are passed
+        to `pytest.main` then the settings in `pytest.ini` may be ignored.
+
+        """
+        paths = []
+        args = update_args_with_paths(paths=paths, keywords=None, args=[])
+        expected = [
+            str(pathlib.Path(sympy_dir(), 'sympy')),
+            str(pathlib.Path(sympy_dir(), 'doc/src')),
+        ]
+        assert args == expected
+
+    @staticmethod
+    @pytest.mark.parametrize(
+        'path',
+        ['sympy/core/tests/test_basic.py', '_basic',
+         r'sympy\core\tests\test_basic.py',
+         r'sympy/core\tests/test_basic.py']
+    )
+    def test_one_file(path: str):
+        """Single files/paths, full or partial, are matched correctly."""
+        args = update_args_with_paths(paths=[path], keywords=None, args=[])
+        expected = [
+            str(pathlib.Path(sympy_dir(), 'sympy/core/tests/test_basic.py')),
+        ]
+        assert args == expected
+
+    @staticmethod
+    def test_partial_path_from_root():
+        """Partial paths from the root directly are matched correctly."""
+        args = update_args_with_paths(paths=['sympy/functions'], keywords=None, args=[])
+        expected = [str(pathlib.Path(sympy_dir(), 'sympy/functions'))]
+        assert args == expected
+
+    @staticmethod
+    def test_multiple_paths_from_root():
+        """Multiple paths, partial or full, are matched correctly."""
+        paths = ['sympy/core/tests/test_basic.py', 'sympy/functions']
+        args = update_args_with_paths(paths=paths, keywords=None, args=[])
+        expected = [
+            str(pathlib.Path(sympy_dir(), 'sympy/core/tests/test_basic.py')),
+            str(pathlib.Path(sympy_dir(), 'sympy/functions')),
+        ]
+        assert args == expected
+
+    @staticmethod
+    @pytest.mark.parametrize(
+        'path', ['sympy/core', r'sympy\core', r'sympy/core\tests']
+    )
+    def test_path_separators(path: str):
+        args = update_args_with_paths(paths=[path], keywords=None, args=[])
+        expected = 'sympy/core/tests' if path.endswith('tests') else 'sympy/core'
+        assert args == [str(Path(sympy_dir(), expected))]
+
+    @staticmethod
+    @pytest.mark.parametrize('path', ['/core', r'\core'])
+    def test_partial_path_separators(path: str):
+        args = update_args_with_paths(paths=[path], keywords=None, args=[])
+        assert str(Path(sympy_dir(), 'sympy/core')) in args
+
+    @staticmethod
+    def test_nonexistent_path_raises_error():
+        with pytest.raises(FileNotFoundError, match='doesnotexist'):
+            update_args_with_paths(paths=['doesnotexist'], keywords=None, args=[])
+
+    @staticmethod
+    def test_missing_path_with_other_valid_paths_raises_error():
+        paths = ['sympy/core/tests/test_basic.py', 'doesnotexist']
+        with pytest.raises(FileNotFoundError, match='doesnotexist'):
+            update_args_with_paths(paths=paths, keywords=None, args=[])
+
+    @staticmethod
+    def test_multiple_nested_paths_do_not_raise_error():
+        # Ensure that directory pruning on sympy/core does not cause the second
+        # pattern to fail
+        paths = ['/core', 'test_sympify.py']
+        args = update_args_with_paths(paths=paths, keywords=None, args=[])
+        expected_paths = ['sympy/core', 'sympy/core/tests/test_sympify.py']
+        for expected in expected_paths:
+            assert any(expected in Path(arg).as_posix() for arg in args)
+
+    @staticmethod
+    @pytest.mark.parametrize(
+        'paths, expected_paths',
+        [
+            (
+                ['/core', '/util'],
+                [
+                    'doc/src/modules/utilities',
+                    'doc/src/reference/public/utilities',
+                    'sympy/core',
+                    'sympy/logic/utilities',
+                    'sympy/utilities',
+                ]
+            ),
+        ]
+    )
+    def test_multiple_paths_from_non_root(paths: list[str], expected_paths: list[str]):
+        """Multiple partial paths are matched correctly."""
+        args = update_args_with_paths(paths=paths, keywords=None, args=[])
+        assert len(args) == len(expected_paths)
+        for arg, expected in zip(sorted(args), expected_paths):
+            assert Path(expected).as_posix() in Path(arg).as_posix()
+
+    @staticmethod
+    @pytest.mark.parametrize(
+        'paths',
+        [
+
+            [],
+            ['sympy/physics'],
+            ['sympy/physics/mechanics'],
+            ['sympy/physics/mechanics/tests'],
+            ['sympy/physics/mechanics/tests/test_kane3.py'],
+        ]
+    )
+    def test_string_as_keyword(paths: list[str]):
+        """String keywords are matched correctly."""
+        keywords = ('bicycle', )
+        args = update_args_with_paths(paths=paths, keywords=keywords, args=[])
+        expected_args = ['sympy/physics/mechanics/tests/test_kane3.py::test_bicycle']
+        assert len(args) == len(expected_args)
+        for arg, expected in zip(sorted(args), expected_args):
+            assert Path(expected).as_posix() in Path(arg).as_posix()
+
+    @staticmethod
+    @pytest.mark.parametrize(
+        'paths',
+        [
+
+            [],
+            ['sympy/core'],
+            ['sympy/core/tests'],
+            ['sympy/core/tests/test_sympify.py'],
+        ]
+    )
+    def test_integer_as_keyword(paths: list[str]):
+        """Integer keywords are matched correctly."""
+        keywords = ('3538', )
+        args = update_args_with_paths(paths=paths, keywords=keywords, args=[])
+        expected_args = ['sympy/core/tests/test_sympify.py::test_issue_3538']
+        assert len(args) == len(expected_args)
+        for arg, expected in zip(sorted(args), expected_args):
+            assert Path(expected).as_posix() in Path(arg).as_posix()
+
+    @staticmethod
+    def test_multiple_keywords():
+        """Multiple keywords are matched correctly."""
+        keywords = ('bicycle', '3538')
+        args = update_args_with_paths(paths=[], keywords=keywords, args=[])
+        expected_args = [
+            'sympy/core/tests/test_sympify.py::test_issue_3538',
+            'sympy/physics/mechanics/tests/test_kane3.py::test_bicycle',
+        ]
+        assert len(args) == len(expected_args)
+        for arg, expected in zip(sorted(args), expected_args):
+            assert Path(expected).as_posix() in Path(arg).as_posix()
+
+    @staticmethod
+    def test_keyword_match_in_multiple_files():
+        """Keywords are matched across multiple files."""
+        keywords = ('1130', )
+        args = update_args_with_paths(paths=[], keywords=keywords, args=[])
+        expected_args = [
+            'sympy/integrals/tests/test_heurisch.py::test_heurisch_symbolic_coeffs_1130',
+            'sympy/utilities/tests/test_lambdify.py::test_python_div_zero_issue_11306',
+        ]
+        assert len(args) == len(expected_args)
+        for arg, expected in zip(sorted(args), expected_args):
+            assert Path(expected).as_posix() in Path(arg).as_posix()
+
+
+    @staticmethod
+    def test_keyword_matches_only_module_level_tests(tmp_path):
+        testfile = tmp_path / 'test_selection.py'
+        testfile.write_text(
+            'def testfalse(): pass\n'
+            'def test_valid(): pass\n'
+            'def outer():\n'
+            '    def test_false(): pass\n'
+            'def test_other(): pass\n',
+            encoding='utf-8',
+        )
+
+        args = update_args_with_paths(
+            paths=[str(testfile)],
+            keywords=('test',),
+            args=[],
+        )
+
+        assert [os.path.normcase(a) for a in args] == [
+            os.path.normcase(f'{testfile}::test_valid'),
+            os.path.normcase(f'{testfile}::test_other'),
+        ]
+
+        assert [] == update_args_with_paths(
+            paths=[str(testfile)],
+            keywords=('nonexistent',),
+            args=[],
+        )
+
+    @staticmethod
+    def test_windows_device_name():
+        # CON is a Windows device name, not a directory.
+        args = update_args_with_paths(['con'], None, [])
+        assert str(Path(sympy_dir(), 'sympy/concrete')) in args

@@ -1,0 +1,646 @@
+.. _solveset:
+
+Solveset
+========
+
+.. module:: sympy.solvers.solveset
+
+This is the official documentation of the ``solveset`` module in solvers.
+
+.. note::
+
+   For a beginner-friendly guide focused on solving common types of equations,
+   refer to :ref:`solving-guide`.
+
+How solveset() is different from solve()
+----------------------------------------
+
+SymPy already has a pretty powerful ``solve`` function. But it has different
+goals. For example:
+
+* It has a generalized output interface to handle various types of solutions.
+  It needs to return many types of solutions consistently. It can deal with
+  univariate as well as multivariate equations as well as other kinds
+  of variability due to the system of equations and options passed into it,
+  producing associated outputs. See :ref:`solve_output` for more details.
+
+* The input API has a lot of parameters. It is a facade around
+  more specialized solvers. *This feature of* ``solve`` *could be viewed as analogous
+  to how* ``simplify`` *is a facade around more specialized simplification functions.*
+
+  See :func:`~sympy.solvers.solvers.solve` for more details about the available parameters
+  and output options.
+
+* There are cases where ``solve`` returns an empty list.
+
+  This might mean that there are no solutions or no solution could be found
+  given its currently supported features. In other cases, there is no way
+  (given the output interface of ``solve``) to communicate whether or not:
+
+  * all possible solutions to the system were found
+  * or that there are provably no solutions
+  * or that the real set of solutions are finite or infinite
+  * etc.
+
+* ``solve`` may return a few solutions when more solutions (potentially
+  infinitely many) also exist.
+
+  It is to some extent inherent to the API of ``solve`` that it does not
+  have a way to represent these different cases distinctly.
+
+Whereas ``solveset`` returns a ``Set`` representing all of the solutions
+of a univariate equation.
+
+
+.. _why-solveset:
+
+Why Solveset?
+-------------
+
+``solveset`` has a consistent input and output interface:
+
+* ``solveset`` returns a ``Set`` object in a way that takes care of all types of output.
+
+  For cases where it does not "know" all of the solutions a ``ConditionSet``
+  with a partial solution is returned.
+
+  For input it only takes the equation, the variables to solve for and the optional
+  argument ``domain`` over which the equation is to be solved.
+
+  See :ref:`solveset-input-api` for more details about the available
+  parameters and :ref:`why-set-output` below for more about ``Set`` output.
+
+* ``solveset`` can return infinitely many solutions. For example solving for
+  `\sin{(x)} = 0` returns `\{2 n \pi | n \in \mathbb{Z}\} \cup \{2 n \pi + \pi | n \in \mathbb{Z}\}`,
+  whereas ``solve`` only returns `[0, \pi]`.
+
+* ``solveset`` has a clear code level and interface level separation between solvers
+  for equations in the complex and real domains.
+
+  For example solving `e^x = 1` when `x` is to be solved in the complex domain, returns
+  the set of all solutions, that is `\{2 n i \pi | n \in \mathbb{Z}\}`, whereas
+  if `x` is to be solved in the real domain then only `\{0\}` is returned.
+
+* As mentioned above, ``solveset`` will return a ``ConditionSet`` where not all
+  parts of an equation can be solved. Consider this example.
+
+  ``expr = (x**2 - 1) * (x**5 + y*x + 1)`` where ``x`` and ``y`` are defined as being
+  in `\mathbb{C}`.
+
+  ``solve(expr, [x], dict=True)`` gives us the solutions it can find. However it gives
+  us no indication that there may be more solutions that it did not return.
+
+  ``[{x: -1},{x: 1}]``
+
+  However, with ``solveset(expr, x)`` the partial solution becomes clear. The quadratic factor
+  was solved, but the quintic factor is not solvable and so a ``ConditionSet`` is returned.
+
+  `\displaystyle \left\{-1, 1\right\} \cup \left\{x\; \middle|\; x \in \mathbb{C} \wedge x^{5} + x y + 1 = 0 \right\}`
+
+
+.. _why-set-output:
+
+Why do we use Sets as an output type?
+-------------------------------------
+
+SymPy has a well developed sets module, which can represent most of the set
+containers in mathematics such as:
+
+ * :class:`~.FiniteSet`
+
+   Represents a finite set of discrete numbers.
+
+
+ * :class:`~.Interval`
+
+   Represents a real interval as a set.
+
+
+ * :class:`~.ProductSet`
+
+   Represents a Cartesian product of sets.
+
+
+ * :class:`~.ImageSet`
+
+   Represents the image of a set under a mathematical function
+
+    >>> from sympy import ImageSet, S, Lambda
+    >>> from sympy.abc import x
+    >>> squares = ImageSet(Lambda(x, x**2), S.Naturals)  # {x**2 for x in N}
+    >>> 4 in squares
+    True
+
+ * :class:`~.ComplexRegion`
+
+   Represents the set of all complex numbers in a region in the Argand plane.
+
+
+ * :class:`~.ConditionSet`
+
+   Represents the set of elements, which satisfies a given condition.
+
+
+Also, the predefined set classes such as:
+
+ * :class:`~.Naturals`, $\mathbb{N}$
+
+   Represents the natural numbers (or counting numbers), which are all
+   positive integers starting from 1.
+
+
+ * :class:`~.Naturals0`, $\mathbb{N_0}$
+
+   Represents the whole numbers, which are all the non-negative integers,
+   inclusive of 0.
+
+
+ * :class:`~.Integers`, $\mathbb{Z}$
+
+   Represents all integers: positive, negative and zero.
+
+
+ * :class:`~.Reals`, $\mathbb{R}$
+
+   Represents the set of all real numbers.
+
+
+ * :class:`~.Complexes`, $\mathbb{C}$
+
+   Represents the set of all complex numbers.
+
+
+ * :class:`~.EmptySet`, $\emptyset$
+
+   Represents the empty set.
+
+ The above six sets are available as Singletons, like ``S.Integers``.
+
+
+It is capable of most of the set operations in mathematics:
+
+ * ``Union``
+ * ``Intersection``
+ * ``Complement``
+ * ``SymmetricDifference``
+
+The main reason for using sets as output to solvers is that it can consistently
+represent many types of solutions. For the single variable case it can represent:
+
+ * No solution (by the empty set).
+
+ * Finitely many solutions (by ``FiniteSet``).
+
+ * Infinitely many solutions, both countably and uncountably infinite solutions
+   (using the ``ImageSet`` module).
+
+ * ``Interval``
+
+ * There can also be bizarre solutions to equations like the set of rational
+   numbers.
+
+No other Python object (list, dictionary, generator, Python sets) provides the
+flexibility of mathematical sets which our sets module tries to emulate. The
+second reason to use sets is that they are close to the entities which
+mathematicians deal with and it makes it easier to reason about them.  Set
+objects conform to Pythonic conventions when possible, i.e., ``x in A`` and
+``for i in A`` both work when they can be computed. Another advantage of using
+objects closer to mathematical entities is that the user won't have to "learn"
+our representation and she can have her expectations transferred from her
+mathematical experience.
+
+For the multivariate case we represent solutions as a set of points in a
+n-dimensional space and a point is represented by a ``FiniteSet`` of ordered
+tuples, which is a point in `\mathbb{R}^n` or `\mathbb{C}^n`.
+
+Please note that, the general ``FiniteSet`` is unordered, but a ``FiniteSet``
+with a tuple as its only argument becomes ordered, since a tuple is ordered.
+So the order in the tuple is mapped to a pre-defined order of variables
+while returning solutions.
+
+For example:
+
+ >>> from sympy import FiniteSet
+ >>> FiniteSet(1, 2, 3)   # Unordered
+ {1, 2, 3}
+ >>> FiniteSet((1, 2, 3))  # Ordered
+ {(1, 2, 3)}
+
+
+Why not use dicts as output?
+
+  Dictionary are easy to deal with programmatically but mathematically they are
+  not very precise and use of them can quickly lead to inconsistency and a lot
+  of confusion. For example:
+
+  * There are a lot of cases where we don't know the complete solution and we
+    may like to output a partial solution, consider the equation `fg = 0`. The
+    solution of this equation is the union of the solution of the following
+    two equations: `f = 0`, `g = 0`. Let's say that we are able to solve
+    `f = 0` but solving `g = 0` isn't supported yet. In this case we cannot
+    represent partial solution of the given equation `fg = 0` using dicts.
+    This problem is solved with sets using a ``ConditionSet`` object:
+
+    `sol_f \cup \{x | x ∊ \mathbb{R} ∧ g = 0\}`, where `sol_f` is the solution
+    of the equation `f = 0`.
+
+  * Using a dict may lead to surprising results like:
+
+    - ``solve(Eq(x**2, 1), x) != solve(Eq(y**2, 1), y)``
+
+
+      Mathematically, this doesn't make sense. Using ``FiniteSet`` here
+      solves the problem.
+
+  * It also cannot represent solutions for equations like `|x| < 1`, which is
+    a disk of radius 1 in the Argand Plane. This problem is solved using
+    complex sets implemented as ``ComplexRegion``.
+
+.. _solveset-input-api:
+
+Input API of ``solveset``
+-------------------------
+
+``solveset`` has simpler input API, unlike ``solve``. It takes a maximum of
+three arguments:
+
+``solveset(equation, variable=None, domain=S.Complexes)``
+
+Equation
+   The equation to solve.
+Variable
+   The variable for which the equation is to be solved.
+Domain
+   The domain in which the equation is to be solved.
+
+An ``Equality`` involving the solving variable is accepted as equation
+syntax and solved as the formal equation ``lhs - rhs = 0``. Ordered
+relations retain their relational semantics and are handled as inequalities.
+A relation that is independent of the solving variable is evaluated as a
+logical condition and may give the whole domain, ``EmptySet``, or an
+unresolved ``ConditionSet``.
+
+``solveset`` removes the ``flags`` argument of ``solve``, which had made the
+input API more complicated and output API inconsistent.
+
+.. _solveset-domain-argument:
+
+What is this domain argument about?
+-----------------------------------
+
+Solveset is designed to be independent of the assumptions on the variable being
+solved for and instead, uses the ``domain`` argument to decide the solver to
+dispatch the equation to, namely ``solveset_real`` or ``solveset_complex``.
+It's unlike the old ``solve`` which considers the assumption on the variable.
+
+    >>> from sympy import solveset, S
+    >>> from sympy.abc import x
+    >>> solveset(x**2 + 1, x) # domain=S.Complexes is default
+    {-I, I}
+    >>> solveset(x**2 + 1, x, domain=S.Reals)
+    EmptySet
+
+What are the general methods employed by solveset to solve an equation?
+-----------------------------------------------------------------------
+
+ Solveset uses various methods to solve an equation, here is a brief overview
+ of the methodology:
+
+ * The ``domain`` argument is first considered to know the domain in which
+   the user is interested to get the solution.
+
+
+ * If the given function is an ``Equality`` that depends on the solving
+   variable, it is treated as equation syntax for ``lhs - rhs = 0``.
+
+
+ * If the given function is an ordered relational (``>=``, ``<=``, ``>``,
+   ``<``), and the domain is real, then ``solve_univariate_inequality`` is
+   used and its solution is returned. Solving for complex solutions of
+   inequalities, like `x^2 < 0`, is not yet supported.
+
+
+ * Based on the ``domain``, the equation is dispatched to one of the two
+   functions ``solveset_real`` or ``solveset_complex``, which solves the
+   given equation in the complex or real domain, respectively.
+
+
+ * If the given expression is a product of two or more functions,
+   like say `gh = 0`, then the solution to the given equation is the Union
+   of the solution of the equations `g = 0` and `h = 0`, if and only if both
+   `g` and `h` are finite for a finite input. So, the solution is built up
+   recursively.
+
+
+ * If the function is trigonometric or hyperbolic, the function
+   ``_solve_real_trig`` is called, which solves it by converting it to complex
+   exponential form.
+
+
+ * The function is now checked if there is any instance of a ``Piecewise``
+   expression, if it is, then it's converted to explicit expression and
+   set pairs and then solved recursively.
+
+
+ * The respective solver now tries to invert the equation using the routines
+   ``invert_real`` and ``invert_complex``. These routines are based on the
+   concept of mathematical inverse (though not exactly). It reduces the
+   real/complex valued equation `f(x) = y` to a set of equations:
+   `\{g(x)  = h_1(y), g(x) = h_2(y), ..., g(x) = h_n(y) \}` where `g(x)` is a
+   simpler function than `f(x)`. There is some work needed to be done in
+   this to find invert of more complex expressions.
+
+
+ * After the invert, the equations are checked for radical or Abs (Modulus),
+   then the method ``_solve_radical`` tries to simplify the radical, by
+   removing it using techniques like squaring, cubing etc, and ``_solve_abs``
+   solves nested Modulus by considering the positive and negative variants,
+   iteratively.
+
+
+ * If none of the above method is successful, then methods of polynomial is
+   used as follows:
+
+   - The method to solve the rational function, ``_solve_as_rational``, is
+     called.  Based on the domain, the respective poly solver
+     ``_solve_as_poly_real`` or ``_solve_as_poly_complex`` is called to solve
+     ``f`` as a polynomial.
+
+   - The underlying method ``_solve_as_poly`` solves the equation using
+     polynomial techniques if it's already a polynomial equation or, with
+     a change of variables, can be made so.
+
+
+ * The final solution set returned by ``solveset`` is the intersection of the
+   set of solutions found above and the input domain.
+
+.. Remember to change the above part when the new solver is implemented.
+
+
+How do we manipulate and return an infinite solution?
+-----------------------------------------------------
+
+ * In the real domain, we use our ``ImageSet`` class in the sets module to
+   return infinite solutions. ``ImageSet`` is an image of a set under
+   a mathematical function. For example, to represent the solution
+   of the equation `\sin{(x)} = 0`, we can use the ``ImageSet`` as:
+
+
+   >>> from sympy import ImageSet, Lambda, pi, S, Dummy, pprint
+   >>> n = Dummy('n')
+   >>> pprint(ImageSet(Lambda(n, 2*pi*n), S.Integers), use_unicode=True)
+   {2⋅n⋅π │ n ∊ ℤ}
+
+
+   Where ``n`` is a dummy variable. It is basically the image of the
+   set of integers under the function `2\pi n`.
+
+ * In the complex domain, we use complex sets, which are implemented as the
+   ``ComplexRegion`` class in the sets module, to represent infinite
+   solution in the Argand plane. For example to represent the solution
+   of the equation `|z| = 1`, which is a unit circle, we can use
+   the ``ComplexRegion`` as:
+
+
+   >>> from sympy import ComplexRegion, FiniteSet, Interval, pi, pprint
+   >>> pprint(ComplexRegion(FiniteSet(1)*Interval(0, 2*pi), polar=True), use_unicode=True)
+   {r⋅(cos(θ) + ⅈ⋅sin(θ)) │ r, θ ∊ {1} × [0, 2⋅π)}
+
+
+   Where the ``FiniteSet`` in the ``ProductSet`` is the range of the value
+   of `r`, which is the radius of the circle and the ``Interval`` is the range
+   of `\theta`, the angle from the `x` axis representing a unit circle in the
+   Argand plane.
+
+   Note: We also have non-polar form notation for representing solution
+   in rectangular form. For example, to represent first two quadrants in the
+   Argand plane, we can write the ``ComplexRegion`` as:
+
+
+   >>> from sympy import ComplexRegion, Interval, pi, oo, pprint
+   >>> pprint(ComplexRegion(Interval(-oo, oo)*Interval(0, oo)), use_unicode=True)
+   {x + y⋅ⅈ │ x, y ∊ (-∞, ∞) × [0, ∞)}
+
+
+   where the Intervals are the range of `x` and `y` for the set of complex
+   numbers `x + iy`.
+
+
+How does ``solveset`` ensure that it is not returning any wrong solution?
+--------------------------------------------------------------------------
+
+ Solvers in a Computer Algebra System are based on heuristic algorithms,
+ so it's usually very hard to ensure 100% percent correctness, in every
+ possible case. However there are still a lot of cases where we can ensure
+ correctness. Solveset tries to verify correctness wherever it can. For
+ example:
+
+ Consider the equation `|x| = n`. A naive method to solve this equation
+ would return ``{-n, n}`` as its solution, which is not correct since
+ ``{-n, n}`` can be its solution if and only if ``n`` is positive.
+ Solveset returns this information as well to ensure correctness.
+
+    >>> from sympy import symbols, S, pprint, solveset
+    >>> x, n = symbols('x, n')
+    >>> pprint(solveset(abs(x) - n, x, domain=S.Reals), use_unicode=True)
+    {x │ x ∊ {-n, n} ∧ (n ∈ [0, ∞))}
+
+ Though, there still a lot of work needs to be done in this regard.
+
+
+Search based solver and step-by-step solution
+---------------------------------------------
+
+ Note: This is under Development.
+
+ After the introduction of :py:class:`~sympy.sets.conditionset.ConditionSet`, the
+ solving of equations can be seen as set transformations. Here is an abstract
+ view of the things we can do to solve equations.
+
+ * Apply various set transformations on the given set.
+ * Define a metric of the usability of solutions, or a notion of some
+   solutions being better than others.
+ * Different transformations would be the nodes of a tree.
+ * Suitable searching techniques could be applied to get the best solution.
+
+ ``ConditionSet`` gives us the ability to represent unevaluated equations and
+ inequalities in forms like `\{x|f(x)=0; x \in S\}` and `\{x|f(x)>0; x \in S\}`
+ but a more powerful thing about ``ConditionSet`` is that it allows us to write
+ the intermediate steps as set to set transformation. Some of the transformations
+ are:
+
+ * Composition: `\{x|f(g(x))=0;x \in S\} \Rightarrow \{x|g(x)=y; x \in S, y \in \{z|f(z)=0; z \in S\}\}`
+
+ * Polynomial Solver: `\{x | P(x) = 0;x \in S\} \Rightarrow  \{x_1,x_2, ... ,x_n\} \cap S`,
+                      where `x_i` are roots of `P(x)`.
+
+ * Invert solver: `\{x|f(x)=0;x \in S\} \Rightarrow  \{g(0)| \text{ all g such that } f(g(x)) = x\}`
+
+ * logcombine: `\{x| \log(f(x)) + \log(g(x));x \in S\}`
+               `\Rightarrow  \{x| \log(f(x).g(x)); x \in S\} \text{ if } f(x) > 0 \text{ and } g(x) > 0`
+               `\Rightarrow  \{x| \log(f(x)) + \log(g(x));x \in S\} \text{ otherwise}`
+
+ * product solve: `\{x|f(x)g(x)=0; x \in S\}`
+                  `\Rightarrow  \{x|f(x)=0; x \in S\} U \{x|g(x)=0; x \in S\}`
+                  `\text{ given } f(x) \text{ and } g(x) \text{ are bounded.}`
+                  `\Rightarrow  \{x|f(x)g(x)=0; x \in S\}, \text{ otherwise}`
+
+ Since the output type is same as the input type any composition of these
+ transformations is also a valid transformation. And our aim is to find
+ the right sequence of compositions (given the atoms) which transforms
+ the given condition set to a set which is not a condition set i.e.,
+ FiniteSet, Interval, Set of Integers and their Union, Intersection,
+ Complement or ImageSet. We can assign a cost function to each set,
+ such that, the more desirable that form of set is to us, the less the value
+ of the cost function. This way our problem is now reduced to finding the path
+ from the initial ConditionSet to the lowest valued set on a graph where
+ the atomic transformations forms the edges.
+
+
+How do we deal with cases where only some of the solutions are known?
+---------------------------------------------------------------------
+
+ Creating a universal equation solver, which can solve each and every equation
+ we encounter in mathematics is an ideal case for solvers in a Computer
+ Algebra System. When cases which are not solved or can only be solved
+ incompletely, a ``ConditionSet`` is used and acts as an unevaluated solveset
+ object.
+
+ Note that, mathematically, finding a complete set of solutions for an
+ equation is undecidable. See `Richardson's theorem
+ <https://en.wikipedia.org/wiki/Richardson%27s_theorem>`_.
+
+ ``ConditionSet`` is basically a Set of elements which satisfy a given
+ condition. For example, to represent the solutions of the equation in
+ the real domain:
+
+ .. math::  (x^2 - 4)(\sin(x) + x)
+
+ We can represent it as:
+
+ `\{-2, 2\} ∪ \{x | x \in \mathbb{R} ∧ x + \sin(x) = 0\}`
+
+
+How are symbolic parameters handled in solveset?
+------------------------------------------------
+
+ Solveset is in its initial phase of development, so the symbolic parameters
+ aren't handled well for all the cases, but some work has been done in this
+ regard to depict our ideology towards symbolic parameters. As an example,
+ consider the solving of `|x| = n` for real `x`, where `n` is a symbolic
+ parameter. Solveset returns the value of `x` considering the domain of the
+ symbolic parameter `n` as well:
+
+ .. math:: ([0, \infty) \cap \{n\}) \cup ((-\infty, 0] \cap \{-n\}).
+
+ This simply means `n` is the solution only when it belongs to the
+ ``Interval`` `[0, \infty)` and `-n` is the solution only when `-n` belongs to
+ the ``Interval`` `(- \infty, 0]`.
+
+ There are other cases to address too, like solving `2^x + (a - 2)` for `x`
+ where `a` is a symbolic parameter.  As of now, It returns the solution as an
+ intersection with `\mathbb{R}`, which is trivial, as it doesn't reveal the
+ domain of `a` in the solution.
+
+ Recently, we have also implemented a function to find the domain of the
+ expression in a FiniteSet (Intersection with the interval) in which it is
+ not-empty. It is a useful addition for dealing with symbolic parameters.
+ For example:
+
+    >>> from sympy import Symbol, FiniteSet, Interval, not_empty_in, sqrt, oo
+    >>> from sympy.abc import x
+    >>> not_empty_in(FiniteSet(x/2).intersect(Interval(0, 1)), x)
+    Interval(0, 2)
+    >>> not_empty_in(FiniteSet(x, x**2).intersect(Interval(1, 2)), x)
+    Union(Interval(1, 2), Interval(-sqrt(2), -1))
+
+
+References
+----------
+
+ .. [1] https://github.com/sympy/sympy/wiki/GSoC-2015-Ideas/7abb76ffed50425299b9065129ae87261668a0f7#user-content-solvers
+ .. [2] https://github.com/sympy/sympy/wiki/GSoC-2014-Application-Harsh-Gupta:-Solvers
+ .. [3] https://github.com/sympy/sympy/wiki/GSoC-2015-Application-AMiT-Kumar--Solvers-:-Extending-Solveset
+ .. [5] https://iamit.in/blog/
+ .. [6] https://github.com/sympy/sympy/pull/2948 : Action Plan for improving solvers.
+ .. [7] https://github.com/sympy/sympy/issues/6659 : ``solve()`` is a giant mess
+ .. [8] https://github.com/sympy/sympy/pull/7523 : ``solveset`` PR
+ .. [9] https://groups.google.com/forum/#!topic/sympy/-SIbX0AFL3Q
+ .. [10] https://github.com/sympy/sympy/pull/9696
+ .. [11] https://en.wikipedia.org/wiki/Richardson%27s_theorem
+
+
+Solveset Module Reference
+-------------------------
+
+Use :func:`solveset` to solve equations or expressions (assumed to be equal to 0) for a single variable.
+Solving an equation like `x^2 == 1` can be done as follows::
+
+    >>> from sympy import solveset
+    >>> from sympy import Symbol, Eq
+    >>> x = Symbol('x')
+    >>> solveset(Eq(x**2, 1), x)
+    {-1, 1}
+
+Or one may manually rewrite the equation as an expression equal to 0::
+
+    >>> solveset(x**2 - 1, x)
+    {-1, 1}
+
+The first argument for :func:`solveset` is an expression (equal to zero) or an equation and the second argument
+is the symbol that we want to solve the equation for.
+
+.. autofunction:: sympy.solvers.solveset::solveset
+
+.. autofunction:: sympy.solvers.solveset::solveset_real
+
+.. autofunction:: sympy.solvers.solveset::solveset_complex
+
+.. autofunction:: sympy.solvers.solveset::invert_real
+
+.. autofunction:: sympy.solvers.solveset::invert_complex
+
+.. autofunction:: sympy.solvers.solveset::domain_check
+
+.. autofunction:: sympy.solvers.solveset::solvify
+
+.. autofunction:: sympy.solvers.solveset::linear_eq_to_matrix
+
+.. autofunction:: sympy.solvers.solveset::linsolve
+
+.. autofunction:: sympy.solvers.solveset::nonlinsolve
+
+
+transolve
+^^^^^^^^^
+
+.. autofunction:: sympy.solvers.solveset::_transolve
+
+.. autofunction:: sympy.solvers.solveset::_is_exponential
+
+.. autofunction:: sympy.solvers.solveset::_solve_exponential
+
+.. autofunction:: sympy.solvers.solveset::_solve_logarithm
+
+.. autofunction:: sympy.solvers.solveset::_is_logarithmic
+
+
+Diophantine Equations (DEs)
+---------------------------
+
+See :ref:`diophantine-docs`
+
+Inequalities
+------------
+
+See :ref:`inequality-docs`
+
+Ordinary Differential equations (ODEs)
+--------------------------------------
+
+See :ref:`ode-docs`.
+
+Partial Differential Equations (PDEs)
+-------------------------------------
+
+See :ref:`pde-docs`.

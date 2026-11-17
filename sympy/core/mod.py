@@ -1,0 +1,284 @@
+from __future__ import annotations
+from .add import Add
+from .exprtools import gcd_terms
+from .function import DefinedFunction
+from .kind import NumberKind
+from .logic import fuzzy_and, fuzzy_not
+from .mul import Mul
+from .numbers import Float, equal_valued
+from .relational import is_le, is_lt, is_ge, is_gt
+from .singleton import S
+
+
+class Mod(DefinedFunction):
+    """Represents a modulo operation on symbolic expressions.
+
+    Parameters
+    ==========
+
+    p : Expr
+        Dividend.
+
+    q : Expr
+        Divisor.
+
+    Notes
+    =====
+
+    The convention used is the same as Python's: the remainder always has the
+    same sign as the divisor.
+
+    Many objects can be evaluated modulo ``n`` much faster than they can be
+    evaluated directly (or at all).  For this, ``evaluate=False`` is
+    necessary to prevent eager evaluation:
+
+    >>> from sympy import binomial, factorial, Mod, Pow
+    >>> Mod(Pow(2, 10**16, evaluate=False), 97)
+    61
+    >>> Mod(factorial(10**9, evaluate=False), 10**9 + 9)
+    712524808
+    >>> Mod(binomial(10**18, 10**12, evaluate=False), (10**5 + 3)**2)
+    3744312326
+
+    Examples
+    ========
+
+    >>> from sympy.abc import x, y
+    >>> x**2 % y
+    Mod(x**2, y)
+    >>> _.subs({x: 5, y: 6})
+    1
+
+    """
+
+    kind = NumberKind
+
+    @classmethod
+    def eval(cls, p, q):
+        def number_eval(p, q):
+            """Try to return p % q if both are numbers or +/-p is known
+            to be less than or equal q.
+            """
+
+            if q.is_zero:
+                raise ZeroDivisionError("Modulo by zero")
+            if p is S.NaN or q is S.NaN or p.is_finite is False or q.is_finite is False:
+                return S.NaN
+            if p is S.Zero or p in (q, -q) or (p.is_integer and q == 1):
+                return S.Zero
+
+            if q.is_Number:
+                if p.is_Number:
+                    return p%q
+                if q == 2:
+                    if p.is_even:
+                        return S.Zero
+                    elif p.is_odd:
+                        return S.One
+
+            if (p.has(Float) or q.has(Float)) and not (
+                    p.is_number and q.is_number):
+                return
+
+            if hasattr(p, '_eval_Mod'):
+                rv = getattr(p, '_eval_Mod')(q)
+                if rv is not None:
+                    return rv
+
+            # by ratio
+            r = p/q
+            if r.is_integer:
+                return S.Zero
+            try:
+                d = int(r)
+            except TypeError:
+                pass
+            else:
+                if isinstance(d, int):
+                    # int() truncates toward zero, whereas modulo uses
+                    # floor division. Correct the quotient from its value,
+                    # rather than the sign of an undecidable symbolic product.
+                    smaller = r < d
+                    if smaller is S.true:
+                        d -= 1
+                    elif smaller is not S.false:
+                        return
+                    return p - d*q
+
+            # by difference
+            # -2|q| < p < 2|q|
+            if q.is_positive:
+                comp1, comp2 = is_le, is_lt
+            elif q.is_negative:
+                comp1, comp2 = is_ge, is_gt
+            else:
+                return
+            ls = -2*q
+            r = p - q
+            for _ in range(4):
+                if not comp1(ls, p):
+                    return
+                if comp2(r, ls):
+                    return p - ls
+                ls += q
+
+        rv = number_eval(p, q)
+        if rv is not None:
+            return rv
+
+        if (p.has(Float) or q.has(Float)) and not (
+                p.is_number and q.is_number):
+            return
+
+        # denest
+        if isinstance(p, cls):
+            qinner = p.args[1]
+            if qinner % q == 0:
+                return cls(p.args[0], q)
+            elif (qinner*(q - qinner)).is_nonnegative:
+                # |qinner| < |q| and have same sign
+                return p
+        elif isinstance(-p, cls):
+            qinner = (-p).args[1]
+            if qinner % q == 0:
+                return cls(-(-p).args[0], q)
+            elif (qinner*(q + qinner)).is_nonpositive:
+                # |qinner| < |q| and have different sign
+                return p
+        elif isinstance(p, Add):
+            # separating into modulus and non modulus
+            both_l = non_mod_l, mod_l = [], []
+            for arg in p.args:
+                both_l[isinstance(arg, cls)].append(arg)
+            # if q same for all
+            if mod_l and all(inner.args[1] == q for inner in mod_l):
+                net = Add(*non_mod_l) + Add(*[i.args[0] for i in mod_l])
+                return cls(net, q)
+
+        elif isinstance(p, Mul):
+            # separating into modulus and non modulus
+            both_l = non_mod_l, mod_l = [], []
+            for arg in p.args:
+                both_l[isinstance(arg, cls)].append(arg)
+
+            if mod_l and all(inner.args[1] == q for inner in mod_l) and all(t.is_integer for t in p.args) and q.is_integer:
+                # finding distributive term
+                non_mod_l = [cls(x, q) for x in non_mod_l]
+                mod = []
+                non_mod = []
+                for j in non_mod_l:
+                    if isinstance(j, cls):
+                        mod.append(j.args[0])
+                    else:
+                        non_mod.append(j)
+                prod_mod = Mul(*mod)
+                prod_non_mod = Mul(*non_mod)
+                prod_mod1 = Mul(*[i.args[0] for i in mod_l])
+                net = prod_mod1*prod_mod*prod_non_mod
+                return cls(net, q)
+
+            if q.is_Integer and q is not S.One:
+                if all(t.is_integer for t in p.args):
+                    non_mod_l = [i % q if i.is_Integer else i for i in non_mod_l]
+                    if any(iq is S.Zero for iq in non_mod_l):
+                        return S.Zero
+
+            p = Mul(*(non_mod_l + mod_l))
+
+        # XXX other possibilities?
+
+        from sympy.polys.polyerrors import PolynomialError
+        from sympy.polys.polytools import gcd
+
+        # Extract common factors only for exact operands. With Floats,
+        # even exact common factors can change the rounding points after
+        # substitution, producing a different numerical remainder.
+        G = S.One
+        if not (p.has(Float) or q.has(Float)):
+            try:
+                G = gcd(p, q)
+                if not equal_valued(G, 1):
+                    p, q = [gcd_terms(i/G, clear=False, fraction=False)
+                            for i in (p, q)]
+            except PolynomialError:  # issue 21373
+                pass
+        pwas, qwas = p, q
+
+        # simplify terms
+        # (x + y + 2) % x -> Mod(y + 2, x)
+        if p.is_Add:
+            # Do not rearrange Float-containing sums.
+            if not (p.has(Float) or q.has(Float)):
+                args = []
+                exact_coeffs = q.is_Rational and not p.has(Float)
+
+                for i in p.args:
+                    if exact_coeffs:
+                        c, term = i.as_coeff_Mul()
+                        if c.is_Rational and term.is_integer:
+                            i = (c % q)*term
+
+                    a = cls(i, q)
+                    if a.count(cls) > i.count(cls):
+                        args.append(i)
+                    else:
+                        args.append(a)
+                if args != list(p.args):
+                    p = Add(*args)
+
+        else:
+            # Reduce exact coefficients of integer-valued factors.
+            if q.is_Rational and not p.has(Float):
+                c, term = p.as_coeff_Mul()
+                if c.is_Rational and term.is_integer:
+                    p = (c % q)*term
+            # Handle non-Rational coefficients not handled by factor_terms.
+            cp, p = p.as_coeff_Mul()
+            cq, q = q.as_coeff_Mul()
+            ok = False
+            if (not cp.is_Rational or not cq.is_Rational) and not (
+                    cp.has(Float) or cq.has(Float)):
+                r = cp % cq
+                if equal_valued(r, 0):
+                    G *= cq
+                    p *= int(cp/cq)
+                    ok = True
+            if not ok:
+                p = cp*p
+                q = cq*q
+
+        # simple -1 extraction
+        if p.could_extract_minus_sign() and q.could_extract_minus_sign():
+            G, p, q = [-i for i in (G, p, q)]
+
+        # check again to see if p and q can now be handled as numbers
+        rv = number_eval(p, q)
+        if rv is not None:
+            return rv*G
+
+        return G*cls(p, q, evaluate=(p, q) != (pwas, qwas))
+
+    def _eval_is_integer(self):
+        p, q = self.args
+        if fuzzy_and([p.is_integer, q.is_integer, fuzzy_not(q.is_zero)]):
+            return True
+
+    def _eval_is_nonnegative(self):
+        if self.args[1].is_positive:
+            return True
+
+    def _eval_is_nonpositive(self):
+        if self.args[1].is_negative:
+            return True
+
+    def _eval_rewrite_as_floor(self, a, b, **kwargs):
+        from sympy.functions.elementary.integers import floor
+        return a - b*floor(a/b)
+
+    def _eval_as_leading_term(self, x, logx, cdir):
+        from sympy.functions.elementary.integers import floor
+        return self.rewrite(floor)._eval_as_leading_term(x, logx=logx, cdir=cdir)
+
+    def _eval_nseries(self, x, n, logx, cdir=0):
+        from sympy.functions.elementary.integers import floor
+        return self.rewrite(floor)._eval_nseries(x, n, logx=logx, cdir=cdir)

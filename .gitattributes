@@ -1,0 +1,5 @@
+*.py    diff=python
+*.sh    eol=lf
+
+# auto-collapse generated files in github diffs
+sympy/parsing/*/_antlr/*.py    linguist-generated=true
