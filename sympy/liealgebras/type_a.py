@@ -77,13 +77,6 @@ class TypeA(Standard_Cartan):
 
         return Matrix(self.basic_root(i-1, i))
 
-    def highest_root(self) -> Matrix:
-        """
-        Returns the highest weight root for A_n
-        """
-
-        return self.basic_root(0, self.n)
-
     def roots(self) -> int:
         """
         Returns the total number of roots for A_n

@@ -98,7 +98,8 @@ class Standard_Cartan(Atom):
 
     @final
     def positive_roots(self) -> list[Matrix]:
-        """Returns the set of all positive roots that are greater
+        """
+        Returns the set of all positive roots that are greater
         than zero in weight from the root system.
         """
         positive_root_coeffs = _positive_root_coefficients(self.cartan_matrix())
@@ -112,6 +113,15 @@ class Standard_Cartan(Atom):
                 root += weighted_roots.pop()
             positive_roots.append(root)
         return positive_roots
+
+    @final
+    def highest_root(self) -> Matrix:
+        """
+        Returns the highest-weight root of the Lie algebra.
+        """
+        highest_root_coeff = _highest_root_coefficients(self.cartan_matrix())
+        terms = [coeff * self.simple_root(i + 1) for i, coeff in enumerate(highest_root_coeff) if coeff != 0]
+        return sum(terms[1:], terms[0])
 
     @final
     def cartan_matrix(self) -> Matrix:
@@ -151,7 +161,7 @@ class Standard_Cartan(Atom):
             "dynkin_diagram is implemented by subclasses of Standard_Cartan"
         )
 
-def _positive_root_coefficients(cartan_matrix: Matrix):
+def _positive_root_coefficients(cartan_matrix: Matrix) -> list[tuple[int, ...]]:
     n = cartan_matrix.rows
 
     simple_roots = [tuple(1 if i == j else 0 for j in range(n)) for i in range(n)]
@@ -173,5 +183,9 @@ def _positive_root_coefficients(cartan_matrix: Matrix):
                 positive_roots.add(new_beta)
                 queue.append(new_beta)
 
-    # sot by height, and antilex within height
+    # sort by height, and antilex within height
     return sorted(positive_roots, key=lambda beta: (-sum(beta), beta),reverse=True)
+
+def _highest_root_coefficients(cartan_matrix: Matrix) -> tuple[int, ...]:
+    positive_root_coeffs = _positive_root_coefficients(cartan_matrix)
+    return positive_root_coeffs[-1]

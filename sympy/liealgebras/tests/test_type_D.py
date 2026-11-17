@@ -12,6 +12,7 @@ def test_type_D():
     assert c.lie_algebra() == "so(8)"
     assert c.roots() == 24
     assert c.simple_root(3) == Matrix([[0, 0, 1, -1]])
+    assert c.highest_root() == Matrix([[1, 1, 0, 0]])
     diag = "    3\n    0\n    |\n    |\n0---0---0\n1   2   4"
     assert diag == c.dynkin_diagram()
     assert c.positive_roots() == [

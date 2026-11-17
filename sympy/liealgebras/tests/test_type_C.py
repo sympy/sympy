@@ -8,6 +8,7 @@ def test_type_C():
     assert c.cartan_matrix() == m
     assert c.dimension() == 4
     assert c.simple_root(4) == Matrix([[0, 0, 0, 2]])
+    assert c.highest_root() == Matrix([[2, 0, 0, 0]])
     assert c.roots() == 32
     assert c.basis() == 36
     assert c.lie_algebra() == "sp(8)"

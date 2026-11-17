@@ -1,7 +1,7 @@
 from __future__ import annotations
 from sympy.liealgebras.cartan_type import CartanType
 from sympy.matrices import Matrix
-from sympy.core.backend import Rational
+from sympy.core.backend import Rational, S
 
 def test_type_E():
     c = CartanType("E6")
@@ -20,6 +20,7 @@ def test_type_E():
 
 def test_Cartan():
     c = CartanType("E6")
+    assert c.highest_root() == Matrix([[S.Half, S.Half, S.Half, S.Half, S.Half, -S.Half, -S.Half, S.Half]])
     assert c.cartan_matrix() == Matrix([
         [ 2, -1,  0,  0,  0,  0],
         [-1,  2, -1,  0,  0,  0],
@@ -29,6 +30,7 @@ def test_Cartan():
         [ 0,  0, -1,  0,  0,  2]])
 
     c = CartanType("E7")
+    assert c.highest_root() == Matrix([[0, 0, 0, 0, 0, 0, -1, 1]])
     assert c.cartan_matrix() == Matrix([
         [ 2, -1,  0,  0,  0,  0,  0],
         [-1,  2, -1,  0,  0,  0,  0],
@@ -39,6 +41,7 @@ def test_Cartan():
         [ 0,  0, -1,  0,  0,  0,  2]])
 
     c = CartanType("E8")
+    assert c.highest_root() == Matrix([[0, 0, 0, 0, 0, 0, 1, 1]])
     assert c.cartan_matrix() == Matrix([
         [ 2, -1,  0,  0,  0,  0,  0,  0],
         [-1,  2, -1,  0,  0,  0,  0,  0],
