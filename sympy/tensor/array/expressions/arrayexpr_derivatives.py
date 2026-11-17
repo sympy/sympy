@@ -3,8 +3,9 @@ import operator
 from functools import reduce, singledispatch
 
 from sympy.core.singleton import S
-from sympy import MatrixBase, derive_by_array, Integer, Determinant, Function, MatPow, Dummy, Pow, Mul, Add
-from sympy.tensor.array import NDimArray
+from sympy import (MatrixBase, derive_by_array, Integer, Determinant, Function,
+                   MatPow, Dummy, Pow, Mul, Add, Lambda)
+from sympy.tensor.array import NDimArray, Array
 from sympy.core.expr import Expr
 from sympy.matrices.expressions.diagonal import DiagMatrix, DiagonalMatrix
 from sympy.matrices.expressions.inverse import Inverse
@@ -208,6 +209,58 @@ def _(expr: Inverse, x: Expr):
     return pp
 
 
+def _elementwise_parameter_derivative(function, x):
+    """Return the derivative of a ``Lambda`` body wrt ``x``, or ``None``.
+
+    Elementwise application rules treat the body of the ``Lambda`` as a
+    function of its bound variable only.  When the body also depends on the
+    differentiation variable (e.g. an exponent such as ``Trace(X)``, or a
+    matrix element captured by ``applyfunc``), the derivative has an extra
+    term from that dependence.
+    """
+    d = function.variables[0]
+    free = function.expr.free_symbols - {d}
+    if not free or not (free & x.free_symbols) or not isinstance(x, MatrixSymbol):
+        return None
+    try:
+        return derive_by_array(function.expr, x)
+    except (NotImplementedError, ValueError):
+        return None
+
+
+def _elementwise_parameter_term(function, subexpr, x, expr_cls):
+    """Build the extra derivative term due to parameters depending on ``x``."""
+    dbody = _elementwise_parameter_derivative(function, x)
+    if dbody is None:
+        return None
+    d = function.variables[0]
+    n, m = x.shape
+    scalar = None
+    if get_shape(subexpr) == (1, 1):
+        # rank one operands (e.g. a scalar MatPow) do not support elementwise
+        # application; substitute their only element instead
+        scalar = subexpr[0, 0]
+        if not isinstance(subexpr, MatrixExpr):
+            from sympy.tensor.array.expressions.from_array_to_matrix import (
+                convert_array_to_matrix)
+            scalar = convert_array_to_matrix(subexpr)[0, 0]
+    terms = []
+    for k in range(n):
+        for l in range(m):
+            entry = dbody[k, l]
+            if entry == 0:
+                continue
+            basis = convert_matrix_to_array(MatrixUnit(n, m, k, l))
+            if scalar is not None:
+                partial = Array([[entry.subs(d, scalar)]])
+            else:
+                partial = expr_cls(Lambda(d, entry), subexpr)
+            terms.append(_array_tensor_product(basis, partial))
+    if not terms:
+        return None
+    return _array_add(*terms)
+
+
 @array_derive.register(ElementwiseApplyFunction)
 def _(expr: ElementwiseApplyFunction, x: Expr):
     assert get_ndim(expr) == 2
@@ -221,7 +274,11 @@ def _(expr: ElementwiseApplyFunction, x: Expr):
     td = _array_diagonal(
         tp, (0, 4), (1, 5)
     )
-    return td
+    pt = _elementwise_parameter_term(expr.function, expr.expr, x,
+                                     ElementwiseApplyFunction)
+    if pt is None:
+        return td
+    return _array_add(td, pt)
 
 
 @array_derive.register(ArrayElementwiseApplyFunc)
@@ -236,7 +293,12 @@ def _(expr: ArrayElementwiseApplyFunc, x: Expr):
     b = get_ndim(x)
     c = get_ndim(expr)
     diag_indices = [(b + i, b + c + i) for i in range(c)]
-    return _array_diagonal(tp, *diag_indices)
+    td = _array_diagonal(tp, *diag_indices)
+    pt = _elementwise_parameter_term(expr.function, subexpr, x,
+                                     ArrayElementwiseApplyFunc)
+    if pt is None:
+        return td
+    return _array_add(td, pt)
 
 
 @array_derive.register(MatrixExpr)
