@@ -241,13 +241,8 @@ def _RealPredicate_number(expr, assumptions):
     # let as_real_imag() work first since the expression may
     # be simpler to evaluate
     i = expr.as_real_imag()[1].evalf(2)
-    if hasattr(i, '_prec'):
-        if i._prec != 1:
-            return not i
-    else:
-        i = expr.evalf(2).as_real_imag()[1]
-        if getattr(i, '_prec', 0) != 1:
-            return not i
+    if getattr(i, '_prec', 1) != 1:
+        return not i
     # allow None to be returned if we couldn't show for sure
     # that i was 0
 
@@ -539,13 +534,8 @@ def _Imaginary_number(expr, assumptions):
     # let as_real_imag() work first since the expression may
     # be simpler to evaluate
     r = expr.as_real_imag()[0].evalf(2)
-    if hasattr(r, '_prec'):
-        if r._prec != 1:
-            return not r
-    else:
-        r = expr.evalf(2).as_real_imag()[0]
-        if getattr(r, '_prec', 0) != 1:
-            return not r
+    if getattr(r, '_prec', 1) != 1:
+        return not r
     # allow None to be returned if we couldn't show for sure
     # that r was 0
 

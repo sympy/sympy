@@ -2593,10 +2593,11 @@ def test_radical_root_evalf_prec():
     from sympy.polys.polyroots import roots
     y = Symbol('y')
     r = roots(y**4 + y + 1, y, multiple=True)[0]
-    assert ask(Q.real(r)) is False
-    assert ask(Q.positive(r)) is False
-    assert ask(Q.negative(r)) is False
-    assert ask(Q.imaginary(r)) is False
+    assert ask(Q.real(r)) is None
+    assert ask(Q.positive(r)) is None
+    assert ask(Q.negative(r)) is None
+    assert ask(Q.imaginary(r)) is None
+    assert ask(Q.nonzero(r)) is None
 
     r_pos = roots(y**4 - y - 1, y, multiple=True)[3]
     assert ask(Q.real(r_pos)) is True
