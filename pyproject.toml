@@ -119,7 +119,7 @@ exclude_lines = [
 ]
 
 [tool.ruff]
-target-version = "py310"
+target-version = "py311"
 # Enable Pyflakes `E` and `F` codes by default.
 lint.select = [
     "W191",  # indentation contains tabs
