@@ -213,8 +213,12 @@ def _parallel_readings(trees):
                       for node, (span_of, _) in zip(nodes, spans)}
         if len(signatures) > 1:
             choices = [_choice(node, span_of) for node, (span_of, _) in zip(nodes, spans)]
-            prefix = os.path.commonprefix(choices)
-            choices = [choice[len(prefix):] for choice in choices]
+            prefix_length = 0
+            for characters in zip(*choices):
+                if any(c != characters[0] for c in characters):
+                    break
+                prefix_length += 1
+            choices = [choice[prefix_length:] for choice in choices]
             # without a rule telling the readings apart, the site is a kind of its own
             kind = frozenset(choices) if len(set(choices)) == len(signatures) else span
             sites[span] = (kind, choices)
