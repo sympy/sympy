@@ -6,6 +6,7 @@ from sympy.core.numbers import Rational, NumberSymbol, _illegal
 from sympy.core.parameters import global_parameters
 from sympy.core.relational import (Lt, Gt, Eq, Ne, Relational,
     _canonical, _canonical_coeff)
+from sympy.core.sympify import sympify
 from sympy.core.sorting import ordered
 from sympy.functions.elementary.miscellaneous import Max, Min
 from sympy.logic.boolalg import (And, Boolean, distribute_and_over_or, Not,
@@ -225,29 +226,37 @@ class Piecewise(DefinedFunction):
 
 
     def _eval_as_leading_term(self, x, logx, cdir):
-        from sympy.functions.elementary.complexes import re
+        from sympy.core.relational import Equality, Unequality
         from sympy.functions.elementary.exponential import log
+
 
         t = Dummy('t', positive=True)
         L = Dummy('L', negative=True)
-        from_right = not re(cdir).is_negative
-        pt = t if from_right else -t
+        d = S.One if cdir == 0 else sympify(cdir)
+        pt = d*t
+
+
+        def evaluate(lhs, rhs, relation):
+            if not isinstance(relation, (Equality, Unequality)):
+                if not (lhs.is_extended_real and rhs.is_extended_real):
+                    return relation
+            return relation.func(lhs, rhs)
+
 
         def decide(relation):
             try:
-                leading_term = (relation.lhs - relation.rhs).as_leading_term(x, cdir=cdir)
-                if from_right:
-                    leading_term = leading_term.subs(log(x), L)
-                res = relation.func(leading_term.subs(x, pt), S.Zero)
+                lt = (relation.lhs - relation.rhs).as_leading_term(x, cdir=cdir)
+            except NotImplementedError:
+                pass
+            else:
+                if d.is_positive:
+                    lt = lt.subs(log(x), L)
+                res = evaluate(lt.subs(x, pt), S.Zero, relation)
                 if res in (S.true, S.false):
                     return res
-            except (NotImplementedError, TypeError):
-                pass
-            try:
-                res = relation.subs(x, pt)
-            except TypeError:
-                return relation
+            res = evaluate(relation.lhs.subs(x, pt), relation.rhs.subs(x, pt), relation)
             return res if res in (S.true, S.false) else relation
+
 
         for e, c in self.args:
             c = c.replace(lambda a: isinstance(a, Relational), decide)
@@ -257,6 +266,7 @@ class Piecewise(DefinedFunction):
                 continue
             raise NotImplementedError(
                 "cannot decide condition %s near %s = 0" % (c, x))
+
 
         raise NotImplementedError("no condition of %s holds near %s = 0" % (self, x))
 
