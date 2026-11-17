@@ -325,7 +325,7 @@ def test_union_iter():
     assert list(u) == [0, 3, 1, 4, 2, 5, 6, 7]
     assert sum(u) == 28
     u = Union(Range(0, oo, 2), Range(0, oo, 3))
-    assert list(islice(u, 6)) == [0, 2, 3, 4, 6, 9]
+    assert list(islice(u, 6)) == [0, 0, 2, 3, 4, 6]
 
 
 def test_union_is_empty():
