@@ -76,6 +76,80 @@ SymPy deprecation warnings.
 
 ## Version 1.15
 
+(deprecated-mathml-xsl)=
+### `print_gtk` and the `sympy.utilities.mathml` functions
+
+The `print_gtk()` function and the functions `c2p()`, `apply_xsl()`, and
+`add_mathml_headers()` in the `sympy.utilities.mathml` module are deprecated.
+
+`print_gtk()` displays an expression in the external `mathmlviewer` program
+from GtkMathView. To do this, it converts the content MathML for the
+expression to presentation MathML with `c2p()`, which uses `apply_xsl()` to
+apply an XSLT stylesheet that is bundled with SymPy.
+
+These functions are deprecated for the following reasons:
+
+- GtkMathView is no longer available in current Linux distributions such as
+  Debian and Ubuntu, so `print_gtk()` cannot be used on most systems.
+- SymPy can print presentation MathML directly, using the
+  `printer='presentation'` option of {func}`~sympy.printing.mathml.mathml`
+  and {func}`~sympy.printing.mathml.print_mathml`, so an XSLT conversion is no
+  longer needed for SymPy expressions.
+- The XSLT stylesheets in `sympy/utilities/mathml/data` that these functions
+  depend on are third-party files that are not under SymPy's license. They
+  will be removed from SymPy together with these functions. See [issue
+  #31035](https://github.com/sympy/sympy/issues/31035).
+
+Code that uses these functions can be updated as follows:
+
+- Instead of `print_gtk(expr)`, use
+  {func}`preview(expr) <sympy.printing.preview.preview>` to display a rendered
+  expression in an external viewer (this requires LaTeX), or use
+  `print_mathml(expr, printer='presentation')` to get presentation MathML,
+  which can be displayed in a web browser.
+
+- Instead of `c2p(mathml(expr))`, use
+
+  ```py
+  mathml(expr, printer='presentation')
+  ```
+
+  Note that the presentation MathML printer does not produce exactly the same
+  output as `c2p()`, and its output is not wrapped in a `<math>` element.
+
+- Instead of `apply_xsl(mml, xsl)`, including uses of `c2p()` on MathML that
+  does not come from a SymPy expression, apply an XSLT stylesheet with
+  [lxml](https://lxml.de/) directly. The stylesheet must be a file that you
+  provide.
+
+  ```py
+  from lxml import etree
+
+  parser = etree.XMLParser(resolve_entities=False)
+  stylesheet = etree.parse("stylesheet.xsl", parser=parser)
+  transform = etree.XSLT(stylesheet,
+                         access_control=etree.XSLTAccessControl.DENY_ALL)
+  result = str(transform(etree.XML(mml, parser=parser)))
+  ```
+
+- Instead of `add_mathml_headers(s)`, wrap the MathML string in a `<math>`
+  element directly. For content MathML that will be passed to a stylesheet
+  like `mmlctop.xsl` or `simple_mmlctop.xsl`, which is what `c2p()` does, use
+
+  ```py
+  '<math>' + s + '</math>'
+  ```
+
+  The `<math>` element should not declare a default namespace in this case,
+  because those two stylesheets match elements that have no namespace. Other
+  uses do need the MathML namespace, including the `mmltex.xsl` stylesheet
+  and displaying presentation MathML in a web browser, such as the output of
+  `mathml(expr, printer='presentation')`:
+
+  ```py
+  '<math xmlns="http://www.w3.org/1998/Math/MathML">' + s + '</math>'
+  ```
+
 (deprecated-mechanics-bodyforcelist)=
 ### Use .loads instead of .forcelist and .bodies instead of .bodylist
 
