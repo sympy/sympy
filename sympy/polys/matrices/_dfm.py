@@ -67,17 +67,17 @@ if TYPE_CHECKING:
     from sympy.polys.domains.domain import Domain
 
 
-if GROUND_TYPES != 'flint':
-    __doctest_skip__ = ['*']
+if GROUND_TYPES != "flint":
+    __doctest_skip__ = ["*"]
 
 
-flint = import_module('flint')
+flint = import_module("flint")
 
 
-__all__ = ['DFM']
+__all__ = ["DFM"]
 
 
-@doctest_depends_on(ground_types=['flint'])
+@doctest_depends_on(ground_types=["flint"])
 class DFM(Generic[Er]):
     """
     Dense FLINT matrix. This class is a wrapper for matrices from python-flint.
@@ -113,7 +113,7 @@ class DFM(Generic[Er]):
 
     """
 
-    fmt = 'dense'
+    fmt = "dense"
     is_DFM = True
     is_DDM = False
 
@@ -123,7 +123,12 @@ class DFM(Generic[Er]):
     cols: int
     domain: Domain[Er]
 
-    def __new__(cls, rowslist: list[list[Er]] | FLINT_MAT_P[Er], shape: tuple[int, int], domain: Domain[Er]) -> DFM[Er]:
+    def __new__(
+        cls,
+        rowslist: list[list[Er]] | FLINT_MAT_P[Er],
+        shape: tuple[int, int],
+        domain: Domain[Er],
+    ) -> DFM[Er]:
         """Construct from a nested list."""
         flint_mat: Callable[..., FLINT_MAT_P[Er]] = cls._get_flint_func(domain)
 
@@ -138,7 +143,9 @@ class DFM(Generic[Er]):
         return cls._new(rep, shape, domain)
 
     @classmethod
-    def _new(cls, rep: FLINT_MAT_P[Es], shape: tuple[int, int], domain: Domain[Es]) -> DFM[Es]:
+    def _new(
+        cls, rep: FLINT_MAT_P[Es], shape: tuple[int, int], domain: Domain[Es]
+    ) -> DFM[Es]:
         """Internal constructor from a flint matrix."""
         cls._check(rep, shape, domain)
         obj: DFM[Es] = object.__new__(DFM)
@@ -181,6 +188,7 @@ class DFM(Generic[Er]):
             c = domain.characteristic()
             if isinstance(domain.one, flint.nmod):
                 _cls = flint.nmod_mat
+
                 def _func(*e):
                     if len(e) == 1 and isinstance(e[0], flint.nmod_mat):
                         return _cls(e[0])
@@ -204,7 +212,7 @@ class DFM(Generic[Er]):
 
     def __repr__(self):
         """Return ``repr(self)``."""
-        return f'DFM{repr(self.to_ddm())[3:]}'
+        return f"DFM{repr(self.to_ddm())[3:]}"
 
     def __eq__(self, other: object) -> bool:
         """Return ``self == other``."""
@@ -216,7 +224,9 @@ class DFM(Generic[Er]):
         return self.domain == other.domain and self.rep == other.rep
 
     @classmethod
-    def from_list(cls, rowslist: list[list[Es]], shape: tuple[int, int], domain: Domain[Es]) -> DFM[Es]:
+    def from_list(
+        cls, rowslist: list[list[Es]], shape: tuple[int, int], domain: Domain[Es]
+    ) -> DFM[Es]:
         """Construct from a nested list."""
         return DFM(rowslist, shape, domain)
 
@@ -262,7 +272,9 @@ class DFM(Generic[Er]):
         return cls.from_list(ddm.to_list(), ddm.shape, ddm.domain)
 
     @classmethod
-    def from_list_flat(cls, elements: list[Es], shape: tuple[int, int], domain: Domain[Es]) -> DFM[Es]:
+    def from_list_flat(
+        cls, elements: list[Es], shape: tuple[int, int], domain: Domain[Es]
+    ) -> DFM[Es]:
         """Inverse of :meth:`to_list_flat`."""
         func: Callable[..., FLINT_MAT_P[Es]] = cls._get_flint_func(domain)
         try:
@@ -282,7 +294,9 @@ class DFM(Generic[Er]):
         return self.to_ddm().to_flat_nz()
 
     @classmethod
-    def from_flat_nz(cls, elements: list[Es], data: FlatNzData, domain: Domain[Es]) -> DFM[Es]:
+    def from_flat_nz(
+        cls, elements: list[Es], data: FlatNzData, domain: Domain[Es]
+    ) -> DFM[Es]:
         """Inverse of :meth:`to_flat_nz`."""
         return DDM.from_flat_nz(elements, data, domain).to_dfm()
 
@@ -291,7 +305,12 @@ class DFM(Generic[Er]):
         return self.to_ddm().to_dod()
 
     @classmethod
-    def from_dod(cls, dod: Mapping[int, Mapping[int, Es]], shape: tuple[int, int], domain: Domain[Es]) -> DFM[Es]:
+    def from_dod(
+        cls,
+        dod: Mapping[int, Mapping[int, Es]],
+        shape: tuple[int, int],
+        domain: Domain[Es],
+    ) -> DFM[Es]:
         """Inverse of :meth:`to_dod`."""
         return DDM.from_dod(dod, shape, domain).to_dfm()
 
@@ -300,7 +319,12 @@ class DFM(Generic[Er]):
         return self.to_ddm().to_dok()
 
     @classmethod
-    def from_dok(cls, dok: Mapping[tuple[int, int], Es], shape: tuple[int, int], domain: Domain[Es]) -> DFM[Es]:
+    def from_dok(
+        cls,
+        dok: Mapping[tuple[int, int], Es],
+        shape: tuple[int, int],
+        domain: Domain[Es],
+    ) -> DFM[Es]:
         """Inverse of :math:`to_dod`."""
         return DDM.from_dok(dok, shape, domain).to_dfm()
 
@@ -350,7 +374,9 @@ class DFM(Generic[Er]):
         try:
             return self.rep[i, j]
         except ValueError:
-            raise IndexError(f"Invalid indices ({i}, {j}) for Matrix of shape {self.shape}")
+            raise IndexError(
+                f"Invalid indices ({i}, {j}) for Matrix of shape {self.shape}"
+            )
 
     def setitem(self, i: int, j: int, value: Er) -> None:
         """Set the ``(i, j)``-th entry."""
@@ -364,7 +390,9 @@ class DFM(Generic[Er]):
         try:
             self.rep[i, j] = value
         except ValueError:
-            raise IndexError(f"Invalid indices ({i}, {j}) for Matrix of shape {self.shape}")
+            raise IndexError(
+                f"Invalid indices ({i}, {j}) for Matrix of shape {self.shape}"
+            )
 
     def _extract(self, i_indices: Sequence[int], j_indices: Sequence[int]) -> DFM[Er]:
         """Extract a submatrix with no checking."""
@@ -390,7 +418,9 @@ class DFM(Generic[Er]):
             else:
                 i_pos = i
             if not 0 <= i_pos < m:
-                raise IndexError(f"Invalid row index {i} for Matrix of shape {self.shape}")
+                raise IndexError(
+                    f"Invalid row index {i} for Matrix of shape {self.shape}"
+                )
             new_rows.append(i_pos)
 
         for j in colslist:
@@ -399,7 +429,9 @@ class DFM(Generic[Er]):
             else:
                 j_pos = j
             if not 0 <= j_pos < n:
-                raise IndexError(f"Invalid column index {j} for Matrix of shape {self.shape}")
+                raise IndexError(
+                    f"Invalid column index {j} for Matrix of shape {self.shape}"
+                )
             new_cols.append(j_pos)
 
         return self._extract(new_rows, new_cols)
@@ -553,7 +585,7 @@ class DFM(Generic[Er]):
         """Return the strongly connected components of the matrix."""
         return self.to_ddm().scc()
 
-    @doctest_depends_on(ground_types='flint')
+    @doctest_depends_on(ground_types="flint")
     def det(self):
         """
         Compute the determinant of the matrix using FLINT.
@@ -604,7 +636,7 @@ class DFM(Generic[Er]):
         # Probably in Python the thresholds would be different though.
         return self.rep.det()
 
-    @doctest_depends_on(ground_types='flint')
+    @doctest_depends_on(ground_types="flint")
     def charpoly(self):
         """
         Compute the characteristic polynomial of the matrix using FLINT.
@@ -648,7 +680,7 @@ class DFM(Generic[Er]):
         # FLINT polynomial coefficients are in reverse order compared to SymPy.
         return self.rep.charpoly().coeffs()[::-1]
 
-    @doctest_depends_on(ground_types='flint')
+    @doctest_depends_on(ground_types="flint")
     def inv(self):
         """
         Compute the inverse of a matrix using FLINT.
@@ -742,7 +774,7 @@ class DFM(Generic[Er]):
     # method= argument to choose between the two. Flint itself has more
     # possible algorithms to choose from than are exposed by python-flint.
 
-    @doctest_depends_on(ground_types='flint')
+    @doctest_depends_on(ground_types="flint")
     def lu_solve(self, rhs):
         """
         Solve a matrix equation using FLINT.
@@ -789,7 +821,9 @@ class DFM(Generic[Er]):
             Higher level interface to solve a matrix equation.
         """
         if not self.domain == rhs.domain:
-            raise DMDomainError("Domains must match: %s != %s" % (self.domain, rhs.domain))
+            raise DMDomainError(
+                "Domains must match: %s != %s" % (self.domain, rhs.domain)
+            )
 
         # XXX: As for inv we should consider whether to return a matrix over
         # over an associated field or attempt to find a solution in the ring.
@@ -800,7 +834,9 @@ class DFM(Generic[Er]):
         m, n = self.shape
         j, k = rhs.shape
         if m != j:
-            raise DMShapeError("Matrix size mismatch: %s * %s vs %s * %s" % (m, n, j, k))
+            raise DMShapeError(
+                "Matrix size mismatch: %s * %s vs %s * %s" % (m, n, j, k)
+            )
         sol_shape = (n, k)
 
         # XXX: The Flint solve method only handles square matrices. Probably
@@ -833,7 +869,7 @@ class DFM(Generic[Er]):
         sympy.polys.matrices.ddm.DDM.fflu
         """
         if self.domain == ZZ:
-            fflu = getattr(self.rep, 'fflu', None)
+            fflu = getattr(self.rep, "fflu", None)
             if fflu is not None:
                 P, L, D, U = self.rep.fflu()
                 m, n = self.shape
@@ -841,7 +877,7 @@ class DFM(Generic[Er]):
                     self._new(P, (m, m), self.domain),
                     self._new(L, (m, m), self.domain),
                     self._new(D, (m, m), self.domain),
-                    self._new(U, self.shape, self.domain)
+                    self._new(U, self.shape, self.domain),
                 )
         ddm_p, ddm_l, ddm_d, ddm_u = self.to_ddm().fflu()
         P = ddm_p.to_dfm()
@@ -882,7 +918,7 @@ class DFM(Generic[Er]):
         """Return a particular solution to the system."""
         return self.to_ddm().particular().to_dfm()
 
-    def _lll(self, transform=False, delta=0.99, eta=0.51, rep='zbasis', gram='approx'):
+    def _lll(self, transform=False, delta=0.99, eta=0.51, rep="zbasis", gram="approx"):
         """Call the fmpz_mat.lll() method but check rank to avoid segfaults."""
 
         # XXX: There are tests that pass e.g. QQ(5,6) for delta. That fails
@@ -910,9 +946,11 @@ class DFM(Generic[Er]):
             raise DMRankError("Matrix must have full row rank for Flint LLL.")
 
         # Actually call the flint method.
-        return self.rep.lll(transform=transform, delta=delta, eta=eta, rep=rep, gram=gram)
+        return self.rep.lll(
+            transform=transform, delta=delta, eta=eta, rep=rep, gram=gram
+        )
 
-    @doctest_depends_on(ground_types='flint')
+    @doctest_depends_on(ground_types="flint")
     def lll(self, delta=0.75):
         """Compute LLL-reduced basis using FLINT.
 
@@ -942,7 +980,7 @@ class DFM(Generic[Er]):
         rep = self._lll(delta=delta)
         return self._new_rep(rep)
 
-    @doctest_depends_on(ground_types='flint')
+    @doctest_depends_on(ground_types="flint")
     def lll_transform(self, delta=0.75):
         """Compute LLL-reduced basis and transform using FLINT.
 
