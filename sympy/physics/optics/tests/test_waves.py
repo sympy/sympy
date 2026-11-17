@@ -101,3 +101,10 @@ def test_twave():
     f2 = Symbol('f2')
     w_diff_f = TWave(A2, f2, n=1.5)
     raises(NotImplementedError, lambda: w_med1 + w_diff_f)
+
+    # Test additive identity with zero and sum()
+    assert 0 + w_med1 == w_med1
+    assert w_med1 + 0 == w_med1
+    assert w_med1 - 0 == w_med1
+    assert 0 - w_med1 == -w_med1
+    assert sum([w_med1, w_med2]) == w_med_sum

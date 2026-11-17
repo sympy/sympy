@@ -281,6 +281,8 @@ class TWave(Expr):
         Addition of two waves will result in their superposition.
         The type of interference will depend on their phase angles.
         """
+        if other == 0:
+            return self
         if isinstance(other, TWave):
             if self.frequency == other.frequency and self.wavelength == other.wavelength:
                 return TWave(sqrt(self.amplitude**2 + other.amplitude**2 + 2 *
@@ -291,6 +293,7 @@ class TWave(Expr):
                              + other.amplitude*sin(other.phase),
                              self.amplitude*cos(self.phase)
                              + other.amplitude*cos(other.phase)),
+                             time_period=self.time_period,
                              n=self.n
                              )
             elif self.frequency != other.frequency:
@@ -313,18 +316,24 @@ class TWave(Expr):
             raise TypeError(type(other).__name__ + " and TWave objects cannot be multiplied.")
 
     def __sub__(self, other):
+        if other == 0:
+            return self
         return self.__add__(-1*other)
 
     def __neg__(self):
         return self.__mul__(-1)
 
     def __radd__(self, other):
+        if other == 0:
+            return self
         return self.__add__(other)
 
     def __rmul__(self, other):
         return self.__mul__(other)
 
     def __rsub__(self, other):
+        if other == 0:
+            return -self
         return (-self).__radd__(other)
 
     def _eval_rewrite_as_sin(self, *args, **kwargs):
