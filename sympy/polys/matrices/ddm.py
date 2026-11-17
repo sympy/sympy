@@ -61,6 +61,7 @@ domain checking and also shape checking so that the list of lists
 representation is friendlier.
 
 """
+
 from __future__ import annotations
 from itertools import chain
 from typing import TYPE_CHECKING, Generic
@@ -79,21 +80,21 @@ from sympy.polys.domains import QQ
 from sympy.polys.domains.domain import Er, Es
 
 from .dense import (
-        ddm_transpose,
-        ddm_iadd,
-        ddm_isub,
-        ddm_ineg,
-        ddm_imul,
-        ddm_irmul,
-        ddm_imatmul,
-        ddm_irref,
-        ddm_irref_den,
-        ddm_idet,
-        ddm_iinv,
-        ddm_ilu_split,
-        ddm_ilu_solve,
-        ddm_berk,
-        )
+    ddm_transpose,
+    ddm_iadd,
+    ddm_isub,
+    ddm_ineg,
+    ddm_imul,
+    ddm_irmul,
+    ddm_imatmul,
+    ddm_irref,
+    ddm_irref_den,
+    ddm_idet,
+    ddm_iinv,
+    ddm_ilu_split,
+    ddm_ilu_solve,
+    ddm_berk,
+)
 
 from .lll import ddm_lll, ddm_lll_transform
 
@@ -104,8 +105,8 @@ if TYPE_CHECKING:
     from sympy.polys.domains.domain import Domain
 
 
-if GROUND_TYPES != 'flint':
-    __doctest_skip__ = ['DDM.to_dfm', 'DDM.to_dfm_or_ddm']
+if GROUND_TYPES != "flint":
+    __doctest_skip__ = ["DDM.to_dfm", "DDM.to_dfm_or_ddm"]
 
 
 class DDM(list[list[Er]], Generic[Er]):
@@ -115,7 +116,7 @@ class DDM(list[list[Er]], Generic[Er]):
     basic matrix arithmetic +, -, *, **.
     """
 
-    fmt = 'dense'
+    fmt = "dense"
     is_DFM = False
     is_DDM = True
 
@@ -124,8 +125,12 @@ class DDM(list[list[Er]], Generic[Er]):
     cols: int
     domain: Domain[Er]
 
-    def __init__(self, rowslist: list[list[Er]], shape: tuple[int, int], domain: Domain[Er]) -> None:
-        if not (isinstance(rowslist, list) and all(type(row) is list for row in rowslist)):
+    def __init__(
+        self, rowslist: list[list[Er]], shape: tuple[int, int], domain: Domain[Er]
+    ) -> None:
+        if not (
+            isinstance(rowslist, list) and all(type(row) is list for row in rowslist)
+        ):
             raise DMBadInputError("rowslist must be a list of lists")
         m, n = shape
         if len(rowslist) != m or any(len(row) != n for row in rowslist):
@@ -157,7 +162,9 @@ class DDM(list[list[Er]], Generic[Er]):
         return DDM(ddm, (len(rows), len(cols)), self.domain)
 
     @classmethod
-    def from_list(cls, rowslist: list[list[Es]], shape: tuple[int, int], domain: Domain[Es]) -> DDM[Es]:
+    def from_list(
+        cls, rowslist: list[list[Es]], shape: tuple[int, int], domain: Domain[Es]
+    ) -> DDM[Es]:
         """
         Create a :class:`DDM` from a list of lists.
 
@@ -230,7 +237,9 @@ class DDM(list[list[Er]], Generic[Er]):
         return flat
 
     @classmethod
-    def from_list_flat(cls, flat: list[Es], shape: tuple[int, int], domain: Domain[Es]) -> DDM[Es]:
+    def from_list_flat(
+        cls, flat: list[Es], shape: tuple[int, int], domain: Domain[Es]
+    ) -> DDM[Es]:
         """
         Create a :class:`DDM` from a flat list of elements.
 
@@ -253,9 +262,9 @@ class DDM(list[list[Er]], Generic[Er]):
         """
         assert type(flat) is list
         rows, cols = shape
-        if not (len(flat) == rows*cols):
+        if not (len(flat) == rows * cols):
             raise DMBadInputError("Inconsistent flat-list shape")
-        lol = [flat[i*cols:(i+1)*cols] for i in range(rows)]
+        lol = [flat[i * cols : (i + 1) * cols] for i in range(rows)]
         return DDM(lol, shape, domain)
 
     def flatiter(self) -> Iterator[Er]:
@@ -300,7 +309,9 @@ class DDM(list[list[Er]], Generic[Er]):
         return self.to_sdm().to_flat_nz()
 
     @classmethod
-    def from_flat_nz(cls, elements: list[Es], data: FlatNzData, domain: Domain[Es]) -> DDM[Es]:
+    def from_flat_nz(
+        cls, elements: list[Es], data: FlatNzData, domain: Domain[Es]
+    ) -> DDM[Es]:
         """
         Reconstruct a :class:`DDM` after calling :meth:`to_flat_nz`.
 
@@ -347,13 +358,18 @@ class DDM(list[list[Er]], Generic[Er]):
         """
         dod = {}
         for i, row in enumerate(self):
-            row_nz = {j:e for j, e in enumerate(row) if e}
+            row_nz = {j: e for j, e in enumerate(row) if e}
             if row_nz:
                 dod[i] = row_nz
         return dod
 
     @classmethod
-    def from_dod(cls, dod: Mapping[int, Mapping[int, Es]], shape: tuple[int, int], domain: Domain[Es]) -> DDM[Es]:
+    def from_dod(
+        cls,
+        dod: Mapping[int, Mapping[int, Es]],
+        shape: tuple[int, int],
+        domain: Domain[Es],
+    ) -> DDM[Es]:
         """
         Create a :class:`DDM` from a dictionary of dictionaries (dod) format.
 
@@ -409,7 +425,12 @@ class DDM(list[list[Er]], Generic[Er]):
         return dok
 
     @classmethod
-    def from_dok(cls, dok: Mapping[tuple[int, int], Es], shape: tuple[int, int], domain: Domain[Es]) -> DDM[Es]:
+    def from_dok(
+        cls,
+        dok: Mapping[tuple[int, int], Es],
+        shape: tuple[int, int],
+        domain: Domain[Es],
+    ) -> DDM[Es]:
         """
         Create a :class:`DDM` from a dictionary of keys (dok) format.
 
@@ -525,7 +546,7 @@ class DDM(list[list[Er]], Generic[Er]):
         """
         return SDM.from_list(self, self.shape, self.domain)
 
-    @doctest_depends_on(ground_types=['flint'])
+    @doctest_depends_on(ground_types=["flint"])
     def to_dfm(self) -> DFM[Er]:
         """
         Convert to :class:`~.DDM` to :class:`~.DFM`.
@@ -549,7 +570,7 @@ class DDM(list[list[Er]], Generic[Er]):
         """
         return DFM(list(self), self.shape, self.domain)
 
-    @doctest_depends_on(ground_types=['flint'])
+    @doctest_depends_on(ground_types=["flint"])
     def to_dfm_or_ddm(self) -> DFM[Er] | DDM[Er]:
         """
         Convert to :class:`~.DFM` if possible or otherwise return self.
@@ -584,18 +605,18 @@ class DDM(list[list[Er]], Generic[Er]):
         return DDM(rows, self.shape, K)
 
     def __str__(self):
-        rowsstr = ['[%s]' % ', '.join(map(str, row)) for row in self]
-        return '[%s]' % ', '.join(rowsstr)
+        rowsstr = ["[%s]" % ", ".join(map(str, row)) for row in self]
+        return "[%s]" % ", ".join(rowsstr)
 
     def __repr__(self):
         cls = type(self).__name__
         rows = list.__repr__(self)
-        return '%s(%s, %s, %s)' % (cls, rows, self.shape, self.domain)
+        return "%s(%s, %s, %s)" % (cls, rows, self.shape, self.domain)
 
     def __eq__(self, other: object) -> bool:
         if not isinstance(other, DDM):
             return False
-        return (super().__eq__(other) and self.domain == other.domain)
+        return super().__eq__(other) and self.domain == other.domain
 
     def __ne__(self, other: object) -> bool:
         return not self.__eq__(other)
@@ -700,14 +721,14 @@ class DDM(list[list[Er]], Generic[Er]):
 
     def add(a, b: DDM[Er]) -> DDM[Er]:
         """a + b"""
-        a._check(a, '+', b, a.shape, b.shape)
+        a._check(a, "+", b, a.shape, b.shape)
         c = a.copy()
         ddm_iadd(c, b)
         return c
 
     def sub(a, b: DDM[Er]) -> DDM[Er]:
         """a - b"""
-        a._check(a, '-', b, a.shape, b.shape)
+        a._check(a, "-", b, a.shape, b.shape)
         c = a.copy()
         ddm_isub(c, b)
         return c
@@ -732,7 +753,7 @@ class DDM(list[list[Er]], Generic[Er]):
         """a @ b (matrix product)"""
         m, o = a.shape
         o2, n = b.shape
-        a._check(a, '*', b, o, o2)
+        a._check(a, "*", b, o, o2)
         c = a.zeros((m, n), a.domain)
         ddm_imatmul(c, a, b)
         return c
@@ -931,7 +952,7 @@ class DDM(list[list[Er]], Generic[Er]):
             last_pivot = -1
             for i in range(m):
                 ai = a[i]
-                for j in range(last_pivot+1, n):
+                for j in range(last_pivot + 1, n):
                     if ai[j]:
                         last_pivot = j
                         pivots.append(j)
@@ -1036,7 +1057,9 @@ class DDM(list[list[Er]], Generic[Er]):
                 # Denominator is previous pivot or 1
                 denominator = LU[rank - 1][rank - 1] if rank > 0 else K.one
                 for k in range(j + 1, cols):
-                    LU[i][k] = K.exquo(pivot * LU[i][k] - LU[rank][k] * multiplier, denominator)
+                    LU[i][k] = K.exquo(
+                        pivot * LU[i][k] - LU[rank][k] * multiplier, denominator
+                    )
                 # Keep the multiplier for L matrix
                 LU[i][j] = multiplier
             rank += 1
@@ -1143,7 +1166,7 @@ class DDM(list[list[Er]], Generic[Er]):
         """x where a*x = b"""
         m, n = a.shape
         m2, o = b.shape
-        a._check(a, 'lu_solve', b, m, m2)
+        a._check(a, "lu_solve", b, m, m2)
         if not a.domain.is_Field:
             raise DMDomainError("lu_solve requires a field")
 
@@ -1159,7 +1182,7 @@ class DDM(list[list[Er]], Generic[Er]):
         if m != n:
             raise DMNonSquareMatrixError("Charpoly of non-square matrix")
         vec = ddm_berk(a, K)
-        coeffs = [vec[i][0] for i in range(n+1)]
+        coeffs = [vec[i][0] for i in range(n + 1)]
         return coeffs
 
     def is_zero_matrix(self) -> bool:
@@ -1183,7 +1206,7 @@ class DDM(list[list[Er]], Generic[Er]):
         even if the matrix is not square.
         """
         zero = self.domain.zero
-        return all(Mij == zero for i, Mi in enumerate(self) for Mij in Mi[i+1:])
+        return all(Mij == zero for i, Mi in enumerate(self) for Mij in Mi[i + 1 :])
 
     def is_diagonal(self) -> bool:
         """
