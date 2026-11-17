@@ -126,8 +126,9 @@ class ImplicitRegion(Basic):
                     if not solveset(equation.subs({x: x_reg, y: y_reg}), self.variables[2], domain=S.Reals).is_empty:
                         return (x_reg, y_reg, list(solveset(equation.subs({x: x_reg, y: y_reg})))[0])
 
-        if len(self.singular_points()) != 0:
-            return list[self.singular_points()][0]
+        sing_pts = self.singular_points()
+        if len(sing_pts) != 0:
+            return list(sing_pts)[0]
 
         raise NotImplementedError()
 
