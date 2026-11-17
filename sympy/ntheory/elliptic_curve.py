@@ -1,6 +1,9 @@
 from __future__ import annotations
+from itertools import count
+
 from sympy.core.numbers import oo
 from sympy.core.symbol import symbols
+from sympy.external.gmpy import lcm
 from sympy.polys.domains import FiniteField, QQ, RationalField, FF
 from sympy.polys.polytools import Poly
 from sympy.solvers.solvers import solve
@@ -372,29 +375,48 @@ class EllipticCurvePoint:
 
     def order(self):
         """
-        Return point order n where nP = 0.
+        Return the order of the point, i.e. the smallest positive integer
+        ``n`` such that ``n*P`` is the point at infinity, or ``oo`` if there
+        is no such ``n``.
+
+        Over ``QQ``, Mazur's theorem says that a point of finite order has
+        order at most 12, so ``oo`` is returned when none of the first 12
+        multiples of the point is the point at infinity.
+
+        Examples
+        ========
+
+        >>> from sympy.ntheory.elliptic_curve import EllipticCurve
+        >>> e1 = EllipticCurve(-43, 166)
+        >>> e1(3, 8).order()
+        7
+        >>> e2 = EllipticCurve(-3, 3)
+        >>> e2(1, 1).order()
+        oo
+        >>> e3 = EllipticCurve(2, 1, modulus=5)
+        >>> e3(1, 2).order()
+        7
 
         """
         if self.z == 0:
             return 1
-        if self.y == 0:  # P = -P
-            return 2
-        p = self * 2
-        if p.y == -self.y:  # 2P = -P
-            return 3
-        i = 2
+        p = self
         if self._domain != QQ:
-            while int(p.x) == p.x and int(p.y) == p.y:
-                p = self + p
-                i += 1
+            for n in count(2):
+                p = p + self
                 if p.z == 0:
-                    return i
-            return oo
-        while p.x.numerator == p.x and p.y.numerator == p.y:
-            p = self + p
-            i += 1
-            if i > 12:
+                    return n
+        # A point of finite order on a model with integer coefficients has
+        # 4*x and 8*y integral (Silverman, "The Arithmetic of Elliptic
+        # Curves", VII.3.4), and (x, y) -> (u**2*x, u**3*y) maps the curve
+        # to such a model.
+        c = self._curve
+        u = lcm(*(a.denominator for a in (c._a1, c._a2, c._a3, c._a4, c._a6)))
+        dx, dy = 4*u**2, 8*u**3
+        for n in range(2, 13):
+            if (dx*p.x/p.z).denominator != 1 or (dy*p.y/p.z).denominator != 1:
                 return oo
+            p = p + self
             if p.z == 0:
-                return i
+                return n
         return oo
