@@ -889,7 +889,7 @@ def test_piecewise_as_leading_term_real_condition():
     f = Piecewise((x**2, Eq(im(x), 0)), (x, True))
     assert f.as_leading_term(x, cdir=1) == x**2
     assert f.as_leading_term(x, cdir=-1) == x**2
-    
+
 
 def test_piecewise_complex():
     p1 = Piecewise((2, x < 0), (1, 0 <= x))

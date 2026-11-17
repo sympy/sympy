@@ -223,7 +223,7 @@ class Piecewise(DefinedFunction):
     def _eval_simplify(self, **kwargs):
         return piecewise_simplify(self, **kwargs)
 
-    
+
     def _eval_as_leading_term(self, x, logx, cdir):
         from sympy.functions.elementary.complexes import re
         from sympy.functions.elementary.exponential import log
@@ -248,7 +248,7 @@ class Piecewise(DefinedFunction):
             except TypeError:
                 return relation
             return res if res in (S.true, S.false) else relation
-        
+
         for e, c in self.args:
             c = c.replace(lambda a: isinstance(a, Relational), decide)
             if c == True:
@@ -257,7 +257,7 @@ class Piecewise(DefinedFunction):
                 continue
             raise NotImplementedError(
                 "cannot decide condition %s near %s = 0" % (c, x))
-        
+
         raise NotImplementedError("no condition of %s holds near %s = 0" % (self, x))
 
     def _eval_adjoint(self):
