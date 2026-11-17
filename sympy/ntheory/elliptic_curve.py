@@ -377,24 +377,18 @@ class EllipticCurvePoint:
         """
         if self.z == 0:
             return 1
-        if self.y == 0:  # P = -P
-            return 2
-        p = self * 2
-        if p.y == -self.y:  # 2P = -P
-            return 3
-        i = 2
-        if self._domain != QQ:
-            while int(p.x) == p.x and int(p.y) == p.y:
-                p = self + p
-                i += 1
+        p = self
+        if self._domain == QQ:
+            # By Mazur's torsion theorem, any rational torsion point on a
+            # nonsingular elliptic curve over QQ has order at most 12.
+            for i in range(2, 13):
+                p = p + self
                 if p.z == 0:
                     return i
             return oo
-        while p.x.numerator == p.x and p.y.numerator == p.y:
-            p = self + p
+        i = 1
+        while True:
+            p = p + self
             i += 1
-            if i > 12:
-                return oo
             if p.z == 0:
                 return i
-        return oo
