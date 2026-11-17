@@ -1,4 +1,5 @@
 from __future__ import annotations
+from sympy.external.gmpy import GROUND_TYPES
 from sympy.polys.matrices import DomainMatrix, DM
 from sympy.polys.domains import ZZ, QQ
 from sympy import Matrix
@@ -262,7 +263,8 @@ def test_sdm_fflu(name, A, P_ans, L_ans, D_ans, U_ans):
 
 @pytest.mark.parametrize('name, A, P_ans, L_ans, D_ans, U_ans', FFLU_EXAMPLES)
 def test_dfm_fflu(name, A, P_ans, L_ans, D_ans, U_ans):
-    pytest.importorskip('flint')
+    if GROUND_TYPES != 'flint':
+        pytest.skip("DFM requires flint ground types")
     if A.domain not in (ZZ, QQ) and not A.domain.is_FF:
         pytest.skip("Domain not supported by DFM")
     A = A.to_dfm()
