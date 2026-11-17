@@ -290,10 +290,14 @@ class TWave(Expr):
                              atan2(self.amplitude*sin(self.phase)
                              + other.amplitude*sin(other.phase),
                              self.amplitude*cos(self.phase)
-                             + other.amplitude*cos(other.phase))
+                             + other.amplitude*cos(other.phase)),
+                             n=self.n
                              )
-            else:
+            elif self.frequency != other.frequency:
                 raise NotImplementedError("Interference of waves with different frequencies"
+                    " has not been implemented.")
+            else:
+                raise NotImplementedError("Interference of waves in different media"
                     " has not been implemented.")
         else:
             raise TypeError(type(other).__name__ + " and TWave objects cannot be added.")

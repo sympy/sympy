@@ -81,3 +81,23 @@ def test_twave():
 
     raises(ValueError, lambda:TWave(A1))
     raises(ValueError, lambda:TWave(A1, f, phi1, t))
+
+    # Test preservation of refractive index n and chained superposition
+    A3 = Symbol('A3')
+    w_med1 = TWave(A1, f, n=1.5)
+    w_med2 = TWave(A2, f, n=1.5)
+    w_med3 = TWave(A3, f, n=1.5)
+    w_med_sum = w_med1 + w_med2
+    assert w_med_sum.n == 1.5
+    assert w_med_sum.speed == c/1.5
+    w_med_chain = w_med1 + w_med2 + w_med3
+    assert w_med_chain.n == 1.5
+
+    # Test error handling when waves have same frequency but different media
+    w_diff_n = TWave(A2, f, n=2.0)
+    raises(NotImplementedError, lambda: w_med1 + w_diff_n)
+
+    # Test error handling when waves have different frequencies
+    f2 = Symbol('f2')
+    w_diff_f = TWave(A2, f2, n=1.5)
+    raises(NotImplementedError, lambda: w_med1 + w_diff_f)
