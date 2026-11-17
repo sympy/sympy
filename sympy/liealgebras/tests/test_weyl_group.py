@@ -15,8 +15,13 @@ def test_weyl_group():
     d = WeylGroup("B5")
     assert d.group_order() == 3840
     assert d.element_order('r1*r2*r4*r5') == 12
-    assert d.matrix_form('r2*r3') ==  Matrix([[0, 0, 1, 0, 0], [1, 0, 0, 0, 0],
-        [0, 1, 0, 0, 0], [0, 0, 0, 1, 0], [0, 0, 0, 0, 1]])
+    assert d.matrix_form('r2*r3') ==  Matrix([
+        [1, 0, 0, 0, 0],
+        [0, 0, 0, 1, 0],
+        [0, 1, 0, 0, 0],
+        [0, 0, 1, 0, 0],
+        [0, 0, 0, 0, 1]],
+        )
     assert d.element_order('r1*r2*r1*r3*r5') == 6
     e = WeylGroup("D5")
     assert e.element_order('r2*r3*r5') == 4

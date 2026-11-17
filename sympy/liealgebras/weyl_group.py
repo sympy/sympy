@@ -146,7 +146,7 @@ class WeylGroup(Atom):
         >>> from sympy.liealgebras.weyl_group import WeylGroup
         >>> b = WeylGroup("B4")
         >>> b.element_order("r1*r4*r2")
-        4
+        6
         """
         n = len(self.cartan_type.simple_root(1))
         identity: Matrix = eye(n)
@@ -209,130 +209,16 @@ class WeylGroup(Atom):
 
         """
         reflections = self.delete_doubles(weylelt)
-        n = self.cartan_type.rank()
-        if self.cartan_type.series == 'A':
-            matrixform = eye(n+1)
-            for elt in reflections:
-                a = int(elt)
-                mat = eye(n+1)
-                mat[a-1, a-1] = 0
-                mat[a-1, a] = 1
-                mat[a, a-1] = 1
-                mat[a, a] = 0
-                matrixform *= mat
-            return matrixform
+        n = len(self.cartan_type.simple_root(1))
+        matrixform: Matrix = eye(n)
 
-        if self.cartan_type.series == 'D':
-            matrixform = eye(n)
-            for elt in reflections:
-                a = int(elt)
-                mat = eye(n)
-                if a < n:
-                    mat[a-1, a-1] = 0
-                    mat[a-1, a] = 1
-                    mat[a, a-1] = 1
-                    mat[a, a] = 0
-                    matrixform *= mat
-                else:
-                    mat[n-2, n-1] = -1
-                    mat[n-2, n-2] = 0
-                    mat[n-1, n-2] = -1
-                    mat[n-1, n-1] = 0
-                    matrixform *= mat
-            return matrixform
+        for elt in reflections:
+            root = self.cartan_type.simple_root(int(elt))
+            reflection_matrix = eye(n) - 2 * (root.T * root) / (root.dot(root))
+            matrixform *= reflection_matrix
 
-        if self.cartan_type.series == 'G':
-            matrixform = eye(3)
-            for elt in reflections:
-                a = int(elt)
-                if a == 1:
-                    gen1 = Matrix([[1, 0, 0], [0, 0, 1], [0, 1, 0]])
-                    matrixform *= gen1
-                else:
-                    gen2 = Matrix([[Rational(2, 3), Rational(2, 3), Rational(-1, 3)],
-                                   [Rational(2, 3), Rational(-1, 3), Rational(2, 3)],
-                                   [Rational(-1, 3), Rational(2, 3), Rational(2, 3)]])
-                    matrixform *= gen2
-            return matrixform
+        return matrixform
 
-        if self.cartan_type.series == 'F':
-            matrixform = eye(4)
-            for elt in reflections:
-                a = int(elt)
-                if a == 1:
-                    mat = Matrix([[1, 0, 0, 0], [0, 0, 1, 0], [0, 1, 0, 0], [0, 0, 0, 1]])
-                    matrixform *= mat
-                elif a == 2:
-                    mat = Matrix([[1, 0, 0, 0], [0, 1, 0, 0], [0, 0, 0, 1], [0, 0, 1, 0]])
-                    matrixform *= mat
-                elif a == 3:
-                    mat = Matrix([[1, 0, 0, 0], [0, 1, 0, 0], [0, 0, 1, 0], [0, 0, 0, -1]])
-                    matrixform *= mat
-                else:
-
-                    mat = Matrix([[Rational(1, 2), Rational(1, 2), Rational(1, 2), Rational(1, 2)],
-                        [Rational(1, 2), Rational(1, 2), Rational(-1, 2), Rational(-1, 2)],
-                        [Rational(1, 2), Rational(-1, 2), Rational(1, 2), Rational(-1, 2)],
-                        [Rational(1, 2), Rational(-1, 2), Rational(-1, 2), Rational(1, 2)]])
-                    matrixform *= mat
-            return matrixform
-
-        if self.cartan_type.series == 'E':
-            matrixform = eye(8)
-            for elt in reflections:
-                a = int(elt)
-                if a == 1:
-                    mat = Matrix([[Rational(3, 4), Rational(1, 4), Rational(1, 4), Rational(1, 4),
-                        Rational(1, 4), Rational(1, 4), Rational(1, 4), Rational(-1, 4)],
-                        [Rational(1, 4), Rational(3, 4), Rational(-1, 4), Rational(-1, 4),
-                            Rational(-1, 4), Rational(-1, 4), Rational(1, 4), Rational(-1, 4)],
-                        [Rational(1, 4), Rational(-1, 4), Rational(3, 4), Rational(-1, 4),
-                        Rational(-1, 4), Rational(-1, 4), Rational(-1, 4), Rational(1, 4)],
-                        [Rational(1, 4), Rational(-1, 4), Rational(-1, 4), Rational(3, 4),
-                        Rational(-1, 4), Rational(-1, 4), Rational(-1, 4), Rational(1, 4)],
-                        [Rational(1, 4), Rational(-1, 4), Rational(-1, 4), Rational(-1, 4),
-                        Rational(3, 4), Rational(-1, 4), Rational(-1, 4), Rational(1, 4)],
-                        [Rational(1, 4), Rational(-1, 4), Rational(-1, 4), Rational(-1, 4),
-                        Rational(-1, 4), Rational(3, 4), Rational(-1, 4), Rational(1, 4)],
-                        [Rational(1, 4), Rational(-1, 4), Rational(-1, 4), Rational(-1, 4),
-                        Rational(-1, 4), Rational(-1, 4), Rational(-3, 4), Rational(1, 4)],
-                        [Rational(1, 4), Rational(-1, 4), Rational(-1, 4), Rational(-1, 4),
-                        Rational(-1, 4), Rational(-1, 4), Rational(-1, 4), Rational(3, 4)]])
-                    matrixform *= mat
-                elif a == 2:
-                    mat = eye(8)
-                    mat[0, 0] = 0
-                    mat[0, 1] = -1
-                    mat[1, 0] = -1
-                    mat[1, 1] = 0
-                    matrixform *= mat
-                else:
-                    mat = eye(8)
-                    mat[a-3, a-3] = 0
-                    mat[a-3, a-2] = 1
-                    mat[a-2, a-3] = 1
-                    mat[a-2, a-2] = 0
-                    matrixform *= mat
-            return matrixform
-
-
-        if self.cartan_type.series in ("B", "C"):
-            matrixform = eye(n)
-            for elt in reflections:
-                a = int(elt)
-                mat = eye(n)
-                if a == 1:
-                    mat[0, 0] = -1
-                    matrixform *= mat
-                else:
-                    mat[a - 2, a - 2] = 0
-                    mat[a-2, a-1] = 1
-                    mat[a - 1, a - 2] = 1
-                    mat[a -1, a - 1] = 0
-                    matrixform *= mat
-            return matrixform
-
-        raise ValueError(f"Invalid Cartan type: {self.cartan_type.series}{n}")
 
     def coxeter_diagram(self) -> str:
         """
