@@ -1218,9 +1218,8 @@ class PrettyPrinter(Printer):
         #Fixing the newlines
         lengths = []
         strs = ['']
-        flag = []
+        flag = [0] * len(o1)
         for i, partstr in enumerate(o1):
-            flag.append(0)
             # XXX: What is this hack?
             if '\n' in partstr:
                 tempstr = partstr
