@@ -12,7 +12,7 @@ license = "BSD-3-Clause AND MIT"
 license-files = ["LICENSE", "LICENSES_BUNDLED.txt"]
 keywords = ["Math", "CAS"]
 # Keep in sync with sympy/__init__.py.
-requires-python = ">=3.10"
+requires-python = ">=3.11"
 dependencies = ["mpmath>=1.1.0,<1.5"]
 classifiers = [
     "Operating System :: OS Independent",
@@ -21,7 +21,6 @@ classifiers = [
     "Topic :: Scientific/Engineering :: Mathematics",
     "Topic :: Scientific/Engineering :: Physics",
     "Programming Language :: Python :: 3",
-    "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
     "Programming Language :: Python :: 3.13",
@@ -120,7 +119,7 @@ exclude_lines = [
 ]
 
 [tool.ruff]
-target-version = "py310"
+target-version = "py311"
 # Enable Pyflakes `E` and `F` codes by default.
 lint.select = [
     "W191",  # indentation contains tabs

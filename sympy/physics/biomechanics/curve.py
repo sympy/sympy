@@ -1732,7 +1732,7 @@ class FiberForceVelocityInverseDeGroote2016(CharacteristicCurveFunction):
         return r'\left( \operatorname{fv}^M \right)^{-1} \left( %s \right)' % _fv_M
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, kw_only=True)
 class CharacteristicCurveCollection:
     """Simple data container to group together related characteristic curves."""
     tendon_force_length: type[CharacteristicCurveFunction]
