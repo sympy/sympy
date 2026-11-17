@@ -4,6 +4,7 @@ sympy.polys.matrices.dfm
 Provides the :class:`DFM` class if ``GROUND_TYPES=flint'``. Otherwise, ``DFM``
 is a placeholder class that raises NotImplementedError when instantiated.
 """
+
 from __future__ import annotations
 
 from typing import TYPE_CHECKING
@@ -15,13 +16,14 @@ if TYPE_CHECKING or GROUND_TYPES == "flint":  # pragma: no cover
     # if the domain is supported by python-flint.
     from ._dfm import DFM
 
-else: # pragma: no cover
+else:  # pragma: no cover
     # Other code should be able to import this and it should just present as a
     # version of DFM that does not support any domains.
     class DFM_dummy:
         """
         Placeholder class for DFM when python-flint is not installed.
         """
+
         def __init__(*args, **kwargs):
             raise NotImplementedError("DFM requires GROUND_TYPES=flint.")
 
