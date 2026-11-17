@@ -909,6 +909,17 @@ def test_loglogistic():
     X = LogLogistic('x', 1, 2)
     assert median(X) == FiniteSet(1)
 
+    # Expectations of expressions other than X itself (issue #31123)
+    X = LogLogistic('x', 1, 3)
+    assert E(X**2) == 2*pi/(3*sin(2*pi/3))
+    assert variance(X) == 2*pi/(3*sin(2*pi/3)) - (pi/(3*sin(pi/3)))**2
+    assert E(X**2 + 2*X + 1) == E(X**2) + 2*E(X) + 1
+    assert E(X**3) is S.NaN
+    a, b = symbols('a b', positive=True)
+    X = LogLogistic('x', a, b)
+    assert E(X**2) == Piecewise((S.NaN, b <= 2),
+                                (2*pi*a**2/(b*sin(2*pi/b)), True))
+
 def test_logitnormal():
     mu = Symbol('mu', real=True)
     s = Symbol('s', positive=True)
