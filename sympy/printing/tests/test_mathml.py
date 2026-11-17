@@ -1,6 +1,7 @@
 from __future__ import annotations
 from sympy.calculus.accumulationbounds import AccumBounds
 from sympy.concrete.summations import Sum
+from sympy.core.add import Add
 from sympy.core.basic import Basic
 from sympy.core.containers import Tuple
 from sympy.core.function import Derivative, Lambda, diff, Function
@@ -226,6 +227,17 @@ def test_content_mathml_add():
     assert mml.childNodes[0].nodeName == 'plus'
     assert mml.childNodes[1].childNodes[0].nodeName == 'minus'
     assert mml.childNodes[1].childNodes[1].nodeName == 'apply'
+
+
+def test_content_mathml_add_repeated_terms():
+    assert mathml(Add(x, y, y, evaluate=False)) == \
+        '<apply><plus/><ci>x</ci><ci>y</ci><ci>y</ci></apply>'
+    assert mathml(Add(x, y, y, y, evaluate=False)) == \
+        '<apply><plus/><ci>x</ci><ci>y</ci><ci>y</ci><ci>y</ci></apply>'
+    assert mathml(Add(x**2, y, y, evaluate=False)) == \
+        '<apply><plus/><apply><power/><ci>x</ci><cn>2</cn></apply><ci>y</ci><ci>y</ci></apply>'
+    assert mathml(Add(x, -y, -y, evaluate=False)) == \
+        '<apply><minus/><apply><minus/><ci>x</ci><ci>y</ci></apply><ci>y</ci></apply>'
 
 
 def test_content_mathml_Rational():

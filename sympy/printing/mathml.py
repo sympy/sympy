@@ -201,13 +201,10 @@ class MathMLContentPrinter(MathMLPrinterBase):
                 x.appendChild(self._print(-arg))
                 # invert expression since this is now minused
                 lastProcessed = x
-                if arg == args[-1]:
-                    plusNodes.append(lastProcessed)
             else:
                 plusNodes.append(lastProcessed)
                 lastProcessed = self._print(arg)
-                if arg == args[-1]:
-                    plusNodes.append(self._print(arg))
+        plusNodes.append(lastProcessed)
         if len(plusNodes) == 1:
             return lastProcessed
         x = self.dom.createElement('apply')
