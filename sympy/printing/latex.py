@@ -622,10 +622,10 @@ class LatexPrinter(Printer):
                 if self._needs_mul_brackets(numer, last=True):
                     tex += r"\frac{1}{%s}%s\left(%s\right)" \
                         % (sdenom, separator, snumer)
-                elif numer.is_Mul:
+                elif isinstance(numer, Mul):
                     # split a long numerator
-                    a = S.One
-                    b = S.One
+                    a: Expr = S.One
+                    b: Expr = S.One
                     for x in numer.args:
                         if self._needs_mul_brackets(x, last=False) or \
                                 len(convert(a*x).split()) > ratio*ldenom or \
@@ -855,7 +855,8 @@ class LatexPrinter(Printer):
             tex = r"\frac{%s^{%s}}{%s}" % (diff_symbol, self._print(dim), tex)
 
         precedence = PRECEDENCE["Mul"]
-        if self._settings['mul_symbol']:
+        if (self._settings['mul_symbol'] or
+                precedence_traditional(expr.expr) == precedence):
             # Nudge up the precedence so d/dx (f(x) * g(x)) also gets parenthesized
             precedence += 1
         if any(i.could_extract_minus_sign() for i in expr.args):
@@ -1844,6 +1845,9 @@ class LatexPrinter(Printer):
             else:
                 return r"%s^{%s}" % (s, adjoint_style)
 
+    def _print_Conjugate(self, expr, exp=None):
+        return self._print_conjugate(expr, exp=exp)
+
     def _print_MatMul(self, expr):
         from sympy import MatMul
 
@@ -1981,6 +1985,9 @@ class LatexPrinter(Printer):
 
         def block(content, ncols):
             return block_str.replace('%COLS%', 'c'*ncols) % content
+
+        if 0 in expr.shape:
+            return block("", 0)
 
         level_str: list[list[str]] = [[] for i in range(expr.ndim + 1)]
         shape_ranges = [list(range(i)) for i in expr.shape]

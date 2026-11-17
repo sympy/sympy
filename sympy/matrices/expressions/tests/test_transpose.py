@@ -1,6 +1,6 @@
 from __future__ import annotations
 from sympy.functions import adjoint, conjugate, transpose
-from sympy.matrices.expressions import MatrixSymbol, Adjoint, trace, Transpose
+from sympy.matrices.expressions import MatrixSymbol, Adjoint, trace, Transpose, Conjugate
 from sympy.matrices import eye, Matrix
 from sympy.assumptions.ask import Q
 from sympy.assumptions.refine import refine
@@ -22,7 +22,8 @@ def test_transpose():
     assert transpose(Transpose(A)) == A
     assert isinstance(Transpose(Transpose(A)), Transpose)
 
-    assert adjoint(Transpose(A)) == Adjoint(Transpose(A))
+    assert adjoint(Transpose(A)) == Conjugate(A)
+    assert Adjoint(Transpose(A)).doit() == Conjugate(A)
     assert conjugate(Transpose(A)) == Adjoint(A)
 
     assert Transpose(eye(3)).doit() == eye(3)

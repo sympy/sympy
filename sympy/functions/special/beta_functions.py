@@ -222,7 +222,7 @@ class betainc(DefinedFunction):
 
     >>> from sympy import hyper
     >>> betainc(a, b, x1, x2).rewrite(hyper)
-    (-x1**a*hyper((a, 1 - b), (a + 1,), x1) + x2**a*hyper((a, 1 - b), (a + 1,), x2))/a
+    (x2**a*hyper((a, 1 - b), (a + 1,), x2) - x1**a*hyper((a, 1 - b), (a + 1,), x1))/a
 
     See Also
     ========
@@ -335,7 +335,7 @@ class betainc_regularized(DefinedFunction):
 
     >>> from sympy import hyper
     >>> betainc_regularized(a, b, x1, x2).rewrite(hyper)
-    (-x1**a*hyper((a, 1 - b), (a + 1,), x1) + x2**a*hyper((a, 1 - b), (a + 1,), x2))/(a*beta(a, b))
+    (x2**a*hyper((a, 1 - b), (a + 1,), x2) - x1**a*hyper((a, 1 - b), (a + 1,), x1))/(a*beta(a, b))
 
     See Also
     ========

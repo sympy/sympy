@@ -1338,6 +1338,9 @@ def test_op_priority():
         def simplify():
             pass
 
+        def xreplace():
+            pass
+
     Lorentz = TensorIndexType('Lorentz', dim=4, dummy_name='L')
     a = tensor_indices('a', Lorentz)
     p = tensor_heads('p', [Lorentz])

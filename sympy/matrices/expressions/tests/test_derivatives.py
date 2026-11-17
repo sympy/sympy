@@ -902,3 +902,32 @@ def test_hadamard_product_derivative():
         dexpr = expr.diff(X2).as_explicit().subs(nums).doit()
         ref = derive_by_array(explicit, Xe).subs(nums).doit()
         assert list(flatten(dexpr.tolist())) == list(flatten(ref.tolist()))
+
+
+def test_matadd_eval_derivative():
+    from sympy.matrices.expressions.special import MatrixUnit
+    x, y = symbols('x y')
+    A = MatrixSymbol('A', 3, 3)
+    B = MatrixSymbol('B', 3, 3)
+
+    assert (x*A + y*B).diff(x) == A
+    assert (x*A + y*B).diff(y) == B
+    assert (A + B).diff(x) == ZeroMatrix(3, 3)
+    assert (A + B).diff(A[0, 1]) == MatrixUnit(3, 3, 0, 1)
+
+
+def test_matmul_eval_derivative():
+    from sympy.matrices.expressions.special import MatrixUnit
+    x, y = symbols('x y')
+    A = MatrixSymbol('A', 3, 3)
+    B = MatrixSymbol('B', 3, 3)
+    C = MatrixSymbol('C', 3, 3)
+
+    assert (A * B).diff(x) == ZeroMatrix(3, 3)
+    assert (x * A * B).diff(x) == A * B
+    assert ((x**2) * A * (y * B)).diff(x) == (2*x*y) * A * B
+    assert ((x*A + B) * (x*B + A)).diff(x) == (x*A + B)*B + A*(x*B + A)
+    expected = -A * (x*B + C).I * B * (x*B + C).I * A
+    assert (A * (x*B + C).I * A).diff(x) == expected
+    assert (A * B).diff(A[0, 1]) == MatrixUnit(3, 3, 0, 1) * B
+    assert (A * B).diff(B[1, 2]) == A * MatrixUnit(3, 3, 1, 2)

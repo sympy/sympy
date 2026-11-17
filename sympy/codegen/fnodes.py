@@ -13,7 +13,7 @@ from sympy.codegen.ast import (
 from sympy.core.basic import Basic
 from sympy.core.containers import Tuple
 from sympy.core.expr import Expr
-from sympy.core.function import Function
+from sympy.core.function import DefinedFunction
 from sympy.core.numbers import Float, Integer
 from sympy.core.symbol import Str
 from sympy.core.sympify import sympify
@@ -617,7 +617,7 @@ class FortranReturn(Token):
     _construct_return_value = staticmethod(sympify)
 
 
-class FFunction(Function):
+class FFunction(DefinedFunction):
     _required_standard = 77
 
     def _fcode(self, printer):

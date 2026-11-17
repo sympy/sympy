@@ -275,8 +275,6 @@ def run_all_tests(test_args=(), test_kwargs=None,
     Right now, this runs the regular tests (bin/test), the doctests
     (bin/doctest), and the examples (examples/all.py).
 
-    This is what ``setup.py test`` uses.
-
     You can pass arguments and keyword arguments to the test functions that
     support them (for now, test,  doctest, and the examples). See the
     docstrings of those functions for a description of the available options.

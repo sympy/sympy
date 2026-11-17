@@ -393,9 +393,9 @@ class Dyadic(Printable, EvalfMixin):
         >>> A = N.orientnew('A', 'Axis', (beta, N.x))
         >>> trigsimp(inertia_dyadic.to_matrix(A))
         Matrix([
-        [                           Ixx,                                           Ixy*cos(beta) + Ixz*sin(beta),                                           -Ixy*sin(beta) + Ixz*cos(beta)],
-        [ Ixy*cos(beta) + Ixz*sin(beta), Iyy*cos(2*beta)/2 + Iyy/2 + Iyz*sin(2*beta) - Izz*cos(2*beta)/2 + Izz/2,                 -Iyy*sin(2*beta)/2 + Iyz*cos(2*beta) + Izz*sin(2*beta)/2],
-        [-Ixy*sin(beta) + Ixz*cos(beta),                -Iyy*sin(2*beta)/2 + Iyz*cos(2*beta) + Izz*sin(2*beta)/2, -Iyy*cos(2*beta)/2 + Iyy/2 - Iyz*sin(2*beta) + Izz*cos(2*beta)/2 + Izz/2]])
+        [                          Ixx,                                           Ixy*cos(beta) + Ixz*sin(beta),                                            Ixz*cos(beta) - Ixy*sin(beta)],
+        [Ixy*cos(beta) + Ixz*sin(beta), Iyy*cos(2*beta)/2 + Iyy/2 + Iyz*sin(2*beta) - Izz*cos(2*beta)/2 + Izz/2,                 -Iyy*sin(2*beta)/2 + Iyz*cos(2*beta) + Izz*sin(2*beta)/2],
+        [Ixz*cos(beta) - Ixy*sin(beta),                -Iyy*sin(2*beta)/2 + Iyz*cos(2*beta) + Izz*sin(2*beta)/2, -Iyy*cos(2*beta)/2 + Iyy/2 - Iyz*sin(2*beta) + Izz*cos(2*beta)/2 + Izz/2]])
 
         """
 
@@ -513,7 +513,7 @@ class Dyadic(Printable, EvalfMixin):
         >>> ((1 + x*y) * D).xreplace({x: pi})
         (pi*y + 1)*(N.x|N.x)
         >>> ((1 + x*y) * D).xreplace({x: pi, y: 2})
-        (1 + 2*pi)*(N.x|N.x)
+        (2*pi + 1)*(N.x|N.x)
 
         Replacements occur only if an entire node in the expression tree is
         matched:

@@ -6,7 +6,6 @@ prune bin
 prune release
 
 exclude .editorconfig
-exclude .flake8
 exclude .gitattributes
 exclude .gitignore
 exclude .mailmap
@@ -15,33 +14,11 @@ exclude CITATION.cff
 exclude CLAUDE.md
 exclude CODE_OF_CONDUCT.md
 exclude CONTRIBUTING.md
-exclude MANIFEST.in
 exclude asv.conf.actions.json
 exclude banner.svg
 exclude codecov.yml
 exclude conftest.py
 exclude requirements-dev.txt
 
-recursive-include data *
-recursive-include doc *
-prune doc/_build
-prune doc/ext/__pycache__
-prune doc/src/_pygments/__pycache__
-exclude doc/src/modules/physics/mechanics/examples/*.pdf
-exclude doc/src/modules/physics/vector/*.pdf
-exclude doc/src/modules/vector/*.pdf
-recursive-include examples *.py README
-
-include sympy/utilities/mathml/data/*.xsl
-
-recursive-include sympy/parsing/latex *.g4 *.txt
-recursive-include sympy/parsing/autolev *.g4 *.al
-recursive-include sympy/parsing/smtlib *.lark
-
-include LICENSE
-include LICENSES_BUNDLED.txt
-include TODO
-include AUTHORS
-include README.md
 include bin/isympy
 exclude MANIFEST.in

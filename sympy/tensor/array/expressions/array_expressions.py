@@ -622,7 +622,7 @@ class ArrayAdd(_ArrayExpr):
         tuple are merged by summing their coefficients.  Addends whose
         summed coefficient is zero are dropped.
         """
-        coeff_map: dict[tuple, Expr] = {}
+        coeff_map = {}
         for arg in args:
             coeff, arrays = _array_term_as_coeff_arrays(arg)
             if arrays in coeff_map:

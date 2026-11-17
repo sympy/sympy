@@ -5,15 +5,16 @@ from collections import defaultdict
 
 from sympy.core import Basic, Mul, Add, Pow, sympify
 from sympy.core.containers import Tuple, OrderedSet
+from sympy.core.function import Function, AppliedUndef, Derivative
 from sympy.core.exprtools import factor_terms
 from sympy.core.singleton import S
 from sympy.core.sorting import ordered
 from sympy.core.symbol import symbols, Symbol
+from sympy.core.traversal import preorder_traversal
 from sympy.matrices import (MatrixBase, Matrix, ImmutableMatrix,
                             SparseMatrix, ImmutableSparseMatrix)
 from sympy.matrices.expressions import (MatrixExpr, MatrixSymbol, MatMul,
                                         MatAdd, MatPow, Inverse)
-from sympy.matrices.expressions.matexpr import MatrixElement
 from sympy.polys.rootoftools import RootOf
 from sympy.utilities.iterables import numbered_symbols, sift, \
         topological_sort, iterable
@@ -39,6 +40,66 @@ basic_optimizations = [(cse_opts.sub_pre, cse_opts.sub_post),
 # sometimes we want the output in a different format; non-trivial
 # transformations can be put here for users
 # ===============================================================
+
+
+def cse_to_functions(replacements, reduced_expressions):
+    """Represent scalar CSE temporaries as functions of differentiation variables.
+
+    This can be passed as the ``postprocess`` argument to ``cse``. The
+    replacement left-hand sides become applied undefined functions instead
+    of independent Symbols, and their occurrences in later expressions
+    are updated accordingly.
+
+    These are symbolic function definitions, not ordinary scalar assignments.
+    Matrix-valued replacements are left unchanged.
+
+    Only differentiation variables occurring freely in a replacement are
+    included as arguments, in their ``variable_count`` order. Other symbols
+    are treated as parameters. Replacements with no matching differentiation
+    variables become zero-argument functions.
+
+    Examples
+    ========
+
+    >>> from sympy import cse, Derivative, Function, symbols
+    >>> from sympy.simplify.cse_main import cse_to_functions
+    >>> x = symbols('x')
+    >>> f = Function('f')
+    >>> cse(f(x)**2 + Derivative(f(x), x), postprocess=cse_to_functions)
+    ([(x0(x), f(x))], [x0(x)**2 + Derivative(x0(x), x)])
+    """
+    expressions = [rhs for _, rhs in replacements] + list(reduced_expressions)
+    used_names = {
+        node.func.__name__
+        for expr in expressions
+        for node in expr.atoms(AppliedUndef)
+    }
+    variables = OrderedSet(
+        variable
+        for expr in expressions
+        for node in preorder_traversal(expr, keys=True)
+        if isinstance(node, Derivative)
+        for variable, _ in node.variable_count
+    )
+    converted = {}
+    processed = []
+    for sym, rhs in replacements:
+        rhs = rhs.xreplace(converted)
+        if isinstance(sym, Symbol):
+            name = sym.name
+            while name in used_names:
+                name += '_'
+            used_names.add(name)
+            args = OrderedSet(
+                variable for variable in
+                (v.xreplace(converted) for v in variables)
+                if rhs.has_xfree({variable})
+            )
+            func = Function(name)(*args)
+            converted[sym] = func
+            sym = func
+        processed.append((sym, rhs))
+    return processed, [expr.xreplace(converted) for expr in reduced_expressions]
 
 
 def reps_toposort(r):
@@ -618,9 +679,7 @@ def tree_cse(exprs, symbols, opt_subs=None, order='canonical', ignore=()):
             return
 
         if isinstance(expr, Basic) and (
-                expr.is_Atom or
-                expr.is_Order or
-                isinstance(expr, (MatrixSymbol, MatrixElement))):
+                expr.is_symbol or expr.is_Atom or expr.is_Order):
             if expr.is_Symbol:
                 excluded_symbols.add(expr.name)
             return

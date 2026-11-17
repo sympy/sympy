@@ -4,7 +4,7 @@ from sympy.assumptions.refine import refine
 from sympy.core.numbers import oo
 from sympy.core.relational import Equality, Eq, Ne
 from sympy.core.singleton import S
-from sympy.core.symbol import (Dummy, symbols)
+from sympy.core.symbol import (Dummy, Symbol, symbols)
 from sympy.functions import Piecewise
 from sympy.functions.elementary.trigonometric import cos, sin
 from sympy.sets.sets import Interval, Union
@@ -1366,6 +1366,13 @@ def test_issue_26985():
 
     assert result_anf == d
     assert result == d
+
+
+def test_evaluate_false_atoms():
+    # https://github.com/sympy/sympy/issues/31133
+    for op in (And, Or):
+        expr = op(x > 1, y > 2, evaluate=False)
+        assert expr.atoms(Symbol) == {x, y}
 
 
 def test_evaluate_false():

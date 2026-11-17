@@ -100,7 +100,7 @@ class MatPow(MatrixExpr):
         base, exp = self.args
         if exp.is_integer and exp.is_nonnegative:
             return MatPow(base.conjugate(), exp)
-        return None
+        return super()._eval_conjugate()
 
     def _eval_derivative(self, x):
         assert not hasattr(x, "shape")

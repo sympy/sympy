@@ -45,9 +45,6 @@ jobs:
       - name: Detect invalid escapes like '\e'
         run: python -We:invalid -We::SyntaxWarning -m compileall -f -q sympy/
 
-      - name: Test all modules are listed in setup.py
-        run: bin/test_setup.py
-
       - name: Check for incorrect use of ``__slots__`` using slotscheck
         run: python bin/slotscheck
 
@@ -66,7 +63,7 @@ jobs:
 
   mypy:
     name: Mypy
-    needs: code-quality
+    needs: [code-quality, authors]
 
     runs-on: ubuntu-latest
     steps:
@@ -84,7 +81,7 @@ jobs:
 
   mypy-flint:
     name: Mypy With python-flint
-    needs: code-quality
+    needs: [code-quality, authors]
 
     runs-on: ubuntu-latest
     steps:
@@ -104,7 +101,7 @@ jobs:
 
   sphinx-lint:
     name: Sphinx Lint
-    needs: code-quality
+    needs: [code-quality, authors]
 
     runs-on: ubuntu-latest
     steps:
@@ -124,7 +121,6 @@ jobs:
 
   authors:
     name: Check Authors
-    needs: code-quality
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -143,7 +139,7 @@ jobs:
 
   doctests-latest:
     name: Doctests
-    needs: code-quality
+    needs: [code-quality, authors]
 
     runs-on: ubuntu-latest
     steps:
@@ -161,7 +157,7 @@ jobs:
   # ------------------------- Test latest Python ------------------- #
 
   tests-latest:
-    needs: code-quality
+    needs: [code-quality, authors]
 
     runs-on: ubuntu-latest
 
@@ -368,7 +364,7 @@ jobs:
 
   tests-slow:
     name: Slow Tests
-    needs: code-quality
+    needs: [code-quality, authors]
 
     runs-on: ubuntu-latest
 
@@ -476,7 +472,7 @@ jobs:
 
   sphinx:
     name: Build Docs
-    needs: code-quality
+    needs: [code-quality, authors]
 
     runs-on: ubuntu-latest
     steps:
@@ -582,16 +578,25 @@ jobs:
       - run: pip install asv virtualenv packaging
       - run: git submodule add https://github.com/sympy/sympy_benchmarks.git
 
-        # Need to make sure we can access the branches from the main repo. We
-        # will run benchmarks for the PR, for master and for the previous
-        # release. The version branch names below should be updated once there
-        # has been a newer release of sympy. The list of branches to check is
-        # also specified in asv.conf.actions.json which should be updated as
-        # well.
-
       - run: git remote add upstream https://github.com/sympy/sympy.git
-      - run: git fetch upstream master
-      - run: git fetch upstream 1.14
+      - run: git fetch upstream master --tags
+
+      - name: Select latest stable release
+        shell: python
+        run: |
+          import re
+          import subprocess
+          from packaging.version import Version
+
+          tags = subprocess.check_output(
+              ['git', 'tag', '--list', 'sympy-*'], text=True).splitlines()
+          stable_tags = [tag for tag in tags
+                         if re.fullmatch(r'sympy-\d+\.\d+\.\d+', tag)]
+          latest = max(stable_tags, key=lambda tag: Version(tag[6:]))
+          commit = subprocess.check_output(
+              ['git', 'rev-parse', f'{latest}^{{commit}}'], text=True).strip()
+          subprocess.run(['git', 'update-ref', 'refs/heads/benchmark-release', commit], check=True)
+          print(f'Benchmark release: {latest} ({commit})', flush=True)
 
       - name: Configure benchmarks
         run: asv machine --yes --config asv.conf.actions.json
@@ -603,8 +608,8 @@ jobs:
         # Output benchmark results
       - run: asv compare upstream/master HEAD --config asv.conf.actions.json --factor 1.5 | tee pr_vs_master.txt
       - run: asv compare upstream/master HEAD --config asv.conf.actions.json --factor 1.5 --only-changed | tee pr_vs_master_changed.txt
-      - run: asv compare upstream/1.14 upstream/master --config asv.conf.actions.json --factor 1.5 | tee master_vs_release.txt
-      - run: asv compare upstream/1.14 upstream/master --config asv.conf.actions.json --factor 1.5 --only-changed | tee master_vs_release_changed.txt
+      - run: asv compare benchmark-release upstream/master --config asv.conf.actions.json --factor 1.5 | tee master_vs_release.txt
+      - run: asv compare benchmark-release upstream/master --config asv.conf.actions.json --factor 1.5 --only-changed | tee master_vs_release_changed.txt
 
         # we save all outputs as artifacts that can be downloaded from the
         # GitHub Actions summary page.

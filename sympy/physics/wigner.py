@@ -66,7 +66,7 @@ Copyright (C) 2008 Jens Rasch <jyr2000@gmail.com>
 from __future__ import annotations
 from sympy.concrete.summations import Sum
 from sympy.core.add import Add
-from sympy.core.function import Function
+from sympy.core.function import DefinedFunction
 from sympy.core.numbers import (I, Integer, pi)
 from sympy.core.singleton import S
 from sympy.core.symbol import Dummy
@@ -943,7 +943,7 @@ def real_gaunt(l_1, l_2, l_3, mu_1, mu_2, mu_3, prec=None):
     return ugnt
 
 
-class Wigner3j(Function):
+class Wigner3j(DefinedFunction):
 
     def doit(self, **hints):
         if all(obj.is_number for obj in self.args):
@@ -1044,17 +1044,17 @@ def wigner_d_small(J, beta):
     ⎣    ⎝2⎠     ⎝2⎠⎦
 
     >>> pprint(wigner_d_small(2*half, beta), use_unicode=True)
-    ⎡        2⎛β⎞              ⎛β⎞    ⎛β⎞           2⎛β⎞     ⎤
-    ⎢     cos ⎜─⎟        √2⋅sin⎜─⎟⋅cos⎜─⎟        sin ⎜─⎟     ⎥
-    ⎢         ⎝2⎠              ⎝2⎠    ⎝2⎠            ⎝2⎠     ⎥
-    ⎢                                                        ⎥
-    ⎢       ⎛β⎞    ⎛β⎞       2⎛β⎞      2⎛β⎞        ⎛β⎞    ⎛β⎞⎥
-    ⎢-√2⋅sin⎜─⎟⋅cos⎜─⎟  - sin ⎜─⎟ + cos ⎜─⎟  √2⋅sin⎜─⎟⋅cos⎜─⎟⎥
-    ⎢       ⎝2⎠    ⎝2⎠        ⎝2⎠       ⎝2⎠        ⎝2⎠    ⎝2⎠⎥
-    ⎢                                                        ⎥
-    ⎢        2⎛β⎞               ⎛β⎞    ⎛β⎞          2⎛β⎞     ⎥
-    ⎢     sin ⎜─⎟        -√2⋅sin⎜─⎟⋅cos⎜─⎟       cos ⎜─⎟     ⎥
-    ⎣         ⎝2⎠               ⎝2⎠    ⎝2⎠           ⎝2⎠     ⎦
+    ⎡        2⎛β⎞             ⎛β⎞    ⎛β⎞          2⎛β⎞     ⎤
+    ⎢     cos ⎜─⎟       √2⋅sin⎜─⎟⋅cos⎜─⎟       sin ⎜─⎟     ⎥
+    ⎢         ⎝2⎠             ⎝2⎠    ⎝2⎠           ⎝2⎠     ⎥
+    ⎢                                                      ⎥
+    ⎢       ⎛β⎞    ⎛β⎞     2⎛β⎞      2⎛β⎞        ⎛β⎞    ⎛β⎞⎥
+    ⎢-√2⋅sin⎜─⎟⋅cos⎜─⎟  cos ⎜─⎟ - sin ⎜─⎟  √2⋅sin⎜─⎟⋅cos⎜─⎟⎥
+    ⎢       ⎝2⎠    ⎝2⎠      ⎝2⎠       ⎝2⎠        ⎝2⎠    ⎝2⎠⎥
+    ⎢                                                      ⎥
+    ⎢        2⎛β⎞              ⎛β⎞    ⎛β⎞         2⎛β⎞     ⎥
+    ⎢     sin ⎜─⎟       -√2⋅sin⎜─⎟⋅cos⎜─⎟      cos ⎜─⎟     ⎥
+    ⎣         ⎝2⎠              ⎝2⎠    ⎝2⎠          ⎝2⎠     ⎦
 
     From table 4 in [Edmonds74]_
 

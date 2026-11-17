@@ -571,11 +571,11 @@ polynomials and to solve some systems of polynomial equations::
     >>> q = Symbol('q')
 
     >>> solve(x**2 + p*x + q, x)
-              __________           __________
-             /  2                 /  2
-       p   \/  p  - 4*q     p   \/  p  - 4*q
-    [- - - -------------, - - + -------------]
-       2         2          2         2
+              __________     __________
+             /  2           /  2
+       p   \/  p  - 4*q   \/  p  - 4*q    p
+    [- - - -------------, ------------- - -]
+       2         2              2         2
 
     >>> solve_poly_system([y - x, x - 5], x, y)
     [(5, 5)]

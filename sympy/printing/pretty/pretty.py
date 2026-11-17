@@ -893,6 +893,9 @@ class PrettyPrinter(Printer):
         pform = pform**dag
         return pform
 
+    def _print_Conjugate(self, expr):
+        return self._print_conjugate(expr)
+
     def _print_BlockMatrix(self, B):
         if B.blocks.shape == (1, 1):
             return self._print(B.blocks[0, 0])
@@ -1215,9 +1218,8 @@ class PrettyPrinter(Printer):
         #Fixing the newlines
         lengths = []
         strs = ['']
-        flag = []
+        flag = [0] * len(o1)
         for i, partstr in enumerate(o1):
-            flag.append(0)
             # XXX: What is this hack?
             if '\n' in partstr:
                 tempstr = partstr
@@ -1277,6 +1279,9 @@ class PrettyPrinter(Printer):
 
         if expr.ndim == 0:
             return self._print(expr[()])
+
+        if 0 in expr.shape:
+            return prettyForm('[]')
 
         level_str = [[]] + [[] for i in range(expr.ndim)]
         shape_ranges = [list(range(i)) for i in expr.shape]
@@ -1976,7 +1981,10 @@ class PrettyPrinter(Printer):
         if pform.binding > prettyForm.MUL:
             pform = prettyForm(*pform.parens())
         pform = prettyForm(*pform.right(' mod '))
-        pform = prettyForm(*pform.right(self._print(expr.args[1])))
+        divisor = self._print(expr.args[1])
+        if divisor.binding > prettyForm.MUL:
+            divisor = prettyForm(*divisor.parens())
+        pform = prettyForm(*pform.right(divisor))
         pform.binding = prettyForm.OPEN
         return pform
 

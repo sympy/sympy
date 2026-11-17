@@ -194,9 +194,7 @@ def directional_derivative(field, direction_vector):
     >>> vec = u * e_r + v * e_theta + w * e_z
     >>> direction = e_theta
     >>> directional_derivative(vec, direction)  # doctest: +NORMALIZE_WHITESPACE
-    (-v(C.r, C.theta, C.z)/C.r + Derivative(u(C.r, C.theta, C.z), C.theta)/C.r)*C.i
-    + (u(C.r, C.theta, C.z)/C.r + Derivative(v(C.r, C.theta, C.z), C.theta)/C.r)*C.j
-    + (Derivative(w(C.r, C.theta, C.z), C.theta)/C.r)*C.k
+    (Derivative(u(C.r, C.theta, C.z), C.theta)/C.r - v(C.r, C.theta, C.z)/C.r)*C.i + (u(C.r, C.theta, C.z)/C.r + Derivative(v(C.r, C.theta, C.z), C.theta)/C.r)*C.j + (Derivative(w(C.r, C.theta, C.z), C.theta)/C.r)*C.k
 
     """
     from sympy.vector.operators import _get_coord_systems
@@ -404,7 +402,7 @@ def scalar_potential_difference(field, coord_sys, point1, point2):
     2*R.x**2*R.y
     >>> Q = R.origin.locate_new('O', 3*R.i + R.j + 2*R.k)
     >>> scalar_potential_difference(vectfield, R, P, Q)
-    -2*R.x**2*R.y + 18
+    18 - 2*R.x**2*R.y
 
     """
 

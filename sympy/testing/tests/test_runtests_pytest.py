@@ -36,6 +36,10 @@ class TestMakeAbsolutePath:
             _ = make_absolute_path(partial_path)
 
 
+@pytest.mark.skipif(
+    not Path(sympy_dir(), '.git').exists(),
+    reason='Path resolution tests require a Git checkout',
+)
 class TestUpdateArgsWithPaths:
 
     @staticmethod

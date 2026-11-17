@@ -268,7 +268,6 @@ def test_files():
     top_level_files = [join(TOP_PATH, file) for file in [
         "isympy.py",
         "build.py",
-        "setup.py",
     ]]
     # Files to exclude from all tests
     exclude = {

@@ -327,15 +327,9 @@ def sylvester(f, g, x, method = 1):
     # Sylvester's matrix of 1853 (a.k.a sylvester2)
     else:
         if len(fp) < len(gp):
-            h = []
-            for i in range(len(gp) - len(fp)):
-                h.append(0)
-            fp[ : 0] = h
+            fp[:0] = [0] * (len(gp) - len(fp))
         else:
-            h = []
-            for i in range(len(fp) - len(gp)):
-                h.append(0)
-            gp[ : 0] = h
+            gp[:0] = [0] * (len(fp) - len(gp))
         mx = max(m, n)
         dim = 2*mx
         M = zeros( dim )
@@ -2349,14 +2343,10 @@ def subresultants_vv(p, q, x, method = 0):
 
     # make two rows (row0, row1) of poly coefficients
     row0 = Poly(f, x, domain = QQ).all_coeffs()
-    leng0 = len(row0)
-    for i in range(col_num - leng0):
-        row0.append(0)
+    row0.extend([0] * (col_num - len(row0)))
     row0 = Matrix([row0])
     row1 = Poly(g,x, domain = QQ).all_coeffs()
-    leng1 = len(row1)
-    for i in range(col_num - leng1):
-        row1.append(0)
+    row1.extend([0] * (col_num - len(row1)))
     row1 = Matrix([row1])
 
     # row pointer for deg_f - deg_g == 1; may be reset below
@@ -2487,14 +2477,10 @@ def subresultants_vv_2(p, q, x):
 
     # make two rows (row0, row1) of poly coefficients
     row0 = Poly(f, x, domain = QQ).all_coeffs()
-    leng0 = len(row0)
-    for i in range(col_num - leng0):
-        row0.append(0)
+    row0.extend([0] * (col_num - len(row0)))
     row0 = Matrix([row0])
     row1 = Poly(g,x, domain = QQ).all_coeffs()
-    leng1 = len(row1)
-    for i in range(col_num - leng1):
-        row1.append(0)
+    row1.extend([0] * (col_num - len(row1)))
     row1 = Matrix([row1])
 
     # main loop
@@ -2523,9 +2509,7 @@ def subresultants_vv_2(p, q, x):
         deg_f, deg_g = deg_g, d
         row0 = row1
         row1 = Poly(poly, x, domain = QQ).all_coeffs()
-        leng1 = len(row1)
-        for i in range(col_num - leng1):
-            row1.append(0)
+        row1.extend([0] * (col_num - len(row1)))
         row1 = Matrix([row1])
 
     return sr_list

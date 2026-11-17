@@ -261,3 +261,8 @@ def test_adjoint_conjugate_power():
     assert (X**I).conjugate() == conjugate(X**I)
     assert (X**z).adjoint() == conjugate(X.T**z)
     assert (X**z).conjugate() == conjugate(X**z)
+
+    # Issue #30900 / #16498: conjugate/adjoint of negative powers preserves shape and matrix operations
+    B = MatrixSymbol('B', n, n)
+    assert (X**(-2)).adjoint().shape == (n, n)
+    assert ((X**(-2)).adjoint() * B).shape == (n, n)

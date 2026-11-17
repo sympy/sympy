@@ -80,8 +80,8 @@ create the local ring of the nodal cubic `y^2 = x^3` at the origin, over
     >>> lr
     ℚ[x, y, order=ilex]
     ───────────────────
-        ╱   3    2╲
-        ╲- x  + y ╱
+         ╱ 2    3╲
+         ╲y  - x ╱
 
 Note how the python list notation can be used as a short cut to express ideals.
 You can use the ``convert`` method to return ordinary sympy objects into
@@ -91,8 +91,8 @@ and in the process the symbols `x` and `y` were automatically converted into
 other representations). For example::
 
     >>> X, Y = lr.convert(x), lr.convert(y) ; X
-        ╱   3    2╲
-    x + ╲- x  + y ╱
+        ╱ 2    3╲
+    x + ╲y  - x ╱
 
     >>> x**3 == y**2
     False
