@@ -399,7 +399,43 @@ def _(expr, assumptions):
 def _(expr, assumptions):
     return True
 
-@ExtendedRealPredicate.register_many(Add, Mul, Pow) # type:ignore
+@ExtendedRealPredicate.register(Add) # type:ignore
+def _(expr, assumptions):
+    """
+    * ExtendedReal + ExtendedReal -> ExtendedReal, unless the sum
+      contains both oo and -oo
+    """
+    result = test_closed_group(expr, assumptions, Q.extended_real)
+    if result is not True:
+        return result
+    maybe_infinite = [a for a in expr.args
+        if _ask_recursive(Q.finite(a), assumptions) is not True]
+    if len(maybe_infinite) <= 1:
+        return True
+    if ask_all(*[~Q.positive_infinite(a) for a in expr.args],
+            assumptions=assumptions):
+        return True
+    if ask_all(*[~Q.negative_infinite(a) for a in expr.args],
+            assumptions=assumptions):
+        return True
+    return None
+
+@ExtendedRealPredicate.register(Mul) # type:ignore
+def _(expr, assumptions):
+    """
+    * ExtendedReal * ExtendedReal -> ExtendedReal, unless the product
+      contains both 0 and an infinity
+    """
+    result = test_closed_group(expr, assumptions, Q.extended_real)
+    if result is not True:
+        return result
+    if ask_all(*[Q.finite(a) for a in expr.args], assumptions=assumptions):
+        return True
+    if ask_all(*[~Q.zero(a) for a in expr.args], assumptions=assumptions):
+        return True
+    return None
+
+@ExtendedRealPredicate.register(Pow) # type:ignore
 def _(expr, assumptions):
     return test_closed_group(expr, assumptions, Q.extended_real)
 
