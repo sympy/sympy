@@ -6,7 +6,7 @@ from sympy.core.symbol import (Symbol, symbols)
 from sympy.sets.sets import Interval
 from sympy.simplify.simplify import simplify
 from sympy.physics.continuum_mechanics.beam import Beam
-from sympy.functions import SingularityFunction, Piecewise, meijerg, Abs, log, sqrt, factorial
+from sympy.functions import SingularityFunction, Piecewise, Abs, log, sqrt, factorial
 from sympy.testing.pytest import raises, slow
 from sympy.physics.units import meter, newton, kilo, giga, milli
 from sympy.physics.continuum_mechanics.beam import Beam3D
@@ -352,9 +352,8 @@ def test_variable_moment():
     b.solve_for_reaction_loads(R, M)
     assert b.slope().expand() == ((10*x*SingularityFunction(x, 0, 0)
         - 10*(x - 4)*SingularityFunction(x, 4, 0))/E).expand()
-    assert b.deflection().expand() == ((5*x**2*SingularityFunction(x, 0, 0)
-        - 10*Piecewise((0, Abs(x)/4 < 1), (x**2*meijerg(((-1, 1), ()), ((), (-2, 0)), x/4), True))
-        + 40*SingularityFunction(x, 4, 1))/E).expand()
+    assert b.deflection().expand() == ((5*SingularityFunction(x, 0, 2)
+        - 5*SingularityFunction(x, 4, 2))/E).expand()
 
     b = Beam(4, E - x, I)
     b.apply_load(20, 4, -1)
