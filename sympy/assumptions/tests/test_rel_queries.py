@@ -5,7 +5,9 @@ from sympy.assumptions.ask import Q, ask
 
 from sympy.core import symbols, Symbol
 from sympy.matrices.expressions.matexpr import MatrixSymbol
-from sympy.core.numbers import I
+from sympy.core.numbers import nan, oo, zoo, I
+from sympy.core.containers import Tuple
+from sympy.core.singleton import S
 
 from sympy.testing.pytest import raises, XFAIL
 x, y, z = symbols("x y z", real=True)
@@ -158,6 +160,71 @@ def test_equality():
 
     # test transitivity
     assert ask(Q.eq(x,z), Q.eq(x,y) & Q.eq(y,z)) is True
+
+    # Regression tests for GH-29863: EqualityPredicate/GreaterThanPredicate
+    # (and friends) used to call is_eq/is_ge from sympy.core.relational ,
+    # which routes through AssumptionsWrapper straight back into ask() for
+    # sub-predicates like Q.zero - a recursive pattern related to GH-28129.
+    # These cases exercise the paths that a naive non-recursive
+    # reimplementation is most likely to get wrong.
+
+    # NaN is never equal to anything, not even itself, even though it is
+    # structurally equal to itself (S.NaN == S.NaN is True in Python).
+    assert ask(Q.eq(nan, nan)) is False
+    assert ask(Q.ne(nan, nan)) is True
+    assert ask(Q.eq(nan, 0)) is False
+
+    # infinities: same-signed/complex infinities compare unequal to
+    # differently-typed infinities
+    assert ask(Q.eq(oo, oo)) is True
+    assert ask(Q.eq(-oo, oo)) is False
+    assert ask(Q.eq(zoo, oo)) is False
+    assert ask(Q.eq(zoo, zoo)) is True
+
+    # Booleans only equal Booleans; a bare Symbol must not be treated as a
+    # Boolean here even though Symbol is technically a Boolean subclass
+    assert ask(Q.eq(S.true, S.true)) is True
+    assert ask(Q.eq(S.true, S.false)) is False
+    assert ask(Q.eq(S.true, 1)) is False
+    assert ask(Q.eq(x, 0), Q.zero(x)) is True
+
+    # complex vs real
+    assert ask(Q.eq(I, 1)) is False
+
+    # a symbol's own declared assumptions must resolve fuzzy facts about
+    # compound expressions without needing local assumptions passed to ask()
+    m = symbols('m', integer=True)
+    assert ask(Q.ge(m**2, 0)) is True
+    assert ask(Q.gt(m**2, -1)) is True
+
+
+def test_equality_edge_cases():
+    # fresh symbols: the module-level x, y, z are real (hence finite)
+    a, b = symbols('a b')
+    A, B = symbols('A B', commutative=False)
+
+    # GH-30617: -oo vs "nonpositive" is undetermined; -oo vs -oo is True
+    assert ask(Q.eq(a, b), Q.negative_infinite(a) & Q.extended_nonpositive(b)) is None
+    assert ask(Q.eq(a, b), Q.negative_infinite(a) & Q.negative_infinite(b)) is True
+
+    # GH-29861: a might be oo, so a == a + 1 is undetermined
+    assert ask(Q.eq(a, a + 1)) is None
+
+    # non-Expr operands cannot be decided via a difference
+    assert ask(Q.eq(a, S.true)) is None
+    assert ask(Q.eq(Tuple(1, 2), Tuple(1, 2))) is True
+    assert ask(Q.eq(Tuple(1, 2), Tuple(1, 3))) is False
+    assert ask(Q.eq(Tuple(1, 2), Tuple(1, 2, 3))) is False
+    assert ask(Q.eq(Tuple(a, 1), Tuple(b, 1))) is None
+
+    # non-commutative: A - B != 0 proves nothing
+    assert ask(Q.eq(A, B)) is None
+
+    # x >= x needs x to be (extended) real
+    assert ask(Q.ge(I, I)) is None
+    assert ask(Q.gt(I, I)) is None
+    assert ask(Q.ge(a, a)) is None
+    assert ask(Q.ge(x, x)) is True
 
 
 @XFAIL
