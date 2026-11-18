@@ -17,8 +17,9 @@ from sympy.core.numbers import (Float, I, Rational)
 from sympy.core.relational import Eq
 from sympy.core.singleton import S
 from sympy.functions.elementary.exponential import (exp, log)
+from sympy.functions.elementary.hyperbolic import sinh
 from sympy.functions.elementary.miscellaneous import sqrt
-from sympy.functions.elementary.trigonometric import tan
+from sympy.functions.elementary.trigonometric import (cos, sin, tan)
 from sympy.integrals.integrals import (Integral, integrate)
 from sympy.polys.orthopolys import legendre_poly
 from sympy.simplify.simplify import simplify
@@ -548,6 +549,7 @@ def test_RootSum_new_constant():
     assert RootSum.new(P, Lambda(x, y)) == 3*y
     assert RootSum.new(P, Lambda(x, 1), auto=False) == 3
     assert RootSum.new(Poly(5, x), Lambda(x, 1)) == 0
+    assert RootSum.new(Poly(a*x**2 + b*x + 1, x), Lambda(x, y)) == 2*y
 
     S1 = RootSum(x**3 + x + 1, Lambda(x, log(x*y)))
     assert S1.diff(y) == 3/y
@@ -561,14 +563,41 @@ def test_RootSum_diff_parametric():
     assert isinstance(dS2, RootSum)
     assert simplify(dS2.doit() - S2.doit().diff(a)) == 0
     assert simplify(dS2.diff(a).doit() - S2.doit().diff(a, 2)) == 0
+    assert simplify(dS2.subs(a, 1) - sinh(1)) == 0
 
     # Leading coefficient depending on differentiation parameter
     S3 = RootSum(a*x**2 + x + 1, Lambda(x, exp(x)), x)
     assert simplify(S3.diff(a).doit() - S3.doit().diff(a)) == 0
 
-    # Rational derivative simplification via Vieta's formulas
+    # Integrand depending on both root and parameter
+    S_both = RootSum(x**2 - a, Lambda(x, exp(a*x)), x)
+    assert simplify(S_both.diff(a).doit() - S_both.doit().diff(a)) == 0
+    assert simplify(
+        RootSum(x**2 - a, Lambda(x, log(x + a)), x).diff(a) - (2*a - 1)/(a**2 - a)
+    ) == 0
+
+    # Rational derivative simplification via Vieta's formulas (including multi-parameter & transcendental)
     assert RootSum(x**3 + a*x + 1, Lambda(x, log(x)), x).diff(a) == 0
     assert RootSum(x**3 + a*x + b, Lambda(x, log(x)), x).diff(b) == 1/b
+    assert simplify(
+        RootSum(x**3 + a*x + b, Lambda(x, log(x - y)), x).diff(a) - y/(y**3 + a*y + b)
+    ) == 0
+    assert simplify(
+        RootSum(x**3 + a*x + b, Lambda(x, log(x - y)), x).diff(b) - 1/(y**3 + a*y + b)
+    ) == 0
+    assert simplify(
+        RootSum(x**2 - sin(a), Lambda(x, log(x)), x).diff(a) - cos(a)/sin(a)
+    ) == 0
+    assert simplify(
+        RootSum(x**2 - sqrt(a), Lambda(x, log(x)), x).diff(a) - 1/(2*a)
+    ) == 0
+
+    # Function-valued parameter and auto=False cancellation
+    g = Function('g')
+    S_func = RootSum(x**2 - g(y), Lambda(x, exp(x)), x)
+    assert simplify(S_func.diff(y).doit() - S_func.doit().diff(y)) == 0
+    assert simplify(S_func.diff(g(y)).doit() - S_func.doit().diff(g(y))) == 0
+    assert RootSum((x - a)**3 + (x - a) + 1, Lambda(x, x), x, auto=False).diff(a) == 3
 
     # Parametric integral Leibniz invariant: d/dx (dF/da) == df/da
     f = 1/(x**3 - a)
@@ -576,16 +605,29 @@ def test_RootSum_diff_parametric():
     assert isinstance(F, RootSum)
     assert simplify(F.diff(a).diff(x) - f.diff(a)) == 0
 
+    # Bound-variable shadowing in raw RootSum._new (poly.gen != fun.var)
+    S_shadow_poly = RootSum._new(Poly(y**2 - x, y), Lambda(x, exp(x)))
+    assert simplify(S_shadow_poly.diff(x).doit() - S_shadow_poly.doit().diff(x)) == 0
+    S_shadow_fun = RootSum._new(Poly(y**2 - a, y), Lambda(x, exp(y*x)))
+    assert simplify(S_shadow_fun.diff(y).doit() - S_shadow_fun.doit().diff(y)) == 0
+    assert RootSum._new(Poly(a, x), Lambda(x, exp(x))).diff(a) == 0
+
     # Factored repeated root (already reduced by RootSum.__new__)
     S_factored = RootSum((x**2 - a)**2, Lambda(x, exp(x)), x)
     assert simplify(S_factored.diff(a).doit() - S_factored.doit().diff(a)) == 0
 
-    # Non-squarefree polynomial stays unevaluated instead of dividing by zero or returning 0
+    # Unsafe cases stay unevaluated instead of dividing by zero or returning wrong answers
     S_raw = RootSum._new(Poly((x - a)**2, x), Lambda(x, exp(x)))
     assert S_raw.diff(a) == Derivative(S_raw, a)
 
     S_ex = RootSum(x**2 - 2*sqrt(a)*x + a, Lambda(x, exp(x)), x)
     assert S_ex.diff(a) == Derivative(S_ex, a)
+
+    S_trig_ex = RootSum(x**2 - 2*sin(a)*x + 1 - cos(a)**2, Lambda(x, exp(x)), x)
+    assert S_trig_ex.diff(a) == Derivative(S_trig_ex, a)
+
+    S_inexact = RootSum._new(Poly(x**2 - 1.5*a, x), Lambda(x, exp(x)))
+    assert S_inexact.diff(a) == Derivative(S_inexact, a)
 
 
 def test_RootSum_subs():

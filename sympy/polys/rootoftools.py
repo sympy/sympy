@@ -20,7 +20,7 @@ from sympy.polys.polyfuncs import symmetrize, viete
 from sympy.polys.polyroots import (
     roots_linear, roots_quadratic, roots_binomial,
     preprocess_roots, roots)
-from sympy.polys.polytools import Poly, factor
+from sympy.polys.polytools import Poly, cancel, factor
 from sympy.polys.rationaltools import together
 from sympy.polys.rootisolation import (
     dup_isolate_complex_roots_sqf,
@@ -1330,20 +1330,26 @@ class RootSum(Expr):
     def _eval_derivative(self, x):
         var, expr = self.fun.variables[0], self.fun.expr
         gen = self.poly.gen
-        if x in (var, gen):
-            return S.Zero
         poly_expr = self.poly.as_expr()
-        dp_dx = poly_expr.diff(x)
+        dp_dx = S.Zero if x == gen else poly_expr.diff(x)
+        df_dx = S.Zero if x == var else expr.diff(x)
         if dp_dx != 0:
             if self.poly.degree() == 0:
                 return S.Zero
-            if not self.poly.is_sqf:
+            domain = self.poly.domain
+            if (not domain.is_Exact or domain.is_EX
+                    or domain.is_EXRAW or not self.poly.is_sqf):
                 return None
             dp_dgen = poly_expr.diff(gen)
             if dp_dgen == 0:
                 return None
-            dexpr = expr.diff(x) - expr.diff(var)*(dp_dx/dp_dgen).subs(gen, var)
+            ratio = cancel(dp_dx/dp_dgen)
+            if x == var or (var != gen and var in ratio.free_symbols):
+                new_var = Dummy(var.name)
+                expr = expr.xreplace({var: new_var})
+                var = new_var
+            dexpr = df_dx - expr.diff(var)*ratio.subs(gen, var)
         else:
-            dexpr = expr.diff(x)
+            dexpr = df_dx
         func = Lambda(var, dexpr)
         return self.new(self.poly, func, self.auto)
