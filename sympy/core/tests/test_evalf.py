@@ -177,6 +177,7 @@ def test_evalf_logs():
 
 def test_evalf_log_base_evaluate_false():
     cases = [(2, 3), (-2, 3), (2, -3), (1 + I, 2 + I),
+             (2, -1), (I, -I), (2, S.Half),
              (1 + Rational(1, 10**30), 1 + Rational(1, 10**40))]
     for digits in [20, 50]:
         for arg, base in cases:
@@ -184,6 +185,7 @@ def test_evalf_log_base_evaluate_false():
             with evaluate(False):
                 expr = log(arg, base, evaluate=False)
                 result = expr.evalf(digits, maxn=200)
+                assert Add(1, 1).args == (S.One, S.One)
             assert abs(result - expected) < abs(expected)*Rational(1, 10**(digits - 2))
 
     expected = (log(2)/log(3)).evalf(50)
