@@ -1197,6 +1197,12 @@ def test_issue_29999():
     assert_is_integral_of(f, F)
 
 
+def test_issue_30974():
+    f = x**2*sec(2*x + 1)
+    F = manualintegrate(f, x)
+    assert abs((F.diff(x) - f).subs(x, Rational(3, 10)).evalf()) < 1e-10
+
+
 
 def test_nested_pow():
     assert_is_integral_of(sqrt(x**2), x*sqrt(x**2)/2)
