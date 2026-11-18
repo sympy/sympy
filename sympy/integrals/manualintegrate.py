@@ -1264,7 +1264,11 @@ def find_substitutions(integrand, symbol, u_var):
             deg_after = max(degree(t, u_var) for t in substituted.as_numer_denom())
             if deg_after > deg_before:
                 return False
-        return substituted.as_independent(u_var, as_Add=False)
+        _, denom = substituted.as_numer_denom()
+        denom_u_free, _ = denom.factor().as_independent(u_var, as_Add=False)
+        numer = (substituted * denom_u_free).cancel()
+        numer_u_free, u_part = numer.as_independent(u_var, as_Add=False)
+        return numer_u_free / denom_u_free, u_part
 
     def exp_subterms(term: Expr):
         linear_coeffs = []
@@ -3628,7 +3632,7 @@ def substitution_rule(integral):
         if branch:
             debug("List of Substitution Rules")
         ways = []
-        factored_integrand = integrand.factor()
+        factored_integrand = integrand.factor(deep=True, expand=False)
         _, denom_integrand = factored_integrand.as_numer_denom()
         for u_func, c, substituted in substitutions:
             subrule = yield IntegralInfo(substituted, u_var)
@@ -3640,7 +3644,7 @@ def substitution_rule(integral):
                 continue
 
             if simplify(c - 1) != 0:
-                _, denom_c = c.as_numer_denom()
+                numer_c, denom_c = c.as_numer_denom()
                 if subrule:
                     subrule = ConstantTimesRule(c * substituted, u_var, c, substituted, subrule)
 
@@ -3661,7 +3665,7 @@ def substitution_rule(integral):
                                 substep = RewriteRule(integrand, symbol, rewritten_integral, substep)
                                 pieces.append((
                                     substep,
-                                    Eq(pole, 0)
+                                    Eq(pole, 0) & Ne(numer_c, 0)
                                 ))
                     if pieces:
                         pieces.append((subrule, True))
