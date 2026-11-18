@@ -23,13 +23,13 @@ class TypeC(Standard_Cartan):
         >>> c.dimension()
         3
         """
-        n = self.n
+        n = self.rank()
         return n
 
     def basic_root(self, i: int, j: int) -> Matrix:
         """Generate roots with 1 in ith position and a -1 in jth position
         """
-        n = self.n
+        n = self.rank()
         root = [0]*n
         root[i] = 1
         root[j] = -1
@@ -69,7 +69,7 @@ class TypeC(Standard_Cartan):
         if i < n:
             return self.basic_root(i-1,i)
         else:
-            root = [0]*self.n
+            root = [0]*n
             root[n-1] = 2
             return Matrix([root])
 
@@ -78,7 +78,7 @@ class TypeC(Standard_Cartan):
         Returns the total number of roots for C_n"
         """
 
-        n = self.n
+        n = self.rank()
         return 2*(n**2)
 
     def basis(self) -> int:
@@ -86,7 +86,7 @@ class TypeC(Standard_Cartan):
         Returns the number of independent generators of C_n
         """
 
-        n = self.n
+        n = self.rank()
         return n*(2*n + 1)
 
     def lie_algebra(self) -> str:
@@ -94,11 +94,11 @@ class TypeC(Standard_Cartan):
         Returns the Lie algebra associated with C_n"
         """
 
-        n = self.n
+        n = self.rank()
         return "sp(" + str(2*n) + ")"
 
     def dynkin_diagram(self) -> str:
-        n = self.n
+        n = self.rank()
         diag = "---".join("0" for _ in range(1, n)) + "=<=0\n"
         diag += "   ".join(str(i) for i in range(1, n+1))
         return diag

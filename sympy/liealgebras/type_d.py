@@ -24,7 +24,7 @@ class TypeD(Standard_Cartan):
         4
         """
 
-        return self.n
+        return self.rank()
 
     def basic_root(self, i: int, j: int) -> Matrix:
         """
@@ -34,7 +34,7 @@ class TypeD(Standard_Cartan):
 
         """
 
-        n = self.n
+        n = self.rank()
         root = [0]*n
         root[i] = 1
         root[j] = -1
@@ -85,14 +85,14 @@ class TypeD(Standard_Cartan):
         Returns the total number of roots for D_n"
         """
 
-        n = self.n
+        n = self.rank()
         return 2*n*(n-1)
 
     def basis(self) -> int:
         """
         Returns the number of independent generators of D_n
         """
-        n = self.n
+        n = self.rank()
         return n*(n-1) // 2
 
     def lie_algebra(self) -> str:
@@ -100,11 +100,11 @@ class TypeD(Standard_Cartan):
         Returns the Lie algebra associated with D_n"
         """
 
-        n = self.n
+        n = self.rank()
         return "so(" + str(2*n) + ")"
 
     def dynkin_diagram(self) -> str:
-        n = self.n
+        n = self.rank()
         diag = " "*4*(n-3) + str(n-1) + "\n"
         diag += " "*4*(n-3) + "0\n"
         diag += " "*4*(n-3) +"|\n"

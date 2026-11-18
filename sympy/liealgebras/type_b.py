@@ -23,7 +23,7 @@ class TypeB(Standard_Cartan):
         3
         """
 
-        return self.n
+        return self.rank()
 
     def basic_root(self, i: int, j: int) -> Matrix:
         """
@@ -32,7 +32,7 @@ class TypeB(Standard_Cartan):
         in the jth position.
 
         """
-        root = [0]*self.n
+        root = [0]*self.rank()
         root[i] = 1
         root[j] = -1
         return Matrix([root])
@@ -72,7 +72,7 @@ class TypeB(Standard_Cartan):
         if i < n:
             return Matrix(self.basic_root(i-1, i))
         else:
-            root = [0]*self.n
+            root = [0]*n
             root[n-1] = 1
             return Matrix([root])
 
@@ -81,7 +81,7 @@ class TypeB(Standard_Cartan):
         Returns the total number of roots for B_n"
         """
 
-        n = self.n
+        n = self.rank()
         return 2*(n**2)
 
     def basis(self) -> int:
@@ -89,7 +89,7 @@ class TypeB(Standard_Cartan):
         Returns the number of independent generators of B_n
         """
 
-        n = self.n
+        n = self.rank()
         return (n**2 - n) // 2
 
     def lie_algebra(self) -> str:
@@ -97,11 +97,11 @@ class TypeB(Standard_Cartan):
         Returns the Lie algebra associated with B_n
         """
 
-        n = self.n
+        n = self.rank()
         return "so(" + str(2*n) + ")"
 
     def dynkin_diagram(self) -> str:
-        n = self.n
+        n = self.rank()
         diag = "---".join("0" for _ in range(1, n)) + "=>=0\n"
         diag += "   ".join(str(i) for i in range(1, n+1))
         return diag

@@ -91,7 +91,7 @@ class TypeE(Standard_Cartan):
         Returns the total number of roots of E_n
         """
 
-        n = self.n
+        n = self.rank()
         if n == 6:
             return 72
         if n == 7:
@@ -103,7 +103,7 @@ class TypeE(Standard_Cartan):
         Returns the number of independent generators of E_n
         """
 
-        n = self.n
+        n = self.rank()
         if n == 6:
             return 78
         if n == 7:
@@ -111,7 +111,7 @@ class TypeE(Standard_Cartan):
         return 248
 
     def dynkin_diagram(self) -> str:
-        n = self.n
+        n = self.rank()
         diag = " "*8 + str(2) + "\n"
         diag += " "*8 + "0\n"
         diag += " "*8 + "|\n"

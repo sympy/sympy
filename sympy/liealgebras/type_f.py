@@ -33,7 +33,7 @@ class TypeF(Standard_Cartan):
 
         """
 
-        n = self.n
+        n = self.rank()
         root = [0]*n
         root[i] = 1
         root[j] = -1

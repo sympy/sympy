@@ -28,7 +28,7 @@ class TypeA(Standard_Cartan):
         >>> c.dimension()
         5
         """
-        return self.n+1
+        return self.rank()+1
 
 
     def basic_root(self, i: int, j: int) -> Matrix:
@@ -39,7 +39,7 @@ class TypeA(Standard_Cartan):
 
         """
 
-        n = self.n
+        n = self.rank()
         root = [0]*(n+1)
         root[i] = 1
         root[j] = -1
@@ -81,25 +81,25 @@ class TypeA(Standard_Cartan):
         """
         Returns the total number of roots for A_n
         """
-        n = self.n
+        n = self.rank()
         return n*(n+1)
 
     def basis(self) -> int:
         """
         Returns the number of independent generators of A_n
         """
-        n = self.n
+        n = self.rank()
         return n**2 - 1
 
     def lie_algebra(self) -> str:
         """
         Returns the Lie algebra associated with A_n
         """
-        n = self.n
+        n = self.rank()
         return "su(" + str(n + 1) + ")"
 
     def dynkin_diagram(self) -> str:
-        n = self.n
+        n = self.rank()
         diag = "---".join("0" for _ in range(1, n+1)) + "\n"
         diag += "   ".join(str(i) for i in range(1, n+1))
         return diag
