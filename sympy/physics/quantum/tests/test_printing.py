@@ -812,14 +812,28 @@ def test_tensorproduct():
     # the symbol is only left out between two kets or two bras
     tp = TensorProduct(Ket('a'), Operator('B'))
     assert str(tp) == '|a>xB'
+    assert pretty(tp) == '|a>x B'
     assert upretty(tp) == '❘a⟩⨂ B'
     assert latex(tp) == r'{{\left|a\right\rangle }}\otimes {B}'
     tp = TensorProduct(Ket('a'), Bra('b'))
     assert str(tp) == '|a>x<b|'
+    assert pretty(tp) == '|a>x <b|'
     assert upretty(tp) == '❘a⟩⨂ ⟨b❘'
+    assert latex(tp) == r'{{\left|a\right\rangle }}\otimes {{\left\langle b\right|}}'
     tp = TensorProduct(Bra('a'), Bra('b'))
     assert str(tp) == '<a|<b|'
     assert upretty(tp) == '⟨a❘⟨b❘'
+    # without the symbol a bra followed by a ket would read as an inner product
+    tp = TensorProduct(Bra('a'), Ket('b'))
+    assert str(tp) == '<a|x|b>'
+    assert pretty(tp) == '<a|x |b>'
+    assert upretty(tp) == '⟨a❘⨂ ❘b⟩'
+    assert latex(tp) == r'{{\left\langle a\right|}}\otimes {{\left|b\right\rangle }}'
+    tp = TensorProduct(Bra('a'), Operator('B'))
+    assert str(tp) == '<a|xB'
+    assert pretty(tp) == '<a|x B'
+    assert upretty(tp) == '⟨a❘⨂ B'
+    assert latex(tp) == r'{{\left\langle a\right|}}\otimes {B}'
 
 
 def test_big_expr():

@@ -47,9 +47,10 @@ def combined_tensor_printing(combined):
     Parameters
     ----------
     combine : bool
-        When true, tensor product states are combined into one ket/bra, and
-        when false explicit tensor product notation is used between each
-        ket/bra.
+        When true, tensor product states are combined into one ket/bra. When
+        false, each ket/bra is printed on its own: two kets or two bras are
+        written next to each other, e.g. ``|a>|b>``, and the tensor product
+        symbol is used between any other pair of factors, e.g. ``|a>x<b|``.
     """
     global _combined_printing
     _combined_printing = combined
