@@ -135,6 +135,13 @@ class MatplotlibBackend(base_backend.Plot):
                 else:
                     lbl = _str_or_latex(s.label)
                     line, = ax.plot(x, y, label=lbl, color=s.line_color)
+                    if getattr(s, "arrow", False):
+                        n = s.arrow if isinstance(s.arrow, int) else 1
+                        for x0, y0, x1, y1 in s._get_arrow_positions(x, y, n):
+                            ax.annotate('', xy=(x1, y1), xytext=(x0, y0),
+                                arrowprops=dict(arrowstyle='-|>',
+                                                color=s.line_color or 'black',
+                                                **s.arrow_kw))
             elif s.is_contour:
                 ax.contour(*s.get_data())
             elif s.is_3Dline:
