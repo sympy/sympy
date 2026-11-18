@@ -1,9 +1,9 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
+from typing import Sequence, TYPE_CHECKING
 
 from .cartan_type import CartanType
-from sympy.core import Atom
+from sympy.core import Atom, Rational
 from sympy.matrices.dense import Matrix
 
 if TYPE_CHECKING:
@@ -146,10 +146,9 @@ class RootSystem(Atom):
         a2 = alpha[root2]
         return a1 + a2
 
-    # TODO: generalize input types
     def add_as_roots(self,
-                     root1: list[int],
-                     root2: list[int]) -> Matrix | str:
+                     root1: Sequence[int | Rational],
+                     root2: Sequence[int | Rational]) -> Matrix | str:
         """Add two roots together if and only if their sum is also a root
 
         It takes as input two vectors which should be roots.  It then computes
@@ -161,10 +160,11 @@ class RootSystem(Atom):
         ========
 
         >>> from sympy.liealgebras.root_system import RootSystem
+        >>> from sympy.matrices import Matrix
         >>> c = RootSystem("A3")
         >>> c.add_as_roots([1, 0, -1, 0], [0, 0, 1, -1])
         Matrix([[1, 0, 0, -1]])
-        >>> c.add_as_roots([1, -1, 0, 0], [0, 0, -1, 1])
+        >>> c.add_as_roots(Matrix([1, -1, 0, 0]), Matrix([0, 0, -1, 1]))
         'The sum of these two roots is not a root'
 
         """
