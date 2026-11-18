@@ -25,6 +25,8 @@ Useful functions:
 - ``find_unit``: easily lookup pre-defined units.
 - ``convert_to(expr, newunit)``: converts an expression into the same
     expression expressed in another unit.
+- ``convert_unit_system(expr, dimensions, source, target)``: converts an
+    expression or an equation into the form it has in another unit system.
 
 """
 
@@ -216,6 +218,8 @@ from .systems import (
     mks, mksa, si
 )
 
+from .unit_system_conversion import convert_unit_system
+
 
 def find_unit(quantity, unit_system="SI"):
     """
@@ -275,6 +279,7 @@ __all__ = [
     'Dimension', 'DimensionSystem',
     'UnitSystem',
     'convert_to',
+    'convert_unit_system',
     'Quantity',
 
     'amount_of_substance', 'acceleration', 'action', 'area',
