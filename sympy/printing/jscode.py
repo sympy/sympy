@@ -160,6 +160,9 @@ class JavascriptCodePrinter(CodePrinter):
     def _print_NegativeInfinity(self, expr):
         return 'Number.NEGATIVE_INFINITY'
 
+    def _print_NaN(self, expr):
+        return 'NaN'
+
     def _print_Piecewise(self, expr):
         from sympy.codegen.ast import Assignment
         if expr.args[-1].cond != True:
