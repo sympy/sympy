@@ -11,6 +11,10 @@ from functools import update_wrapper as _update_wrapper
 from typing import TYPE_CHECKING
 
 
+import mpmath
+
+__version__ = mpmath.__version__
+
 from mpmath import (
     MPContext,
     MPIntervalContext,
@@ -37,7 +41,13 @@ else:
 
 NoConvergence = mp.NoConvergence
 
-from mpmath.ctx_mp_python import mpnumeric
+from mpmath.ctx_mp_python import (
+    PythonMPContext,
+    _constant,
+    _mpc,
+    _mpf,
+    mpnumeric,
+)
 from mpmath.libmp import (
     MPZ,
     MPZ_ONE,
@@ -211,6 +221,12 @@ __all__ = [
     "to_str",
     "workprec",
     "_matrix",
+    "PythonMPContext",
+    "_constant",
+    "_mpc",
+    "_mpf",
+    "__version__",
+    "mpmath",
 ]
 
 
@@ -220,7 +236,6 @@ def conserve_mpmath_dps(func):
     It is not recommended to use this in new code which should instead use
     the :class:`local_workdps` or :class:`local_workprec` context managers.
     """
-    import mpmath
 
     def func_wrapper(*args, **kwargs):
         dps = mpmath.mp.dps
