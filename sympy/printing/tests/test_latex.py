@@ -2597,6 +2597,30 @@ def test_Pow():
     assert latex(S('1.453e4500')**x) == r'{1.453 \cdot 10^{4500}}^{x}'
 
 
+def test_latex_folded_scientific_float_powers():
+    for base, printed in [
+        (Float('2.5e20'), r'2.5 \cdot 10^{20}'),
+        (Float('5e-14'), r'5.0 \cdot 10^{-14}'),
+    ]:
+        for exponent in [Rational(2, 3), Rational(-2, 3)]:
+            expr = Pow(base, exponent, evaluate=False)
+            power = '%s/%s' % (exponent.p, exponent.q)
+            assert latex(expr, fold_frac_powers=True) == \
+                r'\left(%s\right)^{%s}' % (printed, power)
+            assert latex(expr, fold_frac_powers=True, parenthesize_super=False) == \
+                r'{%s}^{%s}' % (printed, power)
+    assert latex(Pow(Float('-2.5e20'), Rational(2, 3), evaluate=False),
+        fold_frac_powers=True) == r'\left(-2.5 \cdot 10^{20}\right)^{2/3}'
+    assert latex(Pow(Float('2.5'), Rational(2, 3), evaluate=False),
+        fold_frac_powers=True) == r'2.5^{2/3}'
+    assert latex(Pow(Float('2.5e20'), S.Half, evaluate=False),
+        fold_frac_powers=True, root_notation=False) == \
+        r'\left(2.5 \cdot 10^{20}\right)^{1/2}'
+    assert latex(Pow(Float('2.5e20'), Rational(2, 3), evaluate=False),
+        fold_frac_powers=True, mul_symbol='times', decimal_separator='comma') == \
+        r'\left(2{,}5 \times 10^{20}\right)^{2/3}'
+
+
 def test_issue_7180():
     assert latex(Equivalent(x, y)) == r"x \Leftrightarrow y"
     assert latex(Not(Equivalent(x, y))) == r"x \not\Leftrightarrow y"

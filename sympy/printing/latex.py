@@ -681,7 +681,7 @@ class LatexPrinter(Printer):
             elif self._settings['fold_frac_powers'] and q != 1:
                 base = self.parenthesize(expr.base, PRECEDENCE['Pow'])
                 # issue #12886: add parentheses for superscripts raised to powers
-                if expr.base.is_Symbol:
+                if expr.base.is_Symbol or (expr.base.is_Float and not expr.base.is_negative):
                     base = self.parenthesize_super(base)
                 if expr.base.is_Function:
                     return self._print(expr.base, exp="%s/%s" % (p, q))
