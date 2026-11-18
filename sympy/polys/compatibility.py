@@ -4,19 +4,31 @@ from __future__ import annotations
 
 from abc import abstractmethod
 from typing import TYPE_CHECKING, Generic, Mapping, Any, cast, overload
-from sympy.polys.domains.domain import Domain, Er, Es, Ef, Eeuclid, Eordered, Eabs
+from sympy.polys.domains.domain import Domain, Er, Es, Ef, Eeuclid, Eordered
 from sympy.polys.densebasic import dup, dmp
 
 if TYPE_CHECKING:
     from sympy.external.gmpy import MPZ
     from sympy.polys.domains.algebraicfield import Alg, AlgebraicField
     from sympy.polys.domains.field import Field
-    from typing import TypeAlias
+    from sympy.polys.domains.absdomain import AbsDomain
+    from typing import TypeAlias, Protocol
     from sympy.core.expr import Expr
     from sympy.polys.orderings import MonomialOrder
     from sympy.polys.rings import PolyElement, PolyRing
 
     cPoly: TypeAlias = PolyElement[Er] | Er | int
+
+    class _AbsPolys(Protocol[Er, Eordered]):
+        @property
+        def domain(self) -> AbsDomain[Er, Eordered]: ...
+
+        @property
+        def ngens(self) -> int: ...
+
+        def to_dup(self, element: cPoly[Er]) -> dup[Er]: ...
+
+        def to_dense(self, element: cPoly[Er]) -> dmp[Er]: ...
 
 from sympy.polys.densearith import dup_add_term
 from sympy.polys.densearith import dmp_add_term
@@ -671,16 +683,16 @@ class IPolys(Generic[Er]):
             dmp_exquo(self.to_dense(f), self.to_dense(g), self.ngens - 1, self.domain)
         )
 
-    def dup_max_norm(self: IPolys[Eordered], f: cPoly[Eordered]) -> Eordered:
+    def dup_max_norm(self: _AbsPolys[Er, Eordered], f: cPoly[Er]) -> Eordered:
         return dup_max_norm(self.to_dup(f), self.domain)
 
-    def dmp_max_norm(self: IPolys[Eordered], f: cPoly[Eordered]) -> Eordered:
-        return dmp_max_norm(self.to_dense(f), self.ngens - 1, self.domain)
-
-    def dup_l1_norm(self: IPolys[Eabs], f: cPoly[Eabs]) -> Eabs:
+    def dup_l1_norm(self: _AbsPolys[Er, Eordered], f: cPoly[Er]) -> Eordered:
         return dup_l1_norm(self.to_dup(f), self.domain)
 
-    def dmp_l1_norm(self: IPolys[Eabs], f: cPoly[Eabs]) -> Eabs:
+    def dmp_max_norm(self: _AbsPolys[Er, Eordered], f: cPoly[Er]) -> Eordered:
+        return dmp_max_norm(self.to_dense(f), self.ngens - 1, self.domain)
+
+    def dmp_l1_norm(self: _AbsPolys[Er, Eordered], f: cPoly[Er]) -> Eordered:
         return dmp_l1_norm(self.to_dense(f), self.ngens - 1, self.domain)
 
     def dup_l2_norm_squared(self, f: cPoly[Er]) -> Er:

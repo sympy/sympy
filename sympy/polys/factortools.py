@@ -1467,6 +1467,19 @@ def dmp_gf_factor(f, u, K):
 
 def dup_factor_list(f, K0):
     """Factor univariate polynomials into irreducibles in `K[x]`. """
+    if not K0.is_Exact:
+        K = K0.get_exact()
+        f = dup_convert(f, K0, K)
+        coeff, factors = dup_factor_list(f, K)
+        coeff = K0.convert(coeff, K)
+        for i, (f, k) in enumerate(factors):
+            f = dup_convert(f, K, K0)
+            max_norm = K0.convert(dup_max_norm(f, K0))
+            f = dup_exquo_ground(f, max_norm, K0)
+            factors[i] = (f, k)
+            coeff = K0.mul(coeff, K0.pow(max_norm, k))
+        return coeff, factors
+
     j, f = dup_terms_gcd(f, K0)
     cont, f = dup_primitive(f, K0)
 
@@ -1479,12 +1492,6 @@ def dup_factor_list(f, K0):
     elif K0.is_GaussianField:
         coeff, factors = dup_qq_i_factor(f, K0)
     else:
-        if not K0.is_Exact:
-            K0_inexact, K0 = K0, K0.get_exact()
-            f = dup_convert(f, K0_inexact, K0)
-        else:
-            K0_inexact = None
-
         if K0.is_Field:
             K = K0.get_ring()
 
@@ -1514,17 +1521,6 @@ def dup_factor_list(f, K0):
             coeff = K0.convert(coeff, K)
             coeff = K0.quo(coeff, denom)
 
-            if K0_inexact:
-                for i, (f, k) in enumerate(factors):
-                    max_norm = dup_max_norm(f, K0)
-                    f = dup_exquo_ground(f, max_norm, K0)
-                    f = dup_convert(f, K0, K0_inexact)
-                    factors[i] = (f, k)
-                    coeff = K0.mul(coeff, K0.pow(max_norm, k))
-
-                coeff = K0_inexact.convert(coeff, K0)
-                K0 = K0_inexact
-
     if j:
         factors.insert(0, ([K0.one, K0.zero], j))
 
@@ -1544,6 +1540,19 @@ def dup_factor_list_include(f, K):
 
 def dmp_factor_list(f, u, K0):
     """Factor multivariate polynomials into irreducibles in `K[X]`. """
+    if not K0.is_Exact:
+        K = K0.get_exact()
+        f = dmp_convert(f, u, K0, K)
+        coeff, factors = dmp_factor_list(f, u, K)
+        coeff = K0.convert(coeff, K)
+        for i, (f, k) in enumerate(factors):
+            f = dmp_convert(f, u, K, K0)
+            max_norm = K0.convert(dmp_max_norm(f, u, K0))
+            f = dmp_exquo_ground(f, max_norm, u, K0)
+            factors[i] = (f, k)
+            coeff = K0.mul(coeff, K0.pow(max_norm, k))
+        return coeff, factors
+
     if not u:
         return dup_factor_list(f, K0)
 
@@ -1559,12 +1568,6 @@ def dmp_factor_list(f, u, K0):
     elif K0.is_GaussianField:
         coeff, factors = dmp_qq_i_factor(f, u, K0)
     else:
-        if not K0.is_Exact:
-            K0_inexact, K0 = K0, K0.get_exact()
-            f = dmp_convert(f, u, K0_inexact, K0)
-        else:
-            K0_inexact = None
-
         if K0.is_Field:
             K = K0.get_ring()
 
@@ -1597,17 +1600,6 @@ def dmp_factor_list(f, u, K0):
 
             coeff = K0.convert(coeff, K)
             coeff = K0.quo(coeff, denom)
-
-            if K0_inexact:
-                for i, (f, k) in enumerate(factors):
-                    max_norm = dmp_max_norm(f, u, K0)
-                    f = dmp_exquo_ground(f, max_norm, u, K0)
-                    f = dmp_convert(f, u, K0, K0_inexact)
-                    factors[i] = (f, k)
-                    coeff = K0.mul(coeff, K0.pow(max_norm, k))
-
-                coeff = K0_inexact.convert(coeff, K0)
-                K0 = K0_inexact
 
     for i, j in enumerate(reversed(J)):
         if not j:
