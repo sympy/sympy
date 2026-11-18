@@ -7,9 +7,11 @@ from sympy.functions import gamma
 from sympy.simplify.gammasimp import gammasimp, _gammasimp
 
 from sympy.utilities.timeutils import timethis
+from sympy.utilities.decorator import _relational_opaque
 
 
 @timethis('combsimp')
+@_relational_opaque
 def combsimp(expr):
     r"""
     Simplify combinatorial expressions.

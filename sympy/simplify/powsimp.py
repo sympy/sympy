@@ -13,6 +13,7 @@ from sympy.functions import exp_polar, exp, log, root, polarify, unpolarify
 from sympy.matrices.expressions.matexpr import MatrixSymbol
 from sympy.polys import lcm, gcd
 from sympy.ntheory.factor_ import multiplicity
+from sympy.utilities.decorator import _rebuild_opaque, _relational_opaque
 
 
 
@@ -111,11 +112,11 @@ def powsimp(expr, deep=False, combine='all', force=False, measure=count_ops):
     expr = sympify(expr)
 
     if (not isinstance(expr, Basic) or isinstance(expr, MatrixSymbol) or (
-            expr.is_Atom or expr in (exp_polar(0), exp_polar(1)))):
+            expr.is_Atom or expr.is_Relational or expr in (exp_polar(0), exp_polar(1)))):
         return expr
 
     if deep or expr.is_Add or expr.is_Mul and _y not in expr.args:
-        expr = expr.func(*[recurse(w) for w in expr.args])
+        expr = _rebuild_opaque(expr, [recurse(w) for w in expr.args])
 
     if expr.is_Pow:
         return recurse(expr*_y, deep=False)/_y
@@ -495,6 +496,7 @@ def powsimp(expr, deep=False, combine='all', force=False, measure=count_ops):
         raise ValueError("combine must be one of ('all', 'exp', 'base').")
 
 
+@_relational_opaque
 def powdenest(eq, force=False, polar=False):
     r"""
     Collect exponents on powers as assumptions allow.
