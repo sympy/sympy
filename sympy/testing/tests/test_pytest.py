@@ -1,8 +1,14 @@
 from __future__ import annotations
 import warnings
-
-from sympy.testing.pytest import (raises, warns, ignore_warnings,
-                                    warns_deprecated_sympy, Failed)
+from sympy.testing.pytest import (
+    XFAIL,
+    raises,
+    warns,
+    ignore_warnings,
+    warns_deprecated_sympy,
+    Failed,
+    USE_PYTEST,
+)
 from sympy.utilities.exceptions import sympy_deprecation_warning
 
 
@@ -210,3 +216,40 @@ def test_ignore_many_warnings():
         for wi in w:
             assert isinstance(wi.message, RuntimeWarning)
             assert str(wi.message) == 'this is the other message'
+
+# XFAIL(raises=...) is implemented by SymPy only when pytest is not in use;
+# under pytest, XFAIL is pytest.mark.xfail.
+if not USE_PYTEST:
+    from sympy.testing.pytest import XFail, Skipped, skip
+
+    def test_XFAIL_without_raises():
+        @XFAIL
+        def f():
+            raise ValueError("Expected failure")
+
+        raises(XFail, f)
+
+    def test_XFAIL_raises():
+        @XFAIL(raises=ValueError)
+        def f():
+            raise ValueError("Expected failure")
+
+        raises(XFail, f)
+
+    def test_XFAIL_raises_wrong_exception():
+        @XFAIL(raises=ValueError)
+        def f():
+            raise TypeError("Unexpected failure")
+
+        raises(TypeError, f)
+
+    def test_XFAIL_raises_preserves_skip_reason():
+        @XFAIL(raises=ValueError)
+        def f():
+            skip("optional dependency unavailable")
+
+        try:
+            f()
+            assert False
+        except Skipped as e:
+            assert str(e) == "optional dependency unavailable"
