@@ -220,6 +220,44 @@ def _not_a_coeff(expr):
     return  # could be
 
 
+def _sparse_dict_from_expr(expr, opt):
+    """Transform an expression to sparse monomial form given generators."""
+    gens = opt.gens
+
+    if not gens:
+        return _sparse_dict_from_expr_no_gens(expr, opt)[0]
+
+    indices = {g: i for i, g in enumerate(gens)}
+    (terms,), _ = _polynomial_terms_from_exprs((expr,), opt)
+    poly = {}
+
+    for coeff, term in terms:
+        monom = {}
+        coeff = list(coeff)
+
+        for base, exp in term.items():
+            try:
+                i = indices[base]
+            except KeyError:
+                factor = Pow(base, exp)
+
+                if not factor.has_free(*gens):
+                    coeff.append(factor)
+                    continue
+
+                raise PolynomialError(
+                    "%s contains an element of the set of generators."
+                    % factor
+                )
+
+            monom[i] = monom.get(i, 0) + exp
+
+        monom = tuple(sorted(monom.items()))
+        coeff = Mul(*coeff)
+        poly[monom] = poly.get(monom, S.Zero) + coeff
+
+    return poly
+
 def _parallel_dict_from_expr_if_gens(exprs, opt):
     """Transform expressions into a multinomial form given generators.
 
@@ -275,35 +313,33 @@ def _parallel_dict_from_expr_if_gens(exprs, opt):
     return polys, opt.gens
 
 
-def _parallel_dict_from_expr_no_gens(exprs, opt):
-    """Transform expressions into a multinomial form and figure out generators.
-
-    Noncommutative expressions are rejected while their factors are
-    decomposed.
-    """
+def _is_coeff(f, opt):
+    if _not_a_coeff(f):
+        return False
+    if f.is_Number:
+        return True
     if opt.domain is not None:
-        def _is_coeff(f):
-            return not _not_a_coeff(f) and (f.is_Number or f in opt.domain)
-    elif opt.extension is True:
-        def _is_coeff(f):
-            return not _not_a_coeff(f) and (f.is_Number or f.is_algebraic)
-    elif opt.greedy is not False:
-        def _is_coeff(f):
-            return not _not_a_coeff(f) and (f.is_Number or f is S.ImaginaryUnit)
-    else:
-        def _is_coeff(f):
-            return not _not_a_coeff(f) and f.is_number
+        return f in opt.domain
+    if opt.extension is True:
+        return f.is_algebraic
+    if opt.greedy is not False:
+        return f is S.ImaginaryUnit
+    return f.is_number
 
+
+def _polynomial_terms_from_exprs(exprs, opt):
+    """Return polynomial term data and inferred generators for expressions."""
     decompose = decompose_power if opt.series is False else decompose_power_rat
+
     try:
-        factor_data, _ = _decompose_exprs(exprs, _is_coeff, decompose)
+        factor_data, _ = _decompose_exprs(
+            exprs, lambda f: _is_coeff(f, opt), decompose)
     except NonCommutativeExpression:
         raise PolynomialError('non-commutative expressions are not supported')
 
     gens, polys = set(), []
 
     for terms in factor_data:
-        poly = {}
         terms_dict = []
 
         for coeff, factors in terms:
@@ -326,12 +362,36 @@ def _parallel_dict_from_expr_no_gens(exprs, opt):
 
         polys.append(terms_dict)
 
-    gens = _sort_gens(gens, opt=opt)
-    k, indices = len(gens), {}
+    return polys, _sort_gens(gens, opt=opt)
 
-    for i, g in enumerate(gens):
-        indices[g] = i
 
+def _sparse_dict_from_expr_no_gens(expr, opt):
+    """Transform an expression to sparse monomial form and infer generators."""
+    (terms,), gens = _polynomial_terms_from_exprs((expr,), opt)
+    indices = {g: i for i, g in enumerate(gens)}
+    poly = {}
+
+    for coeff, term in terms:
+        monom = tuple(sorted(
+            (indices[base], exp)
+            for base, exp in term.items()
+            if exp
+        ))
+        coeff = Mul(*coeff)
+        poly[monom] = poly.get(monom, S.Zero) + coeff
+
+    return poly, gens
+
+
+def _parallel_dict_from_expr_no_gens(exprs, opt):
+    """Transform expressions into a multinomial form and figure out generators.
+
+    Noncommutative expressions are rejected while their factors are
+    decomposed.
+    """
+    polys, gens = _polynomial_terms_from_exprs(exprs, opt)
+    k = len(gens)
+    indices = {g: i for i, g in enumerate(gens)}
     result = []
 
     for terms in polys:
@@ -344,15 +404,12 @@ def _parallel_dict_from_expr_no_gens(exprs, opt):
                 monom[indices[base]] = exp
 
             monom = tuple(monom)
-
-            if monom in poly:
-                poly[monom] += Mul(*coeff)
-            else:
-                poly[monom] = Mul(*coeff)
+            coeff = Mul(*coeff)
+            poly[monom] = poly.get(monom, S.Zero) + coeff
 
         result.append(poly)
 
-    return result, tuple(gens)
+    return result, gens
 
 
 def _dict_from_expr_if_gens(expr, opt):
