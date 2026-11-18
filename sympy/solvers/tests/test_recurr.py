@@ -121,6 +121,19 @@ def test_rsolve_bulk():
                 assert rsolve_hyper(c, q, n).subs(zip(symbols('C:3'), [0, 0, 0])).expand() == p
 
 
+def test_rsolve_hyper_nonlinear_divisors():
+    # issue 31017: the hypergeometric solutions need a divisor of the leading
+    # or trailing coefficient that is not linear
+    assert rsolve((n + 1)**2*y(n + 1) - y(n), y(n), {y(0): 1}) == \
+        1/factorial(n)**2
+    assert rsolve(y(n + 1) - (n + 1)*(n + 2)*y(n), y(n), {y(0): 1}) == \
+        factorial(n)*factorial(n + 1)
+    assert rsolve(y(n + 1) - (n + 1)**3*y(n), y(n), {y(0): 1}) == \
+        factorial(n)**3
+    assert rsolve(y(n + 2) - (n + 1)*(n + 2)*y(n), y(n)) == \
+        (-1)**n*C0*factorial(n) + C1*factorial(n)
+
+
 def test_rsolve_0_sol_homogeneous():
     # fixed by cherry-pick from
     # https://github.com/diofant/diofant/commit/e1d2e52125199eb3df59f12e8944f8a5f24b00a5

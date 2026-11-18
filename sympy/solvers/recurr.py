@@ -463,6 +463,27 @@ def rsolve_ratio(coeffs, f, n, **hints):
             return None
 
 
+def _monic_divisors(roots_dict, n):
+    """Return every monic divisor of the polynomial with the given roots.
+
+    ``roots_dict`` maps each root to its multiplicity, as returned by
+    :func:`~.roots`.
+
+    Examples
+    ========
+
+    >>> from sympy.solvers.recurr import _monic_divisors
+    >>> from sympy.abc import n
+    >>> _monic_divisors({-1: 2}, n)
+    [1, n + 1, (n + 1)**2]
+
+    """
+    divisors = [S.One]
+    for root, mult in roots_dict.items():
+        divisors = [d*(n - root)**k for d in divisors for k in range(mult + 1)]
+    return divisors
+
+
 def rsolve_hyper(coeffs, f, n, **hints):
     r"""
     Given linear recurrence operator `\operatorname{L}` of order `k`
@@ -589,8 +610,10 @@ def rsolve_hyper(coeffs, f, n, **hints):
 
     p, q = coeffs[0], coeffs[r].subs(n, n - r + 1)
 
-    p_factors = list(roots(p, n).keys())
-    q_factors = list(roots(q, n).keys())
+    p_roots = roots(p, n)
+    q_roots = roots(q, n)
+    p_factors = list(p_roots.keys())
+    q_factors = list(q_roots.keys())
 
     factors = [(S.One, S.One)]
 
@@ -605,6 +628,19 @@ def rsolve_hyper(coeffs, f, n, **hints):
     q = [(S.One, n - q) for q in q_factors]
 
     factors = p + factors + q
+
+    # Petkovsek's algorithm needs every monic divisor A of p and B of q, not
+    # only the linear ones above, e.g. B = (n + 1)**2 for
+    # (n + 1)**2*y(n + 1) - y(n) = 0 and A = (n + 1)*(n + 2) for
+    # y(n + 1) - (n + 1)*(n + 2)*y(n) = 0. Only real roots are used: the
+    # products over complex roots cannot be simplified yet.
+    p_real = {r: m for r, m in p_roots.items() if r.is_extended_real}
+    q_real = {r: m for r, m in q_roots.items() if r.is_extended_real}
+    if sum(p_real.values()) > 1 or sum(q_real.values()) > 1:
+        for A in _monic_divisors(p_real, n):
+            for B in _monic_divisors(q_real, n):
+                if (A, B) not in factors:
+                    factors.append((A, B))
 
     for A, B in factors:
         polys, degrees = [], []
