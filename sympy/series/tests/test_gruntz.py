@@ -7,7 +7,7 @@ from sympy.core.symbol import Symbol
 from sympy.functions.elementary.exponential import (exp, log)
 from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.functions.elementary.trigonometric import (acot, atan, cos, sin)
-from sympy.functions.special.error_functions import (Ei, erf)
+from sympy.functions.special.error_functions import (Ei, erf, erf2)
 from sympy.functions.special.gamma_functions import (digamma, gamma, loggamma)
 from sympy.functions.special.zeta_functions import zeta
 from sympy.polys.polytools import cancel
@@ -301,6 +301,10 @@ def test_mrv4():
             x) == {x}
     assert mmrv(log(log(x*exp(x*exp(x)) + 1)) - exp(exp(log(log(x) + 1/x))), x) == \
         {exp(x*exp(x))}
+
+
+def test_mrv_multiple_function_args():
+    assert gruntz(exp(x)*erf2(exp(-x), 2*exp(-x)), x, oo) == 2/sqrt(pi)
 
 
 def mrewrite(a, b, c):
