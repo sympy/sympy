@@ -12,6 +12,15 @@
 
 set -o errexit
 
+browser_packages=(chromium-browser)
+for browser in google-chrome chrome chromium chromium-browser; do
+  if command -v "$browser" >/dev/null 2>&1 && "$browser" --version >/dev/null 2>&1; then
+    browser_packages=()
+    echo "Using existing browser: $browser"
+    break
+  fi
+done
+
 sudo apt-get update
 sudo apt-get install\
   texlive-latex-recommended\
@@ -22,7 +31,7 @@ sudo apt-get install\
   dvipng\
   librsvg2-bin\
   imagemagick\
-  chromium-browser\
+  "${browser_packages[@]}"\
   docbook2x\
   graphviz\
   #
