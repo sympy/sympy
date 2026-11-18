@@ -250,6 +250,17 @@ def test_pycode_reserved_words():
     assert py_str in ('else_ + if_', 'if_ + else_')
 
 
+def test_pycode_async_keywords():
+    for name in ['async', 'await']:
+        symbol = symbols(name)
+        code = pycode(symbol + 1)
+        assert code == name + '_ + 1'
+        assert eval(code, {name + '_': 2}) == 3
+        assert pycode(symbol, reserved_word_suffix='_symbol') == name + '_symbol'
+        raises(ValueError, lambda: pycode(symbol, error_on_reserved=True))
+        assert NumPyPrinter().doprint(symbol + 1) == code
+
+
 def test_issue_20762():
     # Make sure pycode removes curly braces from subscripted variables
     a_b, b, a_11 = symbols('a_{b} b a_{11}')

@@ -16,7 +16,7 @@ _kw = {
     'and', 'as', 'assert', 'break', 'class', 'continue', 'def', 'del', 'elif',
     'else', 'except', 'finally', 'for', 'from', 'global', 'if', 'import', 'in',
     'is', 'lambda', 'not', 'or', 'pass', 'raise', 'return', 'try', 'while',
-    'with', 'yield', 'None', 'False', 'nonlocal', 'True'
+    'with', 'yield', 'None', 'False', 'nonlocal', 'True', 'async', 'await'
 }
 
 _known_functions = {
