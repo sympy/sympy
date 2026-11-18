@@ -6833,6 +6833,12 @@ def test_pretty_Complement():
     assert pretty(S.Reals - S.Naturals0) == '(-oo, oo) \\ Naturals0'
     assert upretty(S.Reals - S.Naturals0) == 'ℝ \\ ℕ₀'
 
+    # a nested Complement is parenthesized, as in the LaTeX printer
+    assert upretty(Complement(S.Reals, Complement(S.Naturals, {x}))) == \
+        'ℝ \\ (ℕ \\ {x})'
+    assert upretty(Complement(Complement(S.Reals, S.Naturals, evaluate=False),
+        {x}, evaluate=False)) == '(ℝ \\ ℕ) \\ {x}'
+
 
 def test_pretty_SymmetricDifference():
     from sympy.sets.sets import SymmetricDifference

@@ -2325,7 +2325,7 @@ class PrettyPrinter(Printer):
 
         return self._print_seq(u.args, None, None, delimiter,
              parenthesize=lambda set: set.is_ProductSet or set.is_Intersection
-                               or set.is_Union)
+                               or set.is_Union or set.is_Complement)
 
     def _print_ImageSet(self, ts):
         if self._use_unicode:
