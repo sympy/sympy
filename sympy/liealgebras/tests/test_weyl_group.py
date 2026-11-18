@@ -1,5 +1,6 @@
 from __future__ import annotations
 from sympy.liealgebras.weyl_group import WeylGroup
+from sympy.core.numbers import Rational
 from sympy.matrices import Matrix
 
 def test_weyl_group():
@@ -41,3 +42,17 @@ def test_weyl_group():
     assert g.element_order('r2*r3') == 4
     h = WeylGroup("E6")
     assert h.group_order() == 51840
+
+def test_24092():
+    c = WeylGroup("E8")
+    m = Rational(1, 4) * Matrix([
+        [ 3,  1,  1,  1,  1,  1,  1, -1],
+        [ 1,  3, -1, -1, -1, -1, -1,  1],
+        [ 1, -1,  3, -1, -1, -1, -1,  1],
+        [ 1, -1, -1,  3, -1, -1, -1,  1],
+        [1, -1, -1, -1,  3, -1, -1,  1],
+        [ 1, -1, -1, -1, -1,  3, -1,  1],
+        [ 1, -1, -1, -1, -1, -1,  3,  1],
+        [-1,  1,  1,  1,  1,  1,  1,  3],
+    ])
+    assert c.matrix_form("r1") == m
