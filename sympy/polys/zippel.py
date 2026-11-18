@@ -418,7 +418,7 @@ def skeleton_sorter(
     degrees for the remaining variables, useful to evaluate quickly the monomials.
 
     It also saves the coefficients of each monomial in a list of lists, and
-    2 booleans needed by the function ``smp_zippel_interp_mod()`` to choose the right routine.
+    2 booleans needed by the function ``_smp_zippel_interp_mod()`` to choose the right routine.
 
     Examples
     ========
@@ -548,7 +548,7 @@ def _validate_eval_tuple(
     return all_vand_basis
 
 
-def smp_zippel_gcd(
+def _smp_zippel_gcd(
     f: smp[MPZ],
     g: smp[MPZ],
     n: int,
@@ -564,7 +564,7 @@ def smp_zippel_gcd(
     `\mathbb{Z}_p[x_0, \ldots, x_{k-1}]` for suitable primes `p` and then
     reconstructing the coefficients with the Chinese Remainder Theorem. To
     compute the multivariate GCD over `\mathbb{Z}_p` the recursive
-    subroutine :func:`smp_zippel_gcd_mod` is used. To verify the result in
+    subroutine :func:`_smp_zippel_gcd_mod` is used. To verify the result in
     `\mathbb{Z}[x_0, \ldots, x_{k-1}]`, trial division is done, but only for
     candidates which are very likely the desired GCD.
 
@@ -619,7 +619,7 @@ def smp_zippel_gcd(
     See also
     ========
 
-    smp_zippel_gcd_mod
+    _smp_zippel_gcd_mod
 
     """
 
@@ -655,7 +655,7 @@ def smp_zippel_gcd(
         fp = smp_trunc_ground(f, p, n, ZZ)
         gp = smp_trunc_ground(g, p, n, ZZ)
 
-        hp = smp_zippel_gcd_mod(
+        hp = _smp_zippel_gcd_mod(
             fp, gp, p, n, rand_point=rand_point, rand_tuple=rand_tuple
         )
         if hp is not None:
@@ -699,7 +699,7 @@ def smp_zippel_gcd(
             return h, cff, cfg
 
 
-def smp_zippel_gcd_mod(
+def _smp_zippel_gcd_mod(
     A: smp[MPZ],
     B: smp[MPZ],
     p: MPZ,
@@ -774,7 +774,7 @@ def smp_zippel_gcd_mod(
 
         B_ = smp_subs_drop(B, {n - 1: t}, n, ZZ)
         _smp_itrunc_ground(B_, p, n - 1, ZZ)
-        G_ = smp_zippel_gcd_mod(A_, B_, p, n - 1, rand_point, rand_point_, rand_tuple)
+        G_ = _smp_zippel_gcd_mod(A_, B_, p, n - 1, rand_point, rand_point_, rand_tuple)
         if G_ is None:
             M = []
             h = []
@@ -810,7 +810,7 @@ def smp_zippel_gcd_mod(
             B_ = smp_subs_drop(B, {n - 1: t}, n, ZZ)
             _smp_itrunc_ground(A_, p, n - 1, ZZ)
             _smp_itrunc_ground(B_, p, n - 1, ZZ)
-            G_ = smp_zippel_interp_mod(
+            G_ = _smp_zippel_interp_mod(
                 A_, B_, G_s, p, monic, pseudomonic, n - 1, rand_tuple
             )
             if G_ is None:
@@ -872,7 +872,7 @@ def smp_zippel_gcd_mod(
                         return None
 
 
-def smp_zippel_interp_mod(
+def _smp_zippel_interp_mod(
     A: smp[MPZ],
     B: smp[MPZ],
     G: dict[int, list[tuple[monom, list[tuple[int, int]]]]],
