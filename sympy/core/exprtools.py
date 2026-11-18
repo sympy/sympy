@@ -568,7 +568,7 @@ class Factors:
             factors = S(factors)
         if isinstance(factors, Factors):
             factors = factors.factors.copy()
-        elif not isinstance(factors, dict) and factors in (None, S.One):
+        elif factors is None or factors is S.One:  # /!\ x in (S.One,) triggers sympify(x)
             factors = {}
         elif factors is S.Zero or factors == 0:
             factors = {S.Zero: S.One}
