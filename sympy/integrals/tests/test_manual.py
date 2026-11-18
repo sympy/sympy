@@ -1471,3 +1471,13 @@ def test_manualintegrate_trig_log_hang():
     expr = log((cos(x)/2 + 1) / (1 - cos(x)/2)) / cos(x)
     res = manualintegrate(expr, x)
     assert res is not None
+
+def test_issue_log_cos_definite_hang():
+    from sympy import Symbol, log, cos, pi, integrate
+
+    x = Symbol('x', real=True)
+    expr = log((1 + cos(x)/2) / (1 - cos(x)/2)) / cos(x)
+
+    # Verify definite integration over [0, pi] evaluates instantly
+    res_def = integrate(expr, (x, 0, pi))
+    assert res_def == pi**2 / 3
