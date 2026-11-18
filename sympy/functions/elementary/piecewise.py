@@ -228,7 +228,9 @@ class Piecewise(DefinedFunction):
     def _eval_as_leading_term(self, x, logx, cdir):
         from sympy.core.relational import Equality, Unequality
         from sympy.functions.elementary.exponential import log
-
+        from sympy.core.function import PoleError
+        from sympy.sets.contains import Contains
+        from sympy.sets.sets import Interval
 
         t = Dummy('t', positive=True)
         L = Dummy('L', negative=True)
@@ -243,26 +245,59 @@ class Piecewise(DefinedFunction):
             return relation.func(lhs, rhs)
 
 
-        def decide(relation):
+        def decide_relation(relation):
             try:
                 lt = (relation.lhs - relation.rhs).as_leading_term(x, cdir=cdir)
-            except NotImplementedError:
+            except (NotImplementedError,PoleError):
                 pass
             else:
                 if d.is_positive:
                     lt = lt.subs(log(x), L)
                 res = evaluate(lt.subs(x, pt), S.Zero, relation)
                 if res in (S.true, S.false):
-                    return res
+                    return bool(res)
             res = evaluate(relation.lhs.subs(x, pt), relation.rhs.subs(x, pt), relation)
-            return res if res in (S.true, S.false) else relation
+            return bool(res) if res in (S.true, S.false) else None
+        def decide(cond):
+            if cond in (S.true, S.false):
+                return bool(cond)
+            if isinstance(cond, And):
+                unknown = False
+                for arg in cond.args:
+                    b = decide(arg)
+                    if b is False:
+                        return False
+                    if b is None:
+                        unknown = True
+                return None if unknown else True
+            if isinstance(cond, Or):
+                unknown = False
+                for arg in cond.args:
+                    b = decide(arg)
+                    if b is True:
+                        return True
+                    if b is None:
+                        unknown = True
+                return None if unknown else False
+            if isinstance(cond, Not):
+                res = decide(cond.args[0])
+                return None if res is None else not res
+            if isinstance(cond, Relational):
+                return decide_relation(cond)
+            if isinstance(cond, Contains):
+                element, set_ = cond.args
 
+                if isinstance(set_, Interval):
+                    return decide(set_.as_relational(element))
+
+                return None
+            return None
 
         for e, c in self.args:
-            c = c.replace(lambda a: isinstance(a, Relational), decide)
-            if c == True:
+            result = decide(c)
+            if result is True:
                 return e.as_leading_term(x, logx=logx, cdir=cdir)
-            if c == False:
+            if result is False:
                 continue
             raise NotImplementedError(
                 "cannot decide condition %s near %s = 0" % (c, x))
