@@ -48,7 +48,8 @@ from sympy.solvers.solveset import (
     nonlinsolve, solvify,
     _is_finite_with_finite_vars, _transolve, _is_exponential,
     _solve_exponential, _is_logarithmic, _is_lambert,
-    _solve_logarithm, _term_factors, _is_modular, NonlinearError)
+    _solve_logarithm, _solve_as_poly, _term_factors, _is_modular,
+    NonlinearError)
 
 from sympy.abc import (a, b, c, d, e, f, g, h, i, j, k, l, m, n, q, r,
     t, w, x, y, z)
@@ -670,6 +671,13 @@ def test_solve_rational():
     assert solveset_real(2*x/(x + 2) - 1, x) == FiniteSet(2)
     assert solveset_real((x**2/(7 - x)).diff(x), x) == \
         FiniteSet(S.Zero, S(14))
+
+
+def test_issue_23254():
+    expr = x/(x - 1) - 1/(x - 1) - 1
+    assert solveset(expr, x) == S.Complexes - FiniteSet(1)
+    assert solveset(expr, x, S.Reals) == S.Reals - FiniteSet(1)
+    assert _solve_as_poly(S.Zero, x, S.Complexes) == S.Complexes
 
 
 def test_solveset_real_gen_is_pow():
