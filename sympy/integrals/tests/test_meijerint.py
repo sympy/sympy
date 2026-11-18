@@ -3,6 +3,7 @@ from sympy.core.function import expand, expand_func, expand_mul
 from sympy.core.numbers import (I, Rational, oo, pi)
 from sympy.core.singleton import S
 from sympy.core.sorting import default_sort_key
+from sympy.core.symbol import Symbol
 from sympy.functions.elementary.complexes import Abs, arg, re, unpolarify
 from sympy.functions.elementary.exponential import (exp, exp_polar, log)
 from sympy.functions.elementary.hyperbolic import cosh, acosh, sinh
@@ -802,3 +803,8 @@ def test_issue_25949():
     from sympy.core.symbol import symbols
     y = symbols("y", nonzero=True)
     assert integrate(cosh(y*(x + 1)), (x, -1, -0.25), meijerg=True) == sinh(0.75*y)/y
+
+
+def test_issue_30998():
+    y = Symbol('y', real=True)
+    assert integrate(1/(y**0.5 + 1), y) == 2.0*y**0.5 - 2.0*log(y**0.5 + 1)
