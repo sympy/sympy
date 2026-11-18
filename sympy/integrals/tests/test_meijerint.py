@@ -675,8 +675,12 @@ def test_messy():
     assert integrate(E1(x)*besselj(1, x), (x, 0, oo), meijerg=True) == \
         log(S.Half + sqrt(2)/2)
 
-    assert integrate(1/x/sqrt(1 - x**2), x, meijerg=True) == \
-        Piecewise((-acosh(1/x), abs(x**(-2)) > 1), (I*asin(1/x), True))
+    messy = integrate(1/x/sqrt(1 - x**2), x, meijerg=True)
+    assert messy.is_Piecewise
+    assert messy.args[0][0] == -acosh(1/x)
+    assert messy.args[1][0] == I*asin(1/x)
+    acosh_cond = messy.args[0][1]
+    assert acosh_cond.has(x > 0) and acosh_cond.has(1/Abs(x**2) > 1)
 
 
 def test_issue_6122():
@@ -802,3 +806,29 @@ def test_issue_25949():
     from sympy.core.symbol import symbols
     y = symbols("y", nonzero=True)
     assert integrate(cosh(y*(x + 1)), (x, -1, -0.25), meijerg=True) == sinh(0.75*y)/y
+
+
+def test_issue_30236():
+    from sympy.core.symbol import symbols
+    from sympy import diff, N, sqrt
+    x, a = symbols('x a')
+    a_pos = symbols('a', positive=True, real=True)
+
+    f = x**2/sqrt(a**2 - x**2)
+    F = integrate(f, x, meijerg=True)
+    assert F.is_Piecewise
+    subs = {x: -3, a: 2}
+    assert abs(N((f - diff(F, x)).subs(subs))) < 1e-5
+
+    f2 = x**2/sqrt(a_pos**2 - x**2)
+    F2 = integrate(f2, x, meijerg=True)
+    subs2 = {x: -3, a_pos: 2}
+    assert abs(N((f2 - diff(F2, x)).subs(subs2))) < 1e-5
+
+    g = 1/(x*sqrt(x**2 - a_pos**2))
+    G = integrate(g, x, meijerg=True)
+    assert G.is_Piecewise
+    subs3 = {x: -3, a_pos: 2}
+    assert abs(N((g - diff(G, x)).subs(subs3))) < 1e-5
+    subs4 = {x: 5, a_pos: 2}
+    assert abs(N((g - diff(G, x)).subs(subs4))) < 1e-5
