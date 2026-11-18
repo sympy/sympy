@@ -536,6 +536,49 @@ def refine_sin_cos(expr, assumptions):
         refined_pow = refine_Pow(pow_expr, assumptions)
         return (pow_expr if refined_pow is None else refined_pow) * sin(rem)
 
+def refine_hyperbolic(expr, assumptions):
+    """
+    Handler for hyperbolic functions: sinh, cosh, tanh, coth.
+    """
+    from sympy.core.singleton import S
+    from sympy import I, sin, cos, tan, cot
+    from sympy.functions import sinh, cosh, tanh, coth
+    from sympy.assumptions import ask, Q
+
+    arg = expr.args[0]
+
+    if ask(Q.zero(arg), assumptions):
+        if isinstance(expr, (sinh, tanh)):
+            return S.Zero
+        elif isinstance(expr, cosh):
+            return S.One
+        elif isinstance(expr, coth):
+            return S.ComplexInfinity
+
+    coeff = arg / I
+    if ask(Q.real(coeff), assumptions):
+        if isinstance(expr, sinh):
+            return I * sin(coeff)
+        elif isinstance(expr, cosh):
+            return cos(coeff)
+        elif isinstance(expr, tanh):
+            return I * tan(coeff)
+        elif isinstance(expr, coth):
+            return -I * cot(coeff)
+
+    return expr
+
+def refine_sinh(expr, assumptions):
+    return refine_hyperbolic(expr, assumptions)
+
+def refine_cosh(expr, assumptions):
+    return refine_hyperbolic(expr, assumptions)
+
+def refine_tanh(expr, assumptions):
+    return refine_hyperbolic(expr, assumptions)
+
+def refine_coth(expr, assumptions):
+    return refine_hyperbolic(expr, assumptions)
 
 def refine_Heaviside(expr, assumptions):
     """
@@ -563,7 +606,6 @@ def refine_Heaviside(expr, assumptions):
     if ask(Q.zero(arg), assumptions):
         return H0
     return expr
-
 
 def refine_floor_ceiling(expr, assumptions):
     """
@@ -604,7 +646,6 @@ def refine_floor_ceiling(expr, assumptions):
         return Add(*gaussian_integer_terms) + expr.func(Add(*nongausian_intergers_terms))
     return expr
 
-
 handlers_dict: dict[str, Callable[[Basic, Boolean | bool], Expr]] = {
     'Abs': refine_abs,
     'Pow': refine_Pow,
@@ -620,4 +661,8 @@ handlers_dict: dict[str, Callable[[Basic, Boolean | bool], Expr]] = {
     'Heaviside': refine_Heaviside,
     'floor': refine_floor_ceiling,
     'ceiling' : refine_floor_ceiling,
+    'sinh': refine_sinh,
+    'cosh': refine_cosh,
+    'tanh': refine_tanh,
+    'coth': refine_coth,
 }
