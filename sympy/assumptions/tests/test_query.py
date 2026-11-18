@@ -1414,6 +1414,26 @@ def test_extended_real():
     assert _ask_recursive(Q.extended_real(x), Q.infinite(x)) is None
 
 
+def test_issue_30610():
+    # extended real numbers are not closed under non-integer powers
+    assert _ask_recursive(Q.extended_real(sqrt(x)), Q.negative(x)) is False
+    assert ask(Q.extended_real(sqrt(x)), Q.negative(x)) is False
+    assert ask(Q.extended_real(x**Rational(1, 2)), Q.negative(x)) is False
+    assert ask(Q.extended_real(x**2), Q.real(x)) is True
+    assert ask(Q.extended_real(2**oo)) is True
+    # integer powers of extended reals are extended real
+    assert ask(Q.extended_real(x**2), Q.extended_real(x)) is True
+    assert ask(Q.extended_real(x**3), Q.extended_real(x)) is True
+    # 0**negative is zoo
+    assert ask(Q.extended_real(x**y), Q.zero(x) & Q.negative(y)) is False
+    assert (S.Zero**-1).is_extended_real is False
+    # other zero/infinity edge cases
+    assert (S.Infinity**0).is_extended_real is True
+    assert (S.NegativeInfinity**2).is_extended_real is True
+    assert (S.NegativeInfinity**3).is_extended_real is True
+    assert (S.NegativeInfinity**-1).is_extended_real is True
+
+
 @_both_exp_pow
 def test_rational():
     assert _ask_recursive(Q.rational(x), Q.integer(x)) is True
