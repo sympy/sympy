@@ -21,7 +21,7 @@ from sympy.solvers.ode import (classify_ode,
 from sympy.solvers.ode.subscheck import checkodesol
 from sympy.solvers.ode.ode import (classify_sysode,
     constant_renumber, constantsimp, get_numbered_constants, solve_ics,
-    _get_constant_solutions)
+    _get_constant_solutions, _get_linear_solutions)
 
 from sympy.solvers.ode.nonhomogeneous import _undetermined_coefficients_match
 from sympy.solvers.ode.single import LinearCoefficients
@@ -584,6 +584,16 @@ def test_get_constant_solutions():
     assert _get_constant_solutions(eq, f(x),
         {f(0): 1, Derivative(f(x), x).subs(x, 0): 1}) == []
     assert _get_constant_solutions(eq, f(x), {f(0): 2}) == []
+
+
+def test_get_linear_solutions():
+    eq = Derivative(f(x), x) - sqrt(x - f(x))
+    assert _get_linear_solutions(eq, f(x), {f(2): 1}) == [Eq(f(x), x - 1)]
+    # the line through (2, 0) does not solve the ODE
+    assert _get_linear_solutions(eq, f(x), {f(2): 0}) == []
+    eq = Derivative(f(x), (x, 2))
+    assert _get_linear_solutions(eq, f(x),
+        {f(0): 1, Derivative(f(x), x).subs(x, 0): 3}) == [Eq(f(x), 3*x + 1)]
 
 
 def test_ode_order():
@@ -1185,3 +1195,7 @@ def test_issue_29827():
 
     ode = Eq(Derivative(f(x), x), f(x)*(1 - f(x)))
     assert dsolve(ode, f(x), ics={f(0): 0}) == Eq(f(x), 0)
+
+    # y = x - 1 is not part of the general solution found by lie_group
+    ode = Eq(Derivative(f(x), x), sqrt(x - f(x)))
+    assert dsolve(ode, f(x), ics={f(2): 1}) == Eq(f(x), x - 1)
