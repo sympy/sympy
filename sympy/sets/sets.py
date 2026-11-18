@@ -1515,7 +1515,18 @@ class Union(Set, LatticeOp):
         return all(arg.is_iterable for arg in self.args)
 
     def __iter__(self):
-        return roundrobin(*(iter(arg) for arg in self.args))
+        # round-robin keeps infinite parts lazy, but elements shared by
+        # several args would be yielded once per arg.
+        seen = set()
+        for item in roundrobin(*(iter(arg) for arg in self.args)):
+            try:
+                if item in seen:
+                    continue
+                seen.add(item)
+            except TypeError:
+                # unhashable element: cannot deduplicate
+                pass
+            yield item
 
 
 class Intersection(Set, LatticeOp):

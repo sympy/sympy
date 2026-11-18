@@ -1,4 +1,5 @@
 from __future__ import annotations
+from itertools import islice
 from sympy.concrete.summations import Sum
 from sympy.core.add import Add
 from sympy.core.containers import TupleKind
@@ -317,8 +318,23 @@ def test_union_iter():
     # Use Range because it is ordered
     u = Union(Range(3), Range(5), Range(4), evaluate=False)
 
-    # Round robin
-    assert list(u) == [0, 0, 0, 1, 1, 1, 2, 2, 2, 3, 3, 4]
+    # Round robin, each element yielded once
+    assert list(u) == [0, 1, 2, 3, 4]
+
+
+def test_union_iter_no_duplicates():
+    # https://github.com/sympy/sympy/issues/31145
+    u = Union(Range(0, 5), Range(3, 8))
+    assert list(u) == [0, 3, 1, 4, 2, 5, 6, 7]
+    assert sum(u) == 28
+
+    # infinite parts stay lazy and are still deduplicated
+    v = Union(Range(0, oo, 2), Range(0, oo, 3))
+    assert list(islice(v, 6)) == [0, 2, 3, 4, 6, 9]
+
+    # disjoint parts are unaffected
+    w = Union(Range(0, 2), Range(5, 7))
+    assert list(w) == [0, 5, 1, 6]
 
 
 def test_union_is_empty():
