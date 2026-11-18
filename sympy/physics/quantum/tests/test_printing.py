@@ -809,6 +809,17 @@ def test_tensorproduct():
     assert pretty(tp) == 'Ax B'
     assert upretty(tp) == 'A⨂ B'
     assert latex(tp) == r'{A}\otimes {B}'
+    # the symbol is only left out between two kets or two bras
+    tp = TensorProduct(Ket('a'), Operator('B'))
+    assert str(tp) == '|a>xB'
+    assert upretty(tp) == '❘a⟩⨂ B'
+    assert latex(tp) == r'{{\left|a\right\rangle }}\otimes {B}'
+    tp = TensorProduct(Ket('a'), Bra('b'))
+    assert str(tp) == '|a>x<b|'
+    assert upretty(tp) == '❘a⟩⨂ ⟨b❘'
+    tp = TensorProduct(Bra('a'), Bra('b'))
+    assert str(tp) == '<a|<b|'
+    assert upretty(tp) == '⟨a❘⟨b❘'
 
 
 def test_big_expr():

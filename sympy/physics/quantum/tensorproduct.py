@@ -55,6 +55,18 @@ def combined_tensor_printing(combined):
     _combined_printing = combined
 
 
+def _is_state_pair(a, b):
+    """Return True if ``a`` and ``b`` are both kets or both bras.
+
+    The tensor product symbol is left out between them when printing, e.g.
+    ``|a>|b>``. It is kept in all other cases: without it a ket followed by
+    an operator, ``|a>B``, reads as a product, and a ket followed by a bra,
+    ``|a><b|``, reads as an outer product.
+    """
+    return (isinstance(a, KetBase) and isinstance(b, KetBase) or
+            isinstance(a, BraBase) and isinstance(b, BraBase))
+
+
 class TensorProduct(Expr):
     """The tensor product of two or more arguments.
 
@@ -173,7 +185,7 @@ class TensorProduct(Expr):
             s = s + printer._print(self.args[i])
             if isinstance(self.args[i], (Add, Pow, Mul)):
                 s = s + ')'
-            if i != length - 1 and not isinstance(self.args[i], (KetBase, BraBase)):
+            if i != length - 1 and not _is_state_pair(self.args[i], self.args[i + 1]):
                 s = s + 'x'
         return s
 
@@ -214,7 +226,7 @@ class TensorProduct(Expr):
                     *next_pform.parens(left='(', right=')')
                 )
             pform = prettyForm(*pform.right(next_pform))
-            if i != length - 1 and not isinstance(self.args[i], (KetBase, BraBase)):
+            if i != length - 1 and not _is_state_pair(self.args[i], self.args[i + 1]):
                 if printer._use_unicode:
                     pform = prettyForm(*pform.right('\N{N-ARY CIRCLED TIMES OPERATOR}' + ' '))
                 else:
@@ -246,7 +258,7 @@ class TensorProduct(Expr):
             s = s + '{' + printer._print(self.args[i], *args) + '}'
             if isinstance(self.args[i], (Add, Mul)):
                 s = s + '\\right)'
-            if i != length - 1 and not isinstance(self.args[i], (KetBase, BraBase)):
+            if i != length - 1 and not _is_state_pair(self.args[i], self.args[i + 1]):
                 s = s + '\\otimes '
         return s
 
