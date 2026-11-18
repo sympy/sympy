@@ -7305,6 +7305,12 @@ def test_MatrixSymbol_printing():
 """
     assert pretty(-a*x + -2*y*y) == ascii_str
 
+    # a term whose coefficient is an Add is printed in parentheses, so the
+    # plus sign before it must be kept
+    assert pretty((1 - a)*A + (1 - b)*B) == "(1 - a)*A + (1 - b)*B"
+    assert upretty((1 - a)*A + (1 - b)*B) == "(1 - a)⋅A + (1 - b)⋅B"
+    assert pretty(A + (b - 1)*B) == "(b - 1)*B + A"
+
 
 def test_degree_printing():
     expr1 = 90*degree
