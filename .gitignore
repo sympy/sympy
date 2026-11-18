@@ -52,8 +52,9 @@ sympy.egg-info/
 tox.ini
 .tox/
 
-# Coverage files (./bin/coverage_report.py)
+# Coverage files (./bin/coverage_report.py, pytest --cov)
 .coverage
+coverage.xml
 covhtml/
 
 # Built doc files (cd doc; make html)
