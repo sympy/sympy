@@ -336,7 +336,7 @@ class RustCodePrinter(CodePrinter):
 
     def _print_caller_var(self, expr):
         if isinstance(expr, TypeCast) and not expr.explicit:
-            return self._print(expr)
+            return self._print_caller_var(expr.expr)
         elif expr.is_Rational and not expr.is_integer:
             return '(' + self._print(expr) + ')'
         elif len(expr.args) > 1:

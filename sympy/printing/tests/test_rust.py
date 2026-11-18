@@ -371,6 +371,7 @@ def test_parenthesize_typecast():
 
 def test_Max_Min():
     a = Symbol('a')
+    w = Symbol('w', integer=False, real=True)
     assert rust_code(Max(0.0, a)) == "0.0_f64.max(a)"
     assert rust_code(Max(a, 0.0)) == "0.0_f64.max(a)"
     assert rust_code(Max(x, y)) == "x.max(y)"
@@ -392,4 +393,8 @@ def test_Max_Min():
     assert rust_code(Min(S.Half, x)) == "(1_f64/2.0).min(x)"
     assert rust_code(Max(n + 2, x)) == "x.max((n + 2) as f64)"
     assert rust_code(Max(2*n, x)) == "x.max((2*n) as f64)"
+    assert rust_code(Max(w + z, x + y)) == "(w + z).max(x + y)"
+    assert rust_code(Min(w*z, x*y)) == "(w*z).min(x*y)"
+    assert rust_code(Max(-x, -y)) == "(-x).max(-y)"
+    assert rust_code(Min(-x, -y)) == "(-x).min(-y)"
     assert rust_code(Max(x, y), user_functions={'Max': 'custom_max'}) == "x.custom_max(y)"
