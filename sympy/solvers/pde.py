@@ -30,21 +30,45 @@ more information on each (run help(pde)):
     with constant coefficients.
   - 1st order linear partial differential equations with
     variable coefficients.
+  - 2nd order linear separable partial differential equations
+    with constant coefficients and (initial/boundary) conditions.
 
 """
 from __future__ import annotations
 from functools import reduce
+from abc import ABC, abstractmethod
+from dataclasses import dataclass, field, replace
 
 from itertools import combinations_with_replacement
 from sympy.simplify import simplify  # type: ignore
 from sympy.core import Add, S
-from sympy.core.function import Function, expand, AppliedUndef, Subs
-from sympy.core.relational import Equality, Eq
-from sympy.core.symbol import Symbol, Wild, symbols
+from sympy.core.function import Function, expand, AppliedUndef, Subs, Derivative
+from sympy.core.relational import Equality, Eq, Relational
+from sympy.core.symbol import Symbol, Wild, Dummy, symbols
+from sympy.core.numbers import pi, I
+from sympy.core.power import Pow
 from sympy.functions import exp
 from sympy.integrals.integrals import Integral, integrate
-from sympy.utilities.iterables import has_dups, is_sequence
+from sympy.utilities.iterables import has_dups, is_sequence, sift
 from sympy.utilities.misc import filldedent
+from sympy.concrete.summations import Sum
+from sympy.core.exprtools import factor_terms
+from sympy.core.mul import Mul
+from sympy.functions.elementary.complexes import conjugate, im, re
+from sympy.functions.elementary.miscellaneous import Max, Min, sqrt
+from sympy.functions.elementary.piecewise import Piecewise
+from sympy.functions.elementary.trigonometric import cos, sin
+from sympy.functions.elementary.hyperbolic import cosh, sinh
+from sympy.sets.conditionset import ConditionSet
+from sympy.sets.fancysets import ImageSet
+from sympy.sets.sets import FiniteSet, Interval, Union, Intersection
+from sympy.series.limits import Limit
+from sympy.solvers.solveset import linear_eq_to_matrix, solveset
+from sympy.solvers.diophantine.diophantine import diophantine
+from sympy.logic.boolalg import And
+from sympy.polys.polytools import Poly, cancel, factor
+from sympy.polys.polyerrors import PolynomialError
+from sympy.polys.domains import ZZ, QQ
 
 from sympy.solvers.deutils import _preprocess, ode_order, _desolve
 from sympy.solvers.solvers import solve
@@ -52,16 +76,20 @@ from sympy.simplify.radsimp import collect
 
 import operator
 
+from typing import TYPE_CHECKING
+if TYPE_CHECKING:
+    from sympy.core.expr import Expr
 
 allhints = (
     "1st_linear_constant_coeff_homogeneous",
     "1st_linear_constant_coeff",
     "1st_linear_constant_coeff_Integral",
-    "1st_linear_variable_coeff"
+    "1st_linear_variable_coeff",
+    "2nd_linear_constant_coeff_separable",
     )
 
 
-def pdsolve(eq, func=None, hint='default', dict=False, solvefun=None, **kwargs):
+def pdsolve(eq, func=None, hint='default', dict=False, solvefun=None, ics=None, **kwargs):
     """
     Solves any (supported) kind of partial differential equation.
 
@@ -91,6 +119,12 @@ def pdsolve(eq, func=None, hint='default', dict=False, solvefun=None, **kwargs):
         ``solvefun`` is the convention used for arbitrary functions returned
             by the PDE solver. If not set by the user, it is set by default
             to be F.
+
+        ``ics`` is a dictionary of conditions, keys are the unknown, or its
+            derivative, with one variable fixed (eg. `u(x0, y), u_y(x, y0)` ).
+            Currently only used for 2nd-order PDEs, see
+            :func:`pde_2nd_linear_constant_coeff_separable`.
+
 
     **Hints**
 
@@ -142,7 +176,8 @@ def pdsolve(eq, func=None, hint='default', dict=False, solvefun=None, **kwargs):
           examples for how to use pdsolve().
         - pdsolve always returns an Equality class (except for the case
           when the hint is "all" or "all_Integral"). Note that it is not possible
-          to get an explicit solution for f(x, y) as in the case of ODE's
+          to get an explicit solution for f(x, y) unless ``ics`` is given;
+          currently only implemented for 2nd-order PDEs.
         - Do help(pde.pde_hintname) to get help more information on a
           specific hint
 
@@ -167,8 +202,8 @@ def pdsolve(eq, func=None, hint='default', dict=False, solvefun=None, **kwargs):
         solvefun = Function('F')
 
     # See the docstring of _desolve for more details.
-    hints = _desolve(eq, func=func, hint=hint, simplify=True,
-                     type='pde', **kwargs)
+    hints = _desolve(eq, func=func, hint=hint, ics=ics, simplify=True,
+                     type='pde', solvefun=solvefun, **kwargs)
     eq = hints.pop('eq', False)
     all_ = hints.pop('all', False)
 
@@ -177,7 +212,7 @@ def pdsolve(eq, func=None, hint='default', dict=False, solvefun=None, **kwargs):
         # number of hints are added.
         pdedict = {}
         failed_hints = {}
-        gethints = classify_pde(eq, dict=True)
+        gethints = classify_pde(eq, dict=True, ics=ics)
         pdedict.update({'order': gethints['order'],
                         'default': gethints['default']})
         for hint in hints:
@@ -223,7 +258,7 @@ def _handle_Integral(expr, func, order, hint):
         return expr
 
 
-def classify_pde(eq, func=None, dict=False, *, prep=True, **kwargs):
+def classify_pde(eq, func=None, dict=False, ics=None, *, prep=True, **kwargs):
     """
     Returns a tuple of possible pdsolve() classifications for a PDE.
 
@@ -239,6 +274,11 @@ def classify_pde(eq, func=None, dict=False, *, prep=True, **kwargs):
     hint:match expression terms. This is intended for internal use by
     pdsolve().  Note that because dictionaries are ordered arbitrarily,
     this will most likely not be in the same order as the tuple.
+
+    If ``ics`` is given, may raise the following errors:
+
+        - ``ValueError`` for invalid or ill-posed problems
+        - ``NotImplementedError`` for unsupported problems
 
     You can get help on different hints by doing help(pde.pde_hintname),
     where hintname is the name of the hint without "_Integral".
@@ -273,7 +313,7 @@ def classify_pde(eq, func=None, dict=False, *, prep=True, **kwargs):
 
     if isinstance(eq, Equality):
         if eq.rhs != 0:
-            return classify_pde(eq.lhs - eq.rhs, func)
+            return classify_pde(eq.lhs - eq.rhs, func, dict=dict, ics=ics, **kwargs)
         eq = eq.lhs
 
     f = func.func
@@ -347,6 +387,12 @@ def classify_pde(eq, func=None, dict=False, *, prep=True, **kwargs):
             if r:
                 r.update({'b': b, 'c': c, 'd': d, 'e': e})
                 matching_hints["1st_linear_variable_coeff"] = r
+
+    elif order == 2 and ics is not None:
+        solvefun = kwargs.get("solvefun") or Function("F")
+        solver = _SeparationOfVariables(_BVP.from_input(reduced_eq, func, ics, solvefun))
+        if solver.matches():
+            matching_hints["2nd_linear_constant_coeff_separable"] = solver
 
     # Order keys based on allhints.
     rettuple = tuple(i for i in allhints if i in matching_hints)
@@ -760,6 +806,88 @@ def pde_1st_linear_variable_coeff(eq, func, order, match, solvefun):
         raise NotImplementedError("Cannot solve the partial differential equation due"
             " to inability of constantsimp")
 
+def pde_2nd_linear_constant_coeff_separable(eq, func, order, match, solvefun):
+    r"""
+    Solves a second order linear constant coefficient PDE with
+    initial/boundary conditions, via separation of variables [1]_ [2]_.
+
+    Accepts PDEs of the form:
+
+    .. math:: A \frac{\partial^2 u(x, y)}{\partial x^2}
+              + C \frac{\partial^2 u(x, y)}{\partial y^2}
+              + D \frac{\partial u(x, y)}{\partial x}
+              + E \frac{\partial u(x, y)}{\partial y}
+              + F u(x,y) = 0
+
+    Subject to conditions on either variable of the form:
+
+    .. math:: \frac{\partial u}{\partial x}(x0, y) = f(y)
+
+    or
+
+    .. math:: u(x0, y) = f(y)
+
+    Requires a pair of homogeneous boundary conditions on
+    at least one variable. Missing conditions are filled
+    with arbitrary functions.
+
+    Returns an equality relating the unknown to its solution, wrapped
+    in a piecewise declaring the domain of validity. The solution is
+    typically an infinite sum, but occasionally simplifies down to
+    a few isolated terms.
+
+    Raises ``ValueError`` for ill-posed problems [3]_ [4]_,
+    including resonance [5]_ [6]_.
+    Cannot detect resonance for symbolic coefficients, so the solution
+    is correct for all but exceptional parameter values.
+
+    Not yet implemented:
+
+        - Robin, periodic, or infinite conditions
+        - eigenvalues with no closed form
+
+    Examples
+    ========
+
+    >>> from sympy import Eq, Function, pdsolve, symbols
+    >>> x, t = symbols('x t')
+    >>> L, c = symbols('L c', positive=True)
+    >>> u = Function('u')
+    >>> heat_pde = Eq(u(x, t).diff(t), c*u(x, t).diff(x, 2))
+    >>> conditions = {u(0, t): 0, u(L, t): 0, u(x, 0): x*(L - x)}
+    >>> pdsolve(heat_pde, u(x, t), ics=conditions)
+    Eq(u(x, t), Piecewise((Sum(-4*L**2*((-1)**_n -
+        1)*exp(-_n**2*pi**2*c*t/L**2)*sin(_n*pi*x/L)/(_n**3*pi**3),
+        (_n, 1, oo)), (L >= x) & (t >= 0) & (x >= 0))))
+
+    >>> from sympy import pi, sin
+    >>> wave_pde = u(x, t).diff(t, 2) - c**2*u(x, t).diff(x, 2)
+    >>> conditions = {u(0, t): 0, u(L, t): 0, u(x, 0): sin(pi*x/L),
+    ...               u(x, t).diff(t).subs(t, 0): 0}
+    >>> pdsolve(wave_pde, u(x, t), ics=conditions)
+    Eq(u(x, t), Piecewise((sin(pi*x/L)*cos(pi*c*t/L), (L >= x) & (x >= 0))))
+
+    References
+    ==========
+
+    .. [1] R. L. Herman, Introduction to Partial Differential Equations, 2015,
+           Sections 2.4 and 4.3, pp. 42.
+
+    .. [2] https://en.wikipedia.org/wiki/Separation_of_variables
+
+    .. [3] V. Ivrii, Partial Differential Equations, University of Toronto,
+           2026, Section 1.2.2, p. 9.
+
+    .. [4] https://en.wikipedia.org/wiki/Well-posed_problem
+
+    .. [5] R. L. Herman, Introduction to Partial Differential Equations, 2015,
+           Section 4.4, p. 122.
+
+    .. [6] https://en.wikipedia.org/wiki/Fredholm_alternative
+
+    """
+    return Eq(func, match.solve())
+
 
 def _simplify_variable_coeff(sol, syms, func, funcarg):
     r"""
@@ -966,3 +1094,1008 @@ def _separate(eq, dep, others):
     if lhs.has(*others) or rhs.has(dep):
         return None
     return [lhs, rhs]
+
+
+@dataclass(frozen=True)
+class _Cond:
+    """
+    Stores a condition of the form `u(x, y0) = f(x)`,
+    where `y` is ``var``, `y0` is ``var_val``,
+    `f(x)` is ``unknown_val``.
+    Optionally accepts ``diff``, the order of the
+    derivative in ``var``; the default is zero (i.e. Dirichlet).
+
+    Conditions are built by ``parse``, applied via ``eval``.
+
+    """
+    var: Symbol
+    var_val: Expr
+    unknown_val: Expr
+    diff: int = 0
+
+    @classmethod
+    def parse(cls, cond_lhs, unknown_val, unknown):
+        """
+        Returns a ``_Cond`` object representing the equation
+        ``cond_lhs`` = ``unknown_val``, where ``unknown``
+        is the function or its derivative evaluated at
+        some value of one of its independent variables.
+
+        Raises ``ValueError`` for conditions that:
+            - try to fix more than one variable, eg. `u(x0, y0) = ...`
+            - involve a mixed derivative, eg. `u_xy(x0, y) = ...`
+            - differentiate in the wrong variable, eg. `u_y(x0, y) = ...`
+            - do not involve ``unknown`` in ``cond_lhs``
+            - involve the fixed variable on the rhs, eg. `u(x0, y) = x`
+            - involve the function and its derivative,
+              eg. `u(x0, y) + u_x(x0, y) = ...`
+              TODO: make this raise ``NotImplementedError`` instead
+
+        Raises ``NotImplementedError`` for conditions that:
+            - relate the unknown to itself, eg. `u(x0, y) = u(xf, y)`
+            - involve infinity, eg. `u(x0, y) = oo` or `u(oo, y) = ...`
+
+        """
+        if unknown_val.has(unknown.func):
+            raise NotImplementedError(f"{cond_lhs} = {unknown_val} relates the unknown to itself (eg. periodic), which is not yet supported")
+        if isinstance(cond_lhs, Limit):
+            raise NotImplementedError(f"limits are not currently supported; received {cond_lhs}")
+
+        if isinstance(cond_lhs, Subs):
+            if len(cond_lhs.variables) != 1:
+                raise ValueError(f"{cond_lhs} must fix exactly one variable")
+            (var,), (var_val,) = cond_lhs.variables, cond_lhs.point
+            cond_derivative = cond_lhs.expr
+            if not isinstance(cond_derivative, Derivative):
+                raise ValueError(f"unrecognized condition: {cond_lhs}")
+            base, diff = cond_derivative.expr, cond_derivative.derivative_count
+            if set(cond_derivative.variables) != {var}:
+                raise ValueError(f"{cond_lhs} differentiates in the wrong variable")
+
+        else:
+            diff_var = None
+            if isinstance(cond_lhs, Derivative):
+                base, diff = cond_lhs.expr, cond_lhs.derivative_count
+                if len(set(cond_lhs.variables)) != 1:
+                    raise ValueError(f"mixed derivatives not supported: {cond_lhs}")
+                (diff_var,) = cond_lhs.variables
+            else:
+                base, diff = cond_lhs, 0
+
+            fixed_vars = [(v, p) for v, p in zip(unknown.args, base.args) if v != p]
+            if len(fixed_vars) != 1:
+                raise ValueError(f"{cond_lhs} must fix exactly one variable")
+            var, var_val = fixed_vars[0]
+            if diff_var is not None and diff_var != var_val:
+                raise ValueError(f"{cond_lhs} differentiates in the wrong variable")
+
+        if var_val.is_infinite or unknown_val.is_infinite:
+            raise NotImplementedError("conditions involving infinity are not currently supported")
+        if base.func != unknown.func:
+            raise ValueError(f"{cond_lhs} is not a condition on {unknown.func}")
+        if unknown_val.has(var):
+            raise ValueError(f"{cond_lhs} fixes {var}, so the resulting value {unknown_val} cannot depend on {var}")
+        return cls(var, var_val, unknown_val, diff)
+
+    def eval(self, expr):
+        """
+        Substitutes the given expression into the condition
+        as its unknown, returning an unevaluated ``Eq``.
+
+        """
+        lhs = expr.diff(self.var, self.diff).subs(self.var, self.var_val)
+        return Eq(lhs, self.unknown_val, evaluate=False)
+
+@dataclass
+class _BVP(ABC):
+    """
+    Virtual interface for parsing and storing a boundary-value problem.
+    The PDE is classified into Elliptic, Hyperbolic, or Parabolic [1]_, and
+    missing conditions are filled in appropriately.
+
+    Implements ``check_conditions`` in each subclass corresponding to a distinct
+    PDE category, defined in ``classify``. Subclasses require different
+    arrangements of conditions (boundary or initial) for well-posedness [2]_.
+
+    References
+    ==========
+
+    .. [1] V. Ivrii, Partial Differential Equations, University of Toronto,
+           2026, Section 1.3.2 and Appendix 1.B.1, pp. 10, 22.
+    .. [2] V. Ivrii, Partial Differential Equations, University of Toronto,
+           2026, Section 1.2.2, p. 9.
+
+    """
+    unknown: Function
+    pde: Expr
+    coeffs: dict
+    conds: dict
+    domains: dict
+
+    def validity_domain(self):
+        """
+        Returns the combined domain of validity, eg. `a <= x <= b, t >= t0`.
+
+        """
+        return And(*[
+            relation
+            for var, interval in self.domains.items()
+            for relation in And.make_args(interval.as_relational(var))
+            if not relation.has(S.Infinity, S.NegativeInfinity)],
+        )
+
+    @classmethod
+    def from_input(cls, pde, unknown, conditions=None, solvefun=None):
+        """
+        Parses the input into a ``_BVP`` object, using the
+        subclass determined by the PDE's classification.
+
+        The optional ``solvefun`` is the base name for the
+        arbitrary functions used to fill in missing conditions.
+        Uses ``F1``, ``F2``, ... by default.
+
+        """
+        cls.check_variables(unknown)
+        coeffs = cls.find_coefficients(pde, unknown)
+        orders = cls.check_derivative_orders(coeffs, unknown)
+        pde_class = cls.classify(coeffs)
+
+        solvefun = solvefun or Function("F")
+        taken_function_names = {
+            fun.func.__name__
+            for expr in (pde, *map(S, (conditions or {}).values()))
+            for fun in expr.atoms(AppliedUndef)
+        }
+
+        def new_func():
+            index = 1
+            while f"{solvefun.__name__}{index}" in taken_function_names:
+                index += 1
+            name = f"{solvefun.__name__}{index}"
+            taken_function_names.add(name)
+            return Function(name)
+
+        conds, domains = pde_class.parse_conds(orders, coeffs, unknown, conditions, new_func)
+        return pde_class(unknown, pde, coeffs, conds, domains)
+
+    @staticmethod
+    def check_variables(unknown):
+        """
+        Confirms the unknown is in exactly two continuous variables.
+
+        """
+        assert len(unknown.args) == 2, f"expected exactly 2 independent variables, received {unknown}"
+
+        for var in unknown.args:
+            if var.is_Symbol is False:
+                raise ValueError(f"{unknown} must be applied to plain symbols, not {var}")
+            if var.is_rational:
+                raise ValueError(f"{var} must be a continuous variable")
+            if var.is_real is False:
+                raise NotImplementedError(f"{var} must be real, complex variables are not yet implemented")
+
+    @staticmethod
+    def find_coefficients(pde_expr, unknown):
+        """
+        Parses and returns a dictionary mapping each term's
+        string representation to its coefficient:
+            "u_xx", "u_xy", "u_yy", "u_x", "u_y", "u", "c"
+        , where "c" is the source term.
+
+        Simplifies the leading coefficients by attempting to
+        eliminate a shared complex factor.
+
+        Raises ``NotImplementedError`` if:
+            - the expression is nonlinear
+            - the expression has variable coefficients
+            - the leading term coefficients are complex
+              beyond a common factor
+
+        """
+        x, y = unknown.args
+        terms = {
+            "u_xx": unknown.diff(x, 2),
+            "u_xy": unknown.diff(x, y),
+            "u_yy": unknown.diff(y, 2),
+            "u_x": unknown.diff(x),
+            "u_y": unknown.diff(y),
+            "u": unknown,
+        }
+
+        coeffs = {name: expand(pde_expr).coeff(term) for name, term in terms.items()}
+        coeffs["c"] = expand(
+            pde_expr - sum(coeffs[n] * term for n, term in terms.items())
+        )
+
+        if any(coeff.has(unknown.func) for coeff in coeffs.values()):
+            raise NotImplementedError(f"received {pde_expr} = 0, which is not linear in {unknown}")
+        if any(coeff.has(x, y) for name, coeff in coeffs.items() if name != "c"):
+            raise NotImplementedError(f"received {pde_expr} = 0, which does not have constant coefficients")
+
+        leading_terms = ["u_xx", "u_yy", "u_xy"]
+        complex_leading_terms = [coeffs[term] for term in leading_terms if coeffs[term].is_real is False]
+        if complex_leading_terms:
+            coeffs = {name: simplify(coeff * conjugate(complex_leading_terms[0])) for name, coeff in coeffs.items()}
+            if any(coeffs[term].is_real is False for term in leading_terms):
+                raise NotImplementedError("second-order coefficients must be real, up to a common factor")
+        return coeffs
+
+    @staticmethod
+    def check_derivative_orders(coeffs, unknown):
+        """
+        Returns a dictionary mapping each variable to its highest derivative
+        order in ``unknown``.
+
+        Raises ``ValueError`` if either variable has zero order.
+        Raises ``NotImplementedError`` if neither variable is second order.
+
+        """
+        x, y = unknown.args
+        x_order = (
+            2 if coeffs["u_xx"] != 0
+            else 1 if (coeffs["u_x"] != 0 or coeffs["u_xy"] != 0)
+            else 0
+        )
+        y_order = (
+            2 if coeffs["u_yy"] != 0
+            else 1 if (coeffs["u_y"] != 0 or coeffs["u_xy"] != 0)
+            else 0
+        )
+
+        if x_order == 0 or y_order == 0:
+            raise ValueError("expected a PDE, received an ODE")
+        if x_order < 2 and y_order < 2:
+            raise NotImplementedError("expected a second derivative in at least one variable")
+        return {x: x_order, y: y_order}
+
+    @staticmethod
+    def classify(coeffs):
+        """
+        Classifies the PDE into Parabolic, Hyperbolic, or Elliptic,
+        returning the corresponding ``BVP`` subclass.
+
+        Raises a ``ValueError`` if classification fails.
+
+        """
+        discriminant = simplify(coeffs["u_xy"] ** 2 - 4 * coeffs["u_xx"] * coeffs["u_yy"])
+        if discriminant.is_zero:
+            return _ParabolicBVP
+        if discriminant.is_nonnegative:
+            return _HyperbolicBVP
+        if discriminant.is_nonpositive:
+            return _EllipticBVP
+        raise ValueError(f"failed to classify the PDE due to ambiguous sign of the discriminant {discriminant}; declare the coefficients' signs")
+
+    @staticmethod
+    @abstractmethod
+    def check_conditions(conds, orders, coeffs, unknown, new_func):
+        """
+        Checks if the given condition types (initial or boundary) are
+        valid for the subclass, fills in missing conditions, and
+        returns ``(conds, domains)``: the conditions and each
+        variable's domain of validity.
+
+        Raises a ``ValueError`` when the condition arrangement
+        would make the problem ill-posed.
+
+        """
+
+    @classmethod
+    def parse_conds(cls, orders, coeffs, unknown, conditions, new_func):
+        """
+        Parses and sorts the conditions by variable, returning the
+        conditions and domains via dispatch to ``check_conditions``.
+
+        Raises ``ValueError`` if any variable receives too many conditions,
+        or invalid conditions.
+
+        """
+        parsed = [_Cond.parse(lhs, S(val), unknown) for lhs, val in (conditions or {}).items()]
+        conds = {var: tuple(c for c in parsed if c.var == var) for var in unknown.args}
+
+        for var in unknown.args:
+            if len(conds[var]) > orders[var]:
+                raise ValueError(f"too many conditions given for {var}; expected at most {orders[var]} conditions, received {conds[var]}")
+            if any(cond.diff >= orders[var] for cond in conds[var]):
+                raise ValueError(f"conditions in {var} may only fix derivatives of order below {orders[var]}, as higher ones are already determined by the PDE")
+
+        return cls.check_conditions(conds, orders, coeffs, unknown, new_func)
+
+    @staticmethod
+    def fill_bcs(var_conds, var, other_var, new_func):
+        """
+        Fills in the missing conditions for this variable with boundary
+        conditions (i.e. conditions at different points ``x0`` and ``x0 + L``).
+
+        The new conditions take an arbitrary function of the other
+        variable, hence they don't constrain the problem.
+
+        """
+        if len(var_conds) == 2:
+            return var_conds
+
+        L = Dummy("L", positive=True)  # arbitrary length
+
+        if len(var_conds) == 1:
+            x0 = var_conds[0].var_val
+            return var_conds + (_Cond(var, x0 + L, new_func()(other_var)),)
+
+        x0 = S.Zero
+        return (
+            _Cond(var, x0, new_func()(other_var)),
+            _Cond(var, x0 + L, new_func()(other_var)),
+        )
+
+    @staticmethod
+    def fill_ics(var_conds, var_order, var, other_var, new_func):
+        """
+        Fills in the missing conditions for this variable with
+        initial conditions (i.e. conditions at the same point ``t0``).
+
+        The new conditions take an arbitrary function of the other
+        variable, hence they don't constrain the problem.
+
+        """
+        diffs = [cond.diff for cond in var_conds]
+        t0 = var_conds[0].var_val if var_conds else S.Zero
+
+        return var_conds + tuple(
+            _Cond(var, t0, new_func()(other_var), k)
+            for k in range(var_order)
+            if k not in diffs
+        )
+
+    @staticmethod
+    def can_be_spatial(var_conds):
+        """
+        Checks if an independent variable could be spatial;
+        any variable with zero or one conditions passes since
+        we can always add a second condition at another point.
+
+        Only rejects variables that already have two conditions
+        at the same point (i.e. initial conditions).
+
+        """
+        return len(var_conds) == len({cond.var_val for cond in var_conds})
+
+    @staticmethod
+    def parse_interval(var_conds, direction=S.Zero):
+        """
+        Determines the interval of validity for an independent variable by
+        using its conditions as well as the optional ``direction``.
+        The `direction` determines whether a single-point condition pair
+        hold above or below that point. The default ``S.Zero`` means
+        the conditions hold for all real numbers.
+
+        Raises a ``ValueError`` if it fails to determine the interval.
+
+        """
+        fixed_points = {cond.var_val for cond in var_conds}
+        if len(fixed_points) == 2:
+            start, end = Min(*fixed_points), Max(*fixed_points)
+            if isinstance(start, Min):
+                raise ValueError(f"cannot order the points {fixed_points}")
+            return Interval(start, end)
+
+        (start,) = fixed_points
+        if direction.is_zero:
+            return Interval(-S.Infinity, S.Infinity)
+        if direction.is_nonnegative:
+            return Interval(start, S.Infinity)
+        if direction.is_nonpositive:
+            return Interval(-S.Infinity, start)
+        raise ValueError(f"cannot tell the sign of {direction}, which decides whether the solution holds above or below {start}; declare the coefficients' signs")
+
+class _EllipticBVP(_BVP):
+    """
+    A BVP whose PDE is elliptic: `B^2 < 4AC`, like
+    the Laplace PDE.
+
+    Well-posedness requires that both variables take
+    boundary conditions.
+
+    """
+    @staticmethod
+    def check_conditions(conds, orders, coeffs, unknown, new_func):
+        """
+        Fills in missing conditions appropriately, and returns
+        the completed conditions as well as each variable's domain
+        of validity.
+
+        Raises a ``ValueError`` for ill-posed condition arrangements.
+
+        """
+        x, y = unknown.args
+        domains = {}
+        for var, other_var in ((x, y), (y, x)):
+            if not _BVP.can_be_spatial(conds[var]):
+                raise ValueError(f"elliptic PDEs cannot accept multiple conditions fixing {var} at a single point; received {conds[var]}")
+
+            conds[var] = _BVP.fill_bcs(conds[var], var, other_var, new_func)
+            domains[var] = _BVP.parse_interval(conds[var])
+
+        if coeffs["u"].is_zero and all(cond.diff > 0 for var_conds in conds.values() for cond in var_conds):
+            raise ValueError("every condition fixes a derivative and the PDE has no u term, so any constant can be added to a solution, and one exists only if the data's net flux is zero")
+        return conds, domains
+
+
+class _ParabolicBVP(_BVP):
+    """
+    A BVP whose PDE is parabolic: `B^2 = 4AC`, like
+    the Heat PDE.
+
+    Well-posedness requires that the second-order variable
+    take boundary conditions.
+
+    """
+    @staticmethod
+    def check_conditions(conds, orders, coeffs, unknown, new_func):
+        """
+        Fills in missing conditions appropriately, and returns
+        the completed conditions as well as each variable's domain
+        of validity.
+
+        Raises a ``ValueError`` for ill-posed condition arrangements.
+        Raises a ``NotImplementedError`` for a mixed derivative term.
+
+        """
+        if coeffs["u_xy"] != 0: # means that coeffs["u_yy"] != 0 too
+            raise NotImplementedError("parabolic PDEs with a mixed derivative are not yet supported")
+
+        (space_var,) = [var for var in conds if orders[var] == 2]
+        (time_var,) = [var for var in conds if orders[var] == 1]
+
+        if not _BVP.can_be_spatial(conds[space_var]):
+            raise ValueError(f"parabolic PDEs cannot accept multiple conditions fixing the spatial variable {space_var} at a single point")
+
+        conds[space_var] = _BVP.fill_bcs(conds[space_var], space_var, time_var, new_func)
+        conds[time_var] = _BVP.fill_ics(conds[time_var], orders[time_var], time_var, space_var, new_func,)
+
+        x, y = unknown.args
+        time_coeff, space_coeff = (
+            (coeffs["u_y"], coeffs["u_xx"]) if space_var == x
+            else (coeffs["u_x"], coeffs["u_yy"])
+        )
+        direction = re(simplify(-space_coeff / time_coeff))
+        return conds, {space_var: _BVP.parse_interval(conds[space_var]), time_var: _BVP.parse_interval(conds[time_var], direction)}
+
+class _HyperbolicBVP(_BVP):
+    """
+    A BVP whose PDE is parabolic: `B^2 > 4AC`, like
+    the Wave PDE.
+
+    Well-posedness depends on the sign of `AC`:
+        `AC < 0`: the usual case, one variable takes
+            boundary conditions, the other takes
+            initial conditions, and the solution holds
+            for all real t (time).
+
+        `AC >= 0`: only possible with a nonzero mixed term `B`;
+            both variables take initial conditions, and the
+            solution holds for one quadrant.
+
+    """
+    @staticmethod
+    def check_conditions(conds, orders, coeffs, unknown, new_func):
+        """
+        Fills in missing conditions appropriately, and returns
+        the completed conditions as well as each variable's domain
+        of validity.
+
+        Raises a ``ValueError`` for ill-posed condition arrangements,
+        including when either variable can be the spatial one and so
+        we cannot distinguish between them.
+
+        """
+        x, y = unknown.args
+        space_vars = [var for var in conds if len({c.var_val for c in conds[var]}) == 2]
+
+        # both wave speeds share a sign, so x behaves like a second time variable
+        if (coeffs["u_xx"] * coeffs["u_yy"]).is_nonnegative:
+            if space_vars:
+                raise ValueError(f"conditions at two points in {space_vars[0]} overlap: when both wave speeds have the same sign, each variable must behave like a time, taking both its conditions at a single point")
+
+            for var, other_var in ((x, y), (y, x)):
+                conds[var] = _BVP.fill_ics(conds[var], orders[var], var, other_var, new_func)
+            return conds, {
+                x: _BVP.parse_interval(conds[x], coeffs["u_xy"] * (coeffs["u_xx"] + coeffs["u_yy"])),
+                y: _BVP.parse_interval(conds[y], S.One),  # convention: y >= y0; the mirrored quadrant is equally valid
+            }
+
+        if len(space_vars) == 2:
+            raise ValueError(f"conditions at two points in both {x} and {y} can resonate, leaving no solutions or infinitely many")
+        if not space_vars:
+            space_vars = [var for var, var_conds in conds.items() if _BVP.can_be_spatial(var_conds)]
+            if not space_vars:
+                raise ValueError(f"conditions at a single point in both {x} and {y} overdetermine the problem")
+            if len(space_vars) == 2:
+                raise ValueError(f"cannot tell which variable is spatial; give two conditions in either {x} or {y}")
+
+        (space_var,) = space_vars
+        (time_var,) = (var for var in conds if var != space_var)
+
+        conds[space_var] = _BVP.fill_bcs(conds[space_var], space_var, time_var, new_func)
+        conds[time_var] = _BVP.fill_ics(conds[time_var], orders[time_var], time_var, space_var, new_func)
+
+        return conds, {space_var: _BVP.parse_interval(conds[space_var]), time_var: _BVP.parse_interval(conds[time_var])}
+
+@dataclass
+class _BVPSolver(ABC):
+    """
+    Abstract class for BVP solvers.
+
+    Child classes must implement two methods:
+        1. ``_matches`` checks if the ``BVP`` meets this solver's
+            requirements, without actually solving the problem.
+        2. ``_solve`` returns the solution of the problem.
+
+    """
+    bvp: _BVP
+    _matched: bool | None = field(default=None, init=False)
+
+    def matches(self):
+        """
+        Checks if the solver's requirements are met for this ``BVP``.
+
+        """
+        if self._matched is None:
+            self._matched = self._matches()
+        return self._matched
+
+    def solve(self):
+        """
+        Solves the given ``BVP`` if the solver's requirements are met.
+
+        """
+        if not self.matches():
+            raise ValueError(f"{type(self).__name__} does not apply to this BVP")
+        return self._solve()
+
+    @abstractmethod
+    def _matches(self):
+        """Without solving, checks if the BVP meets this solver's requirements."""
+
+    @abstractmethod
+    def _solve(self):
+        """Solves the current BVP, to be called only if _matched is true."""
+
+
+@dataclass
+class _SeparationOfVariables(_BVPSolver):
+    """
+    Solves the PDE via separation of variables
+    and eigenfunction expansion [1]_ [2]_.
+
+    Solution Steps:
+        normalize the variables' domains
+        find the eigenpairs from the homogeneous boundary conditions
+        for each eigenpair, solve the other variable's equation and
+            assemble the solution for that eigenpair
+        assemble the complete series solution out of the solutions
+            for all eigenpairs
+
+    References
+    ==========
+
+    .. [1] R. L. Herman, Introduction to Partial Differential Equations, 2015,
+        Sections 2.4 and 4.3, pp. 42, 119.
+    .. [2] https://en.wikipedia.org/wiki/Separation_of_variables
+
+    """
+    def _matches(self):
+        """
+        Checks if the BVP matches this solution's requirements:
+            1. No mixed derivative term.
+            2. No source term (inhomogeneous).
+            3. A pair of homogeneous boundary conditions.
+
+        If all three pass, the variable with the BCs is
+        stored as ``space_var``, and the coefficients
+        are swapped so that its come first.
+
+        """
+        if not self.bvp.coeffs["u_xy"].is_zero:
+            return False
+        if not self.bvp.coeffs["c"].is_zero:
+            return False
+
+        homogeneous_spatial = [
+            var
+            for var, var_conds in self.bvp.conds.items()
+            if len(var_conds) == 2
+            and _BVP.can_be_spatial(var_conds)
+            and all(cond.unknown_val.is_zero for cond in var_conds)
+        ]
+        if not homogeneous_spatial:
+            return False
+
+        self.space_var = homogeneous_spatial[0]
+        (self.other_var,) = [var for var in self.bvp.conds if var != self.space_var]
+        assert (len(self.bvp.unknown.args) == 2), "This solution method expects an unknown with exactly two independent variables."
+        if self.space_var == self.bvp.unknown.args[0]:
+            self.coeffs = self.bvp.coeffs
+        else:
+            swap = str.maketrans("xy", "yx")
+            self.coeffs = {name.translate(swap): coeff for name, coeff in self.bvp.coeffs.items()}
+        return True
+
+    def _solve(self):
+        """
+        Returns a complete solution to the BVP, wrapped in a
+        piecewise giving the domain of validity for the two
+        independent variables.
+
+        """
+        reverse_subs = self.normalize() # 0 <= x <= L and (0 <= y <= H or (t >= 0 or t <= 0 or -oo < t < oo))
+        self.n = Dummy("n", integer=True, positive=True)
+
+        terms = []
+        for eigenvalue, eigenfunction in self.find_eigenpairs():
+            if len({cond.var_val for cond in self.conds[self.y]}) == 2:
+                self.check_resonance(eigenvalue)
+            terms.append(self.sol_eigenpair(eigenvalue, eigenfunction))
+
+        return Piecewise((Add(*terms).subs(reverse_subs), self.bvp.validity_domain()))
+
+    def normalize(self):
+        """
+        Normalizes both variables such that their conditions,
+        and therefore their domains of validity, start at zero.
+        Stores the new data in ``self``, and returns
+        ``reverse_subs``, which is used at the end of the
+        solution process to reverse the normalization (eg. x -> x - x0).
+
+        """
+        self.x = Dummy(str(self.space_var), real=True)
+        self.y = Dummy(str(self.other_var), real=True)
+
+        shifts = {var: Min(*{cond.var_val for cond in var_conds}) for var, var_conds in self.bvp.conds.items()}
+        dummies = {self.space_var: self.x, self.other_var: self.y}
+        shifted = {var: dummies[var] + shifts[var] for var in dummies}
+
+        self.conds = {
+            dummies[var]: tuple(
+                _Cond(dummies[var], cond.var_val - shifts[var], cond.unknown_val.subs(shifted), cond.diff)
+                for cond in var_conds
+            )
+            for var, var_conds in self.bvp.conds.items()
+        }
+
+        self.domains = {
+            dummies[var]: Interval(*(
+                    p if p.is_infinite
+                    else p - shifts[var]
+                    for p in (interval.start, interval.end)
+            ))
+            for var, interval in self.bvp.domains.items()
+        }
+
+        reverse_subs = {dummies[var]: var - shifts[var] for var in dummies}
+        return reverse_subs
+
+    def find_eigenpairs(self):
+        """
+        Computes the eigenvalues and eigenfunctions using
+        the boundary conditions and ODE for ``self.x``.
+
+        Uses `lambda = c - b^2 / (4a) - a*mu^2`, where `lambda`
+        is the eigenvalue and a,b,c are the coefficients of
+        `u_xx`, `u_x`, and `u` respectively. Since `mu` ranges
+        across the entire complex plane, this covers all
+        possible eigenvalues.
+
+        """
+        eigenpairs = []
+        a, b = self.coeffs["u_xx"], self.coeffs["u_x"]
+        x = self.x
+
+        C1, C2 = symbols("C1 C2", cls=Dummy)
+        mu = Dummy("mu")
+        lamda = self.coeffs["u"] - b**2 / (4 * a) - a * mu**2
+
+        # Special case: mu = 0
+        X_sol = exp(-b * x / (2 * a)) * (C1 + C2 * x)
+        BC_matrix, rhs = linear_eq_to_matrix([cond.eval(X_sol) for cond in self.conds[x]], (C1, C2))
+        assert (rhs.is_zero_matrix), f"Expected homogeneous boundary conditions, received{rhs}."
+        det = expand(BC_matrix.det())
+        if det.is_zero is None:
+            det = simplify(det)
+        if det.is_zero:
+            eigenvalue = lamda.subs(mu, S.Zero)
+            eigenfunction = self.find_eigenfunction(BC_matrix, X_sol, (C1, C2))
+            eigenpairs.append((eigenvalue, eigenfunction))
+
+        # Regular case: mu != 0
+        X_sol = exp(-b * x / (2 * a)) * (C1 * cos(mu * x) + C2 * sin(mu * x))
+        BC_matrix, _ = linear_eq_to_matrix([cond.eval(X_sol) for cond in self.conds[x]], (C1, C2))
+        roots = solveset(Eq(self.strip_nonzero_factors(BC_matrix.det().rewrite(exp)), S.Zero), mu, S.Complexes)
+
+        implicit_roots, explicit_roots = sift(sorted(Union.make_args(roots), key=str), lambda s: isinstance(s, ConditionSet), binary=True)
+        if implicit_roots:
+            raise NotImplementedError(f"implicit eigenvalue roots are not yet implemented; found {implicit_roots}")
+
+        for mu_n in self.find_mu_values(Union(*explicit_roots)):
+            eigenvalue = lamda.subs(mu, mu_n)
+            eigenfunction = self.find_eigenfunction(expand(BC_matrix.subs(mu, mu_n)), X_sol.subs(mu, mu_n), (C1, C2))
+            eigenpairs.append((eigenvalue, eigenfunction))
+        return eigenpairs
+
+    @staticmethod
+    def find_eigenfunction(BC_matrix_n, X_n, X_consts):
+        """
+        Solves for the ``X_n`` constants by using
+        the first row of ``BC_matrix_n``.
+
+        """
+        p, q = BC_matrix_n.row(0)
+        return X_n.subs(dict(zip(X_consts, (q, -p))))
+
+    @staticmethod
+    def strip_nonzero_factors(expr):
+        """
+        Removes nonzero factors from ``expr``, including exponentials.
+
+        """
+        return Mul(*[
+                factor
+                for factor in Mul.make_args(factor_terms(expand(expr)))
+                if not (factor.func == exp or (factor.is_number and factor.is_nonzero))
+        ])
+
+    def find_mu_values(self, roots):
+        """
+        Finds all the distinct values of `mu` in the
+        finite or infinite set ``roots``.
+        Negative values are discarded since `mu^2 = (-mu)^2`.
+
+        """
+        mu_values = []
+
+        for s in sorted(Union.make_args(roots), key=str):
+            if isinstance(s, FiniteSet):
+                for mu_n in s:
+                    # Deduplicate roots, since mu**2 = (-mu)**2
+                    if (not re(mu_n).is_nonpositive or (re(mu_n).is_zero and not im(mu_n).is_nonpositive)) and -mu_n not in mu_values:
+                        mu_values.append(mu_n)
+
+            elif s == S.Integers or s == S.Naturals:
+                mu_n = self.n
+                mu_values.append(mu_n)
+
+            elif isinstance(s, ImageSet):
+                indexes = s.lamda.variables
+                assert (len(indexes) == 1), f"Expected exactly one index for a family of eigenvalue roots, received {s}"
+
+                (index,) = indexes
+                mu_n = s.lamda.expr
+
+                positive_re = solveset(re(mu_n) > 0, index, s.base_set)
+                zero_re = solveset(Eq(re(mu_n), 0), index, s.base_set)
+                positive_im = solveset(im(mu_n) > 0, index, s.base_set)
+                index_range = Union(positive_re, Intersection(zero_re, positive_im))
+                if index_range.is_empty:
+                    continue
+
+                if index_range.inf.is_finite:
+                    mu_n = mu_n.subs(index, index_range.inf + self.n - 1)
+                else:
+                    mu_n = mu_n.subs(index, index_range.sup - self.n + 1)
+                mu_values.append(mu_n)
+
+            else:
+                raise ValueError(f"received unexpected object {s} for an eigenvalue root; expected FiniteSet, ImageSet, or S.Integers")
+        return mu_values
+
+    def sol_eigenpair(self, lamda_n, X_n):
+        """
+        Returns a simplified sum of all `X*Y` terms for the
+        given family of eigenvalues ``lamda_n``.
+
+        Splits the infinite sum by unique values of ``n``,
+        then calls ``range_sum`` to compute each bounded sum,
+        before finally returning the combined result.
+
+        """
+        generic_term = self.sol_u(lamda_n, X_n)
+        if not lamda_n.has(self.n): # isolated eigenvalue
+            return generic_term
+
+        a, b = self.coeffs["u_yy"], self.coeffs["u_y"]
+        characteristic_discriminant = b**2 - 4*a*lamda_n
+        special_indices = solveset(characteristic_discriminant, self.n, S.Naturals)
+        if not isinstance(special_indices, FiniteSet):
+            special_indices = S.EmptySet # can't list them (symbolic coefficients), so treat every n as generic
+
+        relation_roots = [solveset(relation.lhs - relation.rhs, self.n, S.Naturals) for relation in generic_term.atoms(Relational)]
+        exceptional_indices = Union(special_indices, *[roots for roots in relation_roots if isinstance(roots, FiniteSet)])
+        exceptional_terms = [
+            self.sol_u(lamda_n.subs(self.n, index), X_n.subs(self.n, index)) if index in special_indices
+            else generic_term.subs(self.n, index)
+            for index in exceptional_indices
+        ]
+
+        range_bounds = sorted(exceptional_indices + {0, S.Infinity})
+        range_sums = [self.range_sum(generic_term, range_bounds[i] + 1, range_bounds[i + 1] - 1) for i in range(len(range_bounds) - 1)]
+        return Add(*exceptional_terms, *range_sums)
+
+    def range_sum(self, term, start, end):
+        """
+        Returns a simplified ``Sum`` of ``term`` from ``start`` to ``end``.
+        Returns a regular sum if there are only a few (<= 2) terms.
+        Then ``end`` can be ``S.Infinity``.
+
+        Simplifies piecewise summands, negative square roots,
+        and terms that reduce to zero.
+
+        """
+        j = Dummy("j", integer=True, nonnegative=True)
+        shifts = [(start + j, self.n - start)]
+        if end.is_finite:
+            shifts.append((end - j, end - self.n))
+
+        for shift, unshift in shifts:
+            shifted_term = term.subs(self.n, shift)
+            imaginary_sqrts = {root: (I*sqrt(-root.base))**(2*root.exp) for root in shifted_term.atoms(Pow) if root.exp.is_Rational and root.exp.q == 2 and root.base.is_negative}
+            term = shifted_term.xreplace(imaginary_sqrts).subs(j, unshift)
+
+        if term.is_zero:
+            return S.Zero
+
+        max_explicit_terms = 2
+        if end - start + 1 <= max_explicit_terms:
+            return Add(*[term.subs(self.n, index) for index in range(start, end + 1)])
+
+        return Sum(term, (self.n, start, end))
+
+    def sol_u(self, lamda_n, X_n):
+        """
+        Solves for `u(x, y) = X(x)*Y(y)` using the provided
+        eigenfunction ``X_n`` and eigenvalue ``lamda_n``.
+
+        Projects the Y conditions onto the eigenfunction X_n,
+        thus obtaining their contribution for that specific n.
+        Constructs the matrix equation `Mc = data`, so the
+        Y constants are simply `c = M^-1 data`.
+
+        Raises a value error if `|M| = 0` (resonance), since that means
+        the equation `Mc = data` either has no solution or infinite ones.
+
+        """
+        Y_n, Y_consts = self.sol_Y(lamda_n)
+        norm = self.weighted_inner_product(X_n, X_n)
+        projected_conds = [replace(cond, unknown_val = factor(cancel(self.weighted_inner_product(cond.unknown_val, X_n) / norm))) for cond in self.conds[self.y]]
+        M, data = linear_eq_to_matrix([cond.eval(Y_n) for cond in projected_conds], Y_consts)
+        if M.det().is_zero:
+            raise ValueError("the conditions are resonant, so there is no solution or infinitely many")
+        Y_n = Y_n.subs(dict(zip(Y_consts, M.LUsolve(data))))
+        return factor_terms(X_n * Y_n)
+
+    def sol_Y(self, lam):
+        """
+        Returns a solution to `aY'' + bY' + lamY = 0`, as
+        well as a tuple of arbitrary constants, eg. (C3, C4).
+
+        The standard solution is `Y = C3*e^(yr1) + C4*e^(yr2)`,
+        but SymPy fails to simplify this in many cases. Instead,
+        we use an equivalent basis in ``Y1`` and ``Y2``, and
+        construct a specialized solution such that each constant's
+        y-function (basis) is zero at one of the two conditions.
+
+        This greatly aids with simplification, and avoids
+        ``dsolve`` bugs. A basis being zero at both conditions
+        is covered by ``check_resonance``.
+
+        """
+        a, b = self.coeffs["u_yy"], self.coeffs["u_y"]
+        y = self.y
+        C3, C4 = symbols("C3 C4", cls=Dummy)
+
+        if a.is_zero:
+            return C3 * exp(-lam * y/b), (C3,)
+        assert len(self.conds[y]) == 2, f"Expected 2 conditions in Y, received {self.conds[y]}"
+
+        E = exp(-b*y / (2*a))
+        d = b**2 - 4*a*lam
+        k = sqrt(d) / (2*a)
+        Y1 = E*y if d.is_zero else E*sinh(k*y) / k # Y1(0) = 0, Y1'(0) = 1
+        Y2 = E*cosh(k*y) + (b/(2*a)) * Y1 # Y2(0) = 1, Y2'(0) = 0
+
+        basis = []
+        for cond in self.conds[y]:
+            s = y - cond.var_val
+            Y1_s, Y2_s = Y1.subs(y, s), Y2.subs(y, s)
+            p, q = cond.eval(Y1_s).lhs, cond.eval(Y2_s).lhs
+            B = q * Y1_s - p * Y2_s # cond.eval(B) = 0 at s = 0
+            basis.append(B)
+
+        return C3*basis[0] + C4*basis[1], (C3, C4)
+
+    def weighted_inner_product(self, g, h):
+        """
+        The weighted bilinear inner product [1]_ [2]_ of ``g, h``,
+        integrated over ``self.x``'s domain of validity.
+
+        References
+        ==========
+
+        .. [1] R. L. Herman, Introduction to Partial Differential Equations,
+               2015, Section 4.2, pp. 111.
+        .. [2] https://en.wikipedia.org/wiki/Sturm%E2%80%93Liouville_theory
+
+        """
+        x = self.x
+        limits = (x, self.domains[x].start, self.domains[x].end)
+        weight = exp(self.coeffs["u_x"] * x / self.coeffs["u_xx"])
+        return integrate(g * h * weight, limits)
+
+    def check_resonance(self, lamda_n):
+        """
+        Identifies some instances of resonance in the Y-conditions
+        of an Elliptic PDE.
+
+        The hardcoded equations are derived from the condition matrix's
+        determinant. The equation `Mc = b`, where `M` is the condition matrix,
+        `c` is the coefficient vector, and `b` is the condition data, has a
+        unique solution for `c` iff the determinant of `M` is nonzero.
+        Otherwise, there are either infinite or zero solutions (resonance).
+
+        Uses hardcoded equations in place of computing ``M.det()`` to
+        help catch some edge cases where SymPy fails to detect a zero
+        determinant. A check on ``M.det()`` already occurs in ``sol_u``.
+
+        Only raises an error if it confirms resonance, undetermined
+        cases pass. This includes symbolic coefficients.
+
+        References
+        ==========
+
+        .. [1] R. L. Herman, Introduction to Partial Differential Equations,
+               2015, Section 4.4, p. 122.
+        .. [2] https://en.wikipedia.org/wiki/Fredholm_alternative
+
+        """
+        if not lamda_n.has(self.n):
+            return
+
+        a, b = self.coeffs["u_yy"], self.coeffs["u_y"]
+        H = self.domains[self.y].end
+        m = Dummy("m", integer=True, positive=True)
+        cond_diffs = {cond.diff for cond in self.conds[self.y]}
+
+        resonance_conditions = []
+        if len(cond_diffs) == 1:
+            resonance_conditions.append(lamda_n - (b**2 / (4*a) + a * (m*pi/H)**2))
+        elif b.is_zero:
+            resonance_conditions.append(lamda_n - a * ((m - S.Half)*pi/H)**2)
+        else:
+            return
+
+        if cond_diffs == {1}: # all Neumann
+            zero_root_indices = solveset(lamda_n, self.n, S.Naturals)
+            if zero_root_indices != S.EmptySet and isinstance(zero_root_indices, FiniteSet):
+                raise ValueError("the conditions are resonant, so there is no solution or infinitely many")
+
+        if any(self.has_positive_integer_solutions(condition, self.n, m) for condition in resonance_conditions):
+            raise ValueError("the conditions are resonant, so there is no solution or infinitely many")
+
+    @staticmethod
+    def has_positive_integer_solutions(expr, n, m):
+        """
+        Checks for integer solutions `n, m` to `expr = 0`.
+        Returns ``True`` if it can find a solution, ``False`` if
+        it can show that there's no valid solution, ``None`` otherwise.
+        The integers `n, m` should be declared positive to filter
+        out solutions with negative integer values.
+
+        """
+        try:
+            poly = Poly(expand(expr), n, m)
+        except PolynomialError:
+            return None
+
+        poly = Poly(expand(expr / poly.LC()), n, m)
+        if poly.domain not in (ZZ, QQ):
+            return None  # some coefficient is irrational or symbolic beyond a shared factor
+
+        _, integer_poly = poly.clear_denoms()
+        return bool(diophantine(integer_poly.as_expr(), syms=(n, m)))
