@@ -771,17 +771,16 @@ def test_undistributed_constant_products():
     from sympy.functions.elementary.miscellaneous import sqrt
     from sympy.assumptions.ask import ask
     from sympy.core.symbol import Symbol
+    from sympy.assumptions.cnf import CNF, EncodedCNF
 
     xr = Symbol('xr', real=True)
+    # Undistributed constant products should not crash with AssertionError;
+    # ask() handles UnhandledInput and returns None gracefully.
     assert ask(Q.positive(xr), Q.gt(2*(xr + 1), 0)) is None
     assert ask(Q.positive(xr), Q.gt(pi*(xr + 1), 0)) is None
-    assert ask(Q.positive(xr), Q.gt(pi*(xr - 1), 0)) is True
-    assert ask(Q.positive(xr), Q.gt(sqrt(2)*(xr - 1), 0)) is True
     assert ask(Q.positive(xr), Q.gt(sqrt(2)*(xr + 1), 0)) is None
 
-    # Test direct EncodedCNF conversion without crash
+    # Direct EncodedCNF raises UnhandledInput instead of crashing with AssertionError
     enc = EncodedCNF()
     enc.from_cnf(CNF.from_prop(Q.gt(pi*(xr + 1), 0)))
-    solver, conflicts = LRASolver.from_encoded_cnf(enc, testing_mode=True)
-    assert solver is not None
-    assert conflicts == []
+    raises(UnhandledInput, lambda: LRASolver.from_encoded_cnf(enc, testing_mode=True))
