@@ -49,6 +49,15 @@ def test_jscode_constants_other():
         2*EulerGamma) == "var EulerGamma = %s;\n2*EulerGamma" % EulerGamma.evalf(17)
 
 
+def test_jscode_boolean_literals():
+    assert jscode(S.true) == 'true'
+    assert jscode(S.false) == 'false'
+    assert jscode(True) == 'true'
+    assert jscode(False) == 'false'
+    expr = Piecewise((S.true, x > 0), (S.false, True))
+    assert jscode(expr) == '((x > 0) ? (\n   true\n)\n: (\n   false\n))'
+
+
 def test_jscode_Rational():
     assert jscode(Rational(3, 7)) == "3/7"
     assert jscode(Rational(18, 9)) == "2"
