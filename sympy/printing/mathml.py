@@ -718,9 +718,9 @@ class MathMLPresentationPrinter(MathMLPrinterBase):
                 y.appendChild(self.dom.createTextNode(self.mathml_tag(expr)))
                 mrow.appendChild(x)
                 mrow.appendChild(y)
-            for term in terms:
+            for i, term in enumerate(terms):
                 mrow.appendChild(self.parenthesize(term, PRECEDENCE['Mul']))
-                if not term == terms[-1]:
+                if i < len(terms) - 1:
                     y = self.dom.createElement('mo')
                     y.appendChild(self.dom.createTextNode(self.mathml_tag(expr)))
                     mrow.appendChild(y)
