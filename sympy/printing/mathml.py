@@ -707,7 +707,7 @@ class MathMLPresentationPrinter(MathMLPrinterBase):
 
             coeff, terms = expr.as_coeff_mul()
             if coeff is S.One and len(terms) == 1:
-                mrow.appendChild(self._print(terms[0]))
+                mrow.appendChild(self.parenthesize(terms[0], PRECEDENCE['Add']))
                 return mrow
             if self.order != 'old':
                 terms = Mul._from_args(terms).as_ordered_factors()
@@ -745,7 +745,7 @@ class MathMLPresentationPrinter(MathMLPrinterBase):
                 # use minus
                 x = self.dom.createElement('mo')
                 x.appendChild(self.dom.createTextNode('-'))
-                y = self._print(-arg)
+                y = self.parenthesize(-arg, PRECEDENCE['Add'])
                 # invert expression since this is now minused
             else:
                 x = self.dom.createElement('mo')
