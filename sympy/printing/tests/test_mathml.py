@@ -1,4 +1,6 @@
 from __future__ import annotations
+from xml.dom.minidom import parseString
+
 from sympy.calculus.accumulationbounds import AccumBounds
 from sympy.concrete.summations import Sum
 from sympy.core.add import Add
@@ -998,9 +1000,25 @@ def test_presentation_mathml_relational():
     assert mml_4.childNodes[0].nodeName == 'mn'
     assert mml_4.childNodes[0].childNodes[0].nodeValue == '1'
     assert mml_4.childNodes[1].nodeName == 'mo'
-    assert mml_4.childNodes[1].childNodes[0].nodeValue == '<'
+    assert mml_4.childNodes[1].childNodes[0].nodeValue == '&lt;'
     assert mml_4.childNodes[2].nodeName == 'mi'
     assert mml_4.childNodes[2].childNodes[0].nodeValue == 'x'
+
+
+def test_presentation_mathml_relational_xml():
+    for expr, operator in [
+        (x < y, '<'), (x > y, '>'), (x <= y, '\u2264'),
+        (x >= y, '\u2265'), (Eq(x, y), '='), (Ne(x, y), '\u2260'),
+    ]:
+        tree = parseString(mathml(expr, printer='presentation'))
+        operation = tree.documentElement.childNodes[1]
+        assert operation.nodeName == 'mo'
+        assert operation.firstChild.nodeValue == operator
+
+    expr = And(x < y, y < z)
+    tree = parseString(mathml(expr, printer='presentation'))
+    operators = tree.getElementsByTagName('mo')
+    assert sum(node.firstChild.nodeValue == '<' for node in operators) == 2
 
 
 def test_presentation_symbol():
@@ -1466,7 +1484,7 @@ def test_print_logic():
     assert mpp.doprint(And(Eq(x, 3), y < 3, x > y + 1)) == \
         '<mrow><mrow><mi>x</mi><mo>=</mo><mn>3</mn></mrow><mo>&#x2227;</mo>'\
         '<mrow><mi>x</mi><mo>></mo><mrow><mi>y</mi><mo>+</mo><mn>1</mn></mrow>'\
-        '</mrow><mo>&#x2227;</mo><mrow><mi>y</mi><mo><</mo><mn>3</mn></mrow></mrow>'
+        '</mrow><mo>&#x2227;</mo><mrow><mi>y</mi><mo>&lt;</mo><mn>3</mn></mrow></mrow>'
     assert mpp.doprint(Or(Eq(x, y), x > 4)) == \
         '<mrow><mrow><mi>x</mi><mo>=</mo><mi>y</mi></mrow><mo>&#x2228;</mo>'\
         '<mrow><mi>x</mi><mo>></mo><mn>4</mn></mrow></mrow>'
@@ -1474,7 +1492,7 @@ def test_print_logic():
         '<mrow><mrow><mi>x</mi><mo>=</mo><mn>3</mn></mrow>'\
         '<mo>&#x2227;</mo><mrow><mo>(</mo><mrow><mrow><mi>x</mi><mo>></mo><mrow>'\
         '<mi>y</mi><mo>+</mo><mn>1</mn></mrow></mrow><mo>&#x2228;</mo><mrow>'\
-        '<mi>y</mi><mo><</mo><mn>3</mn></mrow></mrow><mo>)</mo></mrow></mrow>'
+        '<mi>y</mi><mo>&lt;</mo><mn>3</mn></mrow></mrow><mo>)</mo></mrow></mrow>'
 
     assert mpp.doprint(Not(x)) == '<mrow><mo>&#xAC;</mo><mi>x</mi></mrow>'
     assert mpp.doprint(Not(And(x, y))) == \
