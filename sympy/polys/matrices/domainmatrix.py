@@ -12,7 +12,7 @@ as unifying matrices with different domains.
 
 from __future__ import annotations
 
-from typing import overload, TYPE_CHECKING, Generic
+from typing import cast, overload, TYPE_CHECKING, Generic
 
 from collections import Counter
 from functools import reduce
@@ -1526,16 +1526,7 @@ class DomainMatrix(Generic[Er]):
 
         """
         A._check("+", B, A.shape, B.shape)
-        a = A.rep
-        b = B.rep
-        if isinstance(a, DDM) and isinstance(b, DDM):
-            return A.from_rep(a.add(b))
-        elif isinstance(a, SDM) and isinstance(b, SDM):
-            return A.from_rep(a.add(b))
-        elif isinstance(a, DFM) and isinstance(b, DFM):
-            return A.from_rep(a.add(b))
-        msg = "Type mismatch: %s %s %s" % (type(a), "+", type(b))
-        raise DMFormatError(msg)
+        return cast("DomainMatrix[Er]", A.from_rep(A.rep.add(B.rep)))  # type: ignore
 
     def sub(A, B: DomainMatrix[Er]) -> DomainMatrix[Er]:
         r"""
@@ -1584,16 +1575,7 @@ class DomainMatrix(Generic[Er]):
 
         """
         A._check("-", B, A.shape, B.shape)
-        a = A.rep
-        b = B.rep
-        if isinstance(a, DDM) and isinstance(b, DDM):
-            return A.from_rep(a.sub(b))
-        elif isinstance(a, SDM) and isinstance(b, SDM):
-            return A.from_rep(a.sub(b))
-        elif isinstance(a, DFM) and isinstance(b, DFM):
-            return A.from_rep(a.sub(b))
-        msg = "Type mismatch: %s %s %s" % (type(a), "-", type(b))
-        raise DMFormatError(msg)
+        return cast("DomainMatrix[Er]", A.from_rep(A.rep.sub(B.rep)))  # type: ignore
 
     def neg(A) -> DomainMatrix[Er]:
         r"""
@@ -1706,16 +1688,7 @@ class DomainMatrix(Generic[Er]):
         """
 
         A._check("*", B, A.shape[1], B.shape[0])
-        a = A.rep
-        b = B.rep
-        if isinstance(a, DDM) and isinstance(b, DDM):
-            return A.from_rep(a.matmul(b))
-        elif isinstance(a, SDM) and isinstance(b, SDM):
-            return A.from_rep(a.matmul(b))
-        elif isinstance(a, DFM) and isinstance(b, DFM):
-            return A.from_rep(a.matmul(b))
-        msg = "Type mismatch: %s %s %s" % (type(a), "*", type(b))
-        raise DMFormatError(msg)
+        return cast("DomainMatrix[Er]", A.from_rep(A.rep.matmul(B.rep)))  # type: ignore
 
     def _scalarmul(A, lamda: Er, reverse: bool) -> DomainMatrix[Er]:
         if lamda == A.domain.zero and (not (A.domain.is_EXRAW)):
@@ -1735,16 +1708,7 @@ class DomainMatrix(Generic[Er]):
 
     def mul_elementwise(A, B: DomainMatrix[Er]) -> DomainMatrix[Er]:
         assert A.domain == B.domain
-        a = A.rep
-        b = B.rep
-        if isinstance(a, DDM) and isinstance(b, DDM):
-            return A.from_rep(a.mul_elementwise(b))
-        elif isinstance(a, SDM) and isinstance(b, SDM):
-            return A.from_rep(a.mul_elementwise(b))
-        elif isinstance(a, DFM):
-            return A.from_rep(a.mul_elementwise(b.to_dfm()))
-        msg = "Type mismatch: %s %s %s" % (type(a), "*", type(b))
-        raise DMFormatError(msg)
+        return cast("DomainMatrix[Er]", A.from_rep(A.rep.mul_elementwise(B.rep)))  # type: ignore
 
     def __truediv__(A, lamda):
         """Method for Scalar Division"""
