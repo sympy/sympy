@@ -96,10 +96,9 @@ def crt(m, v, symmetric=False, check=True):
             if result is None:
                 return result
             return int(result[0]), int(result[1])
-        result = gf_crt(v, m, ZZ)
     else:
-        result = gf_crt(v, m, ZZ)
         mm = prod(m)
+    result = gf_crt(v, m, ZZ)
 
     if symmetric:
         return int(symmetric_residue(result, mm)), int(mm)
