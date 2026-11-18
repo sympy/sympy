@@ -1,5 +1,5 @@
 from __future__ import annotations
-from sympy.core import (pi, oo, symbols, Rational, Integer, GoldenRatio,
+from sympy.core import (pi, oo, nan, symbols, Rational, Integer, GoldenRatio,
                         EulerGamma, Catalan, Lambda, Dummy, S, Eq, Ne, Le,
                         Lt, Gt, Ge, Mod)
 from sympy.functions import (Piecewise, sin, cos, Abs, exp, ceiling, sqrt,
@@ -56,6 +56,13 @@ def test_jscode_boolean_literals():
     assert jscode(False) == 'false'
     expr = Piecewise((S.true, x > 0), (S.false, True))
     assert jscode(expr) == '((x > 0) ? (\n   true\n)\n: (\n   false\n))'
+
+
+def test_jscode_nan():
+    assert jscode(nan) == 'NaN'
+    assert jscode(S.NaN) == 'NaN'
+    expr = Piecewise((nan, x > 0), (0, True))
+    assert jscode(expr) == '((x > 0) ? (\n   NaN\n)\n: (\n   0\n))'
 
 
 def test_jscode_Rational():
