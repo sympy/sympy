@@ -132,12 +132,13 @@ def latex_escape(s: str) -> str:
     We cannot use verbatim easily with mathjax, so escaping is easier.
     Rules from https://tex.stackexchange.com/a/34586/41112.
     """
-    s = s.replace('\\', r'\textbackslash')
-    for c in '&%$#_{}':
-        s = s.replace(c, '\\' + c)
-    s = s.replace('~', r'\textasciitilde')
-    s = s.replace('^', r'\textasciicircum')
-    return s
+    replacements = {ord(c): '\\' + c for c in '&%$#_{}'}
+    replacements.update({
+        ord('\\'): r'\textbackslash{}',
+        ord('~'): r'\textasciitilde{}',
+        ord('^'): r'\textasciicircum{}',
+    })
+    return s.translate(replacements)
 
 
 class LatexPrinter(Printer):
