@@ -303,6 +303,16 @@ def test_union():
     assert Union(S.Reals, S.Integers) == S.Reals
 
 
+def test_union_interval_symbolic_endpoints():
+    interval = Interval.open(-1, 1)
+    for endpoint, closed_interval in (
+            (-1, Interval.Ropen(-1, 1)), (1, Interval.Lopen(-1, 1))):
+        result = Union(interval, FiniteSet(x, endpoint))
+        assert result == Union(closed_interval, FiniteSet(x), evaluate=False)
+        for value in (-2, -1, 0, 1, 2, I, -oo, oo):
+            assert result.subs(x, value) == Union(interval, FiniteSet(value, endpoint))
+
+
 def test_union_iter():
     # Use Range because it is ordered
     u = Union(Range(3), Range(5), Range(4), evaluate=False)

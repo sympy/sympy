@@ -72,3 +72,7 @@ def test_atomic_classes():
 
 def test_ordinal():
     assert Ordinal() is ord0
+
+def test_ordinal_canonical():
+    assert raises(ValueError, lambda: Ordinal(OmegaPower(0, 3), OmegaPower(0, 2)))
+    assert raises(ValueError, lambda: Ordinal(OmegaPower(0, 1), OmegaPower(1, 1)))

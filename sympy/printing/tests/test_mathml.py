@@ -1,9 +1,11 @@
 from __future__ import annotations
 from sympy.calculus.accumulationbounds import AccumBounds
 from sympy.concrete.summations import Sum
+from sympy.core.add import Add
 from sympy.core.basic import Basic
 from sympy.core.containers import Tuple
 from sympy.core.function import Derivative, Lambda, diff, Function
+from sympy.core.mul import Mul
 from sympy.core.numbers import (zoo, Float, Integer, I, oo, pi, E,
     Rational)
 from sympy.core.relational import Lt, Ge, Ne, Eq
@@ -226,6 +228,17 @@ def test_content_mathml_add():
     assert mml.childNodes[0].nodeName == 'plus'
     assert mml.childNodes[1].childNodes[0].nodeName == 'minus'
     assert mml.childNodes[1].childNodes[1].nodeName == 'apply'
+
+
+def test_content_mathml_add_repeated_terms():
+    assert mathml(Add(x, y, y, evaluate=False)) == \
+        '<apply><plus/><ci>x</ci><ci>y</ci><ci>y</ci></apply>'
+    assert mathml(Add(x, y, y, y, evaluate=False)) == \
+        '<apply><plus/><ci>x</ci><ci>y</ci><ci>y</ci><ci>y</ci></apply>'
+    assert mathml(Add(x**2, y, y, evaluate=False)) == \
+        '<apply><plus/><apply><power/><ci>x</ci><cn>2</cn></apply><ci>y</ci><ci>y</ci></apply>'
+    assert mathml(Add(x, -y, -y, evaluate=False)) == \
+        '<apply><minus/><apply><minus/><ci>x</ci><ci>y</ci></apply><ci>y</ci></apply>'
 
 
 def test_content_mathml_Rational():
@@ -1291,6 +1304,24 @@ def test_mul_symbol_print():
         '<mrow><mi>x</mi><mo>&#x2024;</mo><mi>y</mi></mrow>'
     assert mathml(expr, printer='presentation', mul_symbol='times') == \
         '<mrow><mi>x</mi><mo>&#xD7;</mo><mi>y</mi></mrow>'
+
+
+def test_presentation_mathml_repeated_factors():
+    A, B = symbols('A B', commutative=False)
+    cases = [
+        (A*B*A, ['<mi>A</mi>', '<mi>B</mi>', '<mi>A</mi>']),
+        (2*A*B*A, ['<mn>2</mn>', '<mi>A</mi>', '<mi>B</mi>', '<mi>A</mi>']),
+        (Mul(A, A, A, evaluate=False), ['<mi>A</mi>']*3),
+    ]
+    for mul_symbol, operator in [
+        (None, '&InvisibleTimes;'), ('dot', '&#xB7;'),
+        ('ldot', '&#x2024;'), ('times', '&#xD7;'),
+    ]:
+        for order in ['lex', 'old']:
+            for expr, factors in cases:
+                expected = '<mrow>' + ('<mo>' + operator + '</mo>').join(factors) + '</mrow>'
+                assert mathml(expr, printer='presentation', mul_symbol=mul_symbol,
+                    order=order) == expected
 
 
 def test_print_lerchphi():

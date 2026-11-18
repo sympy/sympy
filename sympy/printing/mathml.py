@@ -201,13 +201,10 @@ class MathMLContentPrinter(MathMLPrinterBase):
                 x.appendChild(self._print(-arg))
                 # invert expression since this is now minused
                 lastProcessed = x
-                if arg == args[-1]:
-                    plusNodes.append(lastProcessed)
             else:
                 plusNodes.append(lastProcessed)
                 lastProcessed = self._print(arg)
-                if arg == args[-1]:
-                    plusNodes.append(self._print(arg))
+        plusNodes.append(lastProcessed)
         if len(plusNodes) == 1:
             return lastProcessed
         x = self.dom.createElement('apply')
@@ -721,9 +718,9 @@ class MathMLPresentationPrinter(MathMLPrinterBase):
                 y.appendChild(self.dom.createTextNode(self.mathml_tag(expr)))
                 mrow.appendChild(x)
                 mrow.appendChild(y)
-            for term in terms:
+            for i, term in enumerate(terms):
                 mrow.appendChild(self.parenthesize(term, PRECEDENCE['Mul']))
-                if not term == terms[-1]:
+                if i < len(terms) - 1:
                     y = self.dom.createElement('mo')
                     y.appendChild(self.dom.createTextNode(self.mathml_tag(expr)))
                     mrow.appendChild(y)

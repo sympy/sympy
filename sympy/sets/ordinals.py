@@ -87,7 +87,7 @@ class Ordinal(Basic):
 
         obj = super().__new__(cls, *terms)
         powers = [i.exp for i in obj.args]
-        if not all(powers[i] >= powers[i+1] for i in range(len(powers) - 1)):
+        if not all(powers[i] > powers[i+1] for i in range(len(powers) - 1)):
             raise ValueError("powers must be in decreasing order")
         return obj
 
