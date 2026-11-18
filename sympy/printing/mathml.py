@@ -574,7 +574,7 @@ class MathMLPresentationPrinter(MathMLPrinterBase):
             'GreaterThan': '&#x2265;',
             'LessThan': '&#x2264;',
             'StrictGreaterThan': '>',
-            'StrictLessThan': '<',
+            'StrictLessThan': '&lt;',
             'lerchphi': '&#x3A6;',
             'zeta': '&#x3B6;',
             'dirichlet_eta': '&#x3B7;',
