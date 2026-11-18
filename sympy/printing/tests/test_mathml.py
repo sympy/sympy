@@ -767,7 +767,24 @@ def test_print_derivative():
     assert mathml(d) == \
         '<apply><partialdiff/><bvar><ci>y</ci><ci>z</ci><degree><cn>2</cn></degree><ci>x</ci><ci>z</ci><ci>x</ci></bvar><apply><f/><ci>x</ci><ci>y</ci><ci>z</ci></apply></apply>'
     assert mathml(d, printer='presentation') == \
-        '<mrow><mfrac><mrow><msup><mo>&#x2202;</mo><mn>6</mn></msup></mrow><mrow><mo>&#x2202;</mo><mi>y</mi><msup><mo>&#x2202;</mo><mn>2</mn></msup><mi>z</mi><mo>&#x2202;</mo><mi>x</mi><mo>&#x2202;</mo><mi>z</mi><mo>&#x2202;</mo><mi>x</mi></mrow></mfrac><mrow><mi>f</mi><mrow><mo>(</mo><mi>x</mi><mo>,</mo><mi>y</mi><mo>,</mo><mi>z</mi><mo>)</mo></mrow></mrow></mrow>'
+        '<mrow><mfrac><mrow><msup><mo>&#x2202;</mo><mn>6</mn></msup></mrow><mrow><mo>&#x2202;</mo><mi>y</mi><mo>&#x2202;</mo><msup><mi>z</mi><mn>2</mn></msup><mo>&#x2202;</mo><mi>x</mi><mo>&#x2202;</mo><mi>z</mi><mo>&#x2202;</mo><mi>x</mi></mrow></mfrac><mrow><mi>f</mi><mrow><mo>(</mo><mi>x</mi><mo>,</mo><mi>y</mi><mo>,</mo><mi>z</mi><mo>)</mo></mrow></mrow></mrow>'
+
+
+def test_presentation_mathml_derivative_denominator_powers():
+    f = Function('f')
+    for expr, denominator in [
+        (Derivative(f(x), x), '<mrow><mo>&dd;</mo><mi>x</mi></mrow>'),
+        (Derivative(f(x), (x, 2)),
+         '<mrow><mo>&dd;</mo><msup><mi>x</mi><mn>2</mn></msup></mrow>'),
+        (Derivative(f(x, y), (x, 2), y),
+         '<mrow><mo>&#x2202;</mo><mi>y</mi><mo>&#x2202;</mo>'
+         '<msup><mi>x</mi><mn>2</mn></msup></mrow>'),
+        (Derivative(f(x, y), (x, 2), (y, 3)),
+         '<mrow><mo>&#x2202;</mo><msup><mi>y</mi><mn>3</mn></msup>'
+         '<mo>&#x2202;</mo><msup><mi>x</mi><mn>2</mn></msup></mrow>'),
+    ]:
+        fraction = mpp._print(expr).childNodes[0]
+        assert fraction.childNodes[1].toxml() == denominator
 
 
 def test_presentation_mathml_limits():
