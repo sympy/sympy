@@ -1213,7 +1213,7 @@ class RootSum(Expr):
     def new(cls, poly, func, auto=True):
         """Construct new ``RootSum`` instance. """
         if not func.expr.has(*func.variables):
-            return func.expr
+            return poly.degree()*func.expr
 
         rational = cls._is_func_rational(poly, func)
 
@@ -1328,6 +1328,22 @@ class RootSum(Expr):
             return Add(*[self.fun(r) for r in _roots])
 
     def _eval_derivative(self, x):
-        var, expr = self.fun.args
-        func = Lambda(var, expr.diff(x))
+        var, expr = self.fun.variables[0], self.fun.expr
+        gen = self.poly.gen
+        if x in (var, gen):
+            return S.Zero
+        poly_expr = self.poly.as_expr()
+        dp_dx = poly_expr.diff(x)
+        if dp_dx != 0:
+            if self.poly.degree() == 0:
+                return S.Zero
+            if not self.poly.is_sqf:
+                return None
+            dp_dgen = poly_expr.diff(gen)
+            if dp_dgen == 0:
+                return None
+            dexpr = expr.diff(x) - expr.diff(var)*(dp_dx/dp_dgen).subs(gen, var)
+        else:
+            dexpr = expr.diff(x)
+        func = Lambda(var, dexpr)
         return self.new(self.poly, func, self.auto)
