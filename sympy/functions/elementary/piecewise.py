@@ -341,6 +341,14 @@ class Piecewise(DefinedFunction):
                             t = And(*[_solve_inequality(
                                 a, free[0], linear=True)
                                 for a in andargs])
+                            # the symbol cannot be equal to two different
+                            # values, e.g. Eq(y, 0) & Eq(y, 1)
+                            vals = {a.rhs for a in (
+                                t.args if isinstance(t, And) else (t,))
+                                if isinstance(a, Eq) and a.lhs == free[0]}
+                            if any((v - w).is_zero is False
+                                    for v in vals for w in vals):
+                                t = S.false
                     else:
                         t = And(*andargs)
                     if t is S.false:
