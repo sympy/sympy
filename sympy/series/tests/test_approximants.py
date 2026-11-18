@@ -4,7 +4,7 @@ from sympy.series.approximants import pade_approximants_gcdex, pade_approximant,
 from sympy.core.symbol import symbols
 from sympy.functions.combinatorial.factorials import binomial
 from sympy.functions.combinatorial.numbers import (fibonacci, lucas)
-from sympy import exp, sin, log, Poly
+from sympy import exp, sin, cos, log, Poly, cancel
 from sympy.testing.pytest import raises
 
 
@@ -119,3 +119,61 @@ def test_pade_approximant():
 
     with raises(ValueError):
         pade_approximant(1/x, x, 0, 1, 0)
+
+
+def test_pade_approximant_gcdex_degree_jump():
+    # The EEA degree sequence can skip m: for 1/(1 + x) truncated at order 2
+    # it is 2, 0, so no convergent has numerator degree exactly m = n = 1.
+    # The [1/1] approximant is still 1/(1 + x) and must be the one returned.
+    x = symbols("x")
+    f = Poly(1 - x + x**2, x, domain='QQ')
+    num, den = pade_approximant_gcdex(f, 1, 1)
+    assert num.degree() <= 1
+    assert den.degree() <= 1
+    assert (num/den - 1/(1 + x)).simplify() == 0
+
+
+def test_pade_approximant_degree_bounds():
+    x = symbols("x")
+    for m, n in [(1, 1), (2, 1), (1, 2), (3, 2), (2, 3), (5, 1)]:
+        approx = pade_approximant(1/(1 + x), x, 0, m, n)
+        # the expression as returned, before any cancellation
+        num, den = approx.as_numer_denom()
+        assert Poly(num, x).degree() <= m
+        assert Poly(den, x).degree() <= n
+        approx = cancel(approx)
+        num, den = approx.as_numer_denom()
+        assert Poly(num, x).degree() <= m
+        assert Poly(den, x).degree() <= n
+        assert (approx - 1/(1 + x)).simplify() == 0
+
+    # expansion around a non-zero center
+    t = symbols("t")
+    approx = cancel(pade_approximant(1/(1 + x), x, 1, 1, 1).subs(x, t + 1))
+    num, den = approx.as_numer_denom()
+    assert Poly(num, t).degree() <= 1
+    assert Poly(den, t).degree() <= 1
+    assert (approx - 1/(t + 2)).simplify() == 0
+
+
+def test_pade_approximant_no_solution_degree_bounds():
+    # No [2/1] approximant exists for 1 + x**3, but the fallback returned by
+    # the Euclidean algorithm still has to respect both degree bounds.
+    x = symbols("x")
+    num, den = pade_approximant_gcdex(Poly(1 + x**3, x), 2, 1)
+    assert num.degree() <= 2
+    assert den.degree() <= 1
+    assert den.eval(0) == 0
+    assert num/den == 1
+
+    # cos(x) has no [1/1] approximant; the documented fallback value is 1.
+    assert pade_approximant(cos(x), x, 0, 1) == 1
+
+
+def test_pade_approximant_gcdex_zero_polynomial():
+    # The zero polynomial already meets both degree bounds; its first EEA
+    # candidate is 0/1.
+    x = symbols("x")
+    num, den = pade_approximant_gcdex(Poly(0, x), 1, 1)
+    assert num.is_zero
+    assert den.as_expr() == 1
