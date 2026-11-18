@@ -107,6 +107,7 @@ if TYPE_CHECKING:
     from sympy.matrices.expressions.matexpr import MatrixExpr
     from sympy.matrices.expressions.permutation import PermutationMatrix
     from sympy.matrices.expressions.blockmatrix import BlockDiagMatrix, BlockMatrix
+    from sympy.matrices.expressions.matmul import MatMul
 
     Tmat = TypeVar('Tmat', bound='MatrixBase')
     Tbasic = TypeVar('Tbasic', bound=Basic)

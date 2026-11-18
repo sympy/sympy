@@ -33,6 +33,8 @@ def test_svd():
 
 def test_jordan():
     P, J = jordan(X)
+    assert isinstance(P, JordanVectors)
+    assert isinstance(J, JordanBlocks)
     assert P.shape == J.shape == X.shape
     assert ask(Q.invertible(P))
     assert ask(Q.upper_triangular(J))
