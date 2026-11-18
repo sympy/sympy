@@ -302,6 +302,25 @@ class DimensionSystem(Basic, _QuantityMapper):
 
     Optionally either the ``derived_dims`` or the ``dimensional_dependencies``
     may be omitted.
+
+    Explanation
+    ===========
+
+    The dimensions are names, the relations among them are defined by the
+    dimension system. The same dimension may have different expressions in
+    different dimension systems:
+
+    >>> from sympy.physics.units import charge
+    >>> from sympy.physics.units.systems.si import dimsys_SI
+    >>> from sympy.physics.units.systems.cgs import dimsys_cgs
+    >>> dimsys_SI.get_dimensional_dependencies(charge)
+    {Dimension(current): 1, Dimension(time): 1}
+    >>> dimsys_cgs.get_dimensional_dependencies(charge)
+    {Dimension(length): 3/2, Dimension(mass): 1/2, Dimension(time): -1}
+
+    A dimension system does not contain units. The unit systems are built on
+    a dimension system, see
+    :class:`~sympy.physics.units.unitsystem.UnitSystem`.
     """
 
     def __new__(cls, base_dims, derived_dims=(), dimensional_dependencies={}):
