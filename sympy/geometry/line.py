@@ -1636,10 +1636,13 @@ class Segment(LinearEntity):
         p1, p2 = Point._normalize_dimension(Point(p1), Point(p2))
         dim = len(p1)
 
-        if dim == 2:
-            return Segment2D(p1, p2, **kwargs)
-        elif dim == 3:
-            return Segment3D(p1, p2, **kwargs)
+        if cls is Segment:
+            if dim == 2:
+                return Segment2D(p1, p2, **kwargs)
+            elif dim == 3:
+                return Segment3D(p1, p2, **kwargs)
+        elif dim in (2, 3) and p1 == p2:
+            return p1
         return LinearEntity.__new__(cls, p1, p2, **kwargs)
 
     def contains(self, other):

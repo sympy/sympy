@@ -173,6 +173,18 @@ def test_arguments():
             getattr(l4d, func)(p)
 
 
+def test_segment_subclass():
+    class Wire(Segment):
+        pass
+
+    for p, q in [(Point(0, 0), Point(1, 1)),
+                 (Point(0, 0, 0), Point(1, 1, 1))]:
+        wire = Wire(p, q)
+        assert type(wire) is Wire
+        assert wire.points == (p, q)
+        assert Wire(p, p) == p
+
+
 def test_basic_properties_2d():
     p1 = Point(0, 0)
     p2 = Point(1, 1)
