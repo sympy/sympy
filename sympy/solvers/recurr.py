@@ -632,10 +632,12 @@ def rsolve_hyper(coeffs, f, n, **hints):
     # Petkovsek's algorithm needs every monic divisor A of p and B of q, not
     # only the linear ones above, e.g. B = (n + 1)**2 for
     # (n + 1)**2*y(n + 1) - y(n) = 0 and A = (n + 1)*(n + 2) for
-    # y(n + 1) - (n + 1)*(n + 2)*y(n) = 0. Only real roots are used: the
-    # products over complex roots cannot be simplified yet.
-    p_real = {r: m for r, m in p_roots.items() if r.is_extended_real}
-    q_real = {r: m for r, m in q_roots.items() if r.is_extended_real}
+    # y(n + 1) - (n + 1)*(n + 2)*y(n) = 0. Roots known to be non-real are
+    # left out: the products over them cannot be simplified yet.
+    p_real = {root: m for root, m in p_roots.items()
+              if root.is_extended_real is not False}
+    q_real = {root: m for root, m in q_roots.items()
+              if root.is_extended_real is not False}
     if sum(p_real.values()) > 1 or sum(q_real.values()) > 1:
         for A in _monic_divisors(p_real, n):
             for B in _monic_divisors(q_real, n):
@@ -643,6 +645,9 @@ def rsolve_hyper(coeffs, f, n, **hints):
                     factors.append((A, B))
 
     for A, B in factors:
+        if kernel and len(kernel) == r:
+            # a recurrence of order r has at most r independent solutions
+            break
         polys, degrees = [], []
         D = A*B.subs(n, n + r - 1)
 
@@ -668,7 +673,7 @@ def rsolve_hyper(coeffs, f, n, **hints):
                 poly += coeff * Z**i
 
         for z in roots(poly, Z).keys():
-            if z.is_zero:
+            if z.is_zero or kernel and len(kernel) == r:
                 continue
 
             recurr_coeffs = [polys[i].as_expr()*z**i for i in range(r + 1)]

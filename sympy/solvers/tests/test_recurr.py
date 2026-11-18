@@ -132,6 +132,8 @@ def test_rsolve_hyper_nonlinear_divisors():
         factorial(n)**3
     assert rsolve(y(n + 2) - (n + 1)*(n + 2)*y(n), y(n)) == \
         (-1)**n*C0*factorial(n) + C1*factorial(n)
+    # roots whose realness is unknown are used too
+    assert rsolve((n + a)**2*y(n + 1) - y(n), y(n)) == C0/rf(a, n)**2
 
 
 def test_rsolve_0_sol_homogeneous():
