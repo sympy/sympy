@@ -2384,6 +2384,12 @@ def test_issue_6732():
     raises(ValueError, lambda: ask(Q.negative(x), Q.positive(x) & Q.negative(x)))
 
 
+def test_issue_27964():
+    raises(ValueError, lambda: ask(False, False))
+    raises(ValueError, lambda: ask(Q.positive(x), False))
+    assert ask(Implies(False, False)) is True
+
+
 def test_issue_7246():
     assert _ask_recursive(Q.positive(atan(p)), Q.positive(p)) is True
     assert _ask_recursive(Q.positive(atan(p)), Q.negative(p)) is False

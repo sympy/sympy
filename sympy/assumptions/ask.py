@@ -527,10 +527,11 @@ def ask(proposition, assumptions=True, context=global_assumptions):
     known_facts_cnf = get_all_known_facts()
     enc_cnf = EncodedCNF()
     enc_cnf.from_cnf(CNF(known_facts_cnf))
+    enc_cnf.add_from_cnf(assump_cnf)
     enc_cnf.add_from_cnf(local_facts)
 
     # check the satisfiability of given assumptions
-    if local_facts.clauses and satisfiable(enc_cnf) is False:
+    if assump_cnf.clauses and satisfiable(enc_cnf) is False:
         raise ValueError(f"inconsistent assumptions {assumptions}")
 
     # quick computation for single fact
