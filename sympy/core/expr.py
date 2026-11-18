@@ -3829,6 +3829,11 @@ class Expr(Basic, EvalfMixin):
         from sympy.simplify.combsimp import combsimp
         return combsimp(self)
 
+    def hypersimp(self, k):
+        """See the hypersimp function in sympy.simplify"""
+        from sympy.simplify.simplify import hypersimp
+        return hypersimp(self, k)
+
     def gammasimp(self):
         """See the gammasimp function in sympy.simplify"""
         from sympy.simplify.gammasimp import gammasimp
