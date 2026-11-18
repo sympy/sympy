@@ -54,6 +54,7 @@ from sympy.polys.sparsetools import (
     _smp_iadd,
     _smp_iadd_ground,
     _smp_iclear_denoms,
+    _smp_iexquo_ground,
     _smp_imul_ground,
     _smp_iprimitive,
     _smp_iquo_ground,
@@ -1271,7 +1272,7 @@ class PolyElement(
         except CoercionFailed:
             return NotImplemented
         else:
-            return self._floordiv_ground(other)
+            return self._truediv_ground(other)
 
     def __rtruediv__(self, other: Er | int) -> PolyElement[Er]:
         ring = self.ring
@@ -1614,6 +1615,18 @@ class PolyElement(
         if not self or x == domain.one:
             return self
         return self._quo_ground(x)
+
+    def exquo_ground(self, x: Er) -> PolyElement[Er]:
+        domain = self.ring.domain
+
+        if not x:
+            raise ZeroDivisionError("polynomial division")
+        if not self or x == domain.one:
+            return self
+        try:
+            return self._exquo_ground(x)
+        except ExactQuotientFailed:
+            raise ExactQuotientFailed(self, x, self.ring)
 
     def extract_ground(
         self, g: PolyElement[Er]
@@ -2293,6 +2306,9 @@ class PolyElement(
     def _floordiv_ground(self, p2: Er) -> PolyElement[Er]:
         return self.quo_ground(p2)
 
+    def _truediv_ground(self, p2: Er) -> PolyElement[Er]:
+        return self.exquo_ground(p2)
+
     @overload
     def _truediv(self, p2: PolyElement[Er]) -> PolyElement[Er]: ...
 
@@ -2303,7 +2319,10 @@ class PolyElement(
     def _truediv(self, p2: Er) -> PolyElement[Er]: ...
 
     def _truediv(self, p2):
-        return self.exquo(p2)
+        if self.ring.is_element(p2):
+            return self.exquo(p2)
+        else:
+            return self.exquo_ground(p2)
 
     @overload
     def rem(self, G: PolyElement[Er]) -> PolyElement[Er]: ...
@@ -2801,6 +2820,12 @@ class PolyElement(
         ring = self.ring
         h = self.copy()
         _smp_iquo_ground(h, x, ring.ngens, ring.domain)
+        return h
+
+    def _exquo_ground(self, x: Er) -> PolyElement[Er]:
+        ring = self.ring
+        h = self.copy()
+        _smp_iexquo_ground(h, x, ring.ngens, ring.domain)
         return h
 
     def _quo_term(self, term: tuple[Mon, Er]) -> PolyElement[Er]:

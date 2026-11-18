@@ -492,6 +492,16 @@ def _smp_iquo_ground(d: smp[Er], x: Er, n: int, domain: Domain[Er]) -> None:
             del d[mon]
 
 
+def _smp_iexquo_ground(d: smp[Er], x: Er, n: int, domain: Domain[Er]) -> None:
+    # Divide coefficients by a ground element in place, expecting exact division.
+    for mon, coeff in list(d.items()):
+        quotient = domain.exquo(coeff, x)
+        if quotient:
+            d[mon] = quotient
+        else:
+            del d[mon]
+
+
 def smp_trunc_ground(d: smp[Er], p: Er, n: int, domain: Domain[Er]) -> smp[Er]:
     # Reduce coefficients modulo a ground element.
     h = d.copy()
