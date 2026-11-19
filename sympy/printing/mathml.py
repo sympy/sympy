@@ -1150,17 +1150,15 @@ class MathMLPresentationPrinter(MathMLPrinterBase):
         dim = 0  # Total diff dimension, for numerator
         for sym, num in reversed(e.variable_count):
             dim += num
-            if num >= 2:
-                x = self.dom.createElement('msup')
-                xx = self.dom.createElement('mo')
-                xx.appendChild(self.dom.createTextNode(d))
-                x.appendChild(xx)
-                x.appendChild(self._print(num))
-            else:
-                x = self.dom.createElement('mo')
-                x.appendChild(self.dom.createTextNode(d))
+            x = self.dom.createElement('mo')
+            x.appendChild(self.dom.createTextNode(d))
             m.appendChild(x)
             y = self._print(sym)
+            if num >= 2:
+                power = self.dom.createElement('msup')
+                power.appendChild(y)
+                power.appendChild(self._print(num))
+                y = power
             m.appendChild(y)
 
         mnum = self.dom.createElement('mrow')
