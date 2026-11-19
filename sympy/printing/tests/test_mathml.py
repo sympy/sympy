@@ -10,6 +10,7 @@ from sympy.core.function import Derivative, Lambda, diff, Function
 from sympy.core.mul import Mul
 from sympy.core.numbers import (zoo, Float, Integer, I, oo, pi, E,
     Rational)
+from sympy.core.power import Pow
 from sympy.core.relational import Lt, Ge, Ne, Eq
 from sympy.core.singleton import S
 from sympy.core.symbol import symbols, Symbol
@@ -891,6 +892,31 @@ def test_presentation_mathml_add():
         ].nodeValue == '4'
     assert mml.childNodes[3].childNodes[0].nodeValue == '+'
     assert mml.childNodes[4].childNodes[0].nodeValue == 'x'
+
+
+def test_presentation_mathml_negated_sum():
+    expr = Mul(-1, Add(x, y, evaluate=False), evaluate=False)
+    assert mpp.doprint(expr) == \
+        '<mrow><mo>-</mo><mrow><mo>(</mo><mrow><mi>x</mi><mo>+</mo>' \
+        '<mi>y</mi></mrow><mo>)</mo></mrow></mrow>'
+    power = Pow(z, expr, evaluate=False)
+    assert mpp.doprint(power) == \
+        '<msup><mi>z</mi><mrow><mo>-</mo><mrow><mo>(</mo><mrow><mi>x</mi>' \
+        '<mo>+</mo><mi>y</mi></mrow><mo>)</mo></mrow></mrow></msup>'
+
+
+def test_presentation_mathml_subtracted_sum():
+    negative = Mul(-1, Add(y, -z, evaluate=False), evaluate=False)
+    expr = Add(x, negative, evaluate=False)
+    assert mpp.doprint(expr) == \
+        '<mrow><mi>x</mi><mo>-</mo><mrow><mo>(</mo><mrow><mi>y</mi>' \
+        '<mo>-</mo><mi>z</mi></mrow><mo>)</mo></mrow></mrow>'
+
+
+def test_presentation_mathml_subtracted_product():
+    assert mpp.doprint(x - 2*y) == \
+        '<mrow><mi>x</mi><mo>-</mo><mrow><mn>2</mn><mo>&InvisibleTimes;</mo>' \
+        '<mi>y</mi></mrow></mrow>'
 
 
 def test_presentation_mathml_Rational():
