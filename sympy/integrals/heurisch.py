@@ -393,6 +393,24 @@ def heurisch(f, x, rewrite=False, hints=None, mappings=None, retries=3,
     else:
         indep = S.One
 
+    if hints is not None and not hints:
+        # The erf hints below need a quadratic exponent in a single exp
+        # with an expanded argument
+        def _combine_quadratic_exp(e):
+            exps, rest = [], []
+            for factor in Mul.make_args(e):
+                p = factor.args[0].as_poly(x) if isinstance(factor, exp) else None
+                (rest if p is None else exps).append((factor, p))
+            if not exps:
+                return e
+            p = sum((p for _, p in exps[1:]), exps[0][1])
+            if p.degree() != 2:
+                return e
+            return Mul(*[factor for factor, _ in rest])*exp(p.as_expr())
+
+        f = f.replace(lambda e: isinstance(e, exp) or e.is_Mul,
+                      _combine_quadratic_exp)
+
     rewritables = {
         (sin, cos, cot): tan,
         (sinh, cosh, coth): tanh,
