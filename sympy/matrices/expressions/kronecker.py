@@ -119,6 +119,10 @@ class KroneckerProduct(MatrixExpr):
         return super().__new__(cls, *args)
 
     @property
+    def is_ZeroMatrix(self):
+        return any(_is_zero_mat(arg) for arg in self.args)
+
+    @property
     def shape(self):
         rows, cols = self.args[0].shape
         for mat in self.args[1:]:
@@ -379,7 +383,24 @@ def kronecker_product_extract_singleton_matrices(kron: KroneckerProduct):
         return kron
 
 
+def _is_zero_mat(m):
+    if isinstance(m, MatrixBase):
+        return m.is_zero_matrix
+    return bool(m.is_ZeroMatrix)
+
+
+def extract_zeromatrix(kron):
+    if any(_is_zero_mat(arg) for arg in kron.args):
+        from sympy.matrices.expressions.special import ZeroMatrix
+        ret = ZeroMatrix(*kron.shape)
+        if all(isinstance(m, MatrixBase) for m in kron.args):
+            return ret.as_explicit()
+        return ret
+    return kron
+
+
 rules = (unpack,
+         extract_zeromatrix,
          explicit_kronecker_product,
          flatten,
          extract_commutative,
