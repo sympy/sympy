@@ -27,10 +27,12 @@ known_functions = {
     'atan': 'Math.atan',
     'atan2': 'Math.atan2',
     'atanh': 'Math.atanh',
+    'Cbrt': 'Math.cbrt',
     'ceiling': 'Math.ceil',
     'cos': 'Math.cos',
     'cosh': 'Math.cosh',
     'exp': 'Math.exp',
+    'expm1': 'Math.expm1',
     'floor': 'Math.floor',
     'log': 'Math.log',
     'Max': 'Math.max',
@@ -38,12 +40,28 @@ known_functions = {
     'sign': 'Math.sign',
     'sin': 'Math.sin',
     'sinh': 'Math.sinh',
+    'Sqrt': 'Math.sqrt',
     'tan': 'Math.tan',
     'tanh': 'Math.tanh',
 }
 
 
-class JavascriptCodePrinter(CodePrinter):
+class AbstractJavaFamilyPrinter(CodePrinter):
+
+    def _print_Pow(self, expr):
+        PREC = precedence(expr)
+        if equal_valued(expr.exp, -1):
+            return '1/%s' % (self.parenthesize(expr.base, PREC))
+        elif equal_valued(expr.exp, 0.5):
+            return 'Math.sqrt(%s)' % self._print(expr.base)
+        elif expr.exp == S.One/3:
+            return 'Math.cbrt(%s)' % self._print(expr.base)
+        else:
+            return 'Math.pow(%s, %s)' % (self._print(expr.base),
+                                 self._print(expr.exp))
+
+
+class JavascriptCodePrinter(AbstractJavaFamilyPrinter):
     """"A Printer to convert Python expressions to strings of JavaScript code
     """
     printmethod = '_javascript'
@@ -92,18 +110,6 @@ class JavascriptCodePrinter(CodePrinter):
                 'end': self._print(i.upper + 1)})
             close_lines.append("}")
         return open_lines, close_lines
-
-    def _print_Pow(self, expr):
-        PREC = precedence(expr)
-        if equal_valued(expr.exp, -1):
-            return '1/%s' % (self.parenthesize(expr.base, PREC))
-        elif equal_valued(expr.exp, 0.5):
-            return 'Math.sqrt(%s)' % self._print(expr.base)
-        elif expr.exp == S.One/3:
-            return 'Math.cbrt(%s)' % self._print(expr.base)
-        else:
-            return 'Math.pow(%s, %s)' % (self._print(expr.base),
-                                 self._print(expr.exp))
 
     def _print_Rational(self, expr):
         p, q = int(expr.p), int(expr.q)
