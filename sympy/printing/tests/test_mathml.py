@@ -911,6 +911,12 @@ def test_presentation_mathml_subtracted_sum():
         '<mo>-</mo><mi>z</mi></mrow><mo>)</mo></mrow></mrow>'
 
 
+def test_presentation_mathml_subtracted_product():
+    assert mpp.doprint(x - 2*y) == \
+        '<mrow><mi>x</mi><mo>-</mo><mrow><mn>2</mn><mo>&InvisibleTimes;</mo>' \
+        '<mi>y</mi></mrow></mrow>'
+
+
 def test_presentation_mathml_Rational():
     mml_1 = mpp._print(Rational(1, 1))
     assert mml_1.nodeName == 'mn'
