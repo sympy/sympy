@@ -37,6 +37,57 @@ Source = "https://github.com/sympy/sympy"
 [project.optional-dependencies]
 dev = ["pytest>=7.1.0", "hypothesis>=6.70.0"]
 
+# Local developer dependencies (PEP 735); not included in wheels.
+# The two requirements text files are generated from these groups.
+[dependency-groups]
+dev-tools = [
+    {include-group = "test"},
+    {include-group = "typing"},
+    {include-group = "lint"},
+]
+
+test = [
+    "mpmath",
+    "pytest",
+    "pytest-xdist",
+    "pytest-timeout",
+    "pytest-split",
+    "pytest-doctestplus",
+    "pytest-run-parallel",
+    "hypothesis",
+]
+
+typing = ["mypy"]
+
+lint = [
+    "sphinx-lint",
+    "ruff",
+    "slotscheck",
+]
+
+docs = [
+    "furo",
+    "intersphinx-registry",
+    "linkify-it-py",
+    "matplotlib",
+    "matplotlib-inline",
+    "mpmath",
+    "myst-parser",
+    "scipy",
+    "Sphinx",
+    "sphinx-autobuild",
+    "sphinx-copybutton",
+    "sphinx-math-dollar",
+    "sphinx-reredirects",
+    "sphinxcontrib-applehelp",
+    "sphinxcontrib-devhelp",
+    "sphinxcontrib-htmlhelp",
+    "sphinxcontrib-jsmath",
+    "sphinxcontrib-jquery",
+    "sphinxcontrib-qthelp",
+    "sphinxcontrib-serializinghtml",
+]
+
 [project.scripts]
 isympy = "isympy:main"
 

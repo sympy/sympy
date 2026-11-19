@@ -1,3 +1,5 @@
+# Generated from pyproject.toml by bin/generate_requirements.py.
+# Do not edit manually.
 furo
 intersphinx-registry
 linkify-it-py

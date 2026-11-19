@@ -1,6 +1,6 @@
+# Generated from pyproject.toml by bin/generate_requirements.py.
+# Do not edit manually.
 mpmath
-mypy
-sphinx-lint
 pytest
 pytest-xdist
 pytest-timeout
@@ -8,5 +8,7 @@ pytest-split
 pytest-doctestplus
 pytest-run-parallel
 hypothesis
+mypy
+sphinx-lint
 ruff
 slotscheck

@@ -34,6 +34,9 @@ jobs:
           python-version: '3.14'
       - run: python -m pip install --upgrade pip setuptools
 
+      - name: Check generated requirements
+        run: python bin/generate_requirements.py --check
+
       - run: pip install -r requirements-dev.txt
       - run: pip install .
       - name: Basic code quality tests
