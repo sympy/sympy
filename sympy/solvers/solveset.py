@@ -1088,7 +1088,7 @@ def _solve_as_poly(f, symbol, domain=S.Complexes):
         return ConditionSet(symbol, Eq(f, 0), domain)
 
 
-def _solve_radical(f, unradf, symbol, solveset_solver):
+def _solve_radical(f, unradf, symbol, solveset_solver, domain=S.Complexes):
     """ Helper function to solve equations with radicals """
     res = unradf
     eq, cov = res if res else (f, [])
@@ -1112,6 +1112,12 @@ def _solve_radical(f, unradf, symbol, solveset_solver):
         c_set = []  # solutions for ConditionSet
         for s in solutions:
             if checksol(f, symbol, s):
+                f_set.append(s)
+            elif domain.is_subset(S.Reals) is True and \
+                    real_root(f.subs(symbol, s)).equals(0):
+                # checksol substitutes into f directly, where an odd root
+                # of a negative value takes the principal (complex) root;
+                # over the reals the equation uses the real root instead.
                 f_set.append(s)
             else:
                 c_set.append(s)
@@ -1346,7 +1352,7 @@ def _solveset(f, symbol, domain, _check=False):
                     if u:
                         result += _solve_radical(equation, u,
                                                  symbol,
-                                                 solver)
+                                                 solver, domain=domain)
                     elif equation.has(Abs):
                         result += _solve_abs(f, symbol, domain)
                     else:
