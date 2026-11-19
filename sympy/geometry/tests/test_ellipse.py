@@ -1,5 +1,6 @@
 from __future__ import annotations
 from sympy.core import expand
+from sympy.core.evalf import N
 from sympy.core.numbers import (Rational, oo, pi)
 from sympy.core.relational import Eq
 from sympy.core.singleton import S
@@ -183,7 +184,8 @@ def test_ellipse_geom():
         of each other """
         return abs(l1.p1 - l2.p1) < 10**(-prec) and abs(l1.p2 - l2.p2) < 10**(-prec)
     def line_list_close(ll1, ll2, prec):
-        return all(lines_close(l1, l2, prec) for l1, l2 in zip(ll1, ll2))
+        return len(ll1) == len(ll2) and all(
+            lines_close(l1, l2, prec) for l1, l2 in zip(ll1, ll2))
 
     e = Ellipse(Point(0, 0), 2, 1)
     assert e.normal_lines(Point(0, 0)) == \
@@ -194,18 +196,18 @@ def test_ellipse_geom():
         [Line(Point(0, 0), Point(0, 1))]
     assert line_list_close(e.normal_lines(Point(1, 1), 2), [
         Line(Point(Rational(-51, 26), Rational(-1, 5)), Point(Rational(-25, 26), Rational(17, 83))),
-        Line(Point(Rational(28, 29), Rational(-7, 8)), Point(Rational(57, 29), Rational(-9, 2)))], 2)
+        Line(Point(Rational(28, 29), Rational(7, 8)), Point(Rational(57, 29), Rational(9, 2)))], 2)
     # test the failure of Poly.intervals and checks a point on the boundary
     p = Point(sqrt(3), S.Half)
     assert p in e
     assert line_list_close(e.normal_lines(p, 2), [
         Line(Point(Rational(-341, 171), Rational(-1, 13)), Point(Rational(-170, 171), Rational(5, 64))),
-        Line(Point(Rational(26, 15), Rational(-1, 2)), Point(Rational(41, 15), Rational(-43, 26)))], 2)
+        Line(Point(Rational(26, 15), Rational(1, 2)), Point(Rational(41, 15), Rational(43, 26)))], 2)
     # be sure to use the slope that isn't undefined on boundary
     e = Ellipse((0, 0), 2, 2*sqrt(3)/3)
     assert line_list_close(e.normal_lines((1, 1), 2), [
         Line(Point(Rational(-64, 33), Rational(-20, 71)), Point(Rational(-31, 33), Rational(2, 13))),
-        Line(Point(1, -1), Point(2, -4))], 2)
+        Line(Point(1, 1), Point(2, 4))], 2)
     # general ellipse fails except under certain conditions
     e = Ellipse((0, 0), x, 1)
     assert e.normal_lines((x + 1, 0)) == [Line(Point(0, 0), Point(1, 0))]
@@ -610,3 +612,21 @@ def test_evolute():
 def test_svg():
     e1 = Ellipse(Point(1, 0), 3, 2)
     assert e1._svg(2, "#FFAAFF") == '<ellipse fill="#FFAAFF" stroke="#555555" stroke-width="4.0" opacity="0.6" cx="1.00000000000000" cy="0" rx="3.00000000000000" ry="2.00000000000000"/>'
+
+
+def test_issue_12376():
+    def check(e, p, n, prec=8):
+        lines = e.normal_lines(p, prec)
+        assert len(lines) == n
+        for line in lines:
+            q = line.p1 - e.center
+            assert abs(N((q.x/e.hradius)**2 + (q.y/e.vradius)**2 - 1)) < 1e-6
+            assert N(line.distance(p)) < 1e-6
+
+    check(Ellipse(Point(0, 0), 2, 3), Point(3, 3), 2)
+    check(Ellipse(Point(0, 0), 2, 3), Point(3, 3), 2, None)
+    check(Ellipse(Point(0, 0), 2, 3), Point(1, 4), 2)
+    check(Ellipse(Point(1, -2), 3, 1), Point(-2, 3), 2)
+    check(Ellipse(Point(0, 0), 5, 2), Point(Rational(1, 2), Rational(1, 4)), 4)
+    check(Ellipse(Point(0, 0), 2.0, 1.0), Point(S.Half, Rational(1, 10**8)), 4)
+    check(Ellipse(Point(0, 0), 2.1, 1.3), Point(S.Half, Rational(1, 10**8)), 4)
