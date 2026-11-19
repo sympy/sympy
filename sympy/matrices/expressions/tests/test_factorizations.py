@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from sympy.matrices.expressions.factorizations import (
     lu, LofCholesky, qr, svd, jordan, JordanForm, JordanVectors, JordanBlocks,
 )
