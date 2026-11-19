@@ -398,3 +398,4 @@ def test_Max_Min():
     assert rust_code(Max(-x, -y)) == "(-x).max(-y)"
     assert rust_code(Min(-x, -y)) == "(-x).min(-y)"
     assert rust_code(Max(x, y), user_functions={'Max': 'custom_max'}) == "x.custom_max(y)"
+    assert rust_code(Min(x, y), user_functions={'Min': 'custom_min'}) == "x.custom_min(y)"
