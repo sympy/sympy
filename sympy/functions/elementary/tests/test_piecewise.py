@@ -1,4 +1,5 @@
 from __future__ import annotations
+from sympy.concrete.products import Product
 from sympy.concrete.summations import Sum
 from sympy.core.add import Add
 from sympy.core.basic import Basic
@@ -24,8 +25,10 @@ from sympy.integrals.integrals import (Integral, integrate)
 from sympy.logic.boolalg import (And, ITE, Not, Or)
 from sympy.matrices.expressions.matexpr import MatrixSymbol
 from sympy.printing import srepr
+from sympy.tensor.indexed import IndexedBase
 from sympy.sets.contains import Contains
 from sympy.sets.sets import Interval
+from sympy.simplify.simplify import simplify
 from sympy.solvers.solvers import solve
 from sympy.testing.pytest import raises, slow
 from sympy.utilities.lambdify import lambdify
@@ -1638,3 +1641,192 @@ def test_piecewise__eval_is_meromorphic():
     assert f.is_meromorphic(x, 2) == True
     assert f.is_meromorphic(x, Symbol('a')) is None
     assert f.is_meromorphic(x, Symbol('a', real=True)) is None
+
+
+def test_piecewise_fold_sum_indexed_condition():
+    i, j, n = symbols('i j n', integer=True)
+    x = Symbol('x', real=True)
+
+    expr = Sum(
+        Piecewise((i, x > i), (0, True)),
+        (i, 1, n),
+    )
+
+    result = piecewise_fold(expr)
+
+    assert i not in result.free_symbols
+    assert result == expr
+
+
+def test_piecewise_fold_nested_sums_bound_conditions():
+    from sympy import Piecewise, Sum, piecewise_fold, symbols
+
+    i, j = symbols('i j', integer=True)
+
+    expr = Sum(
+        Sum(
+            Piecewise((i + j, i > j), (0, True)),
+            (j, 0, 2),
+        ),
+        (i, 0, 2),
+    )
+
+    result = piecewise_fold(expr)
+
+    assert result == expr
+    assert i not in result.free_symbols
+    assert j not in result.free_symbols
+
+
+def test_piecewise_fold_multiple_integral_variables():
+    from sympy import Integral, Piecewise, piecewise_fold, symbols
+
+    x, y = symbols('x y', real=True)
+
+    expr = Integral(
+        Piecewise((x + y, x > 0), (0, True)),
+        (x, -1, 1),
+        (y, 0, 2),
+    )
+
+    result = piecewise_fold(expr)
+
+    assert isinstance(result, Piecewise)
+    assert expr.doit() == 3
+
+
+def test_piecewise_fold_nested_integral_in_sum():
+    from sympy import Integral, Piecewise, Sum, piecewise_fold, symbols
+
+    i, x = symbols('i x', integer=True)
+
+    expr = Sum(
+        Integral(
+            Piecewise((i + x, i > 0), (0, True)),
+            (x, 0, 1),
+        ),
+        (i, 0, 2),
+    )
+
+    result = piecewise_fold(expr)
+
+    assert result == expr
+    assert i not in result.free_symbols
+    assert i not in simplify(result).free_symbols
+    assert expr.doit() == 4
+
+
+def test_piecewise_fold_nested_binders_with_free_condition():
+    from sympy import Integral, Piecewise, Sum, piecewise_fold, symbols
+
+    i, x, a = symbols('i x a', real=True)
+
+    expr = Sum(
+        Integral(
+            Piecewise((x, a > 0), (0, True)),
+            (x, 0, 1),
+        ),
+        (i, 0, 2),
+    )
+
+    result = piecewise_fold(expr)
+
+    # The condition depends on free symbol a, not on
+    # either bound variable i or x.
+    assert result.has(Piecewise)
+    assert a in result.free_symbols
+    assert i not in result.free_symbols
+    assert x not in result.free_symbols
+
+
+def test_piecewise_fold_bound_symbols():
+    i = symbols('i', integer=True)
+    j = symbols('j', integer=True)
+    n = symbols('n', integer=True)
+    t = Symbol('t')
+    xb = IndexedBase('x')
+
+    pw_bound = Piecewise((i**2, i >= S(174)/25), (0, True))
+    s = Sum(pw_bound, (i, 0, 12))
+    assert piecewise_fold(s) == s
+    assert piecewise_fold(-s) == -s
+    assert i not in piecewise_fold(s).free_symbols
+    assert i not in piecewise_fold(-s).free_symbols
+    assert i not in simplify(s).free_symbols
+    assert s.doit() == 559
+    assert (-s).simplify() == -559
+
+    pw_kd = Piecewise((KroneckerDelta(i, j, (1, n)), xb[i] > 0), (0, True))
+    s_kd = Sum(pw_kd, (i, 1, n))
+    assert piecewise_fold(s_kd) == s_kd
+    assert piecewise_fold(-s_kd) == -s_kd
+    assert i not in piecewise_fold(s_kd).free_symbols
+    assert i not in simplify(s_kd).free_symbols
+
+    pw_int = Piecewise((t**2, t > 0), (0, True))
+    expr_int = Integral(pw_int, (t, -1, 1))
+    folded_int = piecewise_fold(expr_int)
+    assert isinstance(folded_int, Piecewise)
+    assert expr_int.doit() == S(1)/3
+
+    pw_prod = Piecewise((i, i > 3), (1, True))
+    expr_prod = Product(pw_prod, (i, 1, 5))
+    assert piecewise_fold(expr_prod) == expr_prod
+    assert i not in piecewise_fold(expr_prod).free_symbols
+    assert expr_prod.doit() == 20
+
+    pw_multi = Piecewise((i * j, i + j > 5), (0, True))
+    s_multi = Sum(pw_multi, (i, 1, 3), (j, 1, 3))
+    assert piecewise_fold(s_multi) == s_multi
+    assert i not in piecewise_fold(s_multi).free_symbols
+    assert j not in piecewise_fold(s_multi).free_symbols
+    assert s_multi.doit() == 9
+
+    pw_free = Piecewise((i, x > 0), (0, True))
+    s_free = Sum(pw_free, (i, 1, 5))
+    folded_free = piecewise_fold(s_free)
+    assert isinstance(folded_free, Piecewise)
+    assert i not in folded_free.free_symbols
+    assert folded_free.doit() == Piecewise((15, x > 0), (0, True))
+
+    pw_nested = Piecewise((Piecewise((x, x > 0), (0, True)), y > 0),
+                          (1, True))
+    assert piecewise_fold(pw_nested) == Piecewise(
+        (x, And(x > 0, y > 0)), (0, y > 0), (1, True))
+
+    pw_mul_nested = x * Piecewise(
+        (Piecewise((1, x > 0), (2, True)), y > 0), (3, True))
+    assert piecewise_fold(pw_mul_nested) == Piecewise(
+        (x, And(x > 0, y > 0)), (2*x, y > 0), (3*x, True))
+
+    pw_add_nested = x + Piecewise(
+        (Piecewise((1, x > 0), (2, True)), y > 0), (3, True))
+    assert piecewise_fold(pw_add_nested) == Piecewise(
+        (x + 1, And(x > 0, y > 0)), (x + 2, y > 0), (x + 3, True))
+
+    pw_mul_two = (Piecewise((1, x > 0), (0, True))
+                    * Piecewise((1, y > 0), (0, True)))
+    assert piecewise_fold(pw_mul_two) == Piecewise(
+        (1, And(x > 0, y > 0)), (0, True))
+
+    pw_inner = Piecewise((x, x > 0), (0, True))
+    pw_nested_bound = Piecewise((pw_inner*1, i > 2), (0, True))
+    s_nested = Sum(pw_nested_bound, (i, 1, 5))
+    folded_nested = piecewise_fold(s_nested)
+    assert i not in folded_nested.free_symbols
+    assert folded_nested.has(Sum)
+
+    pw_mixed = Piecewise((i, i > 3), (1, x > 0), (0, True))
+    s_mixed = Sum(pw_mixed, (i, 1, 5))
+    assert piecewise_fold(s_mixed) == s_mixed
+    assert i not in piecewise_fold(s_mixed).free_symbols
+    assert i not in simplify(s_mixed).free_symbols
+    assert s_mixed.doit() == 3*Piecewise((1, x > 0), (0, True)) + 9
+
+    pw_outer = Piecewise((2, x > 0), (3, True))
+    s_bound = Sum(Piecewise((i, i > 2), (0, True)), (i, 1, 5))
+    folded_mult = piecewise_fold(pw_outer * s_bound)
+    assert isinstance(folded_mult, Piecewise)
+    assert i not in folded_mult.free_symbols
+    assert folded_mult.has(Sum)
+    assert folded_mult.doit() == Piecewise((24, x > 0), (36, True))
