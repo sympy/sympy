@@ -20,9 +20,7 @@ If you have `Docker <https://docs.docker.com/engine/install/>`_, then instead of
 following the OS-specific installation instructions below, you may choose to
 build a Docker image::
 
-   cd doc
-
-   docker build -f Dockerfile.htmldoc -t sympy_htmldoc .
+   docker build -f doc/Dockerfile.htmldoc -t sympy_htmldoc .
 
 If you choose this option, you can now skip down to the "Build the Docs"
 section below.
@@ -48,7 +46,8 @@ Then activate it using::
 
 After installing pip through either of the two methods given above, run::
 
-   python -m pip install -r doc/requirements.txt
+   python -m pip install --upgrade pip
+   python -m pip install --group docs
 
 If you get mpmath error, install python-mpmath package::
 
@@ -68,7 +67,8 @@ prerequisites::
 
    texlive-scheme-medium librsvg2-tools
 
-   python -m pip install -r doc/requirements.txt
+   python -m pip install --upgrade pip
+   python -m pip install --group docs
 
 If you get mpmath error, install python3-mpmath package::
 
@@ -87,13 +87,11 @@ Then install these packages with homebrew::
 
    brew install imagemagick graphviz docbook librsvg
 
-Install the docs dependencies with either pip or conda::
+Install the docs dependencies with pip from the repository root (including
+inside an activated conda environment)::
 
-   python -m pip install -r requirements.txt
-
-Or::
-
-   conda install -c conda-forge --file requirements.txt
+   python -m pip install --upgrade pip
+   python -m pip install --group docs
 
 Making your Sphinx build successful on the Windows system is tricky because
 some dependencies like ``dvipng`` or ``docbook2x`` are not available.
@@ -132,7 +130,8 @@ Install make and other dependencies::
 
 Install python dependencies::
 
-   pip install -r doc/requirements.txt
+   python -m pip install --upgrade pip
+   python -m pip install --group docs
 
 Build the Docs
 ^^^^^^^^^^^^^^^

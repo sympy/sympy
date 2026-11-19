@@ -146,7 +146,8 @@ jobs:
       - name: Install docs build dependencies
         run: |
           doc/aptinstall.sh
-          pip install -r doc/requirements.txt
+          python -m pip install --upgrade pip
+          pip install --group docs
           pip install .
 
       - name: Use the installed version module for release docs

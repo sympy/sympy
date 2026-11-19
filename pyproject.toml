@@ -38,7 +38,7 @@ Source = "https://github.com/sympy/sympy"
 dev = ["pytest>=7.1.0", "hypothesis>=6.70.0"]
 
 # Local developer dependencies (PEP 735); not included in wheels.
-# The two requirements text files are generated from these groups.
+# Install developer requirements using: pip install --group dev-tools
 [dependency-groups]
 dev-tools = [
     {include-group = "test"},
@@ -57,10 +57,10 @@ test = [
     "hypothesis",
 ]
 
-typing = ["mypy"]
+typing = ["mypy; platform_python_implementation != 'PyPy'"]
 
 lint = [
-    "ruff",
+    "ruff; sys_platform != 'emscripten'",
     "sphinx-lint",
     "slotscheck",
 ]

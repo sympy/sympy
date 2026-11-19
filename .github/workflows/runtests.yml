@@ -34,10 +34,7 @@ jobs:
           python-version: '3.14'
       - run: python -m pip install --upgrade pip setuptools
 
-      - name: Check generated requirements
-        run: python bin/generate_requirements.py --check
-
-      - run: pip install -r requirements-dev.txt
+      - run: pip install --group dev-tools
       - run: pip install .
       - name: Basic code quality tests
         run: bin/test quality
@@ -77,7 +74,7 @@ jobs:
         with:
           python-version: '3.14'
       - run: python -m pip install --upgrade pip
-      - run: pip install -r requirements-dev.txt
+      - run: pip install --group dev-tools
 
       - name: Run mypy on the sympy package
         run: mypy sympy
@@ -115,7 +112,7 @@ jobs:
         with:
           python-version: '3.14'
       - run: python -m pip install --upgrade pip
-      - run: pip install -r requirements-dev.txt
+      - run: pip install --group dev-tools
 
       - name: Run sphinx-lint on the sympy documentation
         run: sphinx-lint doc/
@@ -135,7 +132,7 @@ jobs:
         with:
           python-version: '3.14'
       - run: python -m pip install --upgrade pip
-      - run: pip install -r requirements-dev.txt
+      - run: pip install --group dev-tools
       - run: bin/mailmap_check.py
 
   # -------------------- Doctests latest Python -------------------- #
@@ -153,7 +150,7 @@ jobs:
         with:
           python-version: '3.14'
       - run: python -m pip install --upgrade pip
-      - run: pip install -r requirements-dev.txt
+      - run: pip install --group dev-tools
       - run: pip install .
       - run: bin/doctest --force-colors
 
@@ -174,7 +171,7 @@ jobs:
         with:
           python-version: '3.14'
       - run: python -m pip install --upgrade pip
-      - run: pip install -r requirements-dev.txt
+      - run: pip install --group dev-tools
       - run: pip install .
       - run: pytest -n auto --timeout 10 --durations=50 --durations-min=5
 
@@ -200,12 +197,12 @@ jobs:
         with:
           python-version: ${{ matrix.python-version }}
 
-      - run: pip install -r requirements-dev.txt
+      - run: python -m pip install --upgrade pip wheel setuptools
+      - run: pip install --group dev-tools
 
       # Install the non-Python dependencies
       - run: sudo apt-get update
       - run: sudo apt-get install antlr4 clang
-      - run: python -m pip install --upgrade pip wheel setuptools
 
       # dependencies to install in all Python versions:
       - run: |
@@ -253,7 +250,7 @@ jobs:
                           scipy             \
                           #
 
-      - run: pip install -r requirements-dev.txt
+      - run: pip install --group dev-tools
       - run: pip install .
       - run: pytest -Werror -n auto
 
@@ -272,7 +269,7 @@ jobs:
         with:
           python-version: '3.13'
       - run: python -m pip install --upgrade pip
-      - run: pip install -r requirements-dev.txt
+      - run: pip install --group dev-tools
       - run: pip install python-flint
       - run: pip install .
       - run: pytest -n auto
@@ -292,7 +289,7 @@ jobs:
         with:
           python-version: '3.14'
       - run: python -m pip install --upgrade pip
-      - run: pip install -r requirements-dev.txt
+      - run: pip install --group dev-tools
       - run: pip install python-flint gmpy2
       - run: pip install .
       - run: pytest -n auto
@@ -313,7 +310,7 @@ jobs:
           # tensorflow not yet available for 3.14
           python-version: '3.13'
       - run: python -m pip install --upgrade pip
-      - run: pip install -r requirements-dev.txt
+      - run: pip install --group dev-tools
       - run: pip install numpy scipy tensorflow
       - run: pip install .
       # Test modules that can use tensorflow
@@ -334,7 +331,7 @@ jobs:
         with:
           python-version: '3.14'
       - run: python -m pip install --upgrade pip
-      - run: pip install -r requirements-dev.txt
+      - run: pip install --group dev-tools
       - run: pip install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cpu
       - run: pip install .
       # Test modules that can use pytorch
@@ -355,7 +352,7 @@ jobs:
         with:
           python-version: '3.14'
       - run: python -m pip install --upgrade pip
-      - run: pip install -r requirements-dev.txt
+      - run: pip install --group dev-tools
       - run: pip install numpy symengine
       - run: pip install .
       # Test modules that can use tensorflow
@@ -379,7 +376,7 @@ jobs:
         with:
           python-version: '3.13'
       - run: python -m pip install --upgrade pip
-      - run: pip install -r requirements-dev.txt
+      - run: pip install --group dev-tools
       - run: pip install .
       - run: pytest -m slow --timeout 595 -n auto -v --durations=0
 
@@ -408,15 +405,8 @@ jobs:
           python-version: ${{ matrix.python-version }}
           allow-prereleases: true
       - run: python -m pip install --upgrade pip
-      - env:
-          MATRIX_PYTHON_VERSION: ${{ matrix.python-version }}
-        run: |
-          if [[ "$MATRIX_PYTHON_VERSION" == pypy-* ]]; then
-            # mypy's librt dependency isn't available on PyPy, so exclude it
-            grep -vx 'mypy' requirements-dev.txt | pip install -r /dev/stdin
-          else
-            pip install -r requirements-dev.txt
-          fi
+      # The mypy environment marker excludes it on PyPy.
+      - run: pip install --group dev-tools
       - run: pip install .
       - run: pytest -n auto
 
@@ -467,7 +457,7 @@ jobs:
           python-version: '3.14'
       - run: python -m pip install --upgrade pip
       - run: pip install git+https://github.com/mpmath/mpmath.git@master
-      - run: pip install -r requirements-dev.txt
+      - run: pip install --group dev-tools
       - run: pip install .
       - run: pytest -n auto
 
@@ -486,7 +476,8 @@ jobs:
         with:
           python-version: '3.14'
       - run: doc/aptinstall.sh
-      - run: pip install -r doc/requirements.txt
+      - run: python -m pip install --upgrade pip
+      - run: pip install --group docs
       - run: pip install .
       - run: bin/test_sphinx.sh
 

@@ -47,7 +47,6 @@ git_whitelist = {
     '.editorconfig',
     'asv.conf.actions.json',
     'codecov.yml',
-    'requirements-dev.txt',
     'MANIFEST.in',
     'banner.svg',
     # GitHub Codespace
@@ -71,7 +70,6 @@ git_whitelist = {
     'bin/diagnose_imports',
     'bin/doctest',
     'bin/get_sympy.py',
-    'bin/generate_requirements.py',
     'bin/strip_whitespace',
     'bin/sympy_time.py',
     'bin/sympy_time_cache.py',
@@ -107,7 +105,6 @@ git_whitelist = {
     'release/authors.py',
     # pytest stuff
     'conftest.py',
-    'requirements-dev.txt',
     }
 
 # Files that should be in the tarball should not be in git
