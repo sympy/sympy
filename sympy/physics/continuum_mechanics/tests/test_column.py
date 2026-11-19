@@ -84,8 +84,6 @@ def test_column():
     q = R_0 * SingularityFunction(x, 0, -1) + 10 * SingularityFunction(x, 0, -1) + 10 * SingularityFunction(x, 5, -1)
     assert p == q
 
-test_column()
-
 
 def test_supports_using_manual_method():
     # Test the load equation for column with a support
@@ -195,8 +193,6 @@ def test_distributed_loads():
     )
     assert p == q
 
-test_distributed_loads()
-
 
 def test_remove_load():
     E, A = symbols('E A')
@@ -263,8 +259,6 @@ def test_remove_load():
     p = c1.load
     q = SingularityFunction(x, 5, -1)
     assert p == q
-
-test_remove_load()
 
 
 def test_reactions_point_loads():
@@ -403,8 +397,6 @@ def test_reactions_point_loads():
     q = {R_0: Rational(3,2), R_10: Rational(1,2)}
     assert p == q
 
-test_reactions_point_loads()
-
 
 def test_reactions_higher_orders():
     E, A = symbols('E A')
@@ -504,8 +496,6 @@ def test_reactions_higher_orders():
     p = c6.reaction_loads
     q = {R_0: Rational(440,3), R_10: Rational(580,3)}
 
-test_reactions_higher_orders()
-
 
 def test_telescope_hinge():
     E, A = symbols('E A')
@@ -564,8 +554,6 @@ def test_telescope_hinge():
     q = {u_4: Rational(1, 2000)}
     assert p == q
 
-test_telescope_hinge()
-
 
 def test_equations():
     c = Column(10, 210000, 1)
@@ -612,5 +600,3 @@ def test_equations():
         + SingularityFunction(x, 10, 1)/52500
     )
     assert p == q
-
-test_equations()
