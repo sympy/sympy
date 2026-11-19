@@ -176,6 +176,10 @@ class SingleDiscreteDistribution(DiscreteDistribution, NamedArgsMixin):
                          (var, self.set.inf, self.set.sup), **kwargs)
 
     def __call__(self, *args):
+        if len(args) == 1 and hasattr(self, 'set'):
+            if self.set.contains(args[0]) == S.false:
+                return S.Zero
+
         return self.pdf(*args)
 
 
