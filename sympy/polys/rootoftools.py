@@ -1213,7 +1213,7 @@ class RootSum(Expr):
     def new(cls, poly, func, auto=True):
         """Construct new ``RootSum`` instance. """
         if not func.expr.has(*func.variables):
-            return func.expr
+            return poly.degree()*func.expr
 
         rational = cls._is_func_rational(poly, func)
 
