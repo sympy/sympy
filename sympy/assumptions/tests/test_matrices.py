@@ -301,3 +301,36 @@ def test_queries_require_satask():
         Q.lower_triangular(X) & Q.upper_triangular(X)) is True
     assert _ask_recursive(Q.invertible(X), Q.fullrank(X) & Q.square(X)) is True
     assert _ask_recursive(Q.singular(X), ~Q.invertible(X)) is True
+
+
+def test_KroneckerProduct_assumptions():
+    from sympy.matrices.expressions.kronecker import KroneckerProduct
+    kp = KroneckerProduct(X, Z)
+
+    # Unconditioned queries return None
+    assert _ask_recursive(Q.symmetric(kp)) is None
+    assert _ask_recursive(Q.invertible(kp)) is None
+    assert _ask_recursive(Q.orthogonal(kp)) is None
+    assert _ask_recursive(Q.unitary(kp)) is None
+    assert _ask_recursive(Q.fullrank(kp)) is None
+    assert _ask_recursive(Q.positive_definite(kp)) is None
+    assert _ask_recursive(Q.upper_triangular(kp)) is None
+    assert _ask_recursive(Q.lower_triangular(kp)) is None
+    assert _ask_recursive(Q.diagonal(kp)) is None
+
+    # Conditioned queries
+    assert _ask_recursive(Q.symmetric(kp), Q.symmetric(X) & Q.symmetric(Z)) is True
+    assert _ask_recursive(Q.invertible(kp), Q.invertible(X) & Q.invertible(Z)) is True
+    assert _ask_recursive(Q.invertible(kp), ~Q.invertible(X)) is False
+    assert _ask_recursive(Q.orthogonal(kp), Q.orthogonal(X) & Q.orthogonal(Z)) is True
+    assert _ask_recursive(Q.unitary(kp), Q.unitary(X) & Q.unitary(Z)) is True
+    assert _ask_recursive(Q.fullrank(kp), Q.fullrank(X) & Q.fullrank(Z)) is True
+    assert _ask_recursive(Q.positive_definite(kp), Q.positive_definite(X) & Q.positive_definite(Z)) is True
+    assert _ask_recursive(Q.upper_triangular(kp), Q.upper_triangular(X) & Q.upper_triangular(Z)) is True
+    assert _ask_recursive(Q.lower_triangular(kp), Q.lower_triangular(X) & Q.lower_triangular(Z)) is True
+    assert _ask_recursive(Q.diagonal(kp), Q.diagonal(X) & Q.diagonal(Z)) is True
+
+    # Element sets
+    assert _ask_recursive(Q.integer_elements(kp), Q.integer_elements(X) & Q.integer_elements(Z)) is True
+    assert _ask_recursive(Q.real_elements(kp), Q.real_elements(X) & Q.real_elements(Z)) is True
+    assert _ask_recursive(Q.complex_elements(kp), Q.complex_elements(X) & Q.complex_elements(Z)) is True
