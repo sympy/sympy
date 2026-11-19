@@ -6838,6 +6838,9 @@ def test_pretty_Complement():
         'ℝ \\ (ℕ \\ {x})'
     assert upretty(Complement(Complement(S.Reals, S.Naturals, evaluate=False),
         {x}, evaluate=False)) == '(ℝ \\ ℕ) \\ {x}'
+    assert pretty(Complement(
+        S.Reals, Complement(S.Naturals, {x})
+    )) == r'(-oo, oo) \ (Naturals \ {x})'
 
 
 def test_pretty_SymmetricDifference():
