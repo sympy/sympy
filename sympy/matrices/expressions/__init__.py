@@ -23,6 +23,10 @@ from .permutation import PermutationMatrix, MatrixPermute
 from .sets import MatrixSet
 from .special import ZeroMatrix, Identity, OneMatrix, MatrixUnit
 
+from .factorizations import (
+    JordanVectors, JordanBlocks, jordan, JordanForm,
+)
+
 __all__ = [
     'MatrixSlice',
 
@@ -62,5 +66,7 @@ __all__ = [
 
     'PermutationMatrix', 'MatrixPermute',
 
-    'Permanent', 'per'
+    'Permanent', 'per',
+
+    'JordanVectors', 'JordanBlocks', 'jordan', 'JordanForm',
 ]

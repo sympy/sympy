@@ -208,6 +208,10 @@ def _(expr, assumptions):
         return None
     return fuzzy_and([_ask_recursive(Q.invertible(a), assumptions) for a in expr.diag])
 
+@InvertiblePredicate.register(Factorization)
+def _(expr, assumptions):
+    return _Factorization(Q.invertible, expr, assumptions)
+
 
 # OrthogonalPredicate
 
