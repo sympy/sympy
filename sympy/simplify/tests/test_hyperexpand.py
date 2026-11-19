@@ -426,6 +426,22 @@ def test_meijerg_expand():
     assert hyperexpand(f, place=0) == sqrt(pi)*z/sqrt(z**2 + 1)
 
 
+def test_meijerg_expand_at_one_without_continuity():
+    for parameter in [S.Half, S.One]:
+        expr = meijerg([], [parameter], [0], [], 1)
+        assert hyperexpand(expr) == expr
+
+
+def test_meijerg_expand_at_one_with_continuity():
+    p = symbols('p', positive=True)
+    for parameter in [S(2), 1 + p]:
+        assert hyperexpand(meijerg([], [parameter], [0], [], 1)) == 0
+
+    expr = meijerg([], [S.Half], [0], [], z)
+    assert hyperexpand(expr.subs(z, S.Half)) == sqrt(2)/sqrt(pi)
+    assert hyperexpand(expr.subs(z, 2)) == 0
+
+
 def test_meijerg_lookup():
     from sympy.functions.special.error_functions import (Ci, Si)
     from sympy.functions.special.gamma_functions import uppergamma
