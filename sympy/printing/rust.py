@@ -423,37 +423,24 @@ class RustCodePrinter(CodePrinter):
             return self._print(expr)
         return self._print_Function(expr)
 
-    def _print_Max(self, expr):
-        if "Max" in self.known_functions:
+    def _print_minmax(self, expr, method):
+        if expr.func.__name__ in self.known_functions:
             return self._print_Function(expr)
+
         args = expr.args
-        if not args:
-            return self._print_not_supported(expr)
-        if len(args) == 1:
-            return self._print(args[0])
-        contains_floats = any(arg.is_real and not arg.is_integer for arg in args)
-        if contains_floats:
-            args = [self._cast_to_float(arg) for arg in args]
+        if any(a.is_real and not a.is_integer for a in args):
+            args = [self._cast_to_float(a) for a in args]
+
         res = self._print_caller_var(args[0])
         for arg in args[1:]:
-            res += ".max(%s)" % self._print(arg)
+            res += f".{method}({self._print(arg)})"
         return res
 
+    def _print_Max(self, expr):
+        return self._print_minmax(expr, "max")
+
     def _print_Min(self, expr):
-        if "Min" in self.known_functions:
-            return self._print_Function(expr)
-        args = expr.args
-        if not args:
-            return self._print_not_supported(expr)
-        if len(args) == 1:
-            return self._print(args[0])
-        contains_floats = any(arg.is_real and not arg.is_integer for arg in args)
-        if contains_floats:
-            args = [self._cast_to_float(arg) for arg in args]
-        res = self._print_caller_var(args[0])
-        for arg in args[1:]:
-            res += ".min(%s)" % self._print(arg)
-        return res
+        return self._print_minmax(expr, "min")
 
     def _print_TypeCast(self, expr):
         if not expr.explicit:
@@ -475,7 +462,7 @@ class RustCodePrinter(CodePrinter):
         else:
             return ret
 
-    def _print_Rational(self, expr, _type=False):
+    def _print_Rational(self, expr):
         p, q = int(expr.p), int(expr.q)
         float_suffix = self.type_mappings[self.type_aliases[real]]
         return '%d_%s/%d.0' % (p, float_suffix, q)
