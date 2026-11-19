@@ -92,7 +92,7 @@ jobs:
         with:
           python-version: '3.14'
       - run: python -m pip install --upgrade pip
-      - run: pip install mpmath mypy hypothesis python-flint
+      - run: pip install --group test-typing-flint
 
       - name: Run mypy on the sympy package with python-flint installed
         run: mypy sympy
@@ -204,16 +204,8 @@ jobs:
       - run: sudo apt-get update
       - run: sudo apt-get install antlr4 clang
 
-      # dependencies to install in all Python versions:
-      - run: |
-          pip install numpy numexpr matplotlib bpython ipython cython   \
-                      wurlitzer autowrap lxml lark z3-solver pycosat    \
-                      jax jaxlib libclang scipy                         \
-                      'antlr4-python3-runtime==4.11.*'                  \
-                      symengine                                         \
-                      numba llvmlite pymc                               \
-                      gmpy2                                             \
-                      uncertainties
+      # Optional packages enable tests otherwise skipped.
+      - run: pip install --group test-optional
 
       - run: pip install .
 
@@ -270,7 +262,7 @@ jobs:
           python-version: '3.13'
       - run: python -m pip install --upgrade pip
       - run: pip install --group dev-tools
-      - run: pip install python-flint
+      - run: pip install --group test-flint
       - run: pip install .
       - run: pytest -n auto
 
@@ -290,7 +282,7 @@ jobs:
           python-version: '3.14'
       - run: python -m pip install --upgrade pip
       - run: pip install --group dev-tools
-      - run: pip install python-flint gmpy2
+      - run: pip install --group test-flint-gmpy2
       - run: pip install .
       - run: pytest -n auto
 
@@ -311,7 +303,7 @@ jobs:
           python-version: '3.13'
       - run: python -m pip install --upgrade pip
       - run: pip install --group dev-tools
-      - run: pip install numpy scipy tensorflow
+      - run: pip install --group test-tensorflow
       - run: pip install .
       # Test modules that can use tensorflow
       - run: bin/test_tensorflow.py
@@ -332,7 +324,8 @@ jobs:
           python-version: '3.14'
       - run: python -m pip install --upgrade pip
       - run: pip install --group dev-tools
-      - run: pip install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cpu
+      # Keep PyTorch's CPU-specific package index in this workflow.
+      - run: pip install --group test-pytorch --index-url https://download.pytorch.org/whl/cpu
       - run: pip install .
       # Test modules that can use pytorch
       - run: bin/test_pytorch.py
@@ -353,7 +346,7 @@ jobs:
           python-version: '3.14'
       - run: python -m pip install --upgrade pip
       - run: pip install --group dev-tools
-      - run: pip install numpy symengine
+      - run: pip install --group test-symengine
       - run: pip install .
       # Test modules that can use tensorflow
       - run: bin/test_symengine.py
@@ -569,7 +562,7 @@ jobs:
       - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
         with:
           python-version: '3.14'
-      - run: pip install asv virtualenv packaging
+      - run: pip install --group benchmark
       - run: git submodule add https://github.com/sympy/sympy_benchmarks.git
 
       - run: git remote add upstream https://github.com/sympy/sympy.git

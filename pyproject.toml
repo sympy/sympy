@@ -88,6 +88,58 @@ docs = [
     "sphinxcontrib-serializinghtml",
 ]
 
+
+# CI test environments requiring packages beyond the default developer tools.
+# System packages and special package indexes remain configured in CI.
+test-optional = [
+    "numpy",
+    "numexpr",
+    "matplotlib",
+    "bpython",
+    "ipython",
+    "cython",
+    "wurlitzer",
+    "autowrap",
+    "lxml",
+    "lark",
+    "z3-solver",
+    "pycosat",
+    "jax",
+    "jaxlib",
+    "libclang",
+    "scipy",
+    "antlr4-python3-runtime==4.11.*",
+    "symengine",
+    "numba",
+    "llvmlite",
+    "pymc",
+    "gmpy2>=2.0.0",
+    "uncertainties",
+]
+
+# Keep the FLINT range in sync with sympy/external/gmpy.py.
+test-flint = ["python-flint>=0.9,<0.13"]
+test-flint-gmpy2 = [
+    {include-group = "test-flint"},
+    "gmpy2>=2.0.0",
+]
+test-typing-flint = [
+    "mpmath",
+    "mypy",
+    "hypothesis",
+    {include-group = "test-flint"},
+]
+test-tensorflow = ["numpy", "scipy", "tensorflow"]
+test-symengine = ["numpy", "symengine"]
+test-pytorch = ["torch", "torchvision", "torchaudio"]
+
+benchmark = ["asv", "virtualenv", "packaging"]
+
+[tool.uv]
+# Use our existing dev-tools group by default without shadowing the
+# published [project.optional-dependencies] dev extra.
+default-groups = ["dev-tools"]
+
 [project.scripts]
 isympy = "isympy:main"
 
