@@ -511,6 +511,16 @@ class CodePrinter(StrPrinter):
     def _print_Pi(self, expr):
         return self._print_NumberSymbol(expr)
 
+    def _print_relational_operand(self, arg):
+        """Print an operand of a Relational, parenthesized when needed.
+
+        Relationals are always parenthesized: ``precedence`` gives Eq and Ne
+        the precedence of their function-call form in str.
+        """
+        if arg.is_Relational or precedence(arg) <= PRECEDENCE["Relational"]:
+            return "(%s)" % self._print(arg)
+        return self._print(arg)
+
     def _print_And(self, expr):
         PREC = precedence(expr)
         return (" %s " % self._operators['and']).join(self.parenthesize(a, PREC)

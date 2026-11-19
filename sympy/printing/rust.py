@@ -450,8 +450,8 @@ class RustCodePrinter(CodePrinter):
         else:
             lhs = expr.lhs
             rhs = expr.rhs
-        lhs_code = self._print(lhs)
-        rhs_code = self._print(rhs)
+        lhs_code = self._print_relational_operand(lhs)
+        rhs_code = self._print_relational_operand(rhs)
         op = expr.rel_op
         return "{} {} {}".format(lhs_code, op, rhs_code)
 

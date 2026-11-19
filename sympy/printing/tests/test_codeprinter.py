@@ -2,6 +2,10 @@ from __future__ import annotations
 from sympy.printing.codeprinter import CodePrinter, PrintMethodNotImplementedError
 from sympy.core import symbols
 from sympy.core.symbol import Dummy
+from sympy.core.relational import Eq, Lt
+from sympy.logic.boolalg import And
+from sympy.printing import (ccode, fcode, glsl_code, jscode, julia_code,
+    mathematica_code, octave_code, pycode, rcode, rust_code)
 from sympy.testing.pytest import raises
 from sympy import cos
 from sympy.utilities.lambdify import lambdify
@@ -76,3 +80,25 @@ def test_issue_15791():
         c.doprint(ImmutableSparseMatrix(2, 2, {}))
     with raises(PrintMethodNotImplementedError):
         c.doprint(MutableSparseMatrix(2, 2, {}))
+
+
+def test_issue_11366():
+    x, y, z = symbols('x y z')
+    nested = Eq(x, Eq(y, z, evaluate=False), evaluate=False)
+    compared = Eq(x > 1, y > 1, evaluate=False)
+    chained = Lt(x, Lt(y, z, evaluate=False), evaluate=False)
+    boolean = Eq(And(x > 0, y > 0), z > 0, evaluate=False)
+    for printer in (ccode, glsl_code, jscode, julia_code, mathematica_code,
+                    octave_code, rcode, rust_code):
+        assert printer(nested) == 'x == (y == z)'
+        assert printer(chained) == 'x < (y < z)'
+    for printer in (ccode, glsl_code, jscode, julia_code, mathematica_code):
+        assert printer(compared) == '(x > 1) == (y > 1)'
+        assert printer(boolean) == '(x > 0 && y > 0) == (z > 0)'
+    assert octave_code(boolean) == '(x > 0 & y > 0) == (z > 0)'
+    assert rcode(boolean) == '(x > 0 & y > 0) == (z > 0)'
+    assert rust_code(compared) == '(x > 1.0) == (y > 1.0)'
+    assert fcode(chained, source_format='free') == 'x < (y < z)'
+    assert pycode(compared) == '((x > 1) == (y > 1))'
+    assert pycode(boolean) == '(((x > 0) and (y > 0)) == (z > 0))'
+    assert ccode(Eq(x + 1, y)) == 'x + 1 == y'
