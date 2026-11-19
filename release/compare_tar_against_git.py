@@ -71,6 +71,7 @@ git_whitelist = {
     'bin/diagnose_imports',
     'bin/doctest',
     'bin/get_sympy.py',
+    'bin/generate_requirements.py',
     'bin/strip_whitespace',
     'bin/sympy_time.py',
     'bin/sympy_time_cache.py',
