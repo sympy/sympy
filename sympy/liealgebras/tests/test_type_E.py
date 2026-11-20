@@ -1,6 +1,6 @@
 from __future__ import annotations
 from sympy.liealgebras.cartan_type import CartanType
-from sympy.matrices import Matrix
+from sympy import Matrix, S
 from sympy.core.backend import Rational
 
 def test_type_E():
@@ -21,3 +21,86 @@ def test_type_E():
     assert posroots[8] == [1, 0, 0, 0, 1, 0, 0, 0]
     assert posroots[21] == [Rational(1,2),Rational(1,2),Rational(1,2),Rational(1,2),
                             Rational(1,2),Rational(-1,2),Rational(-1,2),Rational(1,2)]
+
+
+def test_simpleroots():
+    c = CartanType("E6")
+    s = c.simple_roots()
+
+    assert Matrix(s) == Matrix([
+        [S.Half, -S.Half, -S.Half,
+        -S.Half, -S.Half, -S.Half,
+        -S.Half, S.Half],
+        [-1, 1, 0, 0, 0, 0, 0, 0],
+        [0, -1, 1, 0, 0, 0, 0, 0],
+        [0, 0, -1, 1, 0, 0, 0, 0],
+        [0, 0, 0, -1, 1, 0, 0, 0],
+        [1, 1, 0, 0, 0, 0, 0, 0]])
+
+
+    c = CartanType("E7")
+    s = c.simple_roots()
+
+    assert Matrix(s) == Matrix([
+        [S.Half, -S.Half, -S.Half,
+        -S.Half, -S.Half, -S.Half,
+        -S.Half, S.Half],
+       [-1, 1, 0, 0, 0, 0, 0, 0],
+       [0, -1, 1, 0, 0, 0, 0, 0],
+       [0, 0, -1, 1, 0, 0, 0, 0],
+       [0, 0, 0, -1, 1, 0, 0, 0],
+       [0, 0, 0, 0, -1, 1, 0, 0],
+       [1, 1, 0, 0, 0, 0, 0, 0]])
+
+    c = CartanType("E8")
+    s = c.simple_roots()
+
+    assert Matrix(s) == Matrix([
+        [S.Half, -S.Half, -S.Half,
+        -S.Half, -S.Half, -S.Half,
+        -S.Half, S.Half],
+        [-1, 1, 0, 0, 0, 0, 0, 0],
+        [0, -1, 1, 0, 0, 0, 0, 0],
+        [0, 0, -1, 1, 0, 0, 0, 0],
+        [0, 0, 0, -1, 1, 0, 0, 0],
+        [0, 0, 0, 0, -1, 1, 0, 0],
+        [0, 0, 0, 0, 0, -1, 1, 0],
+        [1, 1, 0, 0, 0, 0, 0, 0]])
+
+def test_Cartan():
+    c = CartanType("E6")
+    s = c.cartan_matrix()
+
+    assert Matrix(s) == Matrix([
+        [ 2, -1,  0,  0,  0,  0],
+        [-1,  2, -1,  0,  0,  0],
+        [ 0, -1,  2, -1,  0, -1],
+        [ 0,  0, -1,  2, -1,  0],
+        [ 0,  0,  0, -1,  2,  0],
+        [ 0,  0, -1,  0,  0,  2]])
+
+
+    c = CartanType("E7")
+    s = c.cartan_matrix()
+
+    assert Matrix(s) == Matrix([
+        [ 2, -1,  0,  0,  0,  0,  0],
+        [-1,  2, -1,  0,  0,  0,  0],
+        [ 0, -1,  2, -1,  0,  0, -1],
+        [ 0,  0, -1,  2, -1,  0,  0],
+        [ 0,  0,  0, -1,  2, -1,  0],
+        [ 0,  0,  0,  0, -1,  2,  0],
+        [ 0,  0, -1,  0,  0,  0,  2]])
+
+    c = CartanType("E8")
+    s = c.cartan_matrix()
+
+    assert Matrix(s) == Matrix([
+        [ 2, -1,  0,  0,  0,  0,  0,  0],
+        [-1,  2, -1,  0,  0,  0,  0,  0],
+        [ 0, -1,  2, -1,  0,  0,  0, -1],
+        [ 0,  0, -1,  2, -1,  0,  0,  0],
+        [ 0,  0,  0, -1,  2, -1,  0,  0],
+        [ 0,  0,  0,  0, -1,  2, -1,  0],
+        [ 0,  0,  0,  0,  0, -1,  2,  0],
+        [ 0,  0, -1,  0,  0,  0,  0,  2]])

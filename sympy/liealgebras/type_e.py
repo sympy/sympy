@@ -67,24 +67,19 @@ class TypeE(Standard_Cartan):
         >>> c.simple_root(2)
         [1, 1, 0, 0, 0, 0, 0, 0]
         """
-        n = self.n
-        if i == 1:
-            root = [-Rational(1, 2)]*8
-            root[0] = Rational(1, 2)
-            root[7] = Rational(1, 2)
-            return root
-        elif i == 2:
-            root = [0]*8
-            root[1] = 1
-            root[0] = 1
-            return root
-        else:
-            if i in (7, 8) and n == 6:
-                raise ValueError("E6 only has six simple roots!")
-            if i == 8 and n == 7:
-                raise ValueError("E7 only has seven simple roots!")
+        e8 = [[Rational(1, 2), Rational(-1, 2), Rational(-1, 2),
+            Rational(-1, 2), Rational(-1, 2), Rational(-1, 2),
+            Rational(-1, 2), Rational(1, 2)],
+            [-1, 1, 0, 0, 0, 0, 0, 0],
+            [0, -1, 1, 0, 0, 0, 0, 0],
+            [0, 0, -1, 1, 0, 0, 0, 0],
+            [0, 0, 0, -1, 1, 0, 0, 0],
+            [0, 0, 0, 0, -1, 1, 0, 0],
+            [0, 0, 0, 0, 0, -1, 1, 0],
+            [1, 1, 0, 0, 0, 0, 0, 0]]
 
-            return self.basic_root(i - 3, i - 2)
+        roots = e8[:self.rank() - 1] + [e8[-1]]
+        return [roots[i-1]]
 
     def positive_roots(self) -> dict[int, list[int] | list[Rational]]:
         """
