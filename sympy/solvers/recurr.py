@@ -61,7 +61,7 @@ from sympy.core.sympify import sympify
 
 from sympy.simplify import simplify, hypersimp, hypersimilar  # type: ignore
 from sympy.solvers import solve, solve_undetermined_coeffs
-from sympy.polys import Poly, quo, gcd, lcm, roots, resultant
+from sympy.polys import Poly, quo, gcd, lcm, roots, resultant, degree
 from sympy.functions import binomial, factorial, FallingFactorial, RisingFactorial
 from sympy.matrices import Matrix, casoratian
 from sympy.utilities.iterables import numbered_symbols
@@ -484,6 +484,43 @@ def _monic_divisors(roots_dict, n):
     return divisors
 
 
+def _degree_differences(coeffs, n):
+    """Return the values of ``degree(A) - degree(B)`` worth trying in
+    :func:`rsolve_hyper`.
+
+    For a pair `(A, B)` the polynomial in `Z` is built from the terms of
+    highest degree, and the degree of term `i` is
+    ``degree(coeffs[i]) + i*(degree(A) - degree(B))`` plus a constant. If
+    only one term has the highest degree, the polynomial is a monomial and
+    its only root is `Z = 0`, so the pair gives no solution. The difference
+    must therefore make two of the terms tie for the highest degree, i.e. it
+    is minus the slope of an edge of the Newton polygon of the recurrence.
+
+    Examples
+    ========
+
+    >>> from sympy.solvers.recurr import _degree_differences
+    >>> from sympy.abc import n
+    >>> _degree_differences([-1, (n + 1)**2], n)
+    {-2}
+    >>> _degree_differences([n**2, -2*(n + 1)**2, (n + 2)**2], n)
+    {0}
+
+    """
+    points = [(i, degree(c, n)) for i, c in enumerate(map(sympify, coeffs))
+              if not c.is_zero]
+    differences = set()
+    for k, (i, di) in enumerate(points):
+        for j, dj in points[k + 1:]:
+            delta, rem = divmod(di - dj, j - i)
+            if rem:
+                continue
+            top = di + i*delta
+            if all(dl + l*delta <= top for l, dl in points):
+                differences.add(delta)
+    return differences
+
+
 def rsolve_hyper(coeffs, f, n, **hints):
     r"""
     Given linear recurrence operator `\operatorname{L}` of order `k`
@@ -639,15 +676,22 @@ def rsolve_hyper(coeffs, f, n, **hints):
     q_real = {root: m for root, m in q_roots.items()
               if root.is_extended_real is not False}
     if sum(p_real.values()) > 1 or sum(q_real.values()) > 1:
+        seen = set(factors)
         for A in _monic_divisors(p_real, n):
             for B in _monic_divisors(q_real, n):
-                if (A, B) not in factors:
+                if (A, B) not in seen:
+                    seen.add((A, B))
                     factors.append((A, B))
+
+    differences = _degree_differences(coeffs, n)
 
     for A, B in factors:
         if kernel and len(kernel) == r:
             # a recurrence of order r has at most r independent solutions
             break
+        if r and degree(A, n) - degree(B, n) not in differences:
+            # the polynomial in Z would have no nonzero root
+            continue
         polys, degrees = [], []
         D = A*B.subs(n, n + r - 1)
 
