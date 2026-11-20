@@ -120,7 +120,23 @@ class KroneckerProduct(MatrixExpr):
 
     @property
     def is_zero_matrix(self):
-        return any(_is_zero_mat(arg) for arg in self.args)
+        """True if any factor is a zero matrix, None if unknown.
+
+        A Kronecker product is zero if and only if at least one factor
+        is zero.  For symbolic ``MatrixSymbol`` arguments whose zero
+        status is unknown we return ``None`` (SymPy fuzzy-bool
+        convention) instead of ``False``.
+        """
+        found_unknown = False
+        for arg in self.args:
+            z = _is_zero_mat(arg)
+            if z is True:
+                return True
+            if z is None:
+                found_unknown = True
+        if found_unknown:
+            return None
+        return False
 
     @property
     def shape(self):
@@ -384,15 +400,23 @@ def kronecker_product_extract_singleton_matrices(kron: KroneckerProduct):
 
 
 def _is_zero_mat(m):
+    """Return True / False / None following SymPy fuzzy-bool convention."""
     if isinstance(m, MatrixBase):
         return m.is_zero_matrix
-    if isinstance(m, KroneckerProduct):
-        return m.is_zero_matrix
-    return bool(m.is_ZeroMatrix)
+    # For MatrixExpr subclasses: is_ZeroMatrix is a class-level flag
+    # (True only for ZeroMatrix); otherwise the zero status is unknown.
+    if m.is_ZeroMatrix:
+        return True
+    return None
 
 
 def extract_zeromatrix(kron):
-    if any(_is_zero_mat(arg) for arg in kron.args):
+    """Replace a KroneckerProduct with ZeroMatrix if any factor is zero.
+
+    Placed after ``flatten`` in the rule pipeline so that all args are
+    guaranteed to be non-KroneckerProduct leaves.
+    """
+    if any(_is_zero_mat(arg) is True for arg in kron.args):
         from sympy.matrices.expressions.special import ZeroMatrix
         ret = ZeroMatrix(*kron.shape)
         if all(isinstance(m, MatrixBase) for m in kron.args):
@@ -402,9 +426,9 @@ def extract_zeromatrix(kron):
 
 
 rules = (unpack,
-         extract_zeromatrix,
          explicit_kronecker_product,
          flatten,
+         extract_zeromatrix,
          extract_commutative,
          kronecker_product_extract_singleton_matrices)
 

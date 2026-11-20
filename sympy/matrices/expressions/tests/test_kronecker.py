@@ -270,7 +270,8 @@ def test_KroneckerProduct_zeromatrix():
     kp1 = KroneckerProduct(A, Z_sq)
     assert kp1.is_zero_matrix is True
     assert kp1.is_ZeroMatrix is False
-    assert KroneckerProduct(A, B).is_zero_matrix is False
+    # Generic symbolic product: zero status is unknown (None), not False
+    assert KroneckerProduct(A, B).is_zero_matrix is None
 
     # doit() canonicalization evaluates to ZeroMatrix
     assert kp1.doit() == ZeroMatrix(n*m, m**2)
@@ -285,4 +286,3 @@ def test_KroneckerProduct_zeromatrix():
     Z_exp = Matrix.zeros(2, 2)
     assert kronecker_product(M, Z_exp) == Matrix.zeros(4, 4)
     assert KroneckerProduct(M, ZeroMatrix(2, 2)).doit() == ZeroMatrix(4, 4)
-
