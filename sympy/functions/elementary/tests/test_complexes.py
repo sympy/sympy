@@ -904,7 +904,7 @@ def test_periodic_argument():
     x = Symbol('x')
     p = Symbol('p', positive=True)
 
-    assert unbranched_argument(2 + I) == periodic_argument(2 + I, oo)
+    assert unbranched_argument(2 + I) == atan(S.Half)
     assert unbranched_argument(1 + x) == periodic_argument(1 + x, oo)
     assert N_equals(unbranched_argument((1 + I)**2), pi/2)
     assert N_equals(unbranched_argument((1 - I)**2), -pi/2)
