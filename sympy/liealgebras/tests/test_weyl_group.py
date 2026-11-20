@@ -1,5 +1,6 @@
 from __future__ import annotations
 from sympy.liealgebras.weyl_group import WeylGroup
+from sympy.core.numbers import Rational
 from sympy.matrices import Matrix
 
 def test_weyl_group():
@@ -15,16 +16,23 @@ def test_weyl_group():
     d = WeylGroup("B5")
     assert d.group_order() == 3840
     assert d.element_order('r1*r2*r4*r5') == 12
-    assert d.matrix_form('r2*r3') ==  Matrix([[0, 0, 1, 0, 0], [1, 0, 0, 0, 0],
-        [0, 1, 0, 0, 0], [0, 0, 0, 1, 0], [0, 0, 0, 0, 1]])
+    assert d.matrix_form('r2*r3') ==  Matrix([
+        [1, 0, 0, 0, 0],
+        [0, 0, 0, 1, 0],
+        [0, 1, 0, 0, 0],
+        [0, 0, 1, 0, 0],
+        [0, 0, 0, 0, 1]],
+        )
     assert d.element_order('r1*r2*r1*r3*r5') == 6
     e = WeylGroup("D5")
     assert e.element_order('r2*r3*r5') == 4
     assert e.matrix_form('r2*r3*r5') == Matrix([[1, 0, 0, 0, 0], [0, 0, 0, 0, -1],
         [0, 1, 0, 0, 0], [0, 0, 1, 0, 0], [0, 0, 0, -1, 0]])
+
     f = WeylGroup("G2")
     assert f.element_order('r1*r2*r1*r2') == 3
     assert f.element_order('r2*r1*r1*r2') == 1
+    assert f.element_order('r1*r2*r1') == 2
 
     assert f.matrix_form('r1*r2*r1*r2') == Matrix([[0, 1, 0], [0, 0, 1], [1, 0, 0]])
     g = WeylGroup("F4")
@@ -34,3 +42,17 @@ def test_weyl_group():
     assert g.element_order('r2*r3') == 4
     h = WeylGroup("E6")
     assert h.group_order() == 51840
+
+def test_24092():
+    c = WeylGroup("E8")
+    m = Rational(1, 4) * Matrix([
+        [ 3,  1,  1,  1,  1,  1,  1, -1],
+        [ 1,  3, -1, -1, -1, -1, -1,  1],
+        [ 1, -1,  3, -1, -1, -1, -1,  1],
+        [ 1, -1, -1,  3, -1, -1, -1,  1],
+        [1, -1, -1, -1,  3, -1, -1,  1],
+        [ 1, -1, -1, -1, -1,  3, -1,  1],
+        [ 1, -1, -1, -1, -1, -1,  3,  1],
+        [-1,  1,  1,  1,  1,  1,  1,  3],
+    ])
+    assert c.matrix_form("r1") == m

@@ -1,9 +1,9 @@
 from __future__ import annotations
 
-from typing import cast, Literal, Mapping, TYPE_CHECKING
+from typing import cast, final, Literal, TYPE_CHECKING
 
 from sympy.core import Atom, Basic, Rational
-from sympy.core.backend import zeros, Matrix
+from sympy.matrices.dense import eye, Matrix
 
 if TYPE_CHECKING:
     from .type_a import TypeA
@@ -91,17 +91,40 @@ class Standard_Cartan(Atom):
         """
         return self._series
 
-    def simple_root(self, i: int) -> list[int] | list[Rational]:
+    def simple_root(self, i: int) -> Matrix:
         raise NotImplementedError(
             "simple_root is implemented by subclasses of Standard_Cartan"
         )
 
-    def positive_roots(self) -> Mapping[int, list[int] | list[Rational]]:
-        raise NotImplementedError(
-            "positive_roots is implemented by subclasses of Standard_Cartan"
-        )
+    @final
+    def positive_roots(self) -> list[Matrix]:
+        """
+        Returns the set of all positive roots that are greater
+        than zero in weight from the root system.
+        """
+        positive_root_coeffs = _positive_root_coefficients(self.cartan_matrix())
+        positive_roots: list[Matrix] = []
+        for coeffs in positive_root_coeffs:
+            weighted_roots: list[Matrix] = [
+                coeff * self.simple_root(i + 1) for i, coeff in enumerate(coeffs) if coeff != 0
+                ]
+            root = weighted_roots.pop()
+            while weighted_roots:
+                root += weighted_roots.pop()
+            positive_roots.append(root)
+        return positive_roots
 
-    def cartan_matrix(self):
+    @final
+    def highest_root(self) -> Matrix:
+        """
+        Returns the highest-weight root of the Lie algebra.
+        """
+        highest_root_coeff = _highest_root_coefficients(self.cartan_matrix())
+        terms = [coeff * self.simple_root(i + 1) for i, coeff in enumerate(highest_root_coeff) if coeff != 0]
+        return sum(terms[1:], terms[0])
+
+    @final
+    def cartan_matrix(self) -> Matrix:
         r"""
         Returns the Cartan Matrix for the algebra. For a
         given simple Lie algebra the elements $a_{ij}$ can be
@@ -118,14 +141,22 @@ class Standard_Cartan(Atom):
         - https://mathworld.wolfram.com/CartanMatrix.html
 
         """
-        r = self.rank()
-        cartan_matrix = zeros(r,r)
-        for i, sr_i in enumerate(self.simple_roots()):
-            for j, sr_j in enumerate(self.simple_roots()):
-                cartan_matrix[j,i] = 2 * sr_i.dot(sr_j) / sr_i.dot(sr_i)
+        n = self.rank()
+        simple_roots = [self.simple_root(i) for i in range(1,n+1)]
+
+        norms: list[int] | list[Rational] = [simple_roots[i].dot(simple_roots[i]) for i in range(n)] #type: ignore
+
+        cartan_matrix: Matrix = 2*eye(n)
+        for i in range(n):
+            for j in range(i + 1, n):
+                root_sum: Rational = 2*simple_roots[i].dot(simple_roots[j]) #type: ignore
+                cartan_matrix[i, j] = root_sum / norms[j]
+                cartan_matrix[j, i] = root_sum / norms[i]
+
         return cartan_matrix
 
-    def cocartan_matrix(self):
+
+    def cocartan_matrix(self) -> Matrix:
         r"""
         Returns the Cocartan matrix. The Cocartan matrix
         row elements, $c_i$, are built from covectors of simple roots, $\alpha_i$.
@@ -140,18 +171,20 @@ class Standard_Cartan(Atom):
             \langle c_i, w_j \rangle = \delta_{ij}
 
         """
+        simple_roots = [self.simple_root(i) for i in range(1, self.rank() + 1)]
         return Matrix([
-                2 * x / x.dot(x) for x in self.simple_roots()])
+                2 * x / x.dot(x) for x in simple_roots])
 
-    def omega_matrix(self):
+    def omega_matrix(self) -> Matrix:
         """
-        Returns the omega matrix, which rows are built from
+        Returns the omega matrix whose rows are built from
         the fundamental weights of the algebra in the orthogonal
         basis.
         """
         return self.cocartan_matrix().pinv().T
 
-    def fundamental_weight(self, i):
+
+    def fundamental_weight(self, i: int) -> Matrix:
         r"""
         Returns the i'th fundamental weight of the algebra in the
         orthogonal basis.
@@ -178,16 +211,39 @@ class Standard_Cartan(Atom):
         - https://en.wikipedia.org/wiki/Weight_(representation_theory)
         - http://www.math.columbia.edu/~woit/notes11.pdf
         """
-        i = i - 1
-        return self.omega_matrix().row(i)
+        return self.omega_matrix().row(i - 1) 
+
 
     def dynkin_diagram(self) -> str:
         raise NotImplementedError(
             "dynkin_diagram is implemented by subclasses of Standard_Cartan"
         )
 
-    def simple_roots(self):
-        """
-        Returns the simple roots of the algebra.
-        """
-        return [Matrix(self.simple_root(i+1)).T for i in range(self.n)]
+def _positive_root_coefficients(cartan_matrix: Matrix) -> list[tuple[int, ...]]:
+    n = cartan_matrix.rows
+
+    simple_roots = [tuple(1 if i == j else 0 for j in range(n)) for i in range(n)]
+    positive_roots = set(simple_roots)
+    queue = list(simple_roots)
+
+    while queue:
+        beta = queue.pop(0)
+
+        # reflect beta
+        for i in range(n):
+            pairing = int(sum(beta[j] * cartan_matrix[j, i] for j in range(n)))
+
+            new_beta_list = list(beta)
+            new_beta_list[i] -= pairing
+            new_beta = tuple(new_beta_list)
+
+            if new_beta not in positive_roots and all(c >= 0 for c in new_beta):
+                positive_roots.add(new_beta)
+                queue.append(new_beta)
+
+    # sort by height, and antilex within height
+    return sorted(positive_roots, key=lambda beta: (-sum(beta), beta),reverse=True)
+
+def _highest_root_coefficients(cartan_matrix: Matrix) -> tuple[int, ...]:
+    positive_root_coeffs = _positive_root_coefficients(cartan_matrix)
+    return positive_root_coeffs[-1]

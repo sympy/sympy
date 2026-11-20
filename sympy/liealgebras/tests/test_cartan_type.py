@@ -1,4 +1,6 @@
 from __future__ import annotations
+from sympy.core.numbers import Rational
+from sympy.matrices import eye, Matrix
 from sympy.liealgebras.cartan_type import CartanType, Standard_Cartan
 from sympy.testing.pytest import raises
 from sympy import eye, Matrix
@@ -21,13 +23,13 @@ def test_CartanType():
     c = CartanType("A4")
 
     omega = c.omega_matrix()
-    cocar = c.cocartan_matrix()
+    cocartan = c.cocartan_matrix()
 
-    assert cocar * omega.T == eye(4)
+    assert cocartan * omega.T == eye(4)
 
     c2 = CartanType("A2")
     assert c2.omega_matrix() == Matrix([
-                        ['2/3', '-1/3', '-1/3'],
-                        ['1/3',  '1/3', '-2/3']])
+                        [Rational(2,3), Rational(-1,3), Rational(-1,3)],
+                        [Rational(1,3),  Rational(1,3), Rational(-2,3)]])
 
-    assert c2.fundamental_weight(1) == Matrix([['2/3', '-1/3', '-1/3']])
+    assert c2.fundamental_weight(1) == Matrix([[Rational(2,3), Rational(-1,3), Rational(-1,3)]])
