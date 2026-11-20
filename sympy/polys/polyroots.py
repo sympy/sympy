@@ -19,7 +19,7 @@ from sympy.core.relational import Eq
 from sympy.core.sorting import ordered
 from sympy.core.symbol import Dummy, Symbol, symbols
 from sympy.core.sympify import sympify
-from sympy.functions import exp, im, cos, acos, Piecewise
+from sympy.functions import exp, im, cos, acos, Piecewise, cbrt, conjugate
 from sympy.functions.elementary.miscellaneous import root, sqrt
 from sympy.ntheory import divisors, isprime, nextprime
 from sympy.polys.domains import EX
@@ -171,14 +171,39 @@ def roots_cubic(f, trig=False):
 
     coeff = I*sqrt(3)/2
     if u1 is None:
-        u1 = S.One
-        u2 = Rational(-1, 2) + coeff
-        u3 = Rational(-1, 2) - coeff
-        b, c, d = a, b, c  # a, b, c, d = S.One, a, b, c
-        D0 = b**2 - 3*c  # b**2 - 3*a*c
-        D1 = 2*b**3 - 9*b*c + 27*d  # 2*b**3 - 9*a*b*c + 27*a**2*d
-        C = root((D1 + sqrt(D1**2 - 4*D0**3))/2, 3)
-        return [-(b + uk*C + D0/C/uk)/3 for uk in [u1, u2, u3]]  # -(b + uk*C + D0/C/uk)/3/a
+        if not (a.free_symbols or b.free_symbols or c.free_symbols):
+            # numeric coefficients: keep the existing formula
+            u1 = S.One
+            u2 = Rational(-1, 2) + coeff
+            u3 = Rational(-1, 2) - coeff
+            b, c, d = a, b, c  # a, b, c, d = S.One, a, b, c
+            D0 = b**2 - 3*c  # b**2 - 3*a*c
+            D1 = 2*b**3 - 9*b*c + 27*d  # 2*b**3 - 9*a*b*c + 27*a**2*d
+            C = root((D1 + sqrt(D1**2 - 4*D0**3))/2, 3)
+            return [-(b + uk*C + D0/C/uk)/3 for uk in [u1, u2, u3]]  # -(b + uk*C + D0/C/uk)/3/a
+
+        # symbolic coefficients: the old formula divides by a cube root that
+        # can vanish after substitution (see issue #30837)
+        s = sqrt(q**2/4 + pon3**3)
+        A, B = -q/2 + s, -q/2 - s
+        if all(coefficient.is_real is True for coefficient in (a, b, c)):
+            eta = Rational(1, 2) + sqrt(3)*I/2
+
+            def modified_cbrt(z):
+                return eta*cbrt(z) + conjugate(eta)*conjugate(cbrt(conjugate(z)))
+
+            u, v = modified_cbrt(A), modified_cbrt(B)
+        else:
+            u, w = cbrt(A), cbrt(B)
+            r = u*conjugate(u)
+            e = (cbrt(-1 + r*I) - conjugate(cbrt(-1 - r*I)))/(I*sqrt(3))
+            v = (-pon3*conjugate(u) + e*w)/(r + e)
+        omega = Rational(-1, 2) + coeff
+        return [
+            u + v - aon3,
+            omega*u + omega**2*v - aon3,
+            omega**2*u + omega*v - aon3,
+        ]
 
     u2 = u1*(Rational(-1, 2) + coeff)
     u3 = u1*(Rational(-1, 2) - coeff)
