@@ -1,12 +1,13 @@
 """ This module contains various functions that are special cases
     of incomplete gamma functions. It should probably be renamed. """
 from __future__ import annotations
+from typing import TYPE_CHECKING, ClassVar
 
 from sympy.core import EulerGamma # Must be imported from core, not core.numbers
 from sympy.core.add import Add
 from sympy.core.cache import cacheit
 from sympy.core.expr import Expr
-from sympy.core.function import DefinedFunction, ArgumentIndexError, expand_mul
+from sympy.core.function import DefinedFunction, ExprFunction1Arg, ArgumentIndexError, expand_mul
 from sympy.core.logic import fuzzy_or
 from sympy.core.numbers import I, pi, Rational, Integer
 from sympy.core.relational import is_eq
@@ -49,7 +50,7 @@ def real_to_real_as_real_imag(self, deep=True, **hints):
 ###############################################################################
 
 
-class erf(DefinedFunction):
+class erf(ExprFunction1Arg):
     r"""
     The Gauss error function.
 
@@ -143,7 +144,7 @@ class erf(DefinedFunction):
         return erfinv
 
     @classmethod
-    def eval(cls, arg):
+    def eval(cls, arg: Expr) -> Expr | None:
         if arg.is_Number:
             if arg is S.NaN:
                 return S.NaN
@@ -175,6 +176,8 @@ class erf(DefinedFunction):
         # Try to pull out factors of -1
         if arg.could_extract_minus_sign():
             return -cls(-arg)
+
+        return None
 
     @staticmethod
     @cacheit
@@ -288,7 +291,7 @@ class erf(DefinedFunction):
     as_real_imag = real_to_real_as_real_imag
 
 
-class erfc(DefinedFunction):
+class erfc(ExprFunction1Arg):
     r"""
     Complementary Error Function.
 
@@ -381,7 +384,7 @@ class erfc(DefinedFunction):
         return erfcinv
 
     @classmethod
-    def eval(cls, arg):
+    def eval(cls, arg: Expr) -> Expr | None:
         if arg.is_Number:
             if arg is S.NaN:
                 return S.NaN
@@ -407,6 +410,8 @@ class erfc(DefinedFunction):
         # Try to pull out factors of -1
         if arg.could_extract_minus_sign():
             return 2 - cls(-arg)
+
+        return None
 
     @staticmethod
     @cacheit
@@ -482,7 +487,7 @@ class erfc(DefinedFunction):
         return S.One - erf(*self.args)._eval_aseries(n, args0, x, logx)
 
 
-class erfi(DefinedFunction):
+class erfi(ExprFunction1Arg):
     r"""
     Imaginary error function.
 
@@ -565,7 +570,7 @@ class erfi(DefinedFunction):
             raise ArgumentIndexError(self, argindex)
 
     @classmethod
-    def eval(cls, z):
+    def eval(cls, z: Expr) -> Expr | None:
         if z.is_Number:
             if z is S.NaN:
                 return S.NaN
@@ -593,6 +598,8 @@ class erfi(DefinedFunction):
             # Only happens with unevaluated erf2inv
             if isinstance(nz, erf2inv) and nz.args[0].is_zero:
                 return I*nz.args[1]
+
+        return None
 
     @staticmethod
     @cacheit
@@ -819,7 +826,7 @@ class erf2(DefinedFunction):
     def _eval_is_zero(self):
         return is_eq(*self.args)
 
-class erfinv(DefinedFunction):
+class erfinv(ExprFunction1Arg):
     r"""
     Inverse Error Function. The erfinv function is defined as:
 
@@ -884,7 +891,7 @@ class erfinv(DefinedFunction):
         return erf
 
     @classmethod
-    def eval(cls, z):
+    def eval(cls, z: Expr) -> Expr | None:
         if z is S.NaN:
             return S.NaN
         elif z is S.NegativeOne:
@@ -905,6 +912,8 @@ class erfinv(DefinedFunction):
         if nz is not None and (isinstance(nz, erf) and (nz.args[0]).is_extended_real):
             return -nz.args[0]
 
+        return None
+
     def _eval_rewrite_as_erfcinv(self, z, **kwargs):
         return erfcinv(1-z)
 
@@ -912,7 +921,7 @@ class erfinv(DefinedFunction):
         return self.args[0].is_zero
 
 
-class erfcinv (DefinedFunction):
+class erfcinv(ExprFunction1Arg):
     r"""
     Inverse Complementary Error Function. The erfcinv function is defined as:
 
@@ -971,7 +980,7 @@ class erfcinv (DefinedFunction):
         return erfc
 
     @classmethod
-    def eval(cls, z):
+    def eval(cls, z: Expr) -> Expr | None:
         if z is S.NaN:
             return S.NaN
         elif z.is_zero:
@@ -983,6 +992,8 @@ class erfcinv (DefinedFunction):
 
         if z.is_zero:
             return S.Infinity
+
+        return None
 
     def _eval_rewrite_as_erfinv(self, z, **kwargs):
         return erfinv(1-z)
@@ -1049,6 +1060,11 @@ class erf2inv(DefinedFunction):
 
     """
 
+    if TYPE_CHECKING:
+        @property
+        def args(self) -> tuple[Expr, Expr]:
+            ...
+
 
     def fdiff(self, argindex):
         x, y = self.args
@@ -1095,7 +1111,7 @@ class erf2inv(DefinedFunction):
 #################### EXPONENTIAL INTEGRALS ####################################
 ###############################################################################
 
-class Ei(DefinedFunction):
+class Ei(ExprFunction1Arg):
     r"""
     The classical exponential integral.
 
@@ -1184,7 +1200,7 @@ class Ei(DefinedFunction):
 
 
     @classmethod
-    def eval(cls, z):
+    def eval(cls, z: Expr) -> Expr | None:
         if z.is_zero:
             return S.NegativeInfinity
         elif z is S.Infinity:
@@ -1198,6 +1214,8 @@ class Ei(DefinedFunction):
         nz, n = z.extract_branch_factor()
         if n:
             return Ei(nz) + 2*I*pi*n
+
+        return None
 
     def fdiff(self, argindex=1):
         arg = unpolarify(self.args[0])
@@ -1505,7 +1523,7 @@ def E1(z):
     return expint(1, z)
 
 
-class li(DefinedFunction):
+class li(ExprFunction1Arg):
     r"""
     The classical logarithmic integral.
 
@@ -1606,7 +1624,7 @@ class li(DefinedFunction):
 
 
     @classmethod
-    def eval(cls, z):
+    def eval(cls, z: Expr) -> Expr | None:
         if z.is_zero:
             return S.Zero
         elif z is S.One:
@@ -1615,6 +1633,8 @@ class li(DefinedFunction):
             return S.Infinity
         if z.is_zero:
             return S.Zero
+
+        return None
 
     def fdiff(self, argindex=1):
         arg = self.args[0]
@@ -1672,7 +1692,7 @@ class li(DefinedFunction):
         if z.is_zero:
             return True
 
-class Li(DefinedFunction):
+class Li(ExprFunction1Arg):
     r"""
     The offset logarithmic integral.
 
@@ -1738,11 +1758,13 @@ class Li(DefinedFunction):
 
 
     @classmethod
-    def eval(cls, z):
+    def eval(cls, z: Expr) -> Expr | None:
         if z is S.Infinity:
             return S.Infinity
         elif z == S(2):
             return S.Zero
+
+        return None
 
     def fdiff(self, argindex=1):
         arg = self.args[0]
@@ -1768,12 +1790,28 @@ class Li(DefinedFunction):
 #################### TRIGONOMETRIC INTEGRALS ##################################
 ###############################################################################
 
-class TrigonometricIntegral(DefinedFunction):
+class TrigonometricIntegral(ExprFunction1Arg):
     """ Base class for trigonometric integrals. """
+
+    _atzero: ClassVar[Expr]
+    _trigfunc: ClassVar[type[ExprFunction1Arg]]
+
+    if TYPE_CHECKING:
+        @classmethod
+        def _atinf(cls) -> Expr: ...
+
+        @classmethod
+        def _atneginf(cls) -> Expr: ...
+
+        @classmethod
+        def _Ifactor(cls, z: Expr, sign: int) -> Expr: ...
+
+        @classmethod
+        def _minusfactor(cls, z: Expr) -> Expr: ...
 
 
     @classmethod
-    def eval(cls, z):
+    def eval(cls, z: Expr) -> Expr | None:
         if z is S.Zero:
             return cls._atzero
         elif z is S.Infinity:
@@ -1801,7 +1839,7 @@ class TrigonometricIntegral(DefinedFunction):
 
         nz, n = z.extract_branch_factor()
         if n == 0 and nz == z:
-            return
+            return None
         return 2*pi*I*n*cls._trigfunc(0) + cls(nz)
 
     def fdiff(self, argindex=1):
@@ -2329,13 +2367,16 @@ class Chi(TrigonometricIntegral):
 #################### FRESNEL INTEGRALS ########################################
 ###############################################################################
 
-class FresnelIntegral(DefinedFunction):
+class FresnelIntegral(ExprFunction1Arg):
     """ Base class for the Fresnel integrals."""
+
+    _sign: ClassVar[Expr]
+    _trigfunc: ClassVar[type[ExprFunction1Arg]]
 
     unbranched = True
 
     @classmethod
-    def eval(cls, z):
+    def eval(cls, z: Expr) -> Expr | None:
         # Values at positive infinities signs
         # if any were extracted automatically
         if z is S.Infinity:
@@ -2346,7 +2387,7 @@ class FresnelIntegral(DefinedFunction):
             return S.Zero
 
         # Try to pull out factors of -1 and I
-        prefact = S.One
+        prefact: Expr = S.One
         newarg = z
         changed = False
 
@@ -2364,6 +2405,8 @@ class FresnelIntegral(DefinedFunction):
 
         if changed:
             return prefact*cls(newarg)
+
+        return None
 
     def fdiff(self, argindex=1):
         if argindex == 1:
@@ -2947,16 +2990,18 @@ class owens_t(DefinedFunction):
 ###############################################################################
 
 
-class _erfs(DefinedFunction):
+class _erfs(ExprFunction1Arg):
     """
     Helper function to make the $\\mathrm{erf}(z)$ function
     tractable for the Gruntz algorithm.
 
     """
     @classmethod
-    def eval(cls, arg):
+    def eval(cls, arg: Expr) -> Expr | None:
         if arg.is_zero:
             return S.One
+
+        return None
 
     def _eval_aseries(self, n, args0, x, logx):
         from sympy.series.order import Order
@@ -2996,7 +3041,7 @@ class _erfs(DefinedFunction):
         return (S.One - erf(z))*exp(z**2)
 
 
-class _eis(DefinedFunction):
+class _eis(ExprFunction1Arg):
     """
     Helper function to make the $\\mathrm{Ei}(z)$ and $\\mathrm{li}(z)$
     functions tractable for the Gruntz algorithm.

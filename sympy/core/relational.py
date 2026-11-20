@@ -1946,11 +1946,12 @@ def is_eq(lhs: Basic, rhs: Basic, assumptions=None) -> bool | None:
 
         from sympy.functions.elementary.complexes import arg
         # Compare e.g. zoo with 1+I*oo by comparing args
-        arglhs = arg(lhs)
-        argrhs = arg(rhs)
-        # Guard against Eq(nan, nan) -> False
-        if not (arglhs == S.NaN and argrhs == S.NaN):
-            return fuzzy_bool(is_eq(arglhs, argrhs, assumptions))
+        if isinstance(lhs, Expr) and isinstance(rhs, Expr):
+            arglhs = arg(lhs)
+            argrhs = arg(rhs)
+            # Guard against Eq(nan, nan) -> False
+            if not (arglhs == S.NaN and argrhs == S.NaN):
+                return fuzzy_bool(is_eq(arglhs, argrhs, assumptions))
 
     if isinstance(lhs, Expr) and isinstance(rhs, Expr):
         # Do not form a difference if it would completely cancel a

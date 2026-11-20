@@ -5,7 +5,7 @@ from sympy.core import S
 from sympy.core.add import Add
 from sympy.core.cache import cacheit
 from sympy.core.expr import Expr
-from sympy.core.function import DefinedFunction, ArgumentIndexError, _mexpand
+from sympy.core.function import DefinedFunction, ExprFunction1Arg, ArgumentIndexError, _mexpand
 from sympy.core.logic import fuzzy_or, fuzzy_not
 from sympy.core.numbers import Rational, pi, I
 from sympy.core.power import Pow
@@ -1346,7 +1346,7 @@ def jn_zeros(n, k, method="sympy", dps=15):
     return roots
 
 
-class AiryBase(DefinedFunction):
+class AiryBase(ExprFunction1Arg):
     """
     Abstract base class for Airy functions.
 
@@ -1462,11 +1462,10 @@ class airyai(AiryBase):
 
     """
 
-    nargs = 1
     unbranched = True
 
     @classmethod
-    def eval(cls, arg):
+    def eval(cls, arg: Expr) -> Expr | None:
         if arg.is_Number:
             if arg is S.NaN:
                 return S.NaN
@@ -1476,6 +1475,8 @@ class airyai(AiryBase):
                 return S.One / (3**Rational(2, 3) * gamma(Rational(2, 3)))
         if arg.is_zero:
             return S.One / (3**Rational(2, 3) * gamma(Rational(2, 3)))
+
+        return None
 
     def fdiff(self, argindex=1):
         if argindex == 1:
@@ -1634,11 +1635,10 @@ class airybi(AiryBase):
 
     """
 
-    nargs = 1
     unbranched = True
 
     @classmethod
-    def eval(cls, arg):
+    def eval(cls, arg: Expr) -> Expr | None:
         if arg.is_Number:
             if arg is S.NaN:
                 return S.NaN
@@ -1651,6 +1651,8 @@ class airybi(AiryBase):
 
         if arg.is_zero:
             return S.One / (3**Rational(1, 6) * gamma(Rational(2, 3)))
+
+        return None
 
     def fdiff(self, argindex=1):
         if argindex == 1:
@@ -1802,11 +1804,10 @@ class airyaiprime(AiryBase):
 
     """
 
-    nargs = 1
     unbranched = True
 
     @classmethod
-    def eval(cls, arg):
+    def eval(cls, arg: Expr) -> Expr | None:
         if arg.is_Number:
             if arg is S.NaN:
                 return S.NaN
@@ -1815,6 +1816,8 @@ class airyaiprime(AiryBase):
 
         if arg.is_zero:
             return S.NegativeOne / (3**Rational(1, 3) * gamma(Rational(1, 3)))
+
+        return None
 
     def fdiff(self, argindex=1):
         if argindex == 1:
@@ -1961,11 +1964,10 @@ class airybiprime(AiryBase):
 
     """
 
-    nargs = 1
     unbranched = True
 
     @classmethod
-    def eval(cls, arg):
+    def eval(cls, arg: Expr) -> Expr | None:
         if arg.is_Number:
             if arg is S.NaN:
                 return S.NaN
@@ -1978,6 +1980,8 @@ class airybiprime(AiryBase):
 
         if arg.is_zero:
             return 3**Rational(1, 6) / gamma(Rational(1, 3))
+
+        return None
 
 
     def fdiff(self, argindex=1):

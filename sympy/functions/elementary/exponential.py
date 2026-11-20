@@ -3,7 +3,7 @@ from itertools import product
 
 from sympy.core.add import Add
 from sympy.core.cache import cacheit
-from sympy.core.function import (DefinedFunction, ArgumentIndexError, expand_log,
+from sympy.core.function import (DefinedFunction, ExprFunction1Arg, ArgumentIndexError, expand_log,
     expand_mul, FunctionClass, PoleError, expand_multinomial, expand_complex)
 from sympy.core.logic import fuzzy_and, fuzzy_not, fuzzy_or
 from sympy.core.mul import Mul
@@ -36,15 +36,10 @@ if TYPE_CHECKING:
 # p.is_positive.]
 
 
-class ExpBase(DefinedFunction):
+class ExpBase(ExprFunction1Arg):
 
     unbranched = True
     _singularities = (S.ComplexInfinity,)
-
-    if TYPE_CHECKING:
-        @property
-        def args(self) -> tuple[Expr]:
-            ...
 
     @property
     def kind(self):
@@ -282,7 +277,7 @@ class exp(ExpBase, metaclass=ExpMeta):
                         return I
 
     @classmethod
-    def eval(cls, arg):
+    def eval(cls, arg: Expr) -> Expr | None:
         from sympy.calculus import AccumBounds
         from sympy.matrices.matrixbase import MatrixBase
         from sympy.sets.setexpr import SetExpr
@@ -349,7 +344,8 @@ class exp(ExpBase, metaclass=ExpMeta):
                         return S.Zero
                 return None
 
-            coeffs, log_term = [coeff], None
+            coeffs: list[Expr] = [coeff]
+            log_term = None
             for term in Mul.make_args(terms):
                 term_ = logcombine(term)
                 if isinstance(term_, log):
@@ -364,9 +360,9 @@ class exp(ExpBase, metaclass=ExpMeta):
 
             return log_term**Mul(*coeffs) if log_term else None
 
-        elif arg.is_Add:
-            out = []
-            add = []
+        elif isinstance(arg, Add):
+            out: list[Expr] = []
+            add: list[Expr] = []
             argchanged = False
             for a in arg.args:
                 if a is S.One:
@@ -386,6 +382,8 @@ class exp(ExpBase, metaclass=ExpMeta):
 
         if arg.is_zero:
             return S.One
+
+        return None
 
     @property
     def base(self):
@@ -697,7 +695,7 @@ class log(DefinedFunction):
         return exp
 
     @classmethod
-    def eval(cls, arg, base=None):
+    def eval(cls, arg: Expr, base: Expr | None = None) -> Expr | None:
         from sympy.calculus import AccumBounds
         from sympy.sets.setexpr import SetExpr
 
@@ -734,10 +732,10 @@ class log(DefinedFunction):
                 return S.Infinity
             elif arg is S.NaN:
                 return S.NaN
-            elif arg.is_Rational and arg.p == 1:
+            elif isinstance(arg, Rational) and arg.p == 1:
                 return -cls(arg.q)
 
-        if arg.is_Pow and arg.base is S.Exp1 and arg.exp.is_extended_real:
+        if isinstance(arg, Pow) and arg.base is S.Exp1 and arg.exp.is_extended_real:
             return arg.exp
         if isinstance(arg, exp) and arg.exp.is_extended_real:
             return arg.exp
@@ -817,6 +815,8 @@ class log(DefinedFunction):
                             return cls(modulus) + I * (-atan_table[t1])
                         else:
                             return cls(modulus) + I * (pi - atan_table[t1])
+
+        return None
 
     @staticmethod
     @cacheit
