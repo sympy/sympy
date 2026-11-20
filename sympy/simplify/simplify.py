@@ -734,7 +734,11 @@ def simplify(expr, ratio=1.7, measure=count_ops, rational=False, inverse=False, 
         expr = besselsimp(expr)
 
     if expr.has(TrigonometricFunction, HyperbolicFunction):
-        expr = trigsimp(expr, deep=True)
+        independent, dependent = expr.as_independent(Function, as_Add=True)
+        if independent and dependent.is_Add:
+            expr = independent + trigsimp(dependent, deep=True)
+        else:
+            expr = trigsimp(expr, deep=True)
 
     if expr.has(log):
         expr = shorter(expand_log(expr, deep=True), logcombine(expr))
