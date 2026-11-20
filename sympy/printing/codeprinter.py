@@ -515,11 +515,12 @@ class CodePrinter(StrPrinter):
         """Print an operand of a Relational, parenthesized when needed.
 
         Relationals are always parenthesized: ``precedence`` gives Eq and Ne
-        the precedence of their function-call form in str.
+        Mul precedence, so that ``str`` prints ``Eq(x, 1) | Eq(x, 2)``
+        without parentheses, and ``parenthesize`` alone would skip them.
         """
-        if arg.is_Relational or precedence(arg) <= PRECEDENCE["Relational"]:
+        if arg.is_Relational:
             return "(%s)" % self._print(arg)
-        return self._print(arg)
+        return self.parenthesize(arg, PRECEDENCE["Relational"])
 
     def _print_And(self, expr):
         PREC = precedence(expr)
