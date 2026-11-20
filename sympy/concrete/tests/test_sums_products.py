@@ -491,6 +491,16 @@ def test_evalf_symbolic():
     assert expr.evalf() == expr
 
 
+def test_issue_7796():
+    assert Sum(log(k), (k, n, n - 1)).n() == 0
+    assert Sum(1, (k, n, n + 2)).n() == Sum(1, (k, 1, 3)).n()
+    assert Sum(5, (k, n, n)).n() == Sum(5, (k, 1, 1)).n()
+    assert Sum(log(k), (k, 2, n)).n() == Sum(log(k), (k, 2, n))
+    assert Sum(log(k)/k**3, (k, n, oo)).n() == Sum(log(k)/k**3, (k, n, oo))
+    assert Product(log(k), (k, 2, n)).n() == Product(log(k), (k, 2, n))
+    assert Sum(log(k), (k, 2, n)).n(subs={n: 10}) == Sum(log(k), (k, 2, 10)).n()
+
+
 def test_evalf_issue_3273():
     assert Sum(0, (k, 1, oo)).evalf() == 0
 
