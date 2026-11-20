@@ -606,4 +606,3 @@ def test_equations():
         + SingularityFunction(x, 10, 1)/52500
     )
     assert p == q
-
