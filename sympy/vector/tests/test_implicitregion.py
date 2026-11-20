@@ -32,6 +32,8 @@ def test_regular_point():
     assert r2.regular_point() == (S(4)/7, S(9)/7)
     r3 = ImplicitRegion((x, y), x**2 - 2*x*y + 3*y**2 - 2*x - 5*y + 3/2)
     raises(ValueError, lambda: r3.regular_point())
+    r4 = ImplicitRegion((x, y), y**2 - x**3)
+    assert r4.regular_point() == (0, 0)
 
 
 def test_singular_points_and_multiplicty():
