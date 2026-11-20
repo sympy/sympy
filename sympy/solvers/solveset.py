@@ -16,7 +16,7 @@ from sympy.core import (S, Pow, Dummy, pi, Expr, Wild, Mul, Add)
 from sympy.core.containers import Tuple
 from sympy.core.function import (Lambda, expand_complex, AppliedUndef,
                                 expand_log, _mexpand, expand_trig,
-                                nfloat, expand_power_exp)
+                                nfloat, expand_mul, expand_power_exp)
 from sympy.core.mod import Mod
 from sympy.core.numbers import I, Number, Rational, oo
 from sympy.core.intfunc import integer_log
@@ -46,7 +46,7 @@ from sympy.functions.elementary.miscellaneous import real_root
 from sympy.functions.elementary.trigonometric import TrigonometricFunction
 from sympy.logic.boolalg import And, BooleanTrue
 from sympy.sets import (FiniteSet, imageset, Interval, Intersection,
-                        Union, ConditionSet, ImageSet, Complement, Contains)
+                        Union, ConditionSet, ImageSet, Complement, Contains, Range)
 from sympy.sets.sets import Set, ProductSet
 from sympy.matrices import zeros, Matrix, MatrixBase
 from sympy.ntheory.factor_ import divisors
@@ -1654,6 +1654,76 @@ def _invert_modular(modterm, rhs, n, symbol):
     return modterm, rhs
 
 
+def _solve_modular_power(f, symbol, domain):
+    """Solve a concrete affine power modulo an integer on an integer domain."""
+    if isinstance(f, Eq):
+        f = Add(f.lhs, -f.rhs, evaluate=False)
+    if not isinstance(f, Expr):
+        return None
+
+    constant, term = f.as_independent(symbol, as_Add=True)
+    scale, modterm = term.as_independent(symbol, as_Add=False)
+    if not isinstance(modterm, Mod) or not scale.is_Rational or not scale:
+        return None
+
+    dividend, modulus = modterm.args
+    rhs = -constant/scale
+    if not modulus.is_Integer or not modulus or not rhs.is_Rational:
+        return None
+    offset, term = expand_mul(dividend, deep=False).as_independent(
+        symbol, as_Add=True)
+    coefficient, power = term.as_independent(symbol, as_Add=False)
+    if (not offset.is_Rational or not coefficient.is_Rational or not coefficient
+            or not power.is_Pow or not power.base.is_Integer or power.base <= 1):
+        return None
+    shift = power.exp - symbol
+    if not shift.is_Integer:
+        return None
+
+    # Mod can extract a common factor and leave a rational inner RHS.
+    # Scaling both operands by a positive integer scales the remainder too.
+    denominator = number_lcm(number_lcm(coefficient.q, offset.q), rhs.q)
+    coefficient, offset, modulus, rhs = (
+        int(denominator*value) for value in (coefficient, offset, modulus, rhs))
+    base, shift = int(power.base), int(shift)
+    if rhs % modulus != rhs:
+        return S.EmptySet
+    target = (rhs - offset) % modulus
+
+    # A negative power can contribute only if its denominator divides
+    # the full coefficient after clearing denominators.
+    value = coefficient
+    exponent = -shift
+    negative = []
+    while value % base == 0:
+        value //= base
+        exponent -= 1
+        if value % modulus == target:
+            negative.append(exponent)
+    result = FiniteSet(*negative)
+
+    residue = coefficient % modulus
+    multiplier = base % modulus
+    step = lambda value: value*multiplier % modulus
+    period, start = next(cycle_length(step, residue, nmax=1024))
+    if start is None:
+        if denominator != 1 or domain.intersect(result) is not S.EmptySet:
+            return ConditionSet(symbol, Eq(f, 0, evaluate=False), domain)
+        return None
+
+    for exponent in range(start + period):
+        if residue == target:
+            if exponent < start:
+                result += FiniteSet(exponent - shift)
+            else:
+                n = Dummy('n', integer=True)
+                result += ImageSet(
+                    Lambda(n, period*n + exponent - shift), S.Naturals0)
+            break
+        residue = step(residue)
+    return result if domain is S.Integers else domain.intersect(result)
+
+
 def _solve_modular(f, symbol, domain):
     r"""
     Helper function for solving modular equations of type ``A - Mod(B, C) = 0``,
@@ -2533,6 +2603,16 @@ def solveset(f, symbol=None, domain=S.Complexes):
         f, s, swap = recast_to_symbols([f], [symbol])
         # the xreplace will be needed if a ConditionSet is returned
         return solveset(f[0], s[0], domain).xreplace(swap)
+
+    # Replacing the symbol can re-evaluate Mod. Solve this restricted
+    # family using its original coefficients first.
+    if f.has(Mod) and (
+        isinstance(domain, Range) and all(arg.is_Integer for arg in domain.args)
+        or domain.is_subset(S.Integers)
+    ):
+        modular = _solve_modular_power(f, symbol, domain)
+        if modular is not None:
+            return modular
 
     # solveset should ignore assumptions on symbols
     newsym = None

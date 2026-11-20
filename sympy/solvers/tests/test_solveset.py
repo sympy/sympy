@@ -3416,10 +3416,7 @@ def test_solve_modular():
             ImageSet(Lambda(n, n + 2), S.Naturals0))
     assert solveset(Mod(6**x, 12) - 6, x, S.Integers) == FiniteSet(1)
     assert solveset(Mod(2**x, 15) - 3, x, S.Integers) is S.EmptySet
-    # The residual non-Pow case still falls back safely.
-    expr = Mod(2*2**x - 1, 42)
-    assert solveset(expr, x, S.Integers).dummy_eq(
-        ConditionSet(x, Eq(expr, 0), S.Integers))
+    assert solveset(Mod(2*2**x - 1, 42), x, S.Integers) == FiniteSet(-1)
     assert dumeq(solveset(Mod(2*2**x - 2, 42), x, S.Integers),
             ImageSet(Lambda(n, 6*n), S.Naturals0))
     # Do not use discrete logarithms for fractional exponents or unit bases.
@@ -3476,6 +3473,56 @@ def test_solve_modular():
     assert dumeq(solveset(c - Mod(a**(n - 4)*b, m), n, S.Integers),
             Intersection(ImageSet(Lambda(n, 2147483646*n + 104), S.Naturals0),
             S.Integers))
+
+def test_solve_modular_power_integer_domain():
+    from fractions import Fraction
+
+    cases = [
+        (2, 2, -1, 42, 0, 0), (6, 3, -6, 2, 0, 0),
+        (4, 2, -1, 3, 0, 0), (-8, 2, 5, -7, -1, 0),
+        (8, 2, 0, 1, 0, 0), (8, 2, 0, -1, 0, 0),
+        (3, 2, -1, 6, 0, 0), (3, 2, 0, 4, 2, 0),
+        (1, 3, -3, 2, 0, 1), (4, 2, -1, -3, -2, 0),
+        (2, 2, -1, -3, 1, 0), (2, 2, 0, 4, 1, 0),
+    ]
+    for coefficient, base, offset, modulus, remainder, shift in cases:
+        for evaluate in (True, False):
+            dividend = coefficient*base**(x + shift) + offset
+            expr = Mod(dividend, modulus, evaluate=evaluate) - remainder
+            for domain in (S.Integers, Range(-6, 7, 2)):
+                result = solveset(expr, x, domain)
+                assert not isinstance(result, ConditionSet), (
+                    coefficient, base, offset, modulus, remainder,
+                    shift, evaluate, domain, expr, result)
+                for exponent in range(-12, 13):
+                    value = coefficient*Fraction(base)**(exponent + shift) + offset
+                    expected = value % modulus == remainder and exponent in domain
+                    assert (exponent in result) == expected, (
+                        expr, domain, exponent, result)
+
+    term = Mod(2*2**x - 1, 42, evaluate=False)
+    assert solveset(Eq(2*term, 0, evaluate=False), x, S.Integers) == FiniteSet(-1)
+    assert solveset(term, x, S.Naturals0) is S.EmptySet
+    scaled = 2*Mod(2**x, 2, evaluate=False) - 1
+    assert solveset(scaled, x, S.Integers) == FiniteSet(-1)
+    assert solveset(Mod(0*2**x - 2, 2), x, S.Integers) is S.Integers
+
+
+def test_solve_modular_power_cycle_limit():
+    small = Mod(2*2**x - 1, 3**6, evaluate=False)
+    result = solveset(small, x, S.Integers)
+    assert -1 in result
+    assert 485 in result
+    assert 484 not in result
+
+    # The negative prefix alone is not a complete answer.
+    large = Mod(2*2**x - 1, 3**7, evaluate=False)
+    result = solveset(large, x, S.Integers)
+    assert isinstance(result, ConditionSet)
+    assert -1 in result
+    assert 1457 in result
+    assert -2 not in result
+
 
 # end of modular tests
 
