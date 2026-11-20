@@ -41,8 +41,10 @@ class LarkLaTeXParser:
 
     transformer : str, optional
 
-        The name of the Transformer class to use. If set to ``None``, it uses the
-        default transformer class, which is :py:func:`TransformToSymPyExpr`.
+        The Transformer class to use. If set to ``None``, it uses the default
+        transformer class, which is :py:func:`TransformToSymPyExpr`. A new
+        instance is made for each parse, with the ``evaluate`` and ``locals``
+        keyword arguments given to the parse.
 
     """
     def __init__(self, print_debug_output=False, transform=True, grammar_file=None, transformer=None):
@@ -74,11 +76,11 @@ class LarkLaTeXParser:
         self.transform_expr = transform
 
         if transformer is None:
-            self.transformer = TransformToSymPyExpr()
+            self.transformer = TransformToSymPyExpr
         else:
-            self.transformer = transformer()
+            self.transformer = transformer
 
-    def doparse(self, s: str, locals=None):
+    def doparse(self, s: str, locals=None, evaluate=True):
         if self.print_debug_output:
             _lark.logger.setLevel(logging.DEBUG)
 
@@ -97,14 +99,14 @@ class LarkLaTeXParser:
             # print the `parse_tree` variable
             _lark.logger.debug(parse_tree.pretty())
 
-        sympy_expression = self._transform(parse_tree, locals)
+        sympy_expression = self._transform(parse_tree, locals, evaluate)
 
         if self.print_debug_output:
             _lark.logger.debug("SymPy expression = %s", sympy_expression)
 
         return sympy_expression
 
-    def doparse_all(self, s: str, locals=None):
+    def doparse_all(self, s: str, locals=None, evaluate=True):
         """The list of the readings of ``s``, see :func:`parse_latex_lark_all`.
 
         When ``transform`` is ``False``, the list holds the parse trees of the
@@ -118,7 +120,7 @@ class LarkLaTeXParser:
 
         expressions = []
         for tree in trees:
-            expression = self._transform(tree, locals)
+            expression = self._transform(tree, locals, evaluate)
             if expression not in expressions:
                 expressions.append(expression)
         return expressions
@@ -130,10 +132,8 @@ class LarkLaTeXParser:
 
         return self.parser.parse(s)
 
-    def _transform(self, parse_tree, locals):
-        transformer = self.transformer
-        if locals:
-            transformer = transformer.with_locals(locals)
+    def _transform(self, parse_tree, locals, evaluate):
+        transformer = self.transformer(evaluate=evaluate, locals=locals)
 
         try:
             return transformer.transform(parse_tree)
@@ -234,7 +234,7 @@ if _lark is not None:
 
 
 @doctest_depends_on(modules=('lark',))
-def parse_latex_lark(s: str, locals=None):
+def parse_latex_lark(s: str, locals=None, evaluate=True):
     r"""
     Experimental LaTeX parser using Lark.
 
@@ -254,7 +254,14 @@ def parse_latex_lark(s: str, locals=None):
         the trigonometric and hyperbolic functions like ``\sin``, the functions
         ``\exp``, ``\ln``, ``\log`` and ``\lg``, and any function written as
         ``\operatorname{name}``. The value is an expression for a constant,
-        and for a function it is what is called with the arguments.
+        and for a function it is what is called with the arguments and the
+        ``evaluate`` keyword argument.
+
+    evaluate : bool, optional
+        If ``False``, the expressions are built with ``evaluate=False``, so that
+        they are kept as they are written instead of being simplified.
+        Integrals, sums, products, limits and derivatives are never evaluated.
+        Defaults to ``True``.
 
     Examples
     ========
@@ -268,15 +275,19 @@ def parse_latex_lark(s: str, locals=None):
     >>> f = Function("erf")
     >>> parse_latex_lark(r"\operatorname{erf}(x)", locals={r"\operatorname{erf}": f}).func == f
     True
+    >>> parse_latex_lark(r"x + x")
+    2*x
+    >>> parse_latex_lark(r"x + x", evaluate=False)
+    x + x
 
     """
     if _lark is None:
         raise ImportError("Lark is probably not installed")
-    return _lark_latex_parser.doparse(s, locals=locals)
+    return _lark_latex_parser.doparse(s, locals=locals, evaluate=evaluate)
 
 
 @doctest_depends_on(modules=('lark',))
-def parse_latex_lark_all(s: str, locals=None):
+def parse_latex_lark_all(s: str, locals=None, evaluate=True):
     r"""
     Experimental LaTeX parser using Lark, returning all the readings of an
     ambiguous input.
@@ -304,7 +315,7 @@ def parse_latex_lark_all(s: str, locals=None):
     """
     if _lark is None:
         raise ImportError("Lark is probably not installed")
-    return _lark_latex_parser.doparse_all(s, locals=locals)
+    return _lark_latex_parser.doparse_all(s, locals=locals, evaluate=evaluate)
 
 
 def _pretty_print_lark_trees(tree, indent=0, show_expr=True):
