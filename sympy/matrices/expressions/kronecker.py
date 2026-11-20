@@ -119,7 +119,7 @@ class KroneckerProduct(MatrixExpr):
         return super().__new__(cls, *args)
 
     @property
-    def is_ZeroMatrix(self):
+    def is_zero_matrix(self):
         return any(_is_zero_mat(arg) for arg in self.args)
 
     @property
@@ -385,6 +385,8 @@ def kronecker_product_extract_singleton_matrices(kron: KroneckerProduct):
 
 def _is_zero_mat(m):
     if isinstance(m, MatrixBase):
+        return m.is_zero_matrix
+    if isinstance(m, KroneckerProduct):
         return m.is_zero_matrix
     return bool(m.is_ZeroMatrix)
 

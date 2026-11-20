@@ -266,10 +266,11 @@ def test_KroneckerProduct_zeromatrix():
     Z_sym = ZeroMatrix(n, m)
     Z_sq = ZeroMatrix(m, m)
 
-    # Unevaluated KroneckerProduct preserves arguments but knows is_ZeroMatrix
+    # Unevaluated KroneckerProduct preserves arguments but knows is_zero_matrix
     kp1 = KroneckerProduct(A, Z_sq)
-    assert kp1.is_ZeroMatrix is True
-    assert KroneckerProduct(A, B).is_ZeroMatrix is False
+    assert kp1.is_zero_matrix is True
+    assert kp1.is_ZeroMatrix is False
+    assert KroneckerProduct(A, B).is_zero_matrix is False
 
     # doit() canonicalization evaluates to ZeroMatrix
     assert kp1.doit() == ZeroMatrix(n*m, m**2)
