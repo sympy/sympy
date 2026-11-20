@@ -1573,6 +1573,17 @@ class MathMLPresentationPrinter(MathMLPrinterBase):
         msub.appendChild(mi)
         return msub
 
+    def _print_BaseDyadic(self, e):
+        mrow = self.dom.createElement('mrow')
+        mrow.appendChild(self._l_paren())
+        mrow.appendChild(self._print(e.args[0]))
+        mo = self.dom.createElement('mo')
+        mo.appendChild(self.dom.createTextNode('|'))
+        mrow.appendChild(mo)
+        mrow.appendChild(self._print(e.args[1]))
+        mrow.appendChild(self._r_paren())
+        return mrow
+
     def _print_VectorZero(self, e):
         mover = self.dom.createElement('mover')
         mi = self.dom.createElement('mi')
