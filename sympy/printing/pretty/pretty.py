@@ -913,7 +913,6 @@ class PrettyPrinter(Printer):
                 # term does not start with a minus sign
                 if not coeff.is_Add and coeff.could_extract_minus_sign():
                     s = prettyForm(*stringPict.next(s, ' '))
-                    pform = self._print(item)
                 else:
                     s = prettyForm(*stringPict.next(s, ' + '))
                 s = prettyForm(*stringPict.next(s, pform))
