@@ -103,7 +103,7 @@ and so on where, for example, the value of $f(x)$ at $x = x_{0}$ is $y_{0}$. For
 power series solutions, if no initial conditions are specified $f(0)$ is assumed
 to be $C_{0}$ and the power series solution is calculated about $0$.
 
-Here is an example of setting the initial values for functions, namely namely
+Here is an example of setting the initial values for functions, namely
 $f(0) = 1$ and $g(2) = 3$:
 
 ```py
