@@ -6,6 +6,7 @@ from sympy.assumptions import Q
 from sympy.core.basic import Basic
 from sympy.core.containers import Tuple
 from sympy.core.expr import Expr
+from sympy.core.exprtools import linear_coeffs, NonlinearError
 from sympy.core.function import Lambda
 from sympy.core.logic import fuzzy_not, fuzzy_or, fuzzy_and
 from sympy.core.mod import Mod
@@ -19,6 +20,7 @@ from sympy.core.sympify import _sympify, sympify, _sympy_converter
 from sympy.functions.elementary.integers import ceiling, floor
 from sympy.functions.elementary.trigonometric import sin, cos
 from sympy.logic.boolalg import And, Or
+from sympy.polys.polytools import cancel
 from .sets import tfn, Set, Interval, Union, FiniteSet, ProductSet, SetKind
 from sympy.utilities.misc import filldedent
 
@@ -465,6 +467,22 @@ class ImageSet(Set):
         sig = self.lamda.signature
         variables = self.lamda.variables
         base_sets = self.base_sets
+
+        # Invert affine images directly when the slope is known to be
+        # nonzero. This also allows symbolic candidates to be checked
+        # against the domain of the ImageSet parameter.
+        if (len(variables) == 1 and sig[0].is_symbol
+                and isinstance(expr, Expr) and isinstance(other, Expr)):
+            try:
+                coeff, constant = linear_coeffs(expr, variables[0])
+            except NonlinearError:
+                pass
+            else:
+                if coeff.is_zero is False and coeff.is_finite is True:
+                    preimage = cancel((other - constant)/coeff)
+                    membership = base_sets[0].contains(preimage)
+                    if membership in (S.true, S.false):
+                        return membership
 
         # Use dummy symbols for ImageSet parameters so they don't match
         # anything in other
