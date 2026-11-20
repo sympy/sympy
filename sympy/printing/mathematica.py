@@ -162,8 +162,8 @@ class MCodePrinter(CodePrinter):
         return res
 
     def _print_Relational(self, expr):
-        lhs_code = self._print(expr.lhs)
-        rhs_code = self._print(expr.rhs)
+        lhs_code = self._print_relational_operand(expr.lhs)
+        rhs_code = self._print_relational_operand(expr.rhs)
         op = expr.rel_op
         return "{} {} {}".format(lhs_code, op, rhs_code)
 

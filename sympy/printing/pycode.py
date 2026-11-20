@@ -254,8 +254,9 @@ class AbstractPythonCodePrinter(CodePrinter):
             '>=' :'greater_equal',
         }
         if expr.rel_op in op:
-            lhs = self._print(expr.lhs)
-            rhs = self._print(expr.rhs)
+            PREC = PRECEDENCE["Relational"]
+            lhs = self.parenthesize(expr.lhs, PREC, strict=True)
+            rhs = self.parenthesize(expr.rhs, PREC, strict=True)
             return '({lhs} {op} {rhs})'.format(op=expr.rel_op, lhs=lhs, rhs=rhs)
         return super()._print_Relational(expr)
 
