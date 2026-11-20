@@ -737,17 +737,10 @@ def rsolve_hyper(coeffs, f, n, **hints):
                 # this indicates that the term y(n_root) is zero, and one should
                 # start the product with the term y(n_root + 1).
                 n0 = 0
-                num, den = ratio.as_numer_denom()
-                for n_root in roots(den, n).keys():
+                for n_root in roots(ratio.as_numer_denom()[1], n).keys():
                     if n_root.has(I):
                         return None
                     elif (n0 < (n_root + 1)) == True:
-                        n0 = n_root + 1
-                # Likewise a nonnegative integer root of the numerator makes
-                # every term from y(n_root + 1) on zero, e.g. the product of
-                # n**2/(n + 1)**2 must start at 1 to give 1/n**2.
-                for n_root in roots(num, n).keys():
-                    if n_root.is_integer and (n0 < (n_root + 1)) == True:
                         n0 = n_root + 1
                 K = product(ratio, (n, n0, n - 1))
                 if K.has(factorial, FallingFactorial, RisingFactorial):
