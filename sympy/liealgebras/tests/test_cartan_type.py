@@ -1,6 +1,7 @@
 from __future__ import annotations
 from sympy.liealgebras.cartan_type import CartanType, Standard_Cartan
 from sympy.testing.pytest import raises
+from sympy import eye, Matrix
 
 def test_Standard_Cartan():
     c = CartanType("A4")
@@ -15,3 +16,16 @@ def test_Standard_Cartan():
 
     # Issue 29537
     raises(ValueError, lambda: CartanType("X5"))
+
+def test_CartanType():
+    c = CartanType("A4")
+
+    omega = c.omega_matrix()
+    cocar = c.cocartan_matrix()
+
+    assert cocar * omega.T == eye(4)
+
+    c2 = CartanType("A2")
+    assert c2.omega_matrix() == Matrix([
+                        ['2/3', '-1/3', '-1/3'],
+                        ['1/3',  '1/3', '-2/3']])
