@@ -1479,6 +1479,13 @@ def test_latex_limits():
     # bi-directional limit
     assert latex(Limit(f(x), x, 0, dir='+-')) == \
         r"\lim_{x \to 0} f{\left(x \right)}"
+    assert latex(Limit(f(x), x, a + b)) == \
+        r"\lim_{x \to \left(a + b\right)^+} f{\left(x \right)}"
+    assert latex(Limit(f(x), x, a**2, "-")) == \
+        r"\lim_{x \to \left(a^{2}\right)^-} f{\left(x \right)}"
+    assert latex(Limit(f(x), x, -a)) == \
+        r"\lim_{x \to \left(- a\right)^+} f{\left(x \right)}"
+    assert latex(Limit(f(x), x, a)) == r"\lim_{x \to a^+} f{\left(x \right)}"
 
 
 def test_latex_log():
