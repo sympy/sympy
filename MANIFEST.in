@@ -18,7 +18,6 @@ exclude asv.conf.actions.json
 exclude banner.svg
 exclude codecov.yml
 exclude conftest.py
-exclude requirements-dev.txt
 
 include bin/isympy
 exclude MANIFEST.in

@@ -26,8 +26,9 @@ jobs:
           command: |
             sudo apt update
             sudo apt install imagemagick graphviz librsvg2-bin
+            python -m pip install --upgrade pip
             cd doc
-            pip install -r requirements.txt
+            pip install --group ../pyproject.toml:docs
       - run:
           name: Build docs
           no_output_timeout: 25m

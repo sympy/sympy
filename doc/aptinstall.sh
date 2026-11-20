@@ -1,12 +1,12 @@
 #!/usr/bin/env bash
 #
 # Install non-Python dependencies needed to build the docs on Ubuntu. A
-# requirements.txt file is provided to install the Python dependencies.
+# The docs dependency group in pyproject.toml specifies Python dependencies.
 #
 # From a fresh install of Ubuntu:
 #
 #    $ doc/aptinstall.sh
-#    $ pip install -r doc/requirements.txt
+#    $ python -m pip install --group docs
 #
 # Then you should be set to build the docs.
 
