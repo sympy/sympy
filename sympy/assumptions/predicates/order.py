@@ -91,19 +91,19 @@ class NonNegativePredicate(Predicate):
 
 class NonZeroPredicate(Predicate):
     """
-    Nonzero real number predicate.
+    Nonzero complex number predicate.
 
     Explanation
     ===========
 
-    ``ask(Q.nonzero(x))`` is true iff ``x`` is real and ``x`` is not zero.  Note in
-    particular that ``Q.nonzero(x)`` is false if ``x`` is not real.  Use
-    ``~Q.zero(x)`` if you want the negation of being zero without any real
-    assumptions.
+    ``ask(Q.nonzero(x))`` is true iff ``x`` is a finite complex number and
+    ``x`` is not zero. In particular, ``Q.nonzero(x)`` does not imply that
+    ``x`` is real.
 
     A few important facts about nonzero numbers:
 
-    - ``Q.nonzero`` is logically equivalent to ``Q.positive | Q.negative``.
+    - ``Q.nonzero(x)`` is logically equivalent to
+        ``Q.complex(x) & ~Q.zero(x)``.
 
     - See the documentation of ``Q.real`` for more information about
         related facts.
@@ -113,7 +113,7 @@ class NonZeroPredicate(Predicate):
 
     >>> from sympy import Q, ask, symbols, I, oo
     >>> x = symbols('x')
-    >>> print(ask(Q.nonzero(x), ~Q.zero(x)))
+    >>> print(ask(Q.real(x), Q.nonzero(x)))
     None
     >>> ask(Q.nonzero(x), Q.positive(x))
     True
@@ -122,7 +122,7 @@ class NonZeroPredicate(Predicate):
     >>> ask(Q.nonzero(0))
     False
     >>> ask(Q.nonzero(I))
-    False
+    True
     >>> ask(~Q.zero(I))
     True
     >>> ask(Q.nonzero(oo))

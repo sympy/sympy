@@ -151,14 +151,15 @@ def _(expr, assumptions):
 
 @NonZeroPredicate.register(Expr)
 def _(expr, assumptions):
-    ret = expr.is_nonzero
-    if ret is None:
-        raise MDNotImplementedError
-    return ret
+    is_complex = _ask_recursive(Q.complex(expr), assumptions)
+    if is_complex is False:
+        return False
+    return fuzzy_and([is_complex, fuzzy_not(expr.is_zero)])
 
 @NonZeroPredicate.register(Basic)
 def _(expr, assumptions):
-    if _ask_recursive(Q.real(expr), assumptions) is False:
+    is_complex = _ask_recursive(Q.complex(expr), assumptions)
+    if is_complex is False:
         return False
     if expr.is_number:
         # if there are no symbols just evalf
@@ -166,7 +167,7 @@ def _(expr, assumptions):
         def nonz(i):
             if getattr(i, '_prec', 1) != 1:
                 return i != 0
-        return fuzzy_or(nonz(i) for i in i.as_real_imag())
+        return fuzzy_and([is_complex, fuzzy_or(nonz(i) for i in i.as_real_imag())])
 
 @NonZeroPredicate.register(Add)
 def _(expr, assumptions):
@@ -190,7 +191,7 @@ def _(expr, assumptions):
             _ask_recursive(Q.nonzero(expr.base), assumptions),
             _ask_recursive(Q.zero(expr.exp), assumptions)
         ]),
-        _ask_recursive(Q.real(expr), assumptions)
+        _ask_recursive(Q.complex(expr.exp), assumptions)
     ])
 
 @NonZeroPredicate.register(Abs)

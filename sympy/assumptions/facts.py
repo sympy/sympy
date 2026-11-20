@@ -69,7 +69,7 @@ def get_number_facts(x = None):
         Equivalent(Q.real(x), Q.negative(x) | Q.zero(x) | Q.positive(x)),
         Equivalent(Q.integer(x), Q.even(x) | Q.odd(x)),
         Equivalent(Q.nonpositive(x), Q.negative(x) | Q.zero(x)),
-        Equivalent(Q.nonzero(x), Q.negative(x) | Q.positive(x)),
+        Equivalent(Q.nonzero(x), Q.complex(x) & ~Q.zero(x)),
         Equivalent(Q.nonnegative(x), Q.zero(x) | Q.positive(x)),
         Equivalent(Q.extended_real(x),
                    Q.negative_infinite(x) | Q.negative(x) | Q.zero(x) | Q.positive(x) | Q.positive_infinite(x)),
