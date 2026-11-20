@@ -3,6 +3,7 @@ from __future__ import annotations
 
 from sympy.external.gmpy import GROUND_TYPES
 
+from sympy import symbols
 from sympy.core.numbers import (AlgebraicNumber, E, Float, I, Integer,
     Rational, oo, pi, _illegal)
 from sympy.core.singleton import S
@@ -1495,3 +1496,12 @@ def test_Domain_conjugate():
     a = K.convert(2*exp(2*pi*I/12) + 3*exp(10*pi*I/12) - 4*exp(14*pi*I/12))
     b = K.convert(2*exp(-2*pi*I/12) + 3*exp(-10*pi*I/12) - 4*exp(-14*pi*I/12))
     assert K.conjugate(a) == b
+
+
+def test_PolynomialRing_init():
+    x,y,z = symbols("x,y,z")
+    for DOM in (ZZ, QQ):
+        assert len(PolynomialRing(DOM, "x").gens) == 1
+        assert len(PolynomialRing(DOM, x).gens) == 1
+        assert len(PolynomialRing(DOM, (x,y,z)).gens) == 3
+        assert len(PolynomialRing(DOM, "x,y,z").gens) == 3
