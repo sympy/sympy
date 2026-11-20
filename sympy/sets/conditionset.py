@@ -229,19 +229,12 @@ with
         sym, cond, base = self.args
         dsym = sym.subs(old, adummy)
         insym = dsym.has(adummy)
-        # prioritize changing a symbol in the base
-        newbase = base.subs(old, new)
-        if newbase != base:
-            if not insym:
-                cond = cond.subs(old, new)
-            return self.func(sym, cond, newbase)
-        if insym:
-            pass  # no change of bound symbols via subs
-        elif getattr(new, '_diff_wrt', False):
+        if not insym:
             cond = cond.subs(old, new)
-        else:
-            pass  # let error about the symbol raise from __new__
-        return self.func(sym, cond, base)
+            if cond is S.false:
+                return S.EmptySet
+        newbase = base.subs(old, new)
+        return self.func(sym, cond, newbase)
 
     def _kind(self):
         return SetKind(self.sym.kind)
