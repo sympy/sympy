@@ -2,7 +2,7 @@ from __future__ import annotations
 from sympy.assumptions.ask import (Q, ask)
 from sympy.core.add import Add
 from sympy.core.containers import Tuple
-from sympy.core.function import (Derivative, Function, diff)
+from sympy.core.function import (Derivative, Function, diff, expand_complex)
 from sympy.core.mod import Mod
 from sympy.core.mul import Mul
 from sympy.core import (GoldenRatio, TribonacciConstant)
@@ -2788,3 +2788,10 @@ def test_issue_26504_solve_empty_symbols():
     assert solve([log(2) + log(3) - log(6)]) == {}
     assert solve([x - 1, cos(1)**2 + sin(1)**2 - 1], x) == {x: 1}
     assert solve([x - 1, cos(1)**2 + sin(1)**2 - 2], x) == []
+
+
+def test_issue_30837():
+    p, q = symbols('p q', real=True)
+    sols = solve(x**3 + p*x + q, x)
+    specialized = {expand_complex(s.subs({p: 0, q: -1})) for s in sols}
+    assert specialized == set(solve(x**3 - 1, x))
