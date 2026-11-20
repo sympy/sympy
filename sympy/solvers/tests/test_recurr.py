@@ -136,6 +136,16 @@ def test_rsolve_hyper_nonlinear_divisors():
     assert rsolve((n + a)**2*y(n + 1) - y(n), y(n)) == C0/rf(a, n)**2
 
 
+def test_rsolve_hyper_ratio_numerator_root():
+    # the product of the ratio n/(n + 1) must start at 1, not at 0 where its
+    # first factor is zero; otherwise the solution is zero for all n > 0
+    assert rsolve((n + 1)*y(n + 1) - n*y(n), y(n)) == C0/n
+    assert rsolve((n + 1)**2*y(n + 1) - n**2*y(n), y(n)) == C0/n**2
+    assert rsolve((n + 2)**2*y(n + 2) - 2*(n + 1)**2*y(n + 1) + n**2*y(n),
+                  y(n)) == C0/n**2 + C1/n
+    assert rsolve((n - 2)*y(n + 1) - (n - 3)*y(n), y(n)) == C0/(n - 3)
+
+
 def test_rsolve_0_sol_homogeneous():
     # fixed by cherry-pick from
     # https://github.com/diofant/diofant/commit/e1d2e52125199eb3df59f12e8944f8a5f24b00a5
