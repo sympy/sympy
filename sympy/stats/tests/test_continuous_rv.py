@@ -25,6 +25,7 @@ from sympy.integrals.integrals import Integral
 from sympy.logic.boolalg import (And, Or)
 from sympy.sets.sets import Interval
 from sympy.simplify.simplify import simplify
+from sympy.series.limits import limit
 from sympy.utilities.lambdify import lambdify
 from sympy.functions.special.error_functions import erfinv
 from sympy.functions.special.hyper import meijerg
@@ -254,7 +255,9 @@ def test_moment_generating_function():
     assert mgf == b*(-a*t)**b*uppergamma(-b, -a*t)
 
     mgf = moment_generating_function(QuadraticU('x', a, b))(t)
-    assert str(mgf) == ('(3*(t*((a + b)**2 - 4*b) + 4)*exp(b*t) - 3*(t*(a**2 + 2*a*(b - 2) + b**2) + 4)*exp(a*t))/(t**2*(a - b)**3)')
+    assert mgf == (3*(exp(a*t)*(t**2*(a - b)**2 - 4*t*(a - b) + 8)
+                      - exp(b*t)*(t**2*(a - b)**2 + 4*t*(a - b) + 8))
+                     / (t**3*(a - b)**3))
 
     mgf = moment_generating_function(RaisedCosine('x', a, b))(t)
     assert mgf == pi**2*exp(a*t)*sinh(b*t)/(b*t*(b**2*t**2 + pi**2))
@@ -320,7 +323,7 @@ def test_moment_generating_function():
     assert mgf.diff(t).subs(t, 0) == expint(1, 0)
 
     mgf = moment_generating_function(QuadraticU('x', 1, 2))(t)
-    assert mgf.diff(t).subs(t, 1) == -12*e - 3*exp(2)
+    assert mgf.diff(t).subs(t, 1) == 60*e - 21*exp(2)
 
     mgf = moment_generating_function(RaisedCosine('x', 1, 1))(t)
     assert mgf.diff(t).subs(t, 1) == -2*e*pi**2*sinh(1)/\
@@ -1229,13 +1232,26 @@ def test_quadratic_u():
 
     X = QuadraticU("x", a, b)
     Y = QuadraticU("x", 1, 2)
+    t = Symbol("t", real=True)
 
     assert pspace(X).domain.set == Interval(a, b)
     # Tests _moment_generating_function
-    assert moment_generating_function(Y)(1)  == -15*exp(2) + 27*exp(1)
-    assert moment_generating_function(Y)(2) == -9*exp(4)/2 + 21*exp(2)/2
+    assert moment_generating_function(Y)(1) == 15*exp(2) - 39*e
+    assert moment_generating_function(Y)(2) == 3*exp(4)/2 - 15*exp(2)/2
+    assert simplify(limit(moment_generating_function(X)(t), t, 0)) == 1
 
-    assert characteristic_function(Y)(1) == 3*I*(-1 + 4*I)*exp(I*exp(2*I))
+    # The characteristic function is the MGF evaluated at an imaginary argument
+    assert simplify(characteristic_function(X)(t)
+                    - moment_generating_function(X)(I*t)) == 0
+    assert characteristic_function(Y)(1) == -3*I*((7 + 4*I)*exp(I) - (7 - 4*I)*exp(2*I))
+
+    # The moments follow from the MGF; the sign of the MGF used to be wrong,
+    # which made these negative (#30782)
+    assert E(Y) == Rational(3, 2)
+    assert variance(Y) == Rational(3, 20)
+    assert E(X) == (a + b)/2
+    assert variance(X).expand() == (3*(b - a)**2/20).expand()
+
     assert density(X)(x) == (Piecewise((12*(x - a/2 - b/2)**2/(-a + b)**3,
                           And(x <= b, a <= x)), (0, True)))
 
