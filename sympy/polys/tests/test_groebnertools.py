@@ -16,7 +16,7 @@ from sympy.polys.orderings import lex, grlex
 from sympy.polys.rings import ring, xring
 from sympy.polys.domains import ZZ, QQ
 
-from sympy.testing.pytest import slow
+from sympy.testing.pytest import slow, raises
 from sympy.polys import polyconfig as config
 
 def _do_test_groebner():
@@ -532,3 +532,30 @@ def test_is_reduced():
     assert is_reduced([f, g], R) ==  False
     G = groebner([f, g], R)
     assert is_reduced(G, R) == True
+
+
+def test_groebner_zero_polynomial():
+    R, x, y = ring("x,y", QQ, lex)
+
+    assert groebner([R.zero, x], R) == [x]
+    assert groebner([x, R.zero], R) == [x]
+    assert groebner([x, R.zero, y], R) == [x, y]
+    assert groebner([R.zero, x, R.zero, y], R) == [x, y]
+    assert groebner([R.zero], R) == []
+    assert groebner([R.zero, R.zero], R) == []
+    assert groebner([], R) == []
+
+    # test with f5b
+    assert groebner([R.zero, x], R, method="f5b") == [x]
+    assert groebner([x, R.zero, y], R, method="f5b") == [x, y]
+    assert groebner([R.zero], R, method="f5b") == []
+
+    # test with non-field domain (ZZ)
+    RZ, xz, yz = ring("x,y", ZZ, lex)
+    assert groebner([RZ.zero, xz], RZ) == [xz]
+    assert groebner([xz, RZ.zero, yz], RZ) == [xz, yz]
+    assert groebner([RZ.zero], RZ) == []
+
+    # test contract enforcement against non-polynomial types
+    raises(AttributeError, lambda: groebner([0, x], R))
+    raises(AttributeError, lambda: groebner([None, x], R))
