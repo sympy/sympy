@@ -822,3 +822,10 @@ def test_dup_isolate_all_roots():
 
     f = x**5 + x**4 - 2*x**3 - 2*x**2 + x + 1
     raises(NotImplementedError, lambda: R.dup_isolate_all_roots(f))
+
+def test_dup_count_real_roots_unsupported_domain():
+    from sympy.polys.polytools import Poly
+    from sympy.core.symbol import symbols
+    x, a, b, c = symbols("x a b c")
+    p = Poly(x**7 + a*x**3 + b*x**2 + c, x)
+    raises(DomainError, lambda: p.count_roots())
