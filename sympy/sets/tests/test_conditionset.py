@@ -11,6 +11,7 @@ from sympy.core.relational import (Eq, Ne)
 from sympy.core.singleton import S
 from sympy.core.symbol import (Symbol, symbols)
 from sympy.functions.elementary.complexes import Abs
+from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.functions.elementary.trigonometric import (asin, sin)
 from sympy.logic.boolalg import And
 from sympy.matrices.dense import Matrix
@@ -193,6 +194,12 @@ def test_subs_CondSet():
     assert (0, 1) in ConditionSet((x, y), x + y < 3, S.Integers**2)
 
     raises(TypeError, lambda: ConditionSet(n, n < -10, Interval(0, 10)))
+
+    a = Symbol('a')
+    assert ConditionSet(x, a >= 0, Interval(-sqrt(a), sqrt(a))).subs(a, -1) == S.EmptySet
+    assert ConditionSet(x, a >= 0, Interval(-sqrt(a), sqrt(a))).subs(a, 4) == Interval(-2, 2)
+    assert ConditionSet(x, y < 1, S.Integers).subs(y, 2) == S.EmptySet
+    assert ConditionSet(x, y < 1, S.Integers).subs(y, 0) == S.Integers
 
 
 def test_subs_CondSet_tebr():
