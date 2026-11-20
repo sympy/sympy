@@ -611,6 +611,12 @@ def test_RootSum_diff_parametric():
     S_shadow_fun = RootSum._new(Poly(y**2 - a, y), Lambda(x, exp(y*x)))
     assert simplify(S_shadow_fun.diff(y).doit() - S_shadow_fun.doit().diff(y)) == 0
     assert RootSum._new(Poly(a, x), Lambda(x, exp(x))).diff(a) == 0
+    s_shadow = RootSum(y**2 - a*x, Lambda(x, a*x + x**2), y, auto=False)
+    assert simplify(s_shadow.diff(a).doit()) == 2*x
+    assert simplify(s_shadow.diff(x).doit()) == 2*a
+    s_raw_shadow = RootSum._new(Poly(y**2 - a*x, y), Lambda(x, a*x + x**2), False)
+    assert simplify(s_raw_shadow.diff(a).doit()) == 2*x
+    assert simplify(s_raw_shadow.diff(x).doit()) == 2*a
 
     # Factored repeated root (already reduced by RootSum.__new__)
     S_factored = RootSum((x**2 - a)**2, Lambda(x, exp(x)), x)

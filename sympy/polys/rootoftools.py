@@ -1348,6 +1348,7 @@ class RootSum(Expr):
                 new_var = Dummy(var.name)
                 expr = expr.xreplace({var: new_var})
                 var = new_var
+                df_dx = expr.diff(x)
             dexpr = df_dx - expr.diff(var)*ratio.subs(gen, var)
         else:
             dexpr = df_dx
