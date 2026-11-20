@@ -66,6 +66,7 @@ from sympy.functions.elementary.trigonometric import (atan, cos, sin, tan)
 from sympy.functions.special.bessel import (besseli, besselj, besselk)
 from sympy.functions.special.beta_functions import beta as beta_fn
 from sympy.concrete.summations import Sum
+from sympy.core.add import Add
 from sympy.core.basic import Basic
 from sympy.core.function import Lambda
 from sympy.core.numbers import (I, Rational, pi)
@@ -73,6 +74,8 @@ from sympy.core.relational import (Eq, Ne)
 from sympy.core.singleton import S
 from sympy.core.symbol import Dummy
 from sympy.core.sympify import sympify
+from sympy.polys.polyerrors import PolynomialError
+from sympy.polys.polytools import poly
 from sympy.functions.combinatorial.factorials import (binomial, factorial)
 from sympy.functions.elementary.complexes import (Abs, sign)
 from sympy.functions.elementary.exponential import log
@@ -2631,9 +2634,22 @@ class LogLogisticDistribution(SingleContinuousDistribution):
         a, b = self.alpha, self.beta
         return a*((p/(1 - p))**(1/b))
 
-    def expectation(self, expr, var, **kwargs):
-        a, b = self.args
-        return Piecewise((S.NaN, b <= 1), (pi*a/(b*sin(pi/b)), True))
+    def _moment(self, k):
+        # k-th raw moment, finite only for k < beta
+        a, b = self.alpha, self.beta
+        return Piecewise((S.NaN, b <= k), (a**k*k*pi/(b*sin(k*pi/b)), True))
+
+    def expectation(self, expr, var, evaluate=True, **kwargs):
+        if evaluate:
+            try:
+                p = poly(expr, var)
+            except PolynomialError:
+                p = None
+            if p is not None:
+                # E(sum c_k X**k) = sum c_k E(X**k), using the closed-form moments
+                return Add(*[c*self._moment(k) if k else c
+                             for (k,), c in p.terms()])
+        return super().expectation(expr, var, evaluate=evaluate, **kwargs)
 
 def LogLogistic(name, alpha, beta):
     r"""
