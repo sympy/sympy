@@ -1831,6 +1831,26 @@ def test_print_MatrixElement():
         '<msub><mi>A</mi><mrow><mrow><mi>i</mi><mo>&InvisibleTimes;</mo><mi>j</mi></mrow><mo>,</mo><mn>0</mn></mrow></msub>'
 
 
+def test_print_BaseDyadic():
+    A = CoordSys3D('A')
+    B = CoordSys3D('B')
+    mpp = MathMLPresentationPrinter()
+    ai = ('<msub><mover><mi mathvariant="bold">i</mi><mo>^</mo></mover>'
+          '<mi mathvariant="bold">A</mi></msub>')
+    aj = ai.replace('>i<', '>j<')
+    bj = aj.replace('>A<', '>B<')
+    aij = '<mrow><mo>(</mo>' + ai + '<mo>|</mo>' + aj + '<mo>)</mo></mrow>'
+    aibj = '<mrow><mo>(</mo>' + ai + '<mo>|</mo>' + bj + '<mo>)</mo></mrow>'
+    assert mpp.doprint(A.i.outer(A.j)) == aij
+    assert mpp.doprint(A.i.outer(B.j)) == aibj
+    assert mpp.doprint(-A.i.outer(A.j)) == '<mrow><mo>-</mo>' + aij + '</mrow>'
+    assert mpp.doprint(x*A.i.outer(A.j)) == (
+        '<mrow><mrow><mo>(</mo><mi>x</mi><mo>)</mo></mrow>'
+        '<mo>&InvisibleTimes;</mo>' + aij + '</mrow>')
+    assert mpp.doprint(A.i.outer(A.j) + A.i.outer(B.j)) == (
+        '<mrow>' + aij + '<mo>+</mo>' + aibj + '</mrow>')
+
+
 def test_print_Vector():
     ACS = CoordSys3D('A')
     assert mathml(Cross(ACS.i, ACS.j*ACS.x*3 + ACS.k), printer='presentation') == \
