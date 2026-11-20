@@ -12,7 +12,7 @@ as unifying matrices with different domains.
 
 from __future__ import annotations
 
-from typing import cast, overload, TYPE_CHECKING, Generic
+from typing import overload, TYPE_CHECKING, Generic
 
 from collections import Counter
 from functools import reduce
@@ -1526,7 +1526,7 @@ class DomainMatrix(Generic[Er]):
 
         """
         A._check("+", B, A.shape, B.shape)
-        return cast("DomainMatrix[Er]", A.from_rep(A.rep.add(B.rep)))  # type: ignore
+        return A.from_rep(A.rep.add(B.rep))  # type: ignore
 
     def sub(A, B: DomainMatrix[Er]) -> DomainMatrix[Er]:
         r"""
@@ -1575,7 +1575,7 @@ class DomainMatrix(Generic[Er]):
 
         """
         A._check("-", B, A.shape, B.shape)
-        return cast("DomainMatrix[Er]", A.from_rep(A.rep.sub(B.rep)))  # type: ignore
+        return A.from_rep(A.rep.sub(B.rep))  # type: ignore
 
     def neg(A) -> DomainMatrix[Er]:
         r"""
@@ -1688,7 +1688,7 @@ class DomainMatrix(Generic[Er]):
         """
 
         A._check("*", B, A.shape[1], B.shape[0])
-        return cast("DomainMatrix[Er]", A.from_rep(A.rep.matmul(B.rep)))  # type: ignore
+        return A.from_rep(A.rep.matmul(B.rep))  # type: ignore
 
     def _scalarmul(A, lamda: Er, reverse: bool) -> DomainMatrix[Er]:
         if lamda == A.domain.zero and (not (A.domain.is_EXRAW)):
@@ -1708,7 +1708,7 @@ class DomainMatrix(Generic[Er]):
 
     def mul_elementwise(A, B: DomainMatrix[Er]) -> DomainMatrix[Er]:
         assert A.domain == B.domain
-        return cast("DomainMatrix[Er]", A.from_rep(A.rep.mul_elementwise(B.rep)))  # type: ignore
+        return A.from_rep(A.rep.mul_elementwise(B.rep))  # type: ignore
 
     def __truediv__(A, lamda):
         """Method for Scalar Division"""
