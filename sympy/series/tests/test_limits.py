@@ -1510,3 +1510,19 @@ def test_issue_30568():
     assert limit(Max(x, sin(x)), x, 0) == 0
     assert limit(Min(exp(x), exp(2*x)), x, oo) == oo
     assert limit(Max(1/x, 1/x**2), x, oo) == 0
+
+
+def test_issue_30580():
+    x = Symbol('x')
+    L = log(log(x))
+    assert limit((1/(x*L))**(L/log(x)), x, oo) == 0
+    assert limit((x*L)**(L/log(x)), x, oo) == oo
+    assert limit((1/(x*L))**(1/log(x)), x, oo) == exp(-1)
+
+
+def test_issue_30580_exp_pow_branch():
+    x = Symbol('x')
+    c = S.Half + 1/x
+    assert limit(exp(-x/2)*exp(x + 3*I)**c, x, oo) == exp(1 + 3*I/2)
+    assert limit(exp(-x/2)*exp(x + 4*I)**c, x, oo) == -exp(1 + 2*I)
+    assert limit(exp(-x/2)*exp(x - 4*I)**c, x, oo) == -exp(1 - 2*I)
