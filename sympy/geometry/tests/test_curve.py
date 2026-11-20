@@ -53,6 +53,21 @@ def test_curve():
     raises(ValueError, lambda: Curve((s, s + t), (t, 1, 2)).arbitrary_point(s))
 
 
+def test_curve_arbitrary_point_normalized():
+    s, u, a, b = symbols('s u a b')
+    curve = Curve((s, s**2), (s, a, b))
+    point = curve.arbitrary_point(u, normalize=True)
+    assert point.subs(u, 0) == Point(a, a**2)
+    assert point.subs(u, 1) == Point(b, b**2)
+    assert point.subs(u, S.Half) == Point((a + b)/2, ((a + b)/2)**2)
+    assert curve.arbitrary_point(None, normalize=True) == point.subs(u, s)
+    assert curve.arbitrary_point(u) == Point(u, u**2)
+
+    for start, end in [(0, S.Infinity), (S.NegativeInfinity, 1)]:
+        curve = Curve((s, s**2), (s, start, end))
+        assert curve.arbitrary_point(u, normalize=True) == Point(u, u**2)
+
+
 @slow
 def test_free_symbols():
     a, b, c, d, e, f, s = symbols('a:f,s')
