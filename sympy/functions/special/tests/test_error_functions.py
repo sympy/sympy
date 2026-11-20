@@ -455,6 +455,18 @@ def test_ei():
     raises(ArgumentIndexError, lambda: Ei(x).fdiff(2))
 
 
+def test_ei_rewrite_polar_negative():
+    p = Symbol('p', positive=True)
+    assert Ei(p*exp_polar(I*pi)).rewrite(Shi) == Chi(p) - Shi(p) + I*pi
+    assert Ei(p*exp_polar(-I*pi)).rewrite(Shi) == Chi(p) - Shi(p) - I*pi
+
+
+def test_expint_series_at_zero():
+    assert expint(2, z).series(z, 0, 3) == (
+        1 + z*(log(z) + EulerGamma - 1) - z**2/2 + O(z**3)
+    )
+
+
 def test_expint():
     assert mytn(expint(x, y), expint(x, y).rewrite(uppergamma),
                 y**(x - 1)*uppergamma(1 - x, y), x)
@@ -502,7 +514,7 @@ def test_expint():
         z**2/4 + z**3/18 - z**4/96 + z**5/600 + O(z**6)
 
     assert expint(4, z).series(z) == Rational(1, 3) - z/2 + z**2/2 + \
-        z**3*(log(z)/6 - Rational(11, 36) + EulerGamma/6 - I*pi/6) - z**4/24 + \
+        z**3*(log(z)/6 - Rational(11, 36) + EulerGamma/6) - z**4/24 + \
         z**5/240 + O(z**6)
 
     assert expint(n, x).series(x, oo, n=3) == \
