@@ -2589,6 +2589,27 @@ def test_issue_28127():
     assert _ask_recursive(Q.le(y,x), Q.ge(x,y)) is True
 
 
+def test_radical_root_evalf_prec():
+    from sympy.polys.polyroots import roots
+    y = Symbol('y')
+    r = roots(y**4 + y + 1, y, multiple=True)[0]
+    assert ask(Q.real(r)) is None
+    assert ask(Q.positive(r)) is None
+    assert ask(Q.negative(r)) is None
+    assert ask(Q.imaginary(r)) is None
+    assert ask(Q.nonzero(r)) is None
+
+    r_pos = roots(y**4 - y - 1, y, multiple=True)[3]
+    assert ask(Q.real(r_pos)) is True
+    assert ask(Q.positive(r_pos)) is True
+    assert ask(Q.negative(r_pos)) is False
+
+    r_neg = roots(y**4 - y - 1, y, multiple=True)[2]
+    assert ask(Q.real(r_neg)) is True
+    assert ask(Q.positive(r_neg)) is False
+    assert ask(Q.negative(r_neg)) is True
+
+
 # https://github.com/sympy/sympy/pull/30175
 @XFAIL
 def test_queries_require_satask():

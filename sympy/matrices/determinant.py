@@ -758,7 +758,7 @@ def _det_bareiss(
     # Recursively implemented Bareiss' algorithm as per Deanna Richelle Leggett's
     # thesis https://aquila.usm.edu/cgi/viewcontent.cgi?article=1001&context=masters_theses
     def bareiss(mat: MatrixBase, cumm: Expr = S.One):
-        sign = S.One
+        sign: Expr = S.One
         while True:
             if mat.rows == 0:
                 return sign * mat.one

@@ -384,6 +384,17 @@ def test_trigsimp_groebner():
     assert trigsimp((-s + 1)/c + c/(-s + 1),
                     method='groebner', polynomial=True) == 2/c
 
+    assert trigsimp(y + s**2 + c**2, method='groebner') == y + 1
+    assert trigsimp(2*y + 3 + s**2 + c**2,
+                    method='groebner') == 2*y + 4
+    assert trigsimp(y + tan(x)*c, method='groebner') == y + s
+    assert trigsimp(y*s**2 + y*c**2, method='groebner') == y
+
+    assert trigsimp(y + s**2 + c**2, method='combined') == y + 1
+    assert trigsimp(2*y + 3 + s**2 + c**2,
+                    method='combined') == 2*y + 4
+    assert trigsimp(y + tan(x)*c, method='combined') == y + s
+
     # Test quick=False works
     assert trigsimp_groebner(ex, hints=[2]) in results
     assert trigsimp_groebner(ex, hints=[int(2)]) in results
@@ -466,12 +477,19 @@ def test_exptrigsimp():
         assert s == exptrigsimp(e)
         assert valid(s, 2*sinh(a))
 
+    # issue 22134
+    e = sin(x)**2 - sin(2*x)*tan(x)/2
+    assert e.simplify() == 0
+    assert exptrigsimp(e) == 0
+
+
 def test_exptrigsimp_noncommutative():
     a,b = symbols('a b', commutative=False)
     x = Symbol('x', commutative=True)
     assert exp(a + x) == exptrigsimp(exp(a)*exp(x))
     p = exp(a)*exp(b) - exp(b)*exp(a)
     assert p == exptrigsimp(p) != 0
+
 
 def test_powsimp_on_numbers():
     assert 2**(Rational(1, 3) - 2) == 2**Rational(1, 3)/4

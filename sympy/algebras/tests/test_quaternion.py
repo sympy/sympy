@@ -6,9 +6,9 @@ from sympy.core.numbers import (E, I, Rational, pi)
 from sympy.core.singleton import S
 from sympy.core.symbol import (Symbol, symbols)
 from sympy.functions.elementary.complexes import (Abs, conjugate, im, re, sign)
-from sympy.functions.elementary.exponential import log
+from sympy.functions.elementary.exponential import (exp, log)
 from sympy.functions.elementary.miscellaneous import sqrt
-from sympy.functions.elementary.trigonometric import (acos, asin, cos, sin, atan2, atan)
+from sympy.functions.elementary.trigonometric import (acos, asin, cos, sin, atan2, atan, sinc)
 from sympy.integrals.integrals import integrate
 from sympy.matrices.dense import Matrix
 from sympy.simplify import simplify
@@ -33,7 +33,49 @@ def test_quaternion_construction():
     M = Matrix([[cos(phi), -sin(phi), 0], [sin(phi), cos(phi), 0], [0, 0, 1]])
     q3 = trigsimp(Quaternion.from_rotation_matrix(M))
     assert q3 == Quaternion(
-        sqrt(2)*sqrt(cos(phi) + 1)/2, 0, 0, sqrt(2 - 2*cos(phi))*sign(sin(phi))/2)
+        sqrt(2)*sqrt(cos(phi) + 1)/2, 0, 0, sqrt(2 - 2*cos(phi))*(-sign(sin(phi))**2 + sign(sin(phi)) + 1)/2)
+
+    # 180-degree rotations (symmetric rotation matrices)
+    Rx = Matrix([[1, 0, 0], [0, -1, 0], [0, 0, -1]])
+    Ry = Matrix([[-1, 0, 0], [0, 1, 0], [0, 0, -1]])
+    Rz = Matrix([[-1, 0, 0], [0, -1, 0], [0, 0, 1]])
+    assert Quaternion.from_rotation_matrix(Rx) == Quaternion(0, 1, 0, 0)
+    assert Quaternion.from_rotation_matrix(Ry) == Quaternion(0, 0, 1, 0)
+    assert Quaternion.from_rotation_matrix(Rz) == Quaternion(0, 0, 0, 1)
+
+    for q_orig in [
+        Quaternion(0, 1, 0, 0),
+        Quaternion(0, 0, 1, 0),
+        Quaternion(0, 0, 0, 1),
+        Quaternion(0, sqrt(2)/2, sqrt(2)/2, 0),
+        Quaternion(0, sqrt(3)/3, sqrt(3)/3, sqrt(3)/3),
+    ]:
+        R_mat = q_orig.to_rotation_matrix()
+        q_rec = Quaternion.from_rotation_matrix(R_mat)
+        assert q_rec.norm() == 1
+        assert (R_mat - q_rec.to_rotation_matrix()).applyfunc(simplify) == Matrix.zeros(3, 3)
+
+    # Substitution consistency for symbolic rotation matrices (including 180-degree rotations)
+    _s = Symbol("t", real=True)
+    _m = Matrix([
+        [cos(2 * _s), sin(2 * _s), 0],
+        [sin(2 * _s), -cos(2 * _s), 0],
+        [0, 0, -1]
+    ])
+    for angle in [0, pi / 6, pi / 4, pi / 3, pi / 2, 2 * pi / 3, 3 * pi / 4, pi]:
+        q_sub_first = Quaternion.from_rotation_matrix(_m.subs(_s, angle))
+        q_sym_sub = Quaternion.from_rotation_matrix(_m).subs(_s, angle)
+        assert q_sub_first == q_sym_sub
+
+    _m2 = Matrix([
+        [-1, 0, 0],
+        [0, cos(2 * _s), sin(2 * _s)],
+        [0, sin(2 * _s), -cos(2 * _s)]
+    ])
+    for angle in [0, pi / 6, pi / 4, pi / 3, pi / 2, 2 * pi / 3, 3 * pi / 4, pi]:
+        q_sub_first = Quaternion.from_rotation_matrix(_m2.subs(_s, angle))
+        q_sym_sub = Quaternion.from_rotation_matrix(_m2).subs(_s, angle)
+        assert q_sub_first == q_sym_sub
 
     nc = Symbol('nc', commutative=False)
     raises(ValueError, lambda: Quaternion(w, x, nc, z))
@@ -103,6 +145,7 @@ def test_quaternion_axis_angle_simplification():
     assert result.c == sqrt(14)*sin(asin(4)/2)/7
     assert result.d == 3*sqrt(14)*sin(asin(4)/2)/14
 
+
 def test_quaternion_complex_real_addition():
     a = symbols("a", complex=True)
     b = symbols("b", real=True)
@@ -168,11 +211,21 @@ def test_quaternion_functions():
     assert q1.pow(-0.5) == NotImplemented # type: ignore
     raises(TypeError, lambda: q1**(-0.5))
 
-    assert q1.exp() == \
-    Quaternion(E * cos(sqrt(29)),
-               2 * sqrt(29) * E * sin(sqrt(29)) / 29,
-               3 * sqrt(29) * E * sin(sqrt(29)) / 29,
-               4 * sqrt(29) * E * sin(sqrt(29)) / 29)
+    assert q1.exp() == Quaternion(
+        E * cos(sqrt(29)),
+        2 * E * sinc(sqrt(29)),
+        3 * E * sinc(sqrt(29)),
+        4 * E * sinc(sqrt(29)))
+
+    # exp of a purely real quaternion must not divide by a zero vector norm
+    assert q0.exp() == Quaternion(1, 0, 0, 0)
+    assert Quaternion(2, 0, 0, 0).exp() == Quaternion(exp(2), 0, 0, 0)
+    assert Quaternion(x, 0, 0, 0).exp() == Quaternion(exp(x), 0, 0, 0)
+
+    qc = Quaternion(0, 1, I, 0, real_field=False)
+    assert qc*qc == Quaternion(0, 0, 0, 0)
+    assert qc.exp() == Quaternion(1, 1, I, 0)
+
     assert q1.log() == \
     Quaternion(log(sqrt(30)),
                2 * sqrt(29) * acos(sqrt(30)/30) / 29,
@@ -188,6 +241,8 @@ def test_quaternion_functions():
                120 * sqrt(29) * sin(2 * acos(sqrt(30)/30)) / 29)
 
     assert diff(Quaternion(x, x, x, x), x) == Quaternion(1, 1, 1, 1)
+    assert Quaternion(x, 0, 0, 0).exp().diff(x) == \
+        Quaternion(exp(x), 0, 0, 0)
 
     assert integrate(Quaternion(x, x, x, x), x) == \
     Quaternion(x**2 / 2, x**2 / 2, x**2 / 2, x**2 / 2)
@@ -478,3 +533,20 @@ def test_issue_30560():
     # Inverse components should be purely real
     inv = q.inverse()
     assert not inv.has(I)
+
+
+def test_leading_sign():
+    from sympy.algebras.quaternion import leading_sign
+    assert leading_sign() == 1
+    assert leading_sign(0) == 1
+    assert leading_sign(0, 0) == 1
+    assert leading_sign(5) == 1
+    assert leading_sign(-3) == -1
+    assert leading_sign(0, 4) == 1
+    assert leading_sign(0, -7) == -1
+    assert leading_sign(0, 0, -2) == -1
+    assert leading_sign(3, -5) == 1
+    assert leading_sign(-3, 5) == -1
+
+    _x = Symbol('x')
+    assert leading_sign(_x) == -sign(_x)**2 + sign(_x) + 1

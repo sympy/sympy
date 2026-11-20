@@ -176,6 +176,26 @@ def test_cyclic_convolution():
     raises(ValueError, lambda: convolution([1, 2, 3], [4, 5, 6], cycle=-1))
 
 
+def test_convolution_empty_input():
+    # the convolution of an empty sequence with anything is empty
+    p = 19*2**10 + 1
+    for kwargs in ({}, {'prime': p}):
+        funcs = ((convolution, convolution_fft, convolution_int)
+                 if not kwargs else (convolution, convolution_ntt))
+        for func in funcs:
+            for seq in ([], [1], [1, 2], [1, 2, 3]):
+                assert func([], seq, **kwargs) == []
+                assert func(seq, [], **kwargs) == []
+    assert convolution([], [1, 2], cycle=3) == [0, 0, 0]
+    assert convolution([], [Rational(1, 2), 3]) == []
+    assert convolution([], [1, 2], dyadic=True) == []
+    assert convolution([], [1, 2], subset=True) == []
+    # a nonempty input is unaffected
+    assert convolution([1], [1, 2]) == [1, 2]
+    assert convolution_fft([1], [1, 2]) == [1, 2]
+    assert convolution_ntt([1], [1, 2], prime=p) == [1, 2]
+
+
 def test_convolution_fft():
     assert all(convolution_fft([], x, dps=y) == [] for x in ([], [1]) for y in (None, 3))
     assert convolution_fft([1, 2, 3], [4, 5, 6]) == [4, 13, 28, 27, 18]

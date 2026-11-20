@@ -228,4 +228,4 @@ symbols used in ``v1``. We can achieve this by converting the vector to a matrix
 and then solving the matrix using :meth:`sympy.solvers.solvers.solve`. ::
 
   >>> solve((v1 - v2).to_matrix(N), [v2x, v2y, v2z])
-  {v2x: sqrt(3)*v1x/2 + v1y/2, v2y: -v1x/2 + sqrt(3)*v1y/2, v2z: v1z}
+  {v2x: sqrt(3)*v1x/2 + v1y/2, v2y: sqrt(3)*v1y/2 - v1x/2, v2z: v1z}

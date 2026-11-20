@@ -1,7 +1,14 @@
 """ Caching facility for SymPy """
 from __future__ import annotations
 from importlib import import_module
-from typing import Callable
+from typing import Any, Callable, Protocol, TypeVar
+
+_F = TypeVar('_F', bound=Callable[..., Any])
+
+
+class _CacheDecorator(Protocol):
+    def __call__(self, func: _F, /) -> _F: ...
+
 
 class _cache(list):
     """ List of cached functions """
@@ -72,7 +79,8 @@ def __cacheit(maxsize):
             try:
                 retval = cfunc(*args, **kwargs)
             except TypeError as e:
-                if not e.args or not e.args[0].startswith('unhashable type:'):
+                if (not e.args or not isinstance(e.args[0], str) or
+                        not e.args[0].startswith('unhashable type:')):
                     raise
                 retval = func(*args, **kwargs)
             return retval
@@ -141,6 +149,8 @@ else:
         raise RuntimeError(
             'SYMPY_CACHE_SIZE must be a valid integer or None. ' + \
             'Got: %s' % SYMPY_CACHE_SIZE)
+
+cacheit: _CacheDecorator
 
 if USE_CACHE == 'no':
     cacheit = __cacheit_nocache

@@ -515,6 +515,7 @@ class Dummy(Symbol):
                      **assumptions: bool | None) -> Self:
         if dummy_index is not None:
             assert name is not None, "If you specify a dummy_index, you must also provide a name"
+            dummy_index = int(dummy_index)
 
         if name is None:
             name = "Dummy_" + str(Dummy._count)

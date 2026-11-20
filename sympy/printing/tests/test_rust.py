@@ -3,7 +3,7 @@ from sympy.core import (S, pi, oo, symbols, Rational, Integer, Symbol,
                         GoldenRatio, EulerGamma, Catalan, Lambda, Dummy,
                         Eq, Ne, Le, Lt, Gt, Ge, Mod)
 from sympy.functions import (Piecewise, sin, cos, Abs, exp, ceiling, sqrt,
-                             sign, floor, log)
+                             sign, floor, log, Max, Min)
 from sympy.logic import ITE
 from sympy.testing.pytest import raises, skip
 from sympy.utilities.lambdify import implemented_function
@@ -453,3 +453,35 @@ def test_rust_typecast_compiles():
         (r * (i + j), 50.0),
     ]
     check_rust(cases, variables)
+
+
+def test_Max_Min():
+    a = Symbol('a')
+    w = Symbol('w', integer=False, real=True)
+    assert rust_code(Max(0.0, a)) == "0.0_f64.max(a)"
+    assert rust_code(Max(a, 0.0)) == "0.0_f64.max(a)"
+    assert rust_code(Max(x, y)) == "x.max(y)"
+    assert rust_code(Max(x, y, z)) == "x.max(y).max(z)"
+    assert rust_code(Max(x + y, z)) == "z.max(x + y)"
+    assert rust_code(Max(x, y + z)) == "x.max(y + z)"
+    assert rust_code(Max(x, 1)) == "1.0_f64.max(x)"
+    assert rust_code(Max(1, x)) == "1.0_f64.max(x)"
+    assert rust_code(Max(k, m)) == "k.max(m)"
+    assert rust_code(Max(x, n)) == "(n as f64).max(x)"
+    assert rust_code(Max(-1.0, x)) == "(-1.0_f64).max(x)"
+    assert rust_code(Max(-5, k)) == "(-5_i32).max(k)"
+    assert rust_code(Min(0.0, a)) == "0.0_f64.min(a)"
+    assert rust_code(Min(a, 0.0)) == "0.0_f64.min(a)"
+    assert rust_code(Min(x, y)) == "x.min(y)"
+    assert rust_code(Min(x, y, z)) == "x.min(y).min(z)"
+    assert rust_code(Min(-1.0, x)) == "(-1.0_f64).min(x)"
+    assert rust_code(Max(S.Half, x)) == "(1_f64/2.0).max(x)"
+    assert rust_code(Min(S.Half, x)) == "(1_f64/2.0).min(x)"
+    assert rust_code(Max(n + 2, x)) == "x.max((n + 2) as f64)"
+    assert rust_code(Max(2*n, x)) == "x.max((2*n) as f64)"
+    assert rust_code(Max(w + z, x + y)) == "(w + z).max(x + y)"
+    assert rust_code(Min(w*z, x*y)) == "(w*z).min(x*y)"
+    assert rust_code(Max(-x, -y)) == "(-x).max(-y)"
+    assert rust_code(Min(-x, -y)) == "(-x).min(-y)"
+    assert rust_code(Max(x, y), user_functions={'Max': 'custom_max'}) == "x.custom_max(y)"
+    assert rust_code(Min(x, y), user_functions={'Min': 'custom_min'}) == "x.custom_min(y)"

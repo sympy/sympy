@@ -22,6 +22,8 @@ from sympy.utilities.iterables import sift
 
 if TYPE_CHECKING:
     from .numbers import Number
+    from .symbol import Symbol
+    from sympy.polys.orderings import MonomKey
 
 
 # internal marker to indicate:
@@ -164,10 +166,10 @@ class Mul(Expr, AssocOp):
     """
     __slots__ = ()
 
-    is_Mul = True
+    is_Mul: bool = True
 
     _args_type = Expr
-    _kind_dispatcher = KindDispatcher("Mul_kind_dispatcher", commutative=True)
+    _kind_dispatcher: KindDispatcher = KindDispatcher("Mul_kind_dispatcher", commutative=True)
 
     identity: ClassVar[Expr]
 
@@ -191,7 +193,7 @@ class Mul(Expr, AssocOp):
         c = self.args[0]
         return c.is_Number and c.is_extended_negative
 
-    def __neg__(self):
+    def __neg__(self) -> Expr:
         c, args = self.as_coeff_mul()
         if args[0] is not S.ComplexInfinity:
             c = -c
@@ -420,7 +422,7 @@ class Mul(Expr, AssocOp):
                             if e.is_Integer:
                                 coeff *= Pow(b, e)  # it is an unevaluated power
                                 continue
-                            elif e.is_negative:    # also a sign of an unevaluated power
+                            elif e.is_negative:
                                 seq.append(Pow(b, e))
                                 continue
                             elif b.is_negative:
@@ -2094,7 +2096,7 @@ class Mul(Expr, AssocOp):
         # e.g. (2+2*x)*(3+3*x) should be (6, (1 + x)**2) not (6, (1+x)*(1+x))
         return coef, self.func(*args)
 
-    def as_ordered_factors(self, order=None):
+    def as_ordered_factors(self, order: str | Symbol | MonomKey | None = None) -> list[Expr]:
         """Transform an expression into an ordered list of factors.
 
         Examples
@@ -2112,7 +2114,7 @@ class Mul(Expr, AssocOp):
         return cpart + ncpart
 
     @property
-    def _sorted_args(self):
+    def _sorted_args(self) -> tuple[Expr, ...]:
         return tuple(self.as_ordered_factors())
 
 mul = AssocOpDispatcher('mul')
@@ -2187,8 +2189,11 @@ def _keep_coeff(coeff, factors, clear=True, sign=False):
             args = [i.as_coeff_Mul() for i in factors.args]
             args = [(_keep_coeff(c, coeff), m) for c, m in args]
             if any(c.is_Integer for c, _ in args):
-                return Add._from_args([Mul._from_args(
-                    i[1:] if i[0] == 1 else i) for i in args])
+                return Add._from_args([
+                    c if m is S.One else Mul._from_args(
+                        (m,) if c is S.One else (c, m))
+                    for c, m in args
+                ])
         return Mul(coeff, factors, evaluate=False)
     elif factors.is_Mul:
         margs = list(factors.args)

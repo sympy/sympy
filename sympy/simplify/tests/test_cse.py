@@ -7,7 +7,7 @@ from sympy.codegen.matrix_nodes import MatrixSolve
 from sympy.core.add import Add
 from sympy.core.containers import Tuple
 from sympy.core.expr import UnevaluatedExpr
-from sympy.core.function import Function
+from sympy.core.function import Derivative, Function
 from sympy.core.mul import Mul
 from sympy.core.power import Pow
 from sympy.core.relational import Eq
@@ -22,9 +22,10 @@ from sympy.matrices.dense import Matrix
 from sympy.matrices.expressions import Inverse, MatAdd, MatMul, Transpose
 from sympy.polys.rootoftools import CRootOf
 from sympy.series.order import O
-from sympy.simplify.cse_main import cse
+from sympy.simplify.cse_main import cse, cse_to_functions
 from sympy.simplify.simplify import signsimp
 from sympy.tensor.indexed import (Idx, IndexedBase)
+from sympy.tensor.array.expressions import ArraySymbol
 
 from sympy.core.function import count_ops
 from sympy.simplify.cse_opts import sub_pre, sub_post
@@ -298,6 +299,87 @@ def test_pow_invpow():
         ([(x0, x**(2*y))], [x0 + 1/x0])
 
 
+def test_cse_to_functions():
+    from sympy import Derivative
+    from sympy.simplify.cse_main import cse_to_functions
+
+    f = Function('f')
+    F = Function('x0')
+    expr = f(x)**2 + Derivative(f(x), x)
+    assert cse(expr, postprocess=cse_to_functions) == (
+        [(F(x), f(x))], [F(x)**2 + Derivative(F(x), x)])
+
+    expr = Matrix([[f(x), Derivative(f(x), x)], [f(x)**2, f(x)]])
+    assert cse(expr, postprocess=cse_to_functions) == (
+        [(F(x), f(x))],
+        [Matrix([[F(x), Derivative(F(x), x)], [F(x)**2, F(x)]])])
+
+
+def test_cse_to_functions_dependencies_and_collision():
+    from sympy import Derivative
+    from sympy.simplify.cse_main import cse_to_functions
+
+    x0, x1 = symbols('x0 x1')
+    F0, F1 = Function('x0'), Function('x1')
+    assert cse_to_functions(
+        [(x0, x + y), (x1, x0**2)], [Derivative(x1, x)]) == (
+        [(F0(x), x + y), (F1(x), F0(x)**2)],
+        [Derivative(F1(x), x)])
+
+    existing = F0(x)
+    renamed = Function('x0_')(x)
+    assert cse_to_functions(
+        [(x0, sin(x))], [existing + Derivative(x0, x)]) == (
+        [(renamed, sin(x))],
+        [existing + Derivative(renamed, x)])
+
+
+def test_cse_symbol_like_not_eliminated():
+    # Symbol-like objects are not computations to be extracted by CSE.
+    from sympy import Indexed, MatrixSymbol
+
+    i = Symbol('i')
+    X = ArraySymbol('X', (3,))
+    M = MatrixSymbol('M', 3, 3)
+    for symbol_like in (Indexed('X', i), X[i], M[i, 0]):
+        assert symbol_like.is_symbol
+        assert cse([symbol_like, symbol_like]) == (
+            [], [symbol_like, symbol_like])
+
+
+def test_cse_to_functions_array_derivative():
+    i = Symbol('i')
+    X = ArraySymbol('X', (3,))
+    f = Function('f')
+    expr = f(X[i])**2 + Derivative(f(X[i]), X[i])
+    F = Function('x0')(X[i])
+    replacements, reduced = cse(expr, postprocess=cse_to_functions)
+    assert replacements == [(F, f(X[i]))]
+    assert reduced == [F**2 + Derivative(F, X[i])]
+    assert reduced[0].doit() == reduced[0]
+
+
+def test_cse_to_functions_derivative_argument_order():
+    derivative = Derivative(Function('f')(x, y), (y, 2), x)
+    F = Function('x0')(y, x)
+    assert cse_to_functions([(x0, derivative + z)], [x0]) == (
+        [(F, derivative + z)], [F])
+
+
+def test_cse_to_functions_parameters():
+    f = Function('f')
+    F0, F1 = Function('x0'), Function('x1')
+    assert cse_to_functions(
+        [(x0, y*f(x)), (x1, z + y)], [Derivative(x0 + x1, x)]) == (
+        [(F0(x), y*f(x)), (F1(), z + y)],
+        [Derivative(F0(x) + F1(), x)])
+
+    existing = F0(x)
+    renamed = Function('x0_')()
+    assert cse_to_functions([(x0, y + z)], [existing + x0]) == (
+        [(renamed, y + z)], [existing + renamed])
+
+
 def test_postprocess():
     eq = (x + 1 + exp((x + 1)/(y + 1)) + cos(y + 1))
     assert cse([eq, Eq(x, z + 1), z - 2, (z + 1)*(x + 1)],
@@ -557,6 +639,9 @@ def test_cse_unevaluated():
     else:
         msg = f'Expected common subexpression {xp1} or {-xp1}, instead got {ue}'
         assert False, msg
+
+    p = Pow(x, 1, evaluate=False)
+    assert cse([p, p]) == ([(x0, p)], [x0, x0])
 
 
 def test_cse__performance():

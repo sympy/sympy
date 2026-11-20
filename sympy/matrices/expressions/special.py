@@ -393,18 +393,12 @@ class MatrixUnit(MatrixExpr):
     def cols(self):
         return self._args[1]
 
-    @property
-    def is_square(self):
-        return Eq(self.rows, self.cols)
-
     def _eval_transpose(self):
         return MatrixUnit(self.cols, self.rows, self._j, self._i)
 
     def _eval_trace(self):
-        if (self.rows == self.cols) == True:
-            if self.shape == (1, 1):
-                return S.One
-            return S.Zero
+        if self.is_square:
+            return KroneckerDelta(self._i, self._j, (0, self.rows-1))
 
     def _eval_inverse(self):
         if self.shape == (1, 1):

@@ -178,6 +178,21 @@ class Limit(Expr):
         return isyms
 
 
+    @property
+    def bound_symbols(self):
+        """Return the bound symbols of the limit.
+
+        Examples
+        ========
+
+        >>> from sympy import Limit
+        >>> from sympy.abc import x, y
+        >>> Limit(x + y, x, 0).bound_symbols
+        (x,)
+        """
+        return (self.args[1],)
+
+
     def pow_heuristics(self, e, z, z0, dir):
         b1, e1 = e.base, e.exp
         if not b1.has(z):

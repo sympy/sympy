@@ -35,6 +35,8 @@ from sympy.utilities.misc import func_name, filldedent
 
 if TYPE_CHECKING:
     from collections.abc import Mapping, Iterable
+    from sympy.core.basic import Tbasic
+    from sympy.core.expr import Texpr
 
 
 tfn: dict[bool | Boolean | None, Boolean | None] = defaultdict(lambda: None, {
@@ -112,6 +114,16 @@ class Set(Basic, EvalfMixin):
                  arg2: Basic | complex | None = None, **kwargs: Any) -> Basic:
             ...
 
+        @overload
+        def xreplace(self, rule: Mapping[Texpr, Expr]) -> Set: ...
+        @overload
+        def xreplace(self, rule: Mapping[Tbasic, Set]) -> Set: ...
+        @overload
+        def xreplace(self, rule: Mapping[Tbasic, Basic]) -> Basic: ...
+
+        def xreplace(self, rule: Mapping[Tbasic, Basic]) -> Basic:
+            ...
+
         def simplify(self, **kwargs) -> Set:
             assert False
 
@@ -163,7 +175,7 @@ class Set(Basic, EvalfMixin):
         """
         return Union(self, other)
 
-    def intersect(self, other):
+    def intersect(self, other: Set) -> Set:
         """
         Returns the intersection of 'self' and 'other'.
 
@@ -184,7 +196,7 @@ class Set(Basic, EvalfMixin):
         """
         return Intersection(self, other)
 
-    def intersection(self, other):
+    def intersection(self, other: Set) -> Set:
         """
         Alias for :meth:`intersect()`
         """
@@ -836,7 +848,7 @@ class Set(Basic, EvalfMixin):
     def __sub__(self, other):
         return Complement(self, other)
 
-    def __contains__(self, other):
+    def __contains__(self, other: Basic | complex | tuple[Basic | complex, ...]) -> Boolean:
         other = _sympify(other)
         c = self._contains(other)
         b = tfn[c]
@@ -1276,7 +1288,7 @@ class Interval(Set):
 
     @property
     def _measure(self):
-        return self.end - self.start
+        return Max(0, self.end - self.start)
 
     def _kind(self):
         return SetKind(NumberKind)
@@ -1362,7 +1374,7 @@ class Union(Set, LatticeOp):
     def zero(self):
         return S.UniversalSet
 
-    def __new__(cls, *args, **kwargs):
+    def __new__(cls, *args: Set, **kwargs: bool) -> Set:  # type: ignore[misc]
         evaluate = kwargs.get('evaluate', global_parameters.evaluate)
 
         # flatten inputs to merge intersections and iterables
@@ -1370,10 +1382,10 @@ class Union(Set, LatticeOp):
 
         # Reduce sets using known rules
         if evaluate:
-            args = list(cls._new_args_filter(args))
+            args = tuple(cls._new_args_filter(args))
             return simplify_union(args)
 
-        args = list(ordered(args, Set._infimum_key))
+        args = tuple(ordered(args, Set._infimum_key))
 
         obj = Basic.__new__(cls, *args)
         obj._argset = frozenset(args)
@@ -2465,10 +2477,10 @@ def imageset(*args):
     Interval(0, 4)
 
     >>> imageset(Lambda(x, sin(x)), Interval(-2, 1))
-    ImageSet(Lambda(x, sin(x)), Interval(-2, 1))
+    Interval(-1, sin(1))
 
     >>> imageset(sin, Interval(-2, 1))
-    ImageSet(Lambda(x, sin(x)), Interval(-2, 1))
+    Interval(-1, sin(1))
     >>> imageset(lambda y: x + y, Interval(-2, 1))
     ImageSet(Lambda(y, x + y), Interval(-2, 1))
 
@@ -2725,8 +2737,10 @@ def _handle_finite_sets(op, x, y, commutative):
     if len(fs_args) == 2:
         return FiniteSet(*[op(i, j) for i in fs_args[0] for j in fs_args[1]])
     elif len(fs_args) == 1:
-        sets = [_apply_operation(op, other[0], i, commutative) for i in fs_args[0]]
-        return Union(*sets)
+        sets = [_apply_operation(op, other[0], i, commutative)
+            for i in fs_args[0]]
+        return Union(*(i if isinstance(i, Set) else FiniteSet(i)
+            for i in sets))
     else:
         return None
 

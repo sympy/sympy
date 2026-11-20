@@ -14,6 +14,7 @@ from .trace import Trace, trace
 from .determinant import Determinant, det, Permanent, per
 from .transpose import Transpose
 from .adjoint import Adjoint
+from .conjugate import Conjugate
 from .hadamard import hadamard_product, HadamardProduct, hadamard_power, HadamardPower
 from .diagonal import DiagonalMatrix, DiagonalOf, DiagMatrix, diagonalize_vector
 from .dotproduct import DotProduct
@@ -49,6 +50,7 @@ __all__ = [
     'Transpose',
 
     'Adjoint',
+    'Conjugate',
 
     'hadamard_product', 'HadamardProduct', 'hadamard_power', 'HadamardPower',
 

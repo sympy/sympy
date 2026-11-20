@@ -381,7 +381,10 @@ def trigsimp_groebner(expr, hints=[], quick=False, order="grlex",
         num = Poly(num, gens=gens+freegens).eject(*gens)
         res = []
         for monom, coeff in num.terms():
-            ourgens = set(parallel_poly_from_expr([coeff, denom])[1].gens)
+            try:
+                ourgens = set(parallel_poly_from_expr([coeff, denom])[1].gens)
+            except PolificationFailed:
+                ourgens = set()
             # We compute the transitive closure of all generators that can
             # be reached from our generators through relations in the ideal.
             changed = True
@@ -533,7 +536,7 @@ def trigsimp(expr, inverse=False, **opts):
 
     >>> e = 1/(sin(x)*cos(x)) - cot(x)
     >>> trigsimp(e)
-    -cot(x) + 2/sin(2*x)
+    2/sin(2*x) - cot(x)
     >>> trigsimp(cancel(e))
     tan(x)
 
@@ -633,13 +636,14 @@ def exptrigsimp(expr):
         # functions
         choices = [e]
         if e.has(*_trigs):
-            op = e.rewrite(exp)
+            op = e.rewrite(_trigs, exp)
             # if e is an Add, we can try to factor it
             # helps with expressions with leading factors
             if e.is_Add:
                 choices.append(factor_terms(op))
             else:
                 choices.append(op)
+            choices.append(e.rewrite(sin))
         choices.append(e.rewrite(cos))
         return min(*choices, key=count_ops)
     newexpr = bottom_up(expr, exp_trig)

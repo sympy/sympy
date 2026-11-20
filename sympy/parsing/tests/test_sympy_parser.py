@@ -391,14 +391,64 @@ def test_xor_eval_false():
 
 def test_issue_27832():
     x = Symbol('x')
-    assert parse_expr('1/1', evaluate=False) == Pow(Integer(1), Integer(-1), evaluate=False)
-    assert parse_expr('1/10 * 4', evaluate=False) == Mul(Pow(Integer(10), Integer(-1), evaluate=False), \
-                                                         Integer(4), evaluate=False)
-    assert parse_expr('1/x', evaluate=False) == Pow(x, Integer(-1), evaluate=False)
-    assert parse_expr('+1/20', evaluate=False) == Pow(Integer(20), Integer(-1), evaluate=False)
-    assert parse_expr('~(~1)/20', evaluate=False) == Pow(Integer(20), Integer(-1), evaluate=False)
-    assert parse_expr('-(-1)/10', evaluate=False) == Pow(Integer(10), Integer(-1), evaluate=False)
-    assert parse_expr('-(~0)/10', evaluate=False) == Pow(Integer(10), Integer(-1), evaluate=False)
-    assert parse_expr('+cos(0)/10', evaluate=False) == Mul(cos(Integer(0), evaluate=False), \
-                                                               Pow(Integer(10), Integer(-1), evaluate=False), \
-                                                               evaluate=False)
+    assert parse_expr('1/1', evaluate=False) == Pow(1, -1, evaluate=False)
+    assert parse_expr('1/10 * 4', evaluate=False) == Mul(
+        Rational(1, 10), Integer(4), evaluate=False)
+    assert parse_expr('1/x', evaluate=False) == Pow(x, -1, evaluate=False)
+    assert parse_expr('+1/20', evaluate=False) == Rational(1, 20)
+    assert parse_expr('~(~1)/20', evaluate=False) == Pow(20, -1, evaluate=False)
+    assert parse_expr('-(-1)/10', evaluate=False) == Rational(1, 10)
+    assert parse_expr('-(~0)/10', evaluate=False) == Pow(10, -1, evaluate=False)
+    assert parse_expr('+cos(0)/10', evaluate=False) == Mul(
+        cos(Integer(0), evaluate=False), Pow(10, -1, evaluate=False),
+        evaluate=False)
+
+
+def test_evaluate_false_literal_fractions():
+    from sympy import latex, sqrt
+
+    def ratio(p, q):
+        return Mul(p, Pow(q, -1, evaluate=False), evaluate=False)
+
+    cases = {
+        '1/2': Rational(1, 2),
+        '11/2': Rational(11, 2),
+        '-1/2': Rational(-1, 2),
+        '2/4': ratio(2, 4),
+        '1/1': Pow(1, -1, evaluate=False),
+        '3/1': ratio(3, 1),
+        '0/5': ratio(0, 5),
+        '1/0': Pow(0, -1, evaluate=False),
+        '1*1/2': Mul(1, 1, Pow(2, -1, evaluate=False), evaluate=False),
+        '1*2/4': Mul(1, 2, Pow(4, -1, evaluate=False), evaluate=False),
+        '1*(2/4)': Mul(1, ratio(2, 4), evaluate=False),
+        '2/4*3': Mul(ratio(2, 4), 3, evaluate=False),
+        '3/2*4': Mul(Rational(3, 2), 4, evaluate=False),
+        '-sqrt(2)/3': Mul(Rational(-1, 3), sqrt(2), evaluate=False),
+    }
+    for text, expected in cases.items():
+        assert parse_expr(text, evaluate=False) == expected, text
+
+    assert parse_expr('1*1**-1', evaluate=False) == ratio(1, 1)
+    assert parse_expr('1/1', evaluate=False) != parse_expr(
+        '1*1**-1', evaluate=False)
+    assert latex(parse_expr('1*1**-1', evaluate=False)) == (
+        r'1 \cdot \frac{1}{1}')
+
+    assert parse_expr('x - 1/2', evaluate=False).args[-1] == Rational(-1, 2)
+    assert parse_expr('-(1/2)', evaluate=False) == Rational(-1, 2)
+    assert latex(parse_expr('-sqrt(2)/3', evaluate=False)) == r'- \frac{\sqrt{2}}{3}'
+    assert latex(parse_expr('-sqrt(2)/3 + 1/3 - 1/2',
+        evaluate=False), order='none') == (
+        r'- \frac{\sqrt{2}}{3} + \frac{1}{3} - \frac{1}{2}')
+    assert str(parse_expr('(1+x)/2', evaluate=False)) == '(x + 1)/2'
+    assert parse_expr('2/4') == Rational(1, 2)
+    assert latex(parse_expr('1/1', evaluate=False)) == r'\frac{1}{1}'
+    assert latex(parse_expr('1/0', evaluate=False)) == r'\frac{1}{0}'
+    assert latex(parse_expr('1*2/4', evaluate=False)) == r'1 \cdot 2 \cdot \frac{1}{4}'
+    assert latex(parse_expr('2/4', evaluate=False)) == r'\frac{2}{4}'
+    assert latex(parse_expr('1*(2/4)', evaluate=False)) == r'1 \cdot \frac{2}{4}'
+
+    # issue 24112
+    assert str(parse_expr('-sqrt(7)/2 + 1/3 - 1/2', evaluate=False)) == (
+        '-sqrt(7)/2 - 1/2 + 1/3')

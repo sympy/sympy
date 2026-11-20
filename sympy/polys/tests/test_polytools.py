@@ -4411,6 +4411,28 @@ def test_PurePoly_canonical_instantiation_and_coefficients():
     assert q.subs(y, z) == PurePoly(x**2 + z, x)
 
 
+def test_PurePoly_call_rootof_zero():
+    r = rootof(x**5 - x + 1, 0)
+
+    # A defining polynomial or any polynomial multiple vanishes at r.
+    p = PurePoly(x**5 - x + 1, x)
+    assert p(r) is S.Zero
+    assert PurePoly((x + 2)*(x**5 - x + 1), x)(r) is S.Zero
+    assert PurePoly([1, 0, 0, 0, -1, 1])(r) is S.Zero
+    assert PurePoly(y*(x**5 - x + 1), x)(r) is S.Zero
+
+    # A different polynomial is not silently reduced to zero.
+    q = PurePoly(x**5 - x + 2, x)
+    assert q(r) != 0
+    assert PurePoly(x**2 + 1, x)(r) == r**2 + 1
+
+    # Polynomial generators remain bound, and partial evaluation is
+    # unaffected. Multivariate input does not trigger root recognition.
+    assert p.subs(x, r) == p
+    m = PurePoly(x*y + 1, x, y)
+    assert m(r) == PurePoly(r*y + 1, y)
+
+
 def test_PurePoly_without_generator_from_coefficients():
     # A coefficient sequence specifies a univariate PurePoly without
     # requiring a generator name that would subsequently be discarded.

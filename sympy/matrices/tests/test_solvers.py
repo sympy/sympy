@@ -161,6 +161,27 @@ def test_QRsolve():
     soln = A.QRsolve(b)
     assert soln == x
 
+    # Test complex matrices (issue #31096)
+    Ac = Matrix([[1, I],
+                 [I, 2]])
+    xc = Matrix(2, 1, [1, 1])
+    bc = Ac * xc
+    soln = Ac.QRsolve(bc)
+    assert simplify(soln - xc) == Matrix.zeros(2, 1)
+    assert simplify(Ac * soln - bc) == Matrix.zeros(2, 1)
+
+    # Inversion via QR for complex matrices
+    inv_c = Ac.inv(method='QR')
+    assert simplify(inv_c * Ac) == eye(2)
+    assert simplify(Ac * inv_c) == eye(2)
+
+    # Multi-column RHS with complex entries
+    xc_multi = Matrix([[1 + I, 2], [-I, 3 - I]])
+    bc_multi = Ac * xc_multi
+    soln_multi = Ac.QRsolve(bc_multi)
+    assert simplify(soln_multi - xc_multi) == Matrix.zeros(2, 2)
+
+
 def test_errors():
     raises(ShapeError, lambda: Matrix([1]).LUsolve(Matrix([[1, 2], [3, 4]])))
 

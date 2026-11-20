@@ -109,7 +109,7 @@ def test_Pow():
     assert mcode(x**Rational(2, 3)) == 'x.^(2/3)'
     g = implemented_function('g', Lambda(x, 2*x))
     assert mcode(1/(g(x)*3.5)**(x - y**x)/(x**2 + y)) == \
-        "(3.5*2*x).^(-x + y.^x)./(x.^2 + y)"
+        '(3.5*2*x).^(y.^x - x)./(x.^2 + y)'
     # For issue 14160
     assert mcode(Mul(-2, x, Pow(Mul(y,y,evaluate=False), -1, evaluate=False),
                                                 evaluate=False)) == '-2*x./(y.*y)'
@@ -513,4 +513,4 @@ def test_zeta_printing_issue_14820():
 
 def test_automatic_rewrite():
     assert octave_code(Li(x)) == '(logint(x) - logint(2))'
-    assert octave_code(erf2(x, y)) == '(-erf(x) + erf(y))'
+    assert octave_code(erf2(x, y)) == '(erf(y) - erf(x))'
