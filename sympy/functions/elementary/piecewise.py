@@ -6,6 +6,7 @@ from sympy.core.numbers import Rational, NumberSymbol, _illegal
 from sympy.core.parameters import global_parameters
 from sympy.core.relational import (Lt, Gt, Eq, Ne, Relational,
     _canonical, _canonical_coeff)
+from sympy.core.sympify import sympify
 from sympy.core.sorting import ordered
 from sympy.functions.elementary.miscellaneous import Max, Min
 from sympy.logic.boolalg import (And, Boolean, distribute_and_over_or, Not,
@@ -223,10 +224,86 @@ class Piecewise(DefinedFunction):
     def _eval_simplify(self, **kwargs):
         return piecewise_simplify(self, **kwargs)
 
+
     def _eval_as_leading_term(self, x, logx, cdir):
+        from sympy.core.relational import Equality, Unequality
+        from sympy.functions.elementary.exponential import log
+        from sympy.core.function import PoleError
+        from sympy.sets.contains import Contains
+        from sympy.sets.sets import Interval
+
+        t = Dummy('t', positive=True)
+        L = Dummy('L', negative=True)
+        d = S.One if cdir == 0 else sympify(cdir)
+        pt = d*t
+
+
+        def evaluate(lhs, rhs, relation):
+            if not isinstance(relation, (Equality, Unequality)):
+                if not (lhs.is_extended_real and rhs.is_extended_real):
+                    return relation
+            return relation.func(lhs, rhs)
+
+
+        def decide_relation(relation):
+            try:
+                lt = (relation.lhs - relation.rhs).as_leading_term(x, cdir=cdir)
+            except (NotImplementedError,PoleError):
+                pass
+            else:
+                if d.is_positive:
+                    lt = lt.subs(log(x), L)
+                res = evaluate(lt.subs(x, pt), S.Zero, relation)
+                if res in (S.true, S.false):
+                    return bool(res)
+            res = evaluate(relation.lhs.subs(x, pt), relation.rhs.subs(x, pt), relation)
+            return bool(res) if res in (S.true, S.false) else None
+        def decide(cond):
+            if cond in (S.true, S.false):
+                return bool(cond)
+            if isinstance(cond, And):
+                unknown = False
+                for arg in cond.args:
+                    b = decide(arg)
+                    if b is False:
+                        return False
+                    if b is None:
+                        unknown = True
+                return None if unknown else True
+            if isinstance(cond, Or):
+                unknown = False
+                for arg in cond.args:
+                    b = decide(arg)
+                    if b is True:
+                        return True
+                    if b is None:
+                        unknown = True
+                return None if unknown else False
+            if isinstance(cond, Not):
+                res = decide(cond.args[0])
+                return None if res is None else not res
+            if isinstance(cond, Relational):
+                return decide_relation(cond)
+            if isinstance(cond, Contains):
+                element, set_ = cond.args
+
+                if isinstance(set_, Interval):
+                    return decide(set_.as_relational(element))
+
+                return None
+            return None
+
         for e, c in self.args:
-            if c == True or c.subs(x, 0) == True:
-                return e.as_leading_term(x)
+            result = decide(c)
+            if result is True:
+                return e.as_leading_term(x, logx=logx, cdir=cdir)
+            if result is False:
+                continue
+            raise NotImplementedError(
+                "cannot decide condition %s near %s = 0" % (c, x))
+
+
+        raise NotImplementedError("no condition of %s holds near %s = 0" % (self, x))
 
     def _eval_adjoint(self):
         return self.func(*[(e.adjoint(), c) for e, c in self.args])
