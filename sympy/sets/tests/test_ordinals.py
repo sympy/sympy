@@ -1,7 +1,63 @@
 from __future__ import annotations
+from sympy import Integer
 from sympy.sets.ordinals import Ordinal, OrdinalOmega, OrdinalZero, OmegaPower, ord0, omega
 from sympy.testing.pytest import raises
 
+
+def test_hash_finite():
+    for value in (0, 1, 2, 5, 2**70):
+        ordinal = Ordinal.convert(value)
+        sympy_integer = Integer(value)
+
+        assert ordinal == value
+        assert ordinal == sympy_integer
+        assert hash(ordinal) == hash(value)
+        assert hash(ordinal) == hash(sympy_integer)
+
+        assert len({value, ordinal}) == 1
+        assert {value: 'value'}[ordinal] == 'value'
+        assert {ordinal: 'ordinal'}[value] == 'ordinal'
+
+        if value:
+            term = OmegaPower(0, value)
+            assert term == value
+            assert hash(term) == hash(value)
+            assert term == sympy_integer
+            assert hash(term) == hash(sympy_integer)
+            assert len({value, term}) == 1
+            assert {value: 'value'}[term] == 'value'
+            assert {term: 'term'}[value] == 'term'
+
+
+def test_hash_omega():
+    zero = OrdinalZero()
+    assert zero == ord0
+    assert hash(zero) == hash(ord0)
+    assert hash(zero) == hash(0)
+    assert len({zero, ord0}) == 1
+    assert {zero: 'zero'}[ord0] == 'zero'
+
+    ordinal_omega = OrdinalOmega()
+    omega_representation = Ordinal(OmegaPower(1, 1))
+    assert ordinal_omega == omega_representation
+    assert hash(ordinal_omega) == hash(omega_representation)
+    assert len({ordinal_omega, omega_representation}) == 1
+
+
+def test_hash_nested():
+    ordinal = Ordinal(OmegaPower(omega, 1))
+    equivalent_ordinal = Ordinal(OmegaPower(Ordinal(OmegaPower(1, 1)), 1))
+    assert ordinal == equivalent_ordinal
+    assert hash(ordinal) == hash(equivalent_ordinal)
+
+    multi_term_exponent = omega + 1
+    equivalent_multi_term_exponent = Ordinal(
+        OmegaPower(1, 1), OmegaPower(0, 1))
+    ordinal = Ordinal(OmegaPower(multi_term_exponent, 1), OmegaPower(0, 2))
+    equivalent_ordinal = Ordinal(
+        OmegaPower(equivalent_multi_term_exponent, 1), OmegaPower(0, 2))
+    assert ordinal == equivalent_ordinal
+    assert hash(ordinal) == hash(equivalent_ordinal)
 
 def test_addition_with_integers():
     assert 3 + Ordinal(OmegaPower(5, 3)) == Ordinal(OmegaPower(5, 3))
