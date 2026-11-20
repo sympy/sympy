@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 from __future__ import annotations
 
+from sympy.printing.pretty import pretty
 from sympy.core.function import Function
 from sympy.core.symbol import symbols
 from sympy.functions.elementary.miscellaneous import sqrt
@@ -213,6 +214,13 @@ a  n_x⊗n_y + b n_y⊗n_y + c⋅sin(α) n_z⊗n_y\
 
     assert ascii_vpretty(xx2) == 'n_x|n_y + n_x|n_z'
     assert unicode_vpretty(xx2) == 'n_x⊗n_y + n_x⊗n_z'
+
+
+def test_pretty_dyadic_in_tuple():
+    dyadic = N.x | N.y
+    assert pretty((dyadic,), use_unicode=False) == '(n_x|n_y,)'
+    assert pretty((dyadic,), use_unicode=True) == '(n_x⊗n_y,)'
+    assert pretty((Dyadic([]),)) == '(0,)'
 
 
 def test_dyadic_latex():

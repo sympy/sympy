@@ -204,51 +204,43 @@ class Dyadic(Printable, EvalfMixin):
         return outstr
 
     def _pretty(self, printer):
-        e = self
+        if not self.args:
+            return printer._print(0)
 
-        class Fake:
-            baseline = 0
+        outstr = None
+        bar = prettyForm(u"\N{CIRCLED TIMES}" if printer._use_unicode else "|")
+        for i, v in enumerate(self.args):
+            p_v1 = printer._print(v[1])
+            p_v2 = printer._print(v[2])
+            p_dyad = prettyForm(*p_v1.right(bar, p_v2))
 
-            def render(self, *args, **kwargs):
-                mpp = printer
-                if len(e.args) == 0:
-                    return mpp._print(0)
+            c = v[0]
+            if i == 0:
+                sign = ""
+            else:
+                sign = " + "
 
-                outstr = None
-                bar = prettyForm(u"\N{CIRCLED TIMES}" if mpp._use_unicode else "|")
-                for i, v in enumerate(e.args):
-                    p_v1 = mpp._print(v[1])
-                    p_v2 = mpp._print(v[2])
-                    p_dyad = prettyForm(*p_v1.right(bar, p_v2))
+            coeff, _ = c.as_coeff_Mul()
+            if coeff < 0:
+                if i == 0:
+                    sign = "- "
+                else:
+                    sign = " - "
+                c = -c
 
-                    c = v[0]
-                    if i == 0:
-                        sign = ""
-                    else:
-                        sign = " + "
+            if c == 1:
+                p_term = p_dyad
+            else:
+                p_c = printer._print(c)
+                if isinstance(c, Add):
+                    p_c = prettyForm(*p_c.parens())
+                p_term = prettyForm(*p_c.right(" ", p_dyad))
 
-                    coeff, rest = c.as_coeff_Mul()
-                    if coeff < 0:
-                        if i == 0:
-                            sign = "- "
-                        else:
-                            sign = " - "
-                        c = -c
-
-                    if c == 1:
-                        p_term = p_dyad
-                    else:
-                        p_c = mpp._print(c)
-                        if isinstance(c, Add):
-                            p_c = prettyForm(*p_c.parens())
-                        p_term = prettyForm(*p_c.right(" ", p_dyad))
-
-                    if outstr is None:
-                        outstr = prettyForm(*p_term.left(sign))
-                    else:
-                        outstr = prettyForm(*outstr.right(sign, p_term))
-                return outstr.__str__()
-        return Fake()
+            if outstr is None:
+                outstr = prettyForm(*p_term.left(sign))
+            else:
+                outstr = prettyForm(*outstr.right(sign, p_term))
+        return outstr
 
     def __rsub__(self, other):
         return (-1 * self) + other
