@@ -20,6 +20,7 @@ from sympy.external.mpmath import (
 
 from .sympify import sympify
 from .singleton import S
+from .parameters import global_parameters
 from sympy.external.gmpy import SYMPY_INTS
 from sympy.utilities.iterables import is_sequence
 from sympy.utilities.lambdify import lambdify
@@ -1014,9 +1015,18 @@ def evalf_trig(v: cos | sin | tan, prec: int, options: OPT_DICT) -> TMP_RES:
 
 
 def evalf_log(expr: 'log', prec: int, options: OPT_DICT) -> TMP_RES:
-    if len(expr.args)>1:
-        expr = expr.doit()
-        return evalf(expr, prec, options)
+    if len(expr.args) > 1:
+        if global_parameters.evaluate:
+            return evalf(expr.doit(), prec, options)
+        from .mul import Mul
+        from .power import Pow
+        from sympy.functions.elementary.exponential import log
+        arg, base = expr.args
+        constants = {S.Zero: S.ComplexInfinity, S.One: S.Zero}
+        numerator = constants.get(arg, log(arg, evaluate=False))
+        denominator = constants.get(base, log(base, evaluate=False))
+        rewritten = Mul(numerator, Pow(denominator, -1, evaluate=False), evaluate=False)
+        return evalf(rewritten, prec, options)
     arg = expr.args[0]
     workprec = prec + 10
     result = evalf(arg, workprec, options)

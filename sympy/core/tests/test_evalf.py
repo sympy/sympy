@@ -175,6 +175,36 @@ def test_evalf_logs():
     assert NS('-2*I*log(-(-1)**(S(1)/9))', 15) == '-5.58505360638185'
 
 
+def test_evalf_log_base_evaluate_false():
+    cases = [(2, 3), (-2, 3), (2, -3), (1 + I, 2 + I),
+             (2, -1), (I, -I), (2, S.Half),
+             (1 + Rational(1, 10**30), 1 + Rational(1, 10**40))]
+    for digits in [20, 50]:
+        for arg, base in cases:
+            expected = (log(arg)/log(base)).evalf(digits + 20, maxn=200)
+            with evaluate(False):
+                expr = log(arg, base, evaluate=False)
+                result = expr.evalf(digits, maxn=200)
+                assert Add(1, 1).args == (S.One, S.One)
+            assert abs(result - expected) < abs(expected)*Rational(1, 10**(digits - 2))
+
+    expected = (log(2)/log(3)).evalf(50)
+    with evaluate(False):
+        result = log(x, y, evaluate=False).evalf(50, subs={x: 2, y: 3})
+    assert abs(result - expected) < Rational(1, 10**48)
+
+
+def test_evalf_log_base_special_values():
+    for arg, base, expected in [
+        (1, 3, S.Zero), (2, 1, zoo), (1, 1, nan),
+        (0, 3, zoo), (2, 0, S.Zero), (0, 0, nan),
+    ]:
+        assert log(arg, base, evaluate=False).evalf() == expected
+        with evaluate(False):
+            result = log(arg, base, evaluate=False).evalf()
+        assert result == expected
+
+
 def test_evalf_trig():
     assert NS('sin(1)', 15) == '0.841470984807897'
     assert NS('cos(1)', 15) == '0.540302305868140'
