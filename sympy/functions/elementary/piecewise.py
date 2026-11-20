@@ -327,6 +327,12 @@ class Piecewise(DefinedFunction):
                         from sympy.solvers.inequalities import (
                             reduce_inequalities, _solve_inequality)
                         try:
+                            if any(isinstance(a, (Eq, Ne)) for a in andargs):
+                                # reduce_inequalities would also restrict
+                                # the symbol to where the expressions are
+                                # real, e.g. Ne(log(y), 0) would become
+                                # (y > 0) & Ne(y, 1) and lose y = -2
+                                raise NotImplementedError
                             t = reduce_inequalities(andargs, free[0])
                             # ValueError when there are potentially
                             # nonvanishing imaginary parts
@@ -335,6 +341,14 @@ class Piecewise(DefinedFunction):
                             t = And(*[_solve_inequality(
                                 a, free[0], linear=True)
                                 for a in andargs])
+                            # the symbol cannot be equal to two different
+                            # values, e.g. Eq(y, 0) & Eq(y, 1)
+                            vals = {a.rhs for a in (
+                                t.args if isinstance(t, And) else (t,))
+                                if isinstance(a, Eq) and a.lhs == free[0]}
+                            if any((v - w).is_zero is False
+                                    for v in vals for w in vals):
+                                t = S.false
                     else:
                         t = And(*andargs)
                     if t is S.false:
