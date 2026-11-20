@@ -5,7 +5,7 @@ from math import factorial as fac
 from typing import TYPE_CHECKING
 
 from .cartan_type import CartanType
-from sympy.core.backend import Matrix, eye, Rational, igcd
+from sympy.core.backend import Matrix, eye
 from sympy.core.basic import Atom
 
 if TYPE_CHECKING:

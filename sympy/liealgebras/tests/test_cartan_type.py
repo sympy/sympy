@@ -3,7 +3,7 @@ from sympy.core.numbers import Rational
 from sympy.matrices import eye, Matrix
 from sympy.liealgebras.cartan_type import CartanType, Standard_Cartan
 from sympy.testing.pytest import raises
-from sympy import eye, Matrix
+
 
 def test_Standard_Cartan():
     c = CartanType("A4")

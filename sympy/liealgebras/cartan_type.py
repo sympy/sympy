@@ -211,7 +211,7 @@ class Standard_Cartan(Atom):
         - https://en.wikipedia.org/wiki/Weight_(representation_theory)
         - http://www.math.columbia.edu/~woit/notes11.pdf
         """
-        return self.omega_matrix().row(i - 1) 
+        return self.omega_matrix().row(i - 1)
 
 
     def dynkin_diagram(self) -> str:
