@@ -111,6 +111,12 @@ class Standard_Cartan(Atom):
             a_{ji} = 2 \langle\alpha_i, \alpha_j\rangle / \langle\alpha_j, \alpha_j\rangle
 
         where $a_i$ is the i'th simple root and $\langle,\rangle$ is the scalar product.
+
+        Sources
+        =======
+        - https://en.wikipedia.org/wiki/Cartan_matrix
+        - https://mathworld.wolfram.com/CartanMatrix.html
+
         """
         r = self.rank()
         cartan_matrix = zeros(r,r)
