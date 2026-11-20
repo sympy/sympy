@@ -177,3 +177,16 @@ A_E_F>=EXPRESS(DT(V_E_F>,F),D)\
                        l['l']*sin(l['dc'])*l['dc'].diff()**2 -
                        l['l']*sin(l['dc'])*l['fd'].diff()**2)*l['frame_d'].z)
     assert (a_e_f - expected_a_e_f).simplify() == 0
+
+
+def test_angle_units():
+    if not antlr4:
+        skip('Test skipped: antlr4 is not installed.')
+
+    code = parse_autolev('CONSTANTS A, B, C\nA = 180*UNITS(DEG, RAD)\n'
+                         'B = UNITS(RAD, DEG)\nC = 1/UNITS(DEG, RAD)\n')
+    namespace = {}
+    exec(code, namespace)
+    assert namespace['a'] == namespace['_sm'].pi
+    assert namespace['b'] == 180/namespace['_sm'].pi
+    assert namespace['c'] == 180/namespace['_sm'].pi
