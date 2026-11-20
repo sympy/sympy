@@ -139,6 +139,10 @@ def test_rsolve_hyper_nonlinear_divisors():
     # with A = B = 1, before any of the 2**10 * 2**10 divisor pairs is built
     P = Mul(*[n + j for j in range(1, 11)])
     assert rsolve(P*(y(n + 1) - y(n)), y(n)) == C0
+    # the pair A = n**2, B = (n + 1)**2 would add a second copy of the
+    # solution 1, 0, 0, ... found with A = n, B = n + 1
+    assert rsolve((n + 2)**2*y(n + 2) - 2*(n + 1)**2*y(n + 1) + n**2*y(n),
+                  y(n)) == C0*rf(0, n)/factorial(n)
 
 
 def test_rsolve_0_sol_homogeneous():

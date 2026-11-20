@@ -708,7 +708,7 @@ def rsolve_hyper(coeffs, f, n, **hints):
                     for B in _monic_divisors(q_real, n, B_deg):
                         yield A, B
 
-    seen = set()
+    linear, seen = set(factors), set()
     for A, B in chain(factors, extra_factors()):
         if kernel and len(kernel) == r:
             # a recurrence of order r has at most r independent solutions
@@ -764,11 +764,22 @@ def rsolve_hyper(coeffs, f, n, **hints):
                 # this indicates that the term y(n_root) is zero, and one should
                 # start the product with the term y(n_root + 1).
                 n0 = 0
-                for n_root in roots(ratio.as_numer_denom()[1], n).keys():
+                num, den = ratio.as_numer_denom()
+                for n_root in roots(den, n).keys():
                     if n_root.has(I):
                         return None
                     elif (n0 < (n_root + 1)) == True:
                         n0 = n_root + 1
+                # A nonnegative integer root of the numerator at or after n0
+                # makes the product zero from there on. Such solutions with
+                # finite support are left to the linear factors, as before,
+                # since the casoratian below does not see that e.g. the
+                # products of n/(n + 1) and of n**2/(n + 1)**2 from 0 are
+                # the same sequence 1, 0, 0, ...
+                if (A, B) not in linear and any(
+                        k.is_integer and (k >= n0) == True
+                        for k in roots(num, n)):
+                    continue
                 K = product(ratio, (n, n0, n - 1))
                 if K.has(factorial, FallingFactorial, RisingFactorial):
                     K = simplify(K)
