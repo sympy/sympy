@@ -1723,7 +1723,7 @@ def try_polynomial(func, z):
     return res
 
 
-def try_lerchphi(func):
+def try_lerchphi(func, argument):
     """
     Try to find an expression for Hyper_Function ``func`` in terms of Lerch
     Transcendents.
@@ -1841,8 +1841,12 @@ def try_lerchphi(func):
     trans = {}
     for n, b in enumerate([S.One] + list(deriv.keys())):
         trans[b] = n
-    basis = [expand_func(b) for (b, _) in sorted(trans.items(),
-                                                 key=lambda x:x[1])]
+    # Keep integer and half-integer reductions, including Catalan's constant.
+    keep_lerch = argument == exp_polar(I*pi)
+    basis = [b if (keep_lerch and b.func == lerchphi
+                   and b.args[2].is_Rational and not (2*b.args[2]).is_Integer)
+             else expand_func(b)
+             for (b, _) in sorted(trans.items(), key=lambda x:x[1])]
     B = Matrix(basis)
     C = Matrix([[0]*len(B)])
     for b, c in coeffs.items():
@@ -2040,7 +2044,7 @@ def _hyperexpand(func, z, ops0=[], z0=Dummy('z0'), premult=1, prem=0,
 
     # Now try a lerch phi formula
     if formula is None:
-        formula = try_lerchphi(func)
+        formula = try_lerchphi(func, z)
 
     if formula is None:
         debug('  Could not find an origin. ',
