@@ -48,6 +48,7 @@ For the sake of completeness, `f(n)` can be:
 """
 from __future__ import annotations
 from collections import defaultdict
+from itertools import chain
 
 from sympy.concrete import product
 from sympy.core.singleton import S
@@ -463,25 +464,41 @@ def rsolve_ratio(coeffs, f, n, **hints):
             return None
 
 
-def _monic_divisors(roots_dict, n):
-    """Return every monic divisor of the polynomial with the given roots.
+def _monic_divisors(roots_dict, n, deg):
+    """Yield the monic divisors of degree ``deg`` of the polynomial with the
+    given roots.
 
     ``roots_dict`` maps each root to its multiplicity, as returned by
-    :func:`~.roots`.
+    :func:`~.roots`. The divisors are generated one at a time, so a caller
+    that stops early does not pay for the others.
 
     Examples
     ========
 
     >>> from sympy.solvers.recurr import _monic_divisors
     >>> from sympy.abc import n
-    >>> _monic_divisors({-1: 2}, n)
-    [1, n + 1, (n + 1)**2]
+    >>> list(_monic_divisors({-1: 2, -2: 1}, n, 2))
+    [(n + 1)*(n + 2), (n + 1)**2]
 
     """
-    divisors = [S.One]
-    for root, mult in roots_dict.items():
-        divisors = [d*(n - root)**k for d in divisors for k in range(mult + 1)]
-    return divisors
+    items = list(roots_dict.items())
+    # room[i] is the highest degree the roots from i on can still give
+    room = [0]*(len(items) + 1)
+    for i in reversed(range(len(items))):
+        room[i] = room[i + 1] + items[i][1]
+
+    def divisors(i, left):
+        if left > room[i]:
+            return
+        if i == len(items):
+            yield S.One
+            return
+        root, mult = items[i]
+        for k in range(min(mult, left) + 1):
+            for d in divisors(i + 1, left - k):
+                yield (n - root)**k*d
+
+    yield from divisors(0, deg)
 
 
 def _degree_differences(coeffs, n):
@@ -675,20 +692,30 @@ def rsolve_hyper(coeffs, f, n, **hints):
               if root.is_extended_real is not False}
     q_real = {root: m for root, m in q_roots.items()
               if root.is_extended_real is not False}
-    if sum(p_real.values()) > 1 or sum(q_real.values()) > 1:
-        seen = set(factors)
-        for A in _monic_divisors(p_real, n):
-            for B in _monic_divisors(q_real, n):
-                if (A, B) not in seen:
-                    seen.add((A, B))
-                    factors.append((A, B))
 
     differences = _degree_differences(coeffs, n)
 
-    for A, B in factors:
+    def extra_factors():
+        # Generated lazily and only for the degree differences that can give
+        # a solution, so a recurrence solved by the first candidates never
+        # builds the up to 2**deg(p) * 2**deg(q) pairs.
+        p_deg, q_deg = sum(p_real.values()), sum(q_real.values())
+        if p_deg < 2 and q_deg < 2:
+            return
+        for delta in sorted(differences):
+            for B_deg in range(max(0, -delta), min(q_deg, p_deg - delta) + 1):
+                for A in _monic_divisors(p_real, n, B_deg + delta):
+                    for B in _monic_divisors(q_real, n, B_deg):
+                        yield A, B
+
+    seen = set()
+    for A, B in chain(factors, extra_factors()):
         if kernel and len(kernel) == r:
             # a recurrence of order r has at most r independent solutions
             break
+        if (A, B) in seen:
+            continue
+        seen.add((A, B))
         if r and degree(A, n) - degree(B, n) not in differences:
             # the polynomial in Z would have no nonzero root
             continue

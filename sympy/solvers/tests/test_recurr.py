@@ -1,5 +1,6 @@
 from __future__ import annotations
 from sympy.core.function import (Function, Lambda, expand)
+from sympy.core.mul import Mul
 from sympy.core.numbers import (I, Rational)
 from sympy.core.relational import Eq
 from sympy.core.singleton import S
@@ -134,6 +135,10 @@ def test_rsolve_hyper_nonlinear_divisors():
         (-1)**n*C0*factorial(n) + C1*factorial(n)
     # roots whose realness is unknown are used too
     assert rsolve((n + a)**2*y(n + 1) - y(n), y(n)) == C0/rf(a, n)**2
+    # the extra divisors are generated lazily: the constant solution is found
+    # with A = B = 1, before any of the 2**10 * 2**10 divisor pairs is built
+    P = Mul(*[n + j for j in range(1, 11)])
+    assert rsolve(P*(y(n + 1) - y(n)), y(n)) == C0
 
 
 def test_rsolve_0_sol_homogeneous():
