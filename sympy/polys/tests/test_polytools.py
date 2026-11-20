@@ -5,7 +5,7 @@ import pickle
 
 from sympy.polys.polytools import (
     Poly, PurePoly, poly,
-    parallel_poly_from_expr,
+    poly_from_expr, parallel_poly_from_expr,
     degree, degree_list,
     total_degree,
     LC, LM, LT,
@@ -1801,6 +1801,24 @@ def test_parallel_poly_from_expr():
         [Poly(x, x, y, domain='ZZ'), Poly(y, x, y, domain='ZZ')]
 
     raises(PolificationFailed, lambda: parallel_poly_from_expr([0, 1]))
+
+
+def test_poly_from_expr_expand_count():
+    g = 2**((x*(y + 1) + 1)**2)
+    G = Poly(g, expand=False)
+    gens = (x, 2**(x**2*y**2 + 2*x**2*y + x**2), 2**(x*y), 2**x)
+    assert g.expand().expand() != g.expand()
+    assert parallel_poly_from_expr([G, x])[1].gens == gens
+    assert poly_from_expr(g)[0] == Poly(g.expand().expand(), expand=False)
+
+    for f, args, expr in ((poly_from_expr, (1 + I)**2, 2*I),
+                          (parallel_poly_from_expr, [(1 + I)**2, 2], [2*I, 2]),
+                          (parallel_poly_from_expr, [x*(y + 1), [1]], [x*y + x, [1]])):
+        try:
+            f(args)
+            assert False
+        except PolificationFailed as exc:
+            assert (exc.exprs if exc.seq else exc.expr) == expr
 
 
 def test_pdiv():

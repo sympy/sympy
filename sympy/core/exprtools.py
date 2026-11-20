@@ -453,8 +453,76 @@ def decompose_power_rat(expr: Expr) -> tuple[Expr, Rational]:
     return base, exp # type: ignore
 
 
+def _is_expanded_term(term):
+    """Return True if ``expand`` would leave ``term`` unchanged.
+
+    The test is quick and conservative: it can return False for a term
+    that ``expand`` leaves alone, but never True for one that ``expand``
+    would change or rebuild.
+
+    A number times powers of symbols, like ``3*x**2*y``, passes if it is in
+    the canonical form that evaluation gives it. Any other factor must not
+    be a sum or a rational power of a sum, and ``expand`` must leave it
+    unchanged. A product with such a factor must also be unchanged by the
+    ``mul`` hint of ``expand``, which rebuilds it from its numerator and
+    denominator.
+
+    Examples
+    ========
+
+    >>> from sympy import Mul, exp, sin, sqrt
+    >>> from sympy.core.exprtools import _is_expanded_term
+    >>> from sympy.abc import x, y
+    >>> _is_expanded_term(3*x**2*y), _is_expanded_term(sqrt(2)*sin(x + y))
+    (True, True)
+    >>> _is_expanded_term(x*(y + 1)), _is_expanded_term(exp(x + y))
+    (False, False)
+    >>> _is_expanded_term(Mul(y, x, evaluate=False))
+    False
+
+    ``expand`` leaves ``y/(x + 1)`` unchanged, but the test is conservative
+    with powers of sums:
+
+    >>> _is_expanded_term(y/(x + 1))
+    False
+
+    """
+    args = Mul.make_args(term)
+    simple, bases, last = True, set(), None
+
+    for i, factor in enumerate(args):
+        if factor.is_Number:
+            if (i or not (factor.is_Rational or factor.is_Float) or not factor
+                    or factor is S.One and len(args) > 1):
+                return False
+            continue
+
+        if factor.is_Atom:
+            if factor is S.ComplexInfinity:
+                return False
+            base = factor
+        elif (factor.is_Pow and factor.base.is_Symbol
+                and factor.exp.is_Integer and factor.exp.p not in (0, 1)):
+            base = factor.base
+        else:
+            inner = factor.base if factor.is_Pow and factor.exp.is_Rational else factor
+            if inner.is_Add or factor.expand() != factor:
+                return False
+            simple = False
+            continue
+
+        if base in bases or last is not None and Basic.compare(last, factor) >= 0:
+            return False
+        bases.add(base)
+        last = factor
+
+    if term.is_Mul:
+        return len(args) > 1 and (simple or term._eval_expand_mul() == term)
+    return True
+
+
 def _decompose_exprs(
-        exprs, is_coeff=None, decompose=decompose_power):
+        exprs, is_coeff=None, decompose=decompose_power, expanded=False):
     """Identify bases and factor information in commutative expressions.
 
     The expressions are analyzed as given: no expansion, simplification,
@@ -471,6 +539,10 @@ def _decompose_exprs(
     consisting of a list of coefficient factors and a dictionary mapping each
     remaining base to a tuple giving the sums of its positive and negative
     exponents in that term. ``bases`` is the set of all bases identified.
+
+    If ``expanded`` is True, None is returned as soon as a term is found
+    that ``expand`` might change (see ``_is_expanded_term``), so the caller
+    can expand the expressions and decompose them again.
 
     Examples
     ========
@@ -504,6 +576,9 @@ def _decompose_exprs(
             expr = expr.lhs - expr.rhs
 
         for term in Add.make_args(expr):
+            if expanded and not _is_expanded_term(term):
+                return None
+
             coeff_factors, powers = [], {}
 
             for factor in Mul.make_args(term):
