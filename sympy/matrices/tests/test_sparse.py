@@ -677,6 +677,12 @@ def test_sparse_solve():
     assert A*s == A[:, 0]
     s = A.solve_least_squares(A[:, 0], 'LDL')
     assert A*s == A[:, 0]
+    # Complex matrices must use the conjugate transpose (self.H), not self.T
+    Ac = SparseMatrix([[1], [S.ImaginaryUnit]])
+    bc = SparseMatrix([1, 1])
+    sc = Ac.solve_least_squares(bc, 'LDL')
+    assert sc == SparseMatrix([(1 - S.ImaginaryUnit)/2])
+    assert (Ac*sc - bc).norm() == 1
 
 
 def test_lower_triangular_solve():
