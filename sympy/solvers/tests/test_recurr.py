@@ -1,5 +1,6 @@
 from __future__ import annotations
 from sympy.core.function import (Function, Lambda, expand)
+from sympy.core.mul import Mul
 from sympy.core.numbers import (I, Rational)
 from sympy.core.relational import Eq
 from sympy.core.singleton import S
@@ -119,6 +120,29 @@ def test_rsolve_bulk():
             # See issue 3956:
             if p.is_hypergeometric(n) and len(c) <= 3:
                 assert rsolve_hyper(c, q, n).subs(zip(symbols('C:3'), [0, 0, 0])).expand() == p
+
+
+def test_rsolve_hyper_nonlinear_divisors():
+    # issue 31017: the hypergeometric solutions need a divisor of the leading
+    # or trailing coefficient that is not linear
+    assert rsolve((n + 1)**2*y(n + 1) - y(n), y(n), {y(0): 1}) == \
+        1/factorial(n)**2
+    assert rsolve(y(n + 1) - (n + 1)*(n + 2)*y(n), y(n), {y(0): 1}) == \
+        factorial(n)*factorial(n + 1)
+    assert rsolve(y(n + 1) - (n + 1)**3*y(n), y(n), {y(0): 1}) == \
+        factorial(n)**3
+    assert rsolve(y(n + 2) - (n + 1)*(n + 2)*y(n), y(n)) == \
+        (-1)**n*C0*factorial(n) + C1*factorial(n)
+    # roots whose realness is unknown are used too
+    assert rsolve((n + a)**2*y(n + 1) - y(n), y(n)) == C0/rf(a, n)**2
+    # the extra divisors are generated lazily: the constant solution is found
+    # with A = B = 1, before any of the 2**10 * 2**10 divisor pairs is built
+    P = Mul(*[n + j for j in range(1, 11)])
+    assert rsolve(P*(y(n + 1) - y(n)), y(n)) == C0
+    # the pair A = n**2, B = (n + 1)**2 would add a second copy of the
+    # solution 1, 0, 0, ... found with A = n, B = n + 1
+    assert rsolve((n + 2)**2*y(n + 2) - 2*(n + 1)**2*y(n + 1) + n**2*y(n),
+                  y(n)) == C0*rf(0, n)/factorial(n)
 
 
 def test_rsolve_0_sol_homogeneous():
