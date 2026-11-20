@@ -141,6 +141,31 @@ class Standard_Cartan(Atom):
         """
         return self.cocartan_matrix().pinv().T
 
+    def fundamental_weight(self, i):
+        """
+        Returns the i'th fundamental weight of the algebra in the
+        orthogonal basis.
+
+        Explanation
+        ===========
+        The weights of an algebra, \u03BB, can be
+        written as a linear combination of the simple roots, \u03B1_i.
+        The following theorem,
+
+        a_i = 2<\u03BB, \u03B1_i> / <\u03B1_i, \u03B1_i>
+
+        where a_i are the Dynkin labels.  The fundamental weights
+        of the algebra are the weights, \u03BB, with the smallest a_i >=0.
+        Note that if \u03BB_i==\u03B1_i, then the Dynkin labels become
+        the elements of the Cartan matrix.
+
+        Sources
+        =======
+        - https://en.wikipedia.org/wiki/Weight_(representation_theory)
+        - http://www.math.columbia.edu/~woit/notes11.pdf
+        """
+        return self.omega_matrix().row(i)
+
     def dynkin_diagram(self) -> str:
         raise NotImplementedError(
             "dynkin_diagram is implemented by subclasses of Standard_Cartan"
