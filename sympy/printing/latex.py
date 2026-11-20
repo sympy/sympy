@@ -472,32 +472,26 @@ class LatexPrinter(Printer):
     def _print_Float(self, expr):
         # Based off of that in StrPrinter
         dps = prec_to_dps(expr._prec)
-        strip = False if self._settings['full_prec'] else True
-        low = self._settings["min"] if "min" in self._settings else None
-        high = self._settings["max"] if "max" in self._settings else None
-        str_real = mlib_to_str(expr._mpf_, dps, strip_zeros=strip, min_fixed=low, max_fixed=high)
-
-        # Must always have a mul symbol (as 2.5 10^{20} just looks odd)
-        # thus we use the number separator
-        separator = self._settings['mul_symbol_latex_numbers']
-
-        if 'e' in str_real:
-            (mant, exp) = str_real.split('e')
-
-            if exp[0] == '+':
-                exp = exp[1:]
-            if self._settings['decimal_separator'] == 'comma':
-                mant = mant.replace('.','{,}')
-
-            return r"%s%s10^{%s}" % (mant, separator, exp)
-        elif str_real == "+inf":
+        low = self._settings.get("min")
+        high = self._settings.get("max")
+        str_real = mlib_to_str(expr._mpf_, dps, strip_zeros=False, min_fixed=low, max_fixed=high)
+        if str_real == "+inf":
             return r"\infty"
-        elif str_real == "-inf":
+        if str_real == "-inf":
             return r"- \infty"
-        else:
-            if self._settings['decimal_separator'] == 'comma':
-                str_real = str_real.replace('.','{,}')
-            return str_real
+
+        mant, _, exp = str_real.partition("e")
+        if not self._settings['full_prec']:
+            integer, point, fraction = mant.partition(".")
+            if fraction:
+                mant = integer + point + (fraction.rstrip("0") or "0")
+        if self._settings['decimal_separator'] == 'comma':
+            mant = mant.replace('.', '{,}')
+
+        if exp:
+            separator = self._settings['mul_symbol_latex_numbers']
+            return r"%s%s10^{%s}" % (mant, separator, exp.removeprefix('+'))
+        return mant
 
     def _print_Cross(self, expr):
         vec1 = expr._expr1
