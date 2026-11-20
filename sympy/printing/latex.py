@@ -923,7 +923,8 @@ class LatexPrinter(Printer):
         if str(dir) == '+-' or z0 in (S.Infinity, S.NegativeInfinity):
             tex += r"%s}" % self._print(z0)
         else:
-            tex += r"%s^%s}" % (self._print(z0), self._print(dir))
+            point = self.parenthesize(z0, PRECEDENCE["Pow"], strict=True)
+            tex += r"%s^%s}" % (self.parenthesize_super(point), self._print(dir))
 
         if isinstance(e, AssocOp):
             return r"%s\left(%s\right)" % (tex, self._print(e))
