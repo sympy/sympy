@@ -19,6 +19,7 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
+from sympy.core.expr import Expr
 from sympy.core.power import Pow
 from sympy.core.singleton import S
 from sympy.core.symbol import Symbol
@@ -32,7 +33,6 @@ from sympy.utilities.misc import filldedent
 
 if TYPE_CHECKING:
     from typing import Callable
-    from sympy.core.expr import Expr
     from sympy.sets.sets import Set
     from sympy.core.basic import Basic
     from sympy.logic.boolalg import Boolean
@@ -193,6 +193,12 @@ def monotonicity_helper(
             )
 
     variable = symbol or (free.pop() if free else Symbol('x'))
+    if not isinstance(variable, Expr):
+        message: str = (f"I received `expression` with free symbol {variable = },"
+            f" which is a `{type(variable).__name__}` `type`, but this function"
+            " needs an `Expr` `type`.")
+        raise TypeError(filldedent('''
+            %s''' % message))
 
     try:
         sings = singularities(expression, variable, interval)
@@ -521,6 +527,12 @@ def is_monotonic(
         )
 
     variable = symbol or (free.pop() if free else Symbol('x'))
+    if not isinstance(variable, Expr):
+        message: str = (f"I received `expression` with free symbol {variable = },"
+            f" which is a `{type(variable).__name__}` `type`, but this function"
+            " needs an `Expr` `type`.")
+        raise TypeError(filldedent('''
+            %s''' % message))
 
     try:
         sings = singularities(expression, variable, interval)
