@@ -1004,24 +1004,32 @@ class jn(SphericalBesselBase):
             elif nu.is_integer:
                 if nu.is_positive:
                     return S.Zero
-                else:
+                elif nu.is_negative:
                     return S.ComplexInfinity
         if z in (S.NegativeInfinity, S.Infinity):
             return S.Zero
 
     def _eval_rewrite_as_besselj(self, nu, z, **kwargs):
+        if z.is_zero and nu.is_integer:
+            return self.eval(nu, z)
         return sqrt(pi/(2*z)) * besselj(nu + S.Half, z)
 
     def _eval_rewrite_as_bessely(self, nu, z, **kwargs):
+        if z.is_zero and nu.is_integer:
+            return self.eval(nu, z)
         return S.NegativeOne**nu * sqrt(pi/(2*z)) * bessely(-nu - S.Half, z)
 
     def _eval_rewrite_as_yn(self, nu, z, **kwargs):
         return S.NegativeOne**(nu) * yn(-nu - 1, z)
 
     def _expand(self, **hints):
+        if self.argument.is_zero:
+            return self.eval(*self.args)
         return _jn(self.order, self.argument)
 
     def _eval_evalf(self, prec):
+        if self.argument.is_zero:
+            return self.eval(*self.args)
         if self.order.is_Integer:
             return self.rewrite(besselj)._eval_evalf(prec)
 
