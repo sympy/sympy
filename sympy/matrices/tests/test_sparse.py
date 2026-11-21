@@ -1,8 +1,9 @@
 from __future__ import annotations
-from sympy.core.numbers import (Float, I, Rational)
+from sympy.core.numbers import (Float, I, Rational, pi)
 from sympy.core.singleton import S
 from sympy.core.symbol import (Symbol, symbols)
 from sympy.functions.elementary.complexes import Abs
+from sympy.functions.elementary.trigonometric import cos
 from sympy.polys.polytools import Poly
 from sympy.matrices import \
     Matrix, MutableSparseMatrix, ImmutableSparseMatrix, SparseMatrix, eye, \
@@ -744,3 +745,13 @@ def test_hermitian():
     assert a.is_hermitian is None
     a[0, 1] = a[1, 0]*I
     assert a.is_hermitian is False
+
+
+def test_sparse_applyfunc():
+    m = SparseMatrix([[0, 5], [0, 0]])
+    assert m.applyfunc(lambda x: x + 1) == SparseMatrix([[1, 6], [1, 1]])
+    assert m.applyfunc(lambda x: 2*x) == SparseMatrix([[0, 10], [0, 0]])
+    assert m.applyfunc(lambda x: x - 5).todok() == {(0, 0): -5, (1, 0): -5, (1, 1): -5}
+
+    im = ImmutableSparseMatrix([[0, pi], [0, 0]])
+    assert im.applyfunc(cos) == ImmutableSparseMatrix([[1, -1], [1, 1]])
