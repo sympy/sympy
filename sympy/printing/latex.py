@@ -3043,6 +3043,8 @@ class LatexPrinter(Printer):
     def _print_mpq(self, expr):
         return str(expr)
 
+    _print_PythonMPQ = _print_mpq
+
     def _print_fmpz(self, expr):
         return str(expr)
 
