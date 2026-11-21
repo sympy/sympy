@@ -3,6 +3,7 @@ from sympy.core.add import Add
 from sympy.core.expr import unchanged
 from sympy.core.mul import Mul
 from sympy.core.symbol import symbols
+from sympy.core.singleton import S
 from sympy.core.relational import Eq
 from sympy.concrete.summations import Sum
 from sympy.functions.elementary.complexes import im, re
@@ -132,6 +133,17 @@ def test_ZeroMatrix():
     assert ZeroMatrix(n, n)**0 == Identity(n)
     assert ZeroMatrix(3, 3).as_explicit() == ImmutableDenseMatrix.zeros(3, 3)
 
+    # 0x0 empty ZeroMatrix determinant and inverse
+    Z0 = ZeroMatrix(0, 0)
+    assert Z0.rows == 0 and Z0.cols == 0
+    assert Z0.is_square is True
+    assert Z0._eval_determinant() == S.One
+    assert Z0.inverse() == Z0
+    assert Z0**-1 == Z0
+    assert Z0**-2 == Z0
+    assert Z0.as_explicit() == ImmutableDenseMatrix.zeros(0, 0)
+    assert Z0.as_explicit().det() == S.One
+
 
 def test_ZeroMatrix_doit():
     n = symbols('n', integer=True)
@@ -161,6 +173,17 @@ def test_OneMatrix():
 
     U = OneMatrix(2, 3)
     assert U.as_explicit() == ImmutableDenseMatrix.ones(2, 3)
+
+    # 0x0 empty OneMatrix determinant and inverse
+    U0 = OneMatrix(0, 0)
+    assert U0.rows == 0 and U0.cols == 0
+    assert U0.is_square is True
+    assert U0._eval_determinant() == S.One
+    assert U0.inverse() == U0
+    assert U0**-1 == U0
+    assert U0**-2 == U0
+    assert U0.as_explicit() == ImmutableDenseMatrix.ones(0, 0)
+    assert U0.as_explicit().det() == S.One
 
 
 def test_OneMatrix_doit():
