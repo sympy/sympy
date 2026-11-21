@@ -34,15 +34,14 @@ if TYPE_CHECKING:
     from typing import Callable
     from sympy.core.expr import Expr
     from sympy.sets.sets import Set
-    from sympy.core.basic import Basic
     from sympy.logic.boolalg import Boolean
 
 
 def singularities(
     expression: Expr | complex,
-    symbol: Symbol | Basic,
+    symbol: Expr,
     domain: Set | None = None,
-) -> set[Symbol]:
+) -> Set:
     """
     Find singularities of a given function.
 
@@ -109,34 +108,42 @@ def singularities(
 
     expression = sympify(expression)
 
-    if domain is None:
-        domain = S.Reals if symbol.is_real else S.Complexes
-    try:
-        sings = S.EmptySet
-        e = expression.rewrite([sec, csc, cot, tan], cos)
-        e = e.rewrite([sech, csch, coth, tanh], cosh)
-        for i in e.atoms(Pow):
-            if i.base == S.Zero:
-                sings += solveset(i.exp < 0, symbol, domain)
-                continue
-            if i.exp.is_infinite:
-                raise NotImplementedError
-            if i.exp.is_negative:
-                sings += solveset(i.base, symbol, domain)
-            elif symbol in i.exp.free_symbols:
-                roots = solveset(i.base, symbol, domain)
-                negative = solveset(i.exp < 0, symbol, domain)
-                sings += roots.intersect(negative)
-        for i in expression.atoms(log, asech, acsch):
-            sings += solveset(i.args[0], symbol, domain)
-        for i in expression.atoms(atanh, acoth):
-            sings += solveset(i.args[0] - 1, symbol, domain)
-            sings += solveset(i.args[0] + 1, symbol, domain)
-        return sings
-    except NotImplementedError:
-        raise NotImplementedError(filldedent('''
-            Methods for determining the singularities
-            of this function have not been developed.'''))
+    # Remove the `sherpa` type-narrowing technique after adding type annotations to `SingletonRegistry`.
+    if domain is None and symbol.is_real:
+        sherpa: Set = S.Reals
+        domain = sherpa
+    elif domain is None:
+        sherpa = S.Complexes
+        domain = sherpa
+
+    sings: Set = S.EmptySet
+    e: Expr = expression.rewrite([sec, csc, cot, tan], cos)
+    e = e.rewrite([sech, csch, coth, tanh], cosh)
+    for i in e.atoms(Pow):
+        if i.base == S.Zero:
+            sings += solveset(i.exp < 0, symbol, domain)
+            continue
+        if i.exp.is_infinite:
+            message: str = (f"I received {expression = }, which contains the"
+                f" power `{i}` with the infinite exponent `{i.exp}`, but I do"
+                " not have a method to find the singularities of a power with"
+                " an infinite exponent.")
+            raise NotImplementedError(filldedent('''
+                %s''' % message))
+        if i.exp.is_negative:
+            sings += solveset(i.base, symbol, domain)
+        elif symbol in i.exp.free_symbols:
+            roots: Set = solveset(i.base, symbol, domain)
+            negative: Set = solveset(i.exp < 0, symbol, domain)
+            sings += roots.intersect(negative)
+    for logarithm in expression.atoms(log):
+        sings += solveset(logarithm.args[0], symbol, domain)
+    for function in expression.atoms(asech, acsch):
+        sings += solveset(function.args[0], symbol, domain)
+    for function in expression.atoms(atanh, acoth):
+        sings += solveset(function.args[0] - 1, symbol, domain)
+        sings += solveset(function.args[0] + 1, symbol, domain)
+    return sings
 
 
 ###########################################################################
@@ -175,7 +182,7 @@ def monotonicity_helper(
     Returns
     =======
 
-    Boolean
+    bool
         True if ``predicate`` is true for all the derivatives when ``symbol``
         is varied in ``range``, False otherwise.
 
@@ -183,30 +190,42 @@ def monotonicity_helper(
     from sympy.solvers.solveset import solveset
 
     expression = sympify(expression)
-    free = expression.free_symbols
 
-    if symbol is None:
+    if symbol is not None:
+        variable: Symbol = symbol
+    else:
+        free = expression.free_symbols
         if len(free) > 1:
-            raise NotImplementedError(
-                'The function has not yet been implemented'
-                ' for all multivariate expressions.'
-            )
-
-    variable = symbol or (free.pop() if free else Symbol('x'))
+            message: str = (f"I received {expression.free_symbols = }, which has"
+                f" {len(free)} free symbols, but this function does not yet accept"
+                " more than one free symbol (a multivariate expression).")
+            raise NotImplementedError(filldedent('''
+                %s''' % message))
+        elif free:
+            free_symbol = free.pop()
+            if not isinstance(free_symbol, Symbol):
+                message = (f"I received `expression` with {free_symbol = }, which"
+                    f" is a `{type(free_symbol).__name__}` `type`, but this function"
+                    " needs a `Symbol` `type`.")
+                raise TypeError(filldedent('''
+                    %s''' % message))
+            variable = free_symbol
+        else:
+            variable = Symbol('x')
 
     try:
-        sings = singularities(expression, variable, interval)
+        sings: Set = singularities(expression, variable, interval)
     except NotImplementedError:
         pass
     else:
         if interval.is_subset(S.Reals):
-            interior_sings = interval.interior.intersection(sings)
+            interior_sings: Set = interval.interior.intersection(sings)
             if interior_sings != S.EmptySet:
                 return False
 
-    derivative = expression.diff(variable)
-    predicate_interval = solveset(predicate(derivative), variable, S.Reals)
-    return interval.is_subset(predicate_interval)
+    derivative: Expr = expression.diff(variable)
+    predicate_interval: Set = solveset(predicate(derivative), variable, S.Reals)
+    return interval.is_subset(predicate_interval)  # type: ignore  # `is_subset` is not annotated
 
 
 def is_increasing(
@@ -513,24 +532,37 @@ def is_monotonic(
 
     expression = sympify(expression)
 
-    free = expression.free_symbols
-    if symbol is None and len(free) > 1:
-        raise NotImplementedError(
-            'is_monotonic has not yet been implemented'
-            ' for all multivariate expressions.'
-        )
-
-    variable = symbol or (free.pop() if free else Symbol('x'))
+    if symbol is not None:
+        variable: Symbol = symbol
+    else:
+        free = expression.free_symbols
+        if len(free) > 1:
+            message: str = (f"I received {expression.free_symbols = }, which has"
+                f" {len(free)} free symbols, but this function does not yet accept"
+                " more than one free symbol (a multivariate expression).")
+            raise NotImplementedError(filldedent('''
+                %s''' % message))
+        elif free:
+            free_symbol = free.pop()
+            if not isinstance(free_symbol, Symbol):
+                message = (f"I received `expression` with {free_symbol = }, which"
+                    f" is a `{type(free_symbol).__name__}` `type`, but this function"
+                    " needs a `Symbol` `type`.")
+                raise TypeError(filldedent('''
+                    %s''' % message))
+            variable = free_symbol
+        else:
+            variable = Symbol('x')
 
     try:
-        sings = singularities(expression, variable, interval)
+        sings: Set = singularities(expression, variable, interval)
     except NotImplementedError:
         pass
     else:
         if interval.is_subset(S.Reals):
-            interior_sings = interval.interior.intersection(sings)
+            interior_sings: Set = interval.interior.intersection(sings)
             if interior_sings != S.EmptySet:
                 return False
 
-    turning_points = solveset(expression.diff(variable), variable, interval)
+    turning_points: Set = solveset(expression.diff(variable), variable, interval)
     return interval.intersection(turning_points) is S.EmptySet
