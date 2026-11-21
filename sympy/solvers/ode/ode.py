@@ -489,10 +489,7 @@ def dsolve(eq, func=None, hint="default", simplify=True,
         - Arbitrary constants are symbols named ``C1``, ``C2``, and so on.
         - To rename the arbitrary constants after calling ``dsolve``, pass the
           solution to :py:meth:`~sympy.solvers.ode.ode.constant_renumber`.
-          Set ``variables`` to the symbols that are not constants (for example
-          the symbols of the ODE and of ``ics``); they will not be renamed,
-          but all other free symbols will be. Set ``newconstants`` to an
-          iterator of the new symbols, for example
+          Set ``newconstants`` to an iterator of the new symbols, for example
           ``numbered_symbols('K', start=1)``.
         - Because all solutions should be mathematically equivalent, some
           hints may return the exact same result for an ODE. Often, though,
