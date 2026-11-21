@@ -353,6 +353,12 @@ def test_range_union():
     # Step > 1 misaligned modulo step
     assert Union(Range(0, 10, 2), Range(1, 11, 2)) == Union(Range(0, 10, 2), Range(1, 11, 2), evaluate=False)
 
+    # Singletons
+    assert Union(Range(0, 1), Range(1, 3, 2)) == Range(0, 2, 1)
+    assert Union(Range(0, 1), Range(2, 8, 2)) == Range(0, 8, 2)
+    assert Union(Range(8, 9), Range(2, 8, 2)) == Range(2, 10, 2)
+    assert Union(Range(10, 11), Range(2, 8, 2)) == Union(Range(10, 11), Range(2, 8, 2), evaluate=False)
+
     # Negative step ranges
     assert Union(Range(5, 0, -1), Range(3, 8)) == Range(1, 8)
     assert Union(Range(10, 0, -2), Range(6, -4, -2)) == Range(-2, 12, 2)
@@ -361,6 +367,8 @@ def test_range_union():
     assert Union(Range(0, oo), Range(-5, oo)) == Range(-5, oo)
     assert Union(Range(0, oo, 2), Range(10, oo, 2)) == Range(0, oo, 2)
     assert Union(Range(-oo, 0), Range(0, oo)) == Range(-oo, oo)
+    assert Union(Range(0, oo, 1), Range(-1, -oo, -1)) == Range(-oo, oo, 1)
+    assert Union(Range(0, oo, 2), Range(-oo, oo)) == Range(-oo, oo)
     assert Union(Range(0, oo, 2), Range(0, oo, 3)) == Union(Range(0, oo, 2), Range(0, oo, 3), evaluate=False)
 
 

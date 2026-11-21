@@ -156,43 +156,61 @@ def _(a, b):
         return b
     if b.is_subset(a):
         return a
+    if a.start is -oo and a.stop is oo and a.step == 1:
+        return a
+    if b.start is -oo and b.stop is oo and b.step == 1:
+        return b
     if not all(all(v.is_number for v in r.args) for r in [a, b]):
         return None
 
-    if a.step < 0 and a.size.is_finite:
+    if a.step < 0:
         a = a.reversed
-    if b.step < 0 and b.size.is_finite:
+    if b.step < 0:
         b = b.reversed
+
+    # Two singletons always form a 2-element Range
+    if a.size == 1 and b.size == 1:
+        diff = abs(b[0] - a[0])
+        if diff > 0:
+            mn, mx = Min(a[0], b[0]), Max(a[0], b[0])
+            return Range(mn, mx + diff, diff)
+
+    # A singleton extending an existing range
+    if a.size == 1 and b.size > 1:
+        x = a[0]
+        st = b.step
+        if x == b.inf - st:
+            new_start = -oo if x is -oo else x
+            return Range(new_start, b.stop, st)
+        if x == b.sup + st:
+            new_stop = oo if x is oo else x + st
+            return Range(b.start, new_stop, st)
+
+    if b.size == 1 and a.size > 1:
+        x = b[0]
+        st = a.step
+        if x == a.inf - st:
+            new_start = -oo if x is -oo else x
+            return Range(new_start, a.stop, st)
+        if x == a.sup + st:
+            new_stop = oo if x is oo else x + st
+            return Range(a.start, new_stop, st)
 
     if a.step == b.step:
         st = a.step
-        if st > 0:
-            elem_a = a.start if a.start.is_finite else a.sup
-            elem_b = b.start if b.start.is_finite else b.sup
-            if (elem_b - elem_a) % st != 0:
-                return None
+        elem_a = a.start if a.start.is_finite else a.sup
+        elem_b = b.start if b.start.is_finite else b.sup
+        if (elem_b - elem_a) % st != 0:
+            return None
 
-            if a.inf > b.inf:
-                a, b = b, a
-            if b.inf <= a.sup + st:
-                new_inf = a.inf
-                new_sup = Max(a.sup, b.sup)
-                new_stop = oo if new_sup is oo else new_sup + st
-                return Range(new_inf, new_stop, st)
-
-        elif st < 0:
-            elem_a = a.start if a.start.is_finite else a.inf
-            elem_b = b.start if b.start.is_finite else b.inf
-            if (elem_b - elem_a) % st != 0:
-                return None
-
-            if a.sup < b.sup:
-                a, b = b, a
-            if b.sup >= a.inf + st:
-                new_sup = a.sup
-                new_inf = Min(a.inf, b.inf)
-                new_stop = -oo if new_inf is -oo else new_inf + st
-                return Range(new_sup, new_stop, st)
+        if a.inf > b.inf:
+            a, b = b, a
+        if b.inf <= a.sup + st:
+            new_inf = a.inf
+            new_sup = Max(a.sup, b.sup)
+            new_start = -oo if new_inf is -oo else new_inf
+            new_stop = oo if new_sup is oo else new_sup + st
+            return Range(new_start, new_stop, st)
 
     return None
 
