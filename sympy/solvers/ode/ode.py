@@ -2157,8 +2157,8 @@ def constant_renumber(expr, variables=None, newconstants=None):
     >>> constant_renumber(expr)
     C1 + C2*x + C3*x**2
 
-    The ``variables`` argument specifies which are constants so that the
-    other symbols will not be renumbered:
+    The ``variables`` argument specifies symbols that are not constants and
+    therefore will not be renumbered:
 
     >>> constant_renumber(expr, [C1, x])
     C1*x**2  + C2 + C3*x
