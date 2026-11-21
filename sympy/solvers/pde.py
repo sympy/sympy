@@ -1560,7 +1560,7 @@ class _ParabolicBVP(_BVP):
 
 class _HyperbolicBVP(_BVP):
     """
-    A BVP whose PDE is parabolic: `B^2 > 4AC`, like
+    A BVP whose PDE is hyperbolic: `B^2 > 4AC`, like
     the Wave PDE.
 
     Well-posedness depends on the sign of `AC`:
