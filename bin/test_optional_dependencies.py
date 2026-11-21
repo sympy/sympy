@@ -108,6 +108,7 @@ doctest_list = [
 
     # antlr, lfortran, clang
     'sympy/parsing/',
+    'doc/src/explanation/modules/physics/mechanics/autolev_parser.rst',
 
     # codegen
     'sympy/codegen/',
