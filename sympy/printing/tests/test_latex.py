@@ -60,6 +60,7 @@ from sympy.physics.quantum import Commutator, Operator
 from sympy.physics.quantum.trace import Tr
 from sympy.physics.units import meter, gibibyte, gram, microgram, second, milli, micro
 from sympy.polys.domains.integerring import ZZ
+from sympy.polys.domains.rationalfield import QQ
 from sympy.polys.fields import field
 from sympy.polys.polytools import Poly
 from sympy.polys.rings import ring
@@ -1814,6 +1815,10 @@ def test_latex_FreeGroupElement():
 
 
 def test_latex_PolyElement():
+    R, t = ring("t", QQ)
+    assert latex(R(-2)) == "-2"
+    assert latex(t - QQ(2, 3)) == "t - 2/3"
+
     Ruv, u, v = ring("u,v", ZZ)
     Rxyz, x, y, z = ring("x,y,z", Ruv)
 
