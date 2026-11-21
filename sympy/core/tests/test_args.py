@@ -2075,6 +2075,13 @@ def test_sympy__functions__combinatorial__numbers__jacobi_symbol():
     assert _test_args(jacobi_symbol(2, 3))
 
 
+def test_sympy__functions__combinatorial__numbers__jacobsthal():
+    from sympy.functions.combinatorial.numbers import jacobsthal
+    n = symbols('n', integer=True)
+    t = jacobsthal(n)
+    assert _test_args(t)
+
+
 def test_sympy__functions__combinatorial__numbers__kronecker_symbol():
     from sympy.functions.combinatorial.numbers import kronecker_symbol
     assert _test_args(kronecker_symbol(2, 3))

@@ -18,7 +18,7 @@ from sympy.functions import (
     bernoulli, harmonic, bell, fibonacci, tribonacci, lucas, euler, catalan,
     genocchi, andre, partition, divisor_sigma, udivisor_sigma, legendre_symbol,
     jacobi_symbol, kronecker_symbol, mobius,
-    primenu, primeomega, totient, reduced_totient, primepi,
+    primenu, primeomega, jacobsthal, totient, reduced_totient, primepi,
     motzkin, binomial, gamma, sqrt, cbrt, hyper, log, digamma,
     trigamma, polygamma, factorial, sin, cos, cot, polylog, zeta, dirichlet_eta)
 from sympy.functions.combinatorial.numbers import _nT, nP
@@ -885,6 +885,42 @@ def test_primeomega():
                1, 3, 2, 2, 1, 4, 2, 2, 3, 3, 1, 3, 1, 5, 2, 2, 2, 4]
     for n, val in enumerate(A001222, 1):
         assert primeomega(n) == val
+
+
+def test_jacobsthal():
+    # error
+    m = Symbol('m', integer=False)
+    raises(TypeError, lambda: jacobsthal(m))
+    raises(TypeError, lambda: jacobsthal(4.5))
+    m = Symbol('m', positive=False)
+    raises(ValueError, lambda: jacobsthal(m))
+    raises(ValueError, lambda: jacobsthal(0))
+
+    # special case
+    p = Symbol('p', prime=True)
+    assert jacobsthal(p) == 2
+
+    # property
+    n = Symbol('n', integer=True, positive=True)
+    assert jacobsthal(n).is_integer is True
+    assert jacobsthal(n).is_positive is True
+
+    # Integer
+    assert jacobsthal(1) == 1
+    assert jacobsthal(2) == 2
+    assert jacobsthal(6) == 4
+    assert jacobsthal(30) == 6
+    assert jacobsthal(7*11) == 3
+    # powers of a prime do not change anything
+    assert jacobsthal(2**5 * 3) == jacobsthal(6)
+    A048669 = [1, 2, 2, 2, 2, 4, 2, 2, 2, 4, 2, 4, 2, 4, 3, 2, 2, 4,
+               2, 4, 3, 4, 2, 4, 2, 4, 2, 4, 2, 6, 2, 2, 3, 4, 3, 4,
+               2, 4, 3, 4, 2, 6, 2, 4, 3, 4, 2, 4, 2, 4, 3, 4, 2, 4,
+               3, 4, 3, 4, 2, 6, 2, 4, 3, 2, 3, 6, 2, 4, 3, 6, 2, 4,
+               2, 4, 3, 4, 3, 6, 2, 4, 2, 4, 2, 6, 3, 4, 3, 4, 2, 6,
+               3, 4, 3, 4, 3, 4, 2, 4, 3, 4, 2, 6, 2, 4, 5]
+    for n, val in enumerate(A048669, 1):
+        assert jacobsthal(n) == val
 
 
 def test_totient():
