@@ -564,6 +564,15 @@ class exp(ExpBase, metaclass=ExpMeta):
             return exp(arg0)
         raise PoleError("Cannot expand %s around 0" % (self))
 
+    def _eval_derivative_n_times(self, s, n):
+        if n.is_integer and n.is_nonnegative:
+            darg = self.args[0].diff(s)
+            if (not darg.has(s)
+                    and darg.is_zero is not True
+                    and darg.is_scalar):
+                return self*darg**n
+        return super()._eval_derivative_n_times(s, n)
+
     def _eval_rewrite_as_sin(self, arg, **kwargs):
         from sympy.functions.elementary.trigonometric import sin
         return sin(I*arg + pi/2) - I*sin(I*arg)
