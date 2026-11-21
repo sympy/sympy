@@ -1,11 +1,12 @@
 from __future__ import annotations
+from sympy.core.numbers import oo
 from sympy.core.singleton import S
 from sympy.core.sympify import sympify
 from sympy.functions.elementary.miscellaneous import Min, Max
 from sympy.sets.sets import (EmptySet, FiniteSet, Intersection,
     Interval, ProductSet, Set, Union, UniversalSet)
 from sympy.sets.fancysets import (ComplexRegion, Naturals, Naturals0,
-    Integers, Rationals, Reals)
+    Integers, Rationals, Reals, Range)
 from sympy.multipledispatch import Dispatcher
 
 
@@ -141,6 +142,58 @@ def _(a, b):
     if any(b.contains(x) == True for x in a):
         return {
             FiniteSet(*[x for x in a if b.contains(x) != True]), b}
+    return None
+
+@union_sets.register(Range, Range)
+def _(a, b):
+    if a.is_empty:
+        return b
+    if b.is_empty:
+        return a
+    if a == b:
+        return a
+    if a.is_subset(b):
+        return b
+    if b.is_subset(a):
+        return a
+    if not all(all(v.is_number for v in r.args) for r in [a, b]):
+        return None
+
+    if a.step < 0 and a.size.is_finite:
+        a = a.reversed
+    if b.step < 0 and b.size.is_finite:
+        b = b.reversed
+
+    if a.step == b.step:
+        st = a.step
+        if st > 0:
+            elem_a = a.start if a.start.is_finite else a.sup
+            elem_b = b.start if b.start.is_finite else b.sup
+            if (elem_b - elem_a) % st != 0:
+                return None
+
+            if a.inf > b.inf:
+                a, b = b, a
+            if b.inf <= a.sup + st:
+                new_inf = a.inf
+                new_sup = Max(a.sup, b.sup)
+                new_stop = oo if new_sup is oo else new_sup + st
+                return Range(new_inf, new_stop, st)
+
+        elif st < 0:
+            elem_a = a.start if a.start.is_finite else a.inf
+            elem_b = b.start if b.start.is_finite else b.inf
+            if (elem_b - elem_a) % st != 0:
+                return None
+
+            if a.sup < b.sup:
+                a, b = b, a
+            if b.sup >= a.inf + st:
+                new_sup = a.sup
+                new_inf = Min(a.inf, b.inf)
+                new_stop = -oo if new_inf is -oo else new_inf + st
+                return Range(new_sup, new_stop, st)
+
     return None
 
 @union_sets.register(Set, Set)
