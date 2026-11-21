@@ -4,9 +4,11 @@ from __future__ import annotations
 
 from sympy.core.symbol import Dummy
 from sympy.polys.monomials import monomial_mul, monomial_lcm, monomial_divides, term_div
-from sympy.polys.orderings import lex
+from sympy.polys.orderings import lex, grevlex
 from sympy.polys.polyerrors import DomainError
 from sympy.polys.polyconfig import query
+from sympy.polys.fglmtools import matrix_fglm
+
 
 def groebner(seq, ring, method=None):
     """
@@ -190,6 +192,22 @@ def _buchberger(f, ring):
     if not f:
         return []
 
+    # grevlex code
+    if ring.domain.is_FractionField and ring.ngens > 1 and ring.order != grevlex:
+        grev_ring = ring.clone(order=grevlex)
+        f_grev = [g.set_ring(grev_ring) for g in f]
+        G_grev = _buchberger(f_grev, grev_ring)
+        if not G_grev:
+            return []
+        if len(G_grev) == 1 and G_grev[0].LM == grev_ring.zero_monom:
+            return [ring.one]
+        pure_powers = [False] * ring.ngens
+        for g in G_grev:
+            nonzero = [i for i, exp in enumerate(g.LM) if exp > 0]
+            if len(nonzero) == 1:
+                pure_powers[nonzero[0]] = True
+        if all(pure_powers):
+            return matrix_fglm(G_grev, grev_ring, ring.order)
     # replace f with a reduced list of initial polynomials; see [BW] page 203
     f1 = f[:]
 
