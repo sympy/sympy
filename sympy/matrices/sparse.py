@@ -414,7 +414,7 @@ class SparseRepMatrix(RepMatrix):
         1.5
 
         """
-        t = self.T
+        t = self.H
         return (t*self).inv(method=method)*t*rhs
 
     def solve(self, rhs, method='LDL'):
