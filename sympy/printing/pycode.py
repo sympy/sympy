@@ -259,6 +259,10 @@ class AbstractPythonCodePrinter(CodePrinter):
             return '({lhs} {op} {rhs})'.format(op=expr.rel_op, lhs=lhs, rhs=rhs)
         return super()._print_Relational(expr)
 
+    def _print_Not(self, expr):
+        PREC = precedence(expr)
+        return self._operators['not'] + ' ' + self.parenthesize(expr.args[0], PREC)
+
     def _print_ITE(self, expr):
         from sympy.functions.elementary.piecewise import Piecewise
         return self._print(expr.rewrite(Piecewise))
@@ -641,10 +645,6 @@ class PythonCodePrinter(AbstractPythonCodePrinter):
     def _print_sign(self, e):
         return '(0.0 if {e} == 0 else {f}(1, {e}))'.format(
             f=self._module_format('math.copysign'), e=self._print(e.args[0]))
-
-    def _print_Not(self, expr):
-        PREC = precedence(expr)
-        return self._operators['not'] + ' ' + self.parenthesize(expr.args[0], PREC)
 
     def _print_IndexedBase(self, expr):
         return expr.name

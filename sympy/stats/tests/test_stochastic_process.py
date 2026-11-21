@@ -400,6 +400,13 @@ def test_ContinuousMarkovChain():
     C1 = ContinuousMarkovChain('C', [0, 1, 2], T1)
     assert C1.limiting_distribution() == ImmutableMatrix([[Rational(3, 19), Rational(12, 19), Rational(4, 19)]])
 
+    G = MatrixSymbol('G', 2, 2)
+    Q = Matrix([[-1, 1], [2, -2]])
+    pi = Matrix([[Rational(2, 3), Rational(1, 3)]])
+    condition = ContinuousMarkovChain('X', [0, 1], G).limiting_distribution()
+    equation = condition(pi, Q)
+    assert equation.lhs.as_explicit() == equation.rhs.as_explicit()
+
     T2 = Matrix([[-S.One, S.One, S.Zero], [S.One, -S.One, S.Zero], [S.Zero, S.One, -S.One]])
     C2 = ContinuousMarkovChain('C', [0, 1, 2], T2)
     A, t = C2.generator_matrix, symbols('t', positive=True)

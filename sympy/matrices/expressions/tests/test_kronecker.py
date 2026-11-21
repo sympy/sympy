@@ -257,3 +257,32 @@ def test_KroneckerProduct_singletons():
     assert KroneckerProduct(A, P, B, Q).doit() == KroneckerProduct(A, P, B, Q)
     assert KroneckerProduct(A, P, B, A1).doit() == KroneckerProduct(A, P, B, A1)
     assert KroneckerProduct(P, A1, A, B1).doit() == KroneckerProduct(P, A, A1*B1)
+
+
+def test_KroneckerProduct_zeromatrix():
+    from sympy.matrices.expressions.special import ZeroMatrix
+    A = MatrixSymbol('A', n, m)
+    B = MatrixSymbol('B', m, k)
+    Z_sym = ZeroMatrix(n, m)
+    Z_sq = ZeroMatrix(m, m)
+
+    # Unevaluated KroneckerProduct preserves arguments but knows is_zero_matrix
+    kp1 = KroneckerProduct(A, Z_sq)
+    assert kp1.is_zero_matrix is True
+    assert kp1.is_ZeroMatrix is False
+    # Generic symbolic product: zero status is unknown (None), not False
+    assert KroneckerProduct(A, B).is_zero_matrix is None
+
+    # doit() canonicalization evaluates to ZeroMatrix
+    assert kp1.doit() == ZeroMatrix(n*m, m**2)
+    assert KroneckerProduct(Z_sym, B).doit() == ZeroMatrix(n*m, m*k)
+    assert KroneckerProduct(Z_sym, Z_sq).doit() == ZeroMatrix(n*m, m**2)
+
+    # kronecker_product helper function evaluates to ZeroMatrix
+    assert kronecker_product(A, Z_sq) == ZeroMatrix(n*m, m**2)
+
+    # Explicit concrete matrices
+    M = Matrix([[1, 2], [3, 4]])
+    Z_exp = Matrix.zeros(2, 2)
+    assert kronecker_product(M, Z_exp) == Matrix.zeros(4, 4)
+    assert KroneckerProduct(M, ZeroMatrix(2, 2)).doit() == ZeroMatrix(4, 4)

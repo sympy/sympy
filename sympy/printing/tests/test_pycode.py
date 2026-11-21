@@ -24,6 +24,7 @@ from sympy.tensor import IndexedBase, Idx
 from sympy.tensor.array.expressions.array_expressions import ArraySymbol, ArrayDiagonal, ArrayContraction, ZeroArray, OneArray
 from sympy.external import import_module
 from sympy.functions.special.gamma_functions import loggamma
+from sympy.utilities.lambdify import lambdify
 
 
 
@@ -573,3 +574,29 @@ def test_piecewise_assign_to():
 
     assert pyprint == 'x = ((a + b) if c else (0))'
     assert symprint == 'x = ((a + b) if c else (0))'
+
+
+def test_sympyprinter_not():
+    prntr = SymPyPrinter()
+    pyprntr = PythonCodePrinter()
+
+    assert prntr.doprint(Not(x)) == 'not x'
+    assert prntr.doprint(Not(x, evaluate=False)) == 'not x'
+    assert prntr.doprint(Not(And(x, y))) == 'not (x and y)'
+    assert prntr.doprint(Not(And(x, y), evaluate=False)) == 'not (x and y)'
+    assert prntr.doprint(Not(Or(x, y))) == 'not (x or y)'
+    assert prntr.doprint(Not(Or(x, y), evaluate=False)) == 'not (x or y)'
+    assert prntr.doprint(Not(Not(x, evaluate=False), evaluate=False)) == 'not (not x)'
+    assert prntr.doprint(Not(x > y)) == '(x <= y)'
+    assert prntr.doprint(Not(x > y, evaluate=False)) == 'not ((x > y))'
+
+    assert prntr.doprint(Not(x)) == pyprntr.doprint(Not(x))
+    assert prntr.doprint(Not(And(x, y))) == pyprntr.doprint(Not(And(x, y)))
+
+    f = lambdify(x, Not(x), 'sympy')
+    assert f(True) is False
+    assert f(False) is True
+
+    f2 = lambdify((x, y), Not(And(x, y)), 'sympy')
+    assert f2(True, True) is False
+    assert f2(True, False) is True

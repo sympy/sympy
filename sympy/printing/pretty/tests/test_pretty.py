@@ -6833,6 +6833,15 @@ def test_pretty_Complement():
     assert pretty(S.Reals - S.Naturals0) == '(-oo, oo) \\ Naturals0'
     assert upretty(S.Reals - S.Naturals0) == 'ℝ \\ ℕ₀'
 
+    # a nested Complement is parenthesized, as in the LaTeX printer
+    assert upretty(Complement(S.Reals, Complement(S.Naturals, {x}))) == \
+        'ℝ \\ (ℕ \\ {x})'
+    assert upretty(Complement(Complement(S.Reals, S.Naturals, evaluate=False),
+        {x}, evaluate=False)) == '(ℝ \\ ℕ) \\ {x}'
+    assert pretty(Complement(
+        S.Reals, Complement(S.Naturals, {x})
+    )) == r'(-oo, oo) \ (Naturals \ {x})'
+
 
 def test_pretty_SymmetricDifference():
     from sympy.sets.sets import SymmetricDifference
@@ -7304,6 +7313,16 @@ def test_MatrixSymbol_printing():
 -2*y*  -a*x\
 """
     assert pretty(-a*x + -2*y*y) == ascii_str
+
+    # a term whose coefficient is an Add is printed in parentheses, so the
+    # plus sign before it must be kept
+    assert pretty((1 - a)*A + (1 - b)*B) == "(1 - a)*A + (1 - b)*B"
+    assert upretty((1 - a)*A + (1 - b)*B) == "(1 - a)⋅A + (1 - b)⋅B"
+    assert pretty(A + (b - 1)*B) == "(b - 1)*B + A"
+    assert pretty(A + (1 - b)*B + (1 - c)*C) == "(1 - b)*B + (1 - c)*C + A"
+    assert upretty(A + (1 - b)*B + (1 - c)*C) == "(1 - b)⋅B + (1 - c)⋅C + A"
+    assert pretty((1 - a)*A + (-c - 1)*B) == "(1 - a)*A + (-c - 1)*B"
+    assert pretty(A + (-c - 1)*B) == "(-c - 1)*B + A"
 
 
 def test_degree_printing():

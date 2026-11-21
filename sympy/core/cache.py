@@ -79,7 +79,8 @@ def __cacheit(maxsize):
             try:
                 retval = cfunc(*args, **kwargs)
             except TypeError as e:
-                if not e.args or not e.args[0].startswith('unhashable type:'):
+                if (not e.args or not isinstance(e.args[0], str) or
+                        not e.args[0].startswith('unhashable type:')):
                     raise
                 retval = func(*args, **kwargs)
             return retval
