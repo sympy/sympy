@@ -614,7 +614,7 @@ class ArrayAdd(_ArrayExpr):
         return self._canonicalize()
 
     @classmethod
-    def _collect_scalar_coefficients(cls, args):
+    def _collect_scalar_coefficients(cls, args: list[Basic]) -> list[Basic]:
         """Merge addends that are equal up to a scalar coefficient.
 
         Each addend is decomposed into a scalar coefficient and a tuple

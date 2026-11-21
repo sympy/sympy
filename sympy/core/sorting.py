@@ -1,11 +1,19 @@
 from __future__ import annotations
 from collections import defaultdict
+from typing import TYPE_CHECKING
 
 from .sympify import sympify, SympifyError
 from sympy.utilities.iterables import iterable, uniq
 
 
 __all__ = ['default_sort_key', 'ordered']
+
+if TYPE_CHECKING:
+    from collections.abc import Callable, Iterable, Iterator
+    from typing import TypeVar
+
+    _T = TypeVar('_T')
+    _K = TypeVar('_K')
 
 
 def default_sort_key(item, order=None):
@@ -200,7 +208,13 @@ def _nodes(e):
         return 1
 
 
-def ordered(seq, keys=None, default=True, warn=False):
+def ordered(
+    seq: Iterable[_T],
+    keys: Callable[[_T], _K] | list[Callable[[_T], _K]]
+        | tuple[Callable[[_T], _K], ...] | None = None,
+    default: bool = True,
+    warn: bool = False,
+) -> Iterator[_T]:
     """Return an iterator of the seq where keys are used to break ties
     in a conservative fashion: if, after applying a key, there are no
     ties then no other keys will be computed.
@@ -283,14 +297,14 @@ def ordered(seq, keys=None, default=True, warn=False):
 
     """
 
-    d = defaultdict(list)
+    d: defaultdict[_K | None, list[_T]] = defaultdict(list)
+    remaining_keys: list[Callable[[_T], _K]] = []
     if keys:
         if isinstance(keys, (list, tuple)):
-            keys = list(keys)
-            f = keys.pop(0)
+            remaining_keys = list(keys)
+            f = remaining_keys.pop(0)
         else:
             f = keys
-            keys = []
         for a in seq:
             d[f(a)].append(a)
     else:
@@ -298,10 +312,11 @@ def ordered(seq, keys=None, default=True, warn=False):
             raise ValueError('if default=False then keys must be provided')
         d[None].extend(seq)
 
-    for k, value in sorted(d.items()):
-        if len(value) > 1:
-            if keys:
-                value = ordered(value, keys, default, warn)
+    for k, group in sorted(d.items()):
+        value: Iterable[_T] = group
+        if len(group) > 1:
+            if remaining_keys:
+                value = ordered(value, remaining_keys, default, warn)
             elif default:
                 value = ordered(value, (_nodes, default_sort_key,),
                                default=False, warn=warn)

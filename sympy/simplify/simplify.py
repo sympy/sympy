@@ -711,7 +711,7 @@ def simplify(expr, ratio=1.7, measure=count_ops, rational=False, inverse=False, 
             if expr.has(KroneckerDelta):
                 expr = kroneckersimp(expr)
             # Still a Piecewise?
-            if expr.has(Piecewise):
+            if isinstance(expr, Piecewise):
                 # Do not apply doit on the segments as it has already
                 # been done above, but simplify
                 expr = piecewise_simplify(expr, deep=True, doit=False)
