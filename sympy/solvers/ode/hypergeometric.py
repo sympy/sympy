@@ -135,6 +135,14 @@ def equivalence_hypergeometric(A, B, func):
 
 def match_2nd_2F1_hypergeometric(I, k, sing_point, func):
     x = func.args[0]
+    # The Mobius transformation below is built out of sing_point[0] and
+    # sing_point[1], so an equation with fewer than two finite singular points
+    # cannot be brought to the standard 2F1 form here. equivalence() can still
+    # report "2F1" in that case (max_num_pow 0 together with dem_pow [2], i.e.
+    # I0 = c/(x - a)**2), so this has to be checked before the transformation is
+    # constructed.
+    if len(sing_point) < 2:
+        return None
     a = Wild("a")
     b = Wild("b")
     c = Wild("c")
