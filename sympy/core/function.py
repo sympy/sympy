@@ -32,7 +32,7 @@ There are three types of functions implemented in SymPy:
 
 from __future__ import annotations
 
-from typing import Any
+from typing import Any, TYPE_CHECKING
 from collections.abc import Iterable
 import copyreg
 
@@ -66,6 +66,9 @@ from sympy.external.mpmath import (prec_to_dps, mpf, mpc, mp, workprec, diff as
 
 import inspect
 from collections import Counter
+
+if TYPE_CHECKING:
+    from typing_extensions import Self
 
 def _coeff_isneg(a):
     """Return True if the leading Number is negative.
@@ -884,13 +887,13 @@ class AppliedUndef(Function):
 
     name: str
 
-    def __new__(cls, *args, **options) -> Expr:  # type: ignore
+    def __new__(cls, *args, **options: bool) -> Self:
         args = tuple(map(sympify, args))
         u = [a.name for a in args if isinstance(a, UndefinedFunction)]
         if u:
             raise TypeError('Invalid argument: expecting an expression, not UndefinedFunction%s: %s' % (
                 's'*(len(u) > 1), ', '.join(u)))
-        obj: Expr = super().__new__(cls, *args, **options)  # type: ignore
+        obj: Self = super().__new__(cls, *args, **options)  # type: ignore
         return obj
 
     def _eval_as_leading_term(self, x, logx, cdir):
