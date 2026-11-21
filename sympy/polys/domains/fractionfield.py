@@ -21,7 +21,7 @@ if TYPE_CHECKING:
 
 
 @public
-class FractionField(Field, CompositeDomain, Generic[Er]):
+class FractionField(Field["FracElement[Er]"], CompositeDomain, Generic[Er]):
     """A class for representing multivariate rational function fields. """
 
     is_FractionField = is_Frac = True
