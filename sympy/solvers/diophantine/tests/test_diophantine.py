@@ -561,7 +561,7 @@ def test_diophantine():
     assert diophantine(1/x) == set()
     assert diophantine(1/x + 1/y - S.Half) == {(6, 3), (-2, 1), (4, 4), (1, -2), (3, 6)}
     assert diophantine(x**2 + y**2 +3*x- 5, permute=True) == \
-           {(-1, 1), (-4, -1), (1, -1), (1, 1), (-4, 1), (-1, -1), (4, 1), (4, -1)}
+           {(-4, -1), (-4, 1), (1, -1), (1, 1)}
 
 
     #test issue 18186
@@ -965,6 +965,17 @@ def test_diophantine_permute_sign():
     assert len(diophantine(eq, permute=True)) == 62000
     soln = {(-1, -1), (-1, 2), (1, -2), (1, 1)}
     assert diophantine(10*x**2 + 12*x*y + 12*y**2 - 34, permute=True) == soln
+
+
+def test_diophantine_permute_signs_with_linear_term():
+    # A non-zero linear coefficient fixes the sign of that variable, so
+    # permuting it produces solutions that no longer satisfy the equation.
+    eq = x**2 + x + y**2
+    assert diophantine(eq) == {(-1, 0), (0, 0)}
+    assert diophantine(eq, permute=True) == {(-1, 0), (0, 0)}
+
+    eq = x**2 + x*y + y**2 + y - 5
+    assert diophantine(eq, permute=True) == diophantine(eq)
 
 
 @XFAIL

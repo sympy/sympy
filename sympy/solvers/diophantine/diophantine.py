@@ -1413,7 +1413,6 @@ def diophantine(eq, param=symbols("t", integer=True), syms=None,
                     var_mul = list(subsets(v, 2))
                     # here var_mul is like [(x, y)]
                     xy_coeff = True
-                    x_coeff = True
                     var1_mul_var2 = (x[0]*x[1] for x in var_mul)
                     for v1_mul_v2 in var1_mul_var2:
                         try:
@@ -1421,6 +1420,7 @@ def diophantine(eq, param=symbols("t", integer=True), syms=None,
                         except KeyError:
                             coeff = 0
                         xy_coeff = bool(xy_coeff) and bool(coeff)
+                    lin_coeff = []
                     var_mul = list(subsets(v, 1))
                     # here var_mul is like [(x,), (y, )]
                     for v1 in var_mul:
@@ -1428,18 +1428,21 @@ def diophantine(eq, param=symbols("t", integer=True), syms=None,
                             coeff = c[v1[0]]
                         except KeyError:
                             coeff = 0
-                        x_coeff = bool(x_coeff) and bool(coeff)
-                    if not any((xy_coeff, x_coeff)):
-                        # means only x**2, y**2 and const is present
-                        # so we can get more soln by permuting this soln.
-                        do_permute_signs = True
-                    elif not x_coeff:
-                        # when coeff(x), coeff(y) is not present then signs of
-                        #  x, y can be permuted such that their sign are same
-                        # as sign of x*y.
-                        # e.g 1. (x_val,y_val)=> (x_val,y_val), (-x_val,-y_val)
-                        # 2. (-x_vall, y_val)=> (-x_val,y_val), (x_val,-y_val)
-                        permute_few_signs = True
+                        lin_coeff.append(bool(coeff))
+                    if not any(lin_coeff):
+                        # a linear term fixes the sign of its variable, so
+                        # signs may only be permuted when none is present
+                        if not xy_coeff:
+                            # means only x**2, y**2 and const is present
+                            # so we can get more soln by permuting this soln.
+                            do_permute_signs = True
+                        else:
+                            # when coeff(x), coeff(y) is not present then signs
+                            # of x, y can be permuted such that their sign are
+                            # same as sign of x*y.
+                            # e.g 1. (x_val,y_val)=> (x_val,y_val), (-x_val,-y_val)
+                            # 2. (-x_val, y_val)=> (-x_val,y_val), (x_val,-y_val)
+                            permute_few_signs = True
         if t == 'general_sum_of_squares':
             # trying to factor such expressions will sometimes hang
             terms = [(eq, 1)]
