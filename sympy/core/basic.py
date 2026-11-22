@@ -25,6 +25,7 @@ if TYPE_CHECKING:
     from typing_extensions import Self
     from .assumptions import StdFactKB
     from .symbol import Symbol
+    from sympy.logic.boolalg import Boolean
 
     Tbasic = TypeVar("Tbasic", bound='Basic')
 
@@ -2097,7 +2098,7 @@ class Basic(Printable):
         from sympy.simplify.simplify import simplify
         return simplify(self, **kwargs)
 
-    def refine(self, assumption=True):
+    def refine(self, assumption: Boolean | bool = True) -> Basic:
         """See the refine function in sympy.assumptions"""
         from sympy.assumptions.refine import refine
         return refine(self, assumption)
