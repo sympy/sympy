@@ -247,11 +247,14 @@ class Module:
         >>> from sympy.polys.numberfields.modules import PowerBasis
         >>> T = Poly(cyclotomic_poly(5))
         >>> A = PowerBasis(T)
-        >>> print(A.mult_tab())
-        {0: {0: [1, 0, 0, 0], 1: [0, 1, 0, 0], 2: [0, 0, 1, 0],     3: [0, 0, 0, 1]},
-                          1: {1: [0, 0, 1, 0], 2: [0, 0, 0, 1],     3: [-1, -1, -1, -1]},
-                                           2: {2: [-1, -1, -1, -1], 3: [1, 0, 0, 0]},
-                                                                3: {3: [0, 1, 0, 0]}}
+        >>> M = A.mult_tab()
+        >>> print({i: {j: [int(c) for c in coeffs]
+        ...            for j, coeffs in row.items()}
+        ...        for i, row in M.items()})
+        {0: {0: [1, 0, 0, 0], 1: [0, 1, 0, 0], 2: [0, 0, 1, 0], 3: [0, 0, 0, 1]},
+         1: {1: [0, 0, 1, 0], 2: [0, 0, 0, 1], 3: [-1, -1, -1, -1]},
+         2: {2: [-1, -1, -1, -1], 3: [1, 0, 0, 0]},
+         3: {3: [0, 1, 0, 0]}}
 
         Returns
         =======
