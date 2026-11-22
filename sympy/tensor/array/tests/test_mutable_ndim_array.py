@@ -366,6 +366,25 @@ def test_slices_assign():
         assert i.tolist() == [[2, 8, 8], [3, 20, 5], [6, 44, 8], [9, 10, 11]]
 
 
+def test_slice_assign_without_tuple():
+    for array_type in (MutableDenseNDimArray, MutableSparseNDimArray):
+        a = array_type.zeros(4)
+        a[1:3] = [2, 3]
+        assert a.tolist() == [0, 2, 3, 0]
+        a[1:3] += array_type([1, 2])
+        assert a.tolist() == [0, 3, 5, 0]
+        a[-2:] = [0, 7]
+        assert a.tolist() == [0, 3, 0, 7]
+        a[:] = [1, 2, 3, 4]
+        assert a.tolist() == [1, 2, 3, 4]
+
+        b = array_type.zeros(2, 2)
+        b[:] = [[1, 2], [3, 4]]
+        assert b.tolist() == [[1, 2], [3, 4]]
+        b[1:] = [[0, 5]]
+        assert b.tolist() == [[1, 2], [0, 5]]
+
+
 def test_diff():
     from sympy.abc import x, y, z
     md = MutableDenseNDimArray([[x, y], [x*z, x*y*z]])
