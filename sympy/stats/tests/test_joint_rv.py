@@ -12,7 +12,7 @@ from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.functions.elementary.piecewise import Piecewise
 from sympy.functions.special.bessel import besselk
 from sympy.functions.special.gamma_functions import gamma
-from sympy.matrices.dense import eye
+from sympy.matrices.dense import (diag, eye)
 from sympy.matrices.expressions.determinant import Determinant
 from sympy.sets.fancysets import Range
 from sympy.sets.sets import (Interval, ProductSet)
@@ -32,7 +32,7 @@ from sympy.stats.joint_rv_types import (JointRV, MultivariateNormalDistribution,
 from sympy.testing.pytest import raises, XFAIL, skip, slow
 from sympy.external import import_module
 
-from sympy.abc import x, y
+from sympy.abc import x, y, z
 
 
 
@@ -95,6 +95,15 @@ def test_Normal():
         sqrt((2*pi)**n * Determinant(Sg)), 0, 0)
 
     assert density_X_at_obs == expected_density
+
+
+def test_multivariate_normal_marginal_distribution():
+    X = MultivariateNormal('X', [0, 0, 0], diag(1, 2, 4))
+    assert marginal_distribution(X, X[0])(0) == sqrt(2)/(2*sqrt(pi))
+    assert marginal_distribution(X, X[1])(0) == 1/(2*sqrt(pi))
+    assert marginal_distribution(X, X[2])(0) == sqrt(2)/(4*sqrt(pi))
+    assert marginal_distribution(X, X[1], X[0], X[2])(x, y, z) == density(X)(y, x, z)
+    assert marginal_distribution(X, X[2], X[0])(2, 0) == exp(-S(1)/2)/(4*pi)
 
 
 def test_MultivariateTDist():
