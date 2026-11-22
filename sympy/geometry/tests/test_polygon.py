@@ -230,6 +230,11 @@ def test_polygon():
     # Basic stuff
     assert Triangle(p1, p1, p1) == p1
     assert Triangle(p2, p2*2, p2*3) == Segment(p2, p2*3)
+    assert Triangle(p2*2, p2*3, p2) == Segment(p2, p2*3)
+    assert Triangle(p2*2, p2, p2*3) == Segment(p2, p2*3)
+    assert Triangle((0, 0), (1, 0), (-1, 0)) == Segment(Point(-1, 0), Point(1, 0))
+    assert Triangle((-1, 0), (1, 0), (0, 0)) == Segment(Point(-1, 0), Point(1, 0))
+    assert Triangle((1, 0), (-1, 0), (0, 0)) == Segment(Point(-1, 0), Point(1, 0))
     assert t1.area == Rational(25, 2)
     assert t1.is_right()
     assert t2.is_right() is False

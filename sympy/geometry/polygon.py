@@ -2143,17 +2143,12 @@ class Triangle(Polygon):
             nodup.pop()  # last point was same as first
 
         # remove collinear points
-        i = -3
-        while i < len(nodup) - 3 and len(nodup) > 2:
-            a, b, c = sorted(
-                [nodup[i], nodup[i + 1], nodup[i + 2]], key=default_sort_key)
+        if len(nodup) == 3:
+            a, b, c = sorted(nodup, key=default_sort_key)
             if Point.is_collinear(a, b, c):
-                nodup[i] = a
-                nodup[i + 1] = None
-                nodup.pop(i + 1)
-            i += 1
+                nodup = [a, c]
 
-        vertices = list(filter(lambda x: x is not None, nodup))
+        vertices = nodup
 
         if len(vertices) == 3:
             return GeometryEntity.__new__(cls, *vertices, **kwargs)
