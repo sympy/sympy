@@ -1552,26 +1552,28 @@ def _invert_modular(modterm, rhs, n, symbol):
                 and (power.exp - symbol).is_Integer
                 and (constant or coefficient != 1 or not rhs.is_Integer or m == 1)):
             base, exponent = power.args
+            base = int(base)
             while number_gcd(coefficient.q, base) > 1:
                 coefficient *= base
                 exponent -= 1
             target = rhs - constant
             denominator = number_lcm(coefficient.q, target.q)
-            coefficient *= denominator
-            target *= denominator
-            modulus = m*denominator
+            coefficient = int(coefficient*denominator)
+            target = int(target*denominator)
+            modulus = int(m*denominator)
             # Once base no longer divides coefficient, an integer value
             # requires a nonnegative exponent.
             while coefficient % base == 0:
-                coefficient /= base
+                coefficient //= base
                 exponent += 1
             common = number_gcd(coefficient, modulus)
             if target % common:
                 return symbol, S.EmptySet
-            modulus /= common
+            modulus //= common
             if modulus == 1:
                 return exponent, S.Naturals0
-            target = Mod(target/common*invert(coefficient/common, modulus), modulus)
+            target = Mod((target // common)*
+                invert(coefficient // common, modulus), modulus)
             reduced = Mod(Pow(base, exponent, evaluate=False), modulus, evaluate=False)
             f_x, g_n = _invert_modular(reduced, target, n, symbol)
             if f_x == reduced and g_n == target:
