@@ -1092,7 +1092,9 @@ def nthroot_mod(
     if ni == 1:
         return [ai] if all_roots else ai
     if ni == 2:
-        return sqrt_mod(ai, pi, all_roots)
+        if all_roots:
+            return sqrt_mod(ai, pi, all_roots=True)
+        return min(sqrt_mod_iter(ai, pi), default=None)
 
     base: list[list[MPZ]] = []
     prime_power: list[MPZ] = []
