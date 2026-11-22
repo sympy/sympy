@@ -105,6 +105,9 @@ class Expr(Basic, EvalfMixin):
         def simplify(self, **kwargs) -> Expr:
             ...
 
+        def refine(self, assumption: Boolean | bool = True) -> Expr:
+            ...
+
         def doit(self, **hints: Any) -> Expr:
             ...
 
