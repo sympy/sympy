@@ -1905,10 +1905,16 @@ def binomial_mod(n, m, k):
     # the generalization of Lucas' Theorem given by Granville
     # to obtain binomial(n, k) mod p^e, and then use the Chinese
     # Remainder Theorem to obtain the result mod q
-    if n < 0 or m < 0 or m > n: return 0
+    if m < 0: return 0
+    sign = 1
+    if n < 0:
+        sign = -1 if m % 2 else 1
+        n = m - n - 1
+    elif m > n:
+        return 0
     factorisation = factorint(k)
     residues = [_binomial_mod_prime_power(n, m, p, e) for p, e in factorisation.items()]
-    return crt([p**pw for p, pw in factorisation.items()], residues, check=False)[0]
+    return sign * crt([p**pw for p, pw in factorisation.items()], residues, check=False)[0] % k
 
 
 def _binomial_mod_prime_power(n, m, p, q):
