@@ -322,7 +322,12 @@ def deltasummation(f, limit, no_piecewise=False):
     value = solns[0]
     if no_piecewise:
         return expr.subs(x, value)
-    return Piecewise(
-        (expr.subs(x, value), Interval(*limit[1:3]).as_relational(value)),
-        (S.Zero, True)
-    )
+    v = expr.subs(x, value)
+    fwd = Interval(*limit[1:3]).as_relational(value)
+    pieces = [(v, fwd)]
+    if fwd is S.false:
+        rev = Interval(limit[2] + 1, limit[1] - 1).as_relational(value)
+        if rev is not S.false:
+            pieces.append((-v, rev))
+    pieces.append((S.Zero, True))
+    return Piecewise(*pieces)

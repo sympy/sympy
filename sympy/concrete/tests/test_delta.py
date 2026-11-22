@@ -261,6 +261,14 @@ def test_deltasummation_basic_numerical():
     assert ds((i + j)*KD(i, j), (j, -oo, oo)) == 2*i
 
 
+def test_deltasummation_reversed_limits():
+    n = symbols('n', integer=True)
+    s = Sum(KD(i, 1), (i, 2, n))
+    assert s.doit() == Piecewise((-1, n <= 0), (0, True))
+    assert s.doit().subs(n, 0) == s.subs(n, 0).doit() == -1
+    assert s.doit().subs(n, 1) == 0
+
+
 def test_deltasummation_basic_symbolic():
     assert ds(KD(i, j), (j, 1, 3)) == \
         Piecewise((1, And(1 <= i, i <= 3)), (0, True))
