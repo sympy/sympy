@@ -1,7 +1,8 @@
 from __future__ import annotations
 from functools import wraps
 
-from sympy.utilities.decorator import threaded, xthreaded, memoize_property, deprecated
+from sympy.utilities.decorator import (threaded, xthreaded, memoize_property,
+    deprecated, no_attrs_in_subclass)
 from sympy.testing.pytest import warns_deprecated_sympy
 
 from sympy.core.basic import Basic
@@ -128,3 +129,28 @@ def test_deprecated():
 
     with warns_deprecated_sympy():
         assert deprecated_class_new_init(1).arg == 1
+
+
+def test_no_attrs_in_subclass():
+    class A:
+        x = 'test'
+
+        def f(self):
+            return 'method'
+
+    A.x = no_attrs_in_subclass(A, A.x)
+    A.f = no_attrs_in_subclass(A, A.f)
+
+    class B(A):
+        pass
+
+    # on the class it was applied to, attributes still work
+    assert A.x == 'test'
+    assert A().x == 'test'
+    assert A().f() == 'method'
+
+    # on a subclass, they are hidden
+    assert hasattr(B, 'x') is False
+    assert hasattr(B, 'f') is False
+    assert hasattr(B(), 'x') is False
+    assert hasattr(B(), 'f') is False
