@@ -167,7 +167,7 @@ class EllipticCurve:
         for xx in solve(self._poly.subs({self.y: 0, self.z: 1})):
             if xx.is_rational:
                 l.append(self(xx, 0))
-        for i in divisors(self.discriminant, generator=True):
+        for i in divisors(int(self._discrim), generator=True):
             j = int(i**.5)
             if j**2 == i:
                 for xx in solve(self._poly.subs({self.y: j, self.z: 1})):
@@ -206,9 +206,13 @@ class EllipticCurve:
         >>> e2 = EllipticCurve(0, 17)
         >>> e2.discriminant
         -124848
+        >>> from sympy import Rational
+        >>> EllipticCurve(Rational(1, 8), 0).discriminant
+        -1/8
 
         """
-        return int(self._discrim)
+        discriminant = self._domain.to_sympy(self._discrim)
+        return int(discriminant) if discriminant.is_Integer else discriminant
 
     @property
     def is_singular(self):

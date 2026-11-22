@@ -1,5 +1,21 @@
 from __future__ import annotations
+from sympy import Rational
 from sympy.ntheory.elliptic_curve import EllipticCurve, EllipticCurvePoint
+
+
+def test_elliptic_curve_discriminant():
+    curve = EllipticCurve(Rational(1, 8), 0)
+    assert curve.discriminant == Rational(-1, 8)
+    assert not curve.is_singular
+
+    assert EllipticCurve(0, 0).is_singular
+
+    assert type(EllipticCurve(1, 0).discriminant) is int
+    finite_field_curve = EllipticCurve(1, 0, modulus=5)
+    assert type(finite_field_curve.discriminant) is int
+    assert finite_field_curve.discriminant == 1
+    assert not finite_field_curve.is_singular
+    assert EllipticCurve(0, 0, modulus=5).is_singular
 
 
 def test_elliptic_curve():
