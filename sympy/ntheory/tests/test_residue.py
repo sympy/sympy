@@ -227,6 +227,7 @@ def test_residue():
     assert nthroot_mod(4, 4, 27, True) == [5, 22]
     assert nthroot_mod(4, 4, 121, True) == [19, 102]
     assert nthroot_mod(2, 3, 7, True) == []
+    assert nthroot_mod(4, 2, 12) == 2
     for p in range(1, 20):
         for a in range(p):
             for n in range(1, p):
@@ -239,7 +240,7 @@ def test_residue():
                 if ans2 is None:
                     assert ans == []
                 else:
-                    assert ans2 in ans
+                    assert ans2 == ans[0]
 
     x = Symbol('x', positive=True)
     i = Symbol('i', integer=True)
