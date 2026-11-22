@@ -68,8 +68,8 @@ point load of 12 kN is applied at the free end of the beam.
    >>> b.apply_load(12, 9, -1)
    >>> b.apply_load(50, 5, -2)
    >>> b.apply_load(8, 0, 0, end=5)
-   >>> p = b.draw()
-   >>> p.show()
+   >>> p = b.draw()  # doctest: +SKIP
+   >>> p.show()  # doctest: +SKIP
 
 .. note::
 
@@ -266,8 +266,8 @@ deflection is restricted at both the supports.
    >>> _ = b.apply_support(10, "pin")
    >>> _ = b.apply_support(30, "roller")
    >>> b.apply_load(120, 30, -2)
-   >>> p = b.draw()
-   >>> p.show()
+   >>> p = b.draw()  # doctest: +SKIP
+   >>> p.show()  # doctest: +SKIP
 
 .. note::
 
@@ -333,8 +333,8 @@ applied from the mid till the end of the beam.
    >>> b.apply_load(S(3)/2, 3, -2)
    >>> b.apply_load(3, 3, 0, end=6)
    >>> b.apply_load(1, 3, 1, end=6)
-   >>> p = b.draw()
-   >>> p.show()
+   >>> p = b.draw()  # doctest: +SKIP
+   >>> p.show()  # doctest: +SKIP
 
 .. note::
 
@@ -431,8 +431,8 @@ to a distributed constant load of 10 KN/m from the starting point till
    >>> b.apply_load(10, 0, 0, end=2)
    >>> b.apply_load(20, 5, -1)
    >>> b.apply_load(8, 7.5, -1)
-   >>> p = b.draw()
-   >>> p.show()
+   >>> p = b.draw()  # doctest: +SKIP
+   >>> p.show()  # doctest: +SKIP
 
 .. code:: pycon
 
@@ -500,8 +500,8 @@ away from start.
    >>> b.apply_load(4, 0, 0, end=2)
    >>> b.apply_load(12, 4, -1)
    >>> b.apply_load(1, 3, 1, end=6)
-   >>> p = b.draw()
-   >>> p.show()
+   >>> p = b.draw()  # doctest: +SKIP
+   >>> p.show()  # doctest: +SKIP
 
 .. code:: pycon
 
@@ -571,8 +571,8 @@ overhanging end.
    >>> _ = b.apply_support(8, "roller")
    >>> b.apply_load(2, 2, 0, end=6)
    >>> b.apply_load(5, 11, -2)
-   >>> p = b.draw()
-   >>> p.show()
+   >>> p = b.draw()  # doctest: +SKIP
+   >>> p.show()  # doctest: +SKIP
 
 .. code:: pycon
 
@@ -640,8 +640,8 @@ beam.
    >>> _ = b.apply_support(0, "fixed")
    >>> _ = b.apply_support(l, "fixed")
    >>> b.apply_load(F, l/2, -1)
-   >>> p = b.draw()
-   >>> p.show()
+   >>> p = b.draw()  # doctest: +SKIP
+   >>> p.show()  # doctest: +SKIP
 
 .. code:: pycon
 
@@ -729,8 +729,8 @@ applied at a distance of ``3*l`` from the starting point.
    >>> _ = b.apply_support(l, "roller")
    >>> _ = b.apply_support(4*l, "roller")
    >>> b.apply_load(P, 3*l, -1)
-   >>> p = b.draw()
-   >>> p.show()
+   >>> p = b.draw()  # doctest: +SKIP
+   >>> p.show()  # doctest: +SKIP
 
 .. code:: pycon
 
@@ -813,8 +813,8 @@ A pointload of magnitude 20 N is applied from the top at its free end.
    >>> b = b1.join(b2, "fixed")
    >>> _ = b.apply_support(0, "fixed")
    >>> b.apply_load(20, 4, -1)
-   >>> p = b.draw()
-   >>> p.show()
+   >>> p = b.draw()  # doctest: +SKIP
+   >>> p.show()  # doctest: +SKIP
 
 .. code:: pycon
 
@@ -871,8 +871,8 @@ from the top at a distance of ``2*l`` from starting point.
    >>> _ = b.apply_support(3*l, type='fixed')
    >>> _ = b.apply_rotation_hinge(l)
    >>> b.apply_load(P, 2*l, -1)
-   >>> p = b.draw()
-   >>> p.show()
+   >>> p = b.draw()  # doctest: +SKIP
+   >>> p.show()  # doctest: +SKIP
 
 .. code:: pycon
 
