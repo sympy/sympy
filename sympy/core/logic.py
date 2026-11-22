@@ -15,7 +15,7 @@ from typing import Iterable
 FuzzyBool = bool | None
 
 
-def _torf(args: Iterable[bool]) -> bool | None:
+def _torf(args: Iterable[bool | None]) -> bool | None:
     """Return True if all args are True, False if they
     are all False, else None.
 
