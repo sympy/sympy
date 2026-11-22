@@ -3,7 +3,7 @@ Boolean algebra module for SymPy
 """
 
 from __future__ import annotations
-from typing import TYPE_CHECKING, overload, Any
+from typing import TYPE_CHECKING, overload, Any, Literal
 
 from collections import defaultdict
 from itertools import chain, combinations, product, permutations
@@ -82,6 +82,9 @@ class Boolean(Basic):
         from sympy.sets.sets import Set
 
         def __new__(cls, *args: Basic | complex) -> Boolean:
+            ...
+
+        def __bool__(self) -> bool:
             ...
 
         @overload # type: ignore
@@ -380,7 +383,7 @@ class BooleanTrue(BooleanAtom, metaclass=Singleton):
     sympy.logic.boolalg.BooleanFalse
 
     """
-    def __bool__(self):
+    def __bool__(self) -> Literal[True]:
         return True
 
     def __hash__(self):
@@ -455,7 +458,7 @@ class BooleanFalse(BooleanAtom, metaclass=Singleton):
     sympy.logic.boolalg.BooleanTrue
 
     """
-    def __bool__(self):
+    def __bool__(self) -> Literal[False]:
         return False
 
     def __hash__(self):
