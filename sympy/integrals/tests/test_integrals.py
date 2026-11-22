@@ -2443,3 +2443,5 @@ def test_piecewise_condition_with_Ne_not_restricted_to_reals():
     # a complex value of y can be substituted
     r = integrate(exp(x*y), (x, 0, z))
     assert r.subs(y, I) == -I*exp(I*z) + I
+    r = integrate(Piecewise((x, Eq(y, I)), (2*x, True)), (x, 0, 1))
+    assert r == Piecewise((S.Half, Eq(y, I)), (1, True))

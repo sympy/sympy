@@ -128,8 +128,9 @@ def test_Compound_Distribution():
     assert C.is_Finite
     assert C.set == {0, 1}
     y = symbols('y', negative=False, integer=True)
-    assert C.pdf(y, evaluate=True) == Piecewise((S(1)/(30*beta(2, 4)), Eq(y, 0)),
-                (S(1)/(60*beta(2, 4)), Eq(y, 1)), (0, True))
+    assert C.pdf(y, evaluate=True).simplify() == Piecewise(
+                (S(1)/(60*beta(2, 4)), Eq(y, 1)),
+                (S(1)/(30*beta(2, 4)), Eq(y, 0)), (0, True))
 
     k, t, z = symbols('k t z', positive=True, real=True)
     G = Gamma('G', k, t)
