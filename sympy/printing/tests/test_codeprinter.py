@@ -3,7 +3,7 @@ from sympy.printing.codeprinter import CodePrinter, PrintMethodNotImplementedErr
 from sympy.core import symbols
 from sympy.core.symbol import Dummy
 from sympy.core.relational import Eq, Lt
-from sympy.logic.boolalg import And
+from sympy.logic.boolalg import And, Not
 from sympy.printing import (ccode, fcode, glsl_code, jscode, julia_code,
     mathematica_code, octave_code, pycode, rcode, rust_code)
 from sympy.testing.pytest import raises
@@ -102,3 +102,16 @@ def test_issue_11366():
     assert pycode(compared) == '((x > 1) == (y > 1))'
     assert pycode(boolean) == '(((x > 0) and (y > 0)) == (z > 0))'
     assert ccode(Eq(x + 1, y)) == 'x + 1 == y'
+    negated = Eq(Not(x > 0, evaluate=False), y, evaluate=False)
+    negated_rhs = Eq(y, Not(x > 0, evaluate=False), evaluate=False)
+    assert pycode(negated) == '((not ((x > 0))) == y)'
+    assert pycode(negated_rhs) == '(y == (not ((x > 0))))'
+    assert rcode(negated) == '(!(x > 0)) == y'
+    assert rcode(negated_rhs) == 'y == (!(x > 0))'
+    assert fcode(negated, source_format='free') == '(.not. (x > 0)) == y'
+    assert ccode(negated_rhs) == 'y == (!(x > 0))'
+    # Python's not binds more loosely than ==, so check the value too
+    f = lambdify((x, y), negated, modules=[])
+    g = lambdify((x, y), negated_rhs, modules=[])
+    assert f(1, 2) is False and f(-1, True) is True
+    assert g(1, 2) is False and g(-1, True) is True

@@ -243,6 +243,12 @@ class AbstractPythonCodePrinter(CodePrinter):
             result.append(' else None)')
         return ''.join(result)
 
+    def _print_relational_operand(self, arg):
+        # Relationals already print with their own parentheses here.
+        if arg.is_Not:
+            return "(%s)" % self._print(arg)
+        return self.parenthesize(arg, PRECEDENCE["Relational"], strict=True)
+
     def _print_Relational(self, expr):
         "Relational printer for Equality and Unequality"
         op = {
@@ -254,9 +260,8 @@ class AbstractPythonCodePrinter(CodePrinter):
             '>=' :'greater_equal',
         }
         if expr.rel_op in op:
-            PREC = PRECEDENCE["Relational"]
-            lhs = self.parenthesize(expr.lhs, PREC, strict=True)
-            rhs = self.parenthesize(expr.rhs, PREC, strict=True)
+            lhs = self._print_relational_operand(expr.lhs)
+            rhs = self._print_relational_operand(expr.rhs)
             return '({lhs} {op} {rhs})'.format(op=expr.rel_op, lhs=lhs, rhs=rhs)
         return super()._print_Relational(expr)
 

@@ -517,8 +517,11 @@ class CodePrinter(StrPrinter):
         Relationals are always parenthesized: ``precedence`` gives Eq and Ne
         Mul precedence, so that ``str`` prints ``Eq(x, 1) | Eq(x, 2)``
         without parentheses, and ``parenthesize`` alone would skip them.
+        Not is parenthesized too: its precedence is above Relational, but
+        ``not`` in Python and the negation in R and Fortran bind more loosely
+        than comparisons.
         """
-        if arg.is_Relational:
+        if arg.is_Relational or arg.is_Not:
             return "(%s)" % self._print(arg)
         return self.parenthesize(arg, PRECEDENCE["Relational"])
 
