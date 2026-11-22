@@ -9,8 +9,8 @@ this stuff for general purpose.
 
 from __future__ import annotations
 
-# Type of a fuzzy bool
-FuzzyBool = bool | None
+from typing import Union
+FuzzyBool = Union[bool, None]
 
 
 def _torf(args):
