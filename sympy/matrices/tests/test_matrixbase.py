@@ -3422,6 +3422,22 @@ def test_pinv():
         )
 
 
+def test_pinv_diagonalization_repeated_eigenvalues():
+    A = eye(3) + ones(3)
+    A_pinv = A.pinv(method="ED")
+    assert A * A_pinv == eye(3)
+
+    for A in (Matrix([[1, 1, 0], [1, 1, 0], [0, 0, 0]]),
+              Matrix([[1, 1, 1, 0], [1, 1, 1, 0], [1, 1, 1, 0]])):
+        A_pinv = A.pinv(method="ED")
+        AAp = A * A_pinv
+        ApA = A_pinv * A
+        assert simplify(AAp * A) == A
+        assert simplify(ApA * A_pinv) == A_pinv
+        assert AAp.H == AAp
+        assert ApA.H == ApA
+
+
 @slow
 def test_pinv_rank_deficient_when_diagonalization_fails():
     # Test the four properties of the pseudoinverse for matrices when
