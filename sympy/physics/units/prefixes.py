@@ -138,12 +138,14 @@ def prefix_unit(unit, prefixes):
     You can use the predefined PREFIXES or BIN_PREFIXES, but you can also
     pass as argument a subdict of them if you do not want all prefixed units.
 
-        >>> from sympy.physics.units.prefixes import (PREFIXES,
-        ...                                                 prefix_unit)
-        >>> from sympy.physics.units import m
-        >>> pref = {"m": PREFIXES["m"], "c": PREFIXES["c"], "d": PREFIXES["d"]}
-        >>> prefix_unit(m, pref)  # doctest: +SKIP
-        [millimeter, centimeter, decimeter]
+    Examples
+    ========
+
+    >>> from sympy.physics.units.prefixes import PREFIXES, prefix_unit
+    >>> from sympy.physics.units import m
+    >>> pref = {"m": PREFIXES["m"], "c": PREFIXES["c"], "d": PREFIXES["d"]}
+    >>> prefix_unit(m, pref)
+    [millimeter, centimeter, decimeter]
     """
 
     from sympy.physics.units.quantities import Quantity
