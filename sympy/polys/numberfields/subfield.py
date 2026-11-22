@@ -175,9 +175,9 @@ def field_isomorphism(a, b, *, fast=True):
     ========
 
     >>> from sympy import sqrt, field_isomorphism, I
-    >>> print(field_isomorphism(3, sqrt(2)))  # doctest: +SKIP
+    >>> print(field_isomorphism(3, sqrt(2)))
     [3]
-    >>> print(field_isomorphism( I*sqrt(3), I*sqrt(3)/2))  # doctest: +SKIP
+    >>> print(field_isomorphism( I*sqrt(3), I*sqrt(3)/2))
     [2, 0]
 
     Parameters

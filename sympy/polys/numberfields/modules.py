@@ -247,7 +247,7 @@ class Module:
         >>> from sympy.polys.numberfields.modules import PowerBasis
         >>> T = Poly(cyclotomic_poly(5))
         >>> A = PowerBasis(T)
-        >>> print(A.mult_tab())  # doctest: +SKIP
+        >>> print(A.mult_tab())
         {0: {0: [1, 0, 0, 0], 1: [0, 1, 0, 0], 2: [0, 0, 1, 0],     3: [0, 0, 0, 1]},
                           1: {1: [0, 0, 1, 0], 2: [0, 0, 0, 1],     3: [-1, -1, -1, -1]},
                                            2: {2: [-1, -1, -1, -1], 3: [1, 0, 0, 0]},
@@ -338,7 +338,7 @@ class Module:
 
         >>> B = A.submodule_from_gens([2*A(i) for i in range(4)])
         >>> b = B.represent(a)
-        >>> print(b.transpose())  # doctest: +SKIP
+        >>> print(b.transpose())
         DomainMatrix([[1, 2, 3, 4]], (1, 4), ZZ)
 
         However, the element of ``B`` so defined still represents the same
@@ -478,10 +478,10 @@ class Module:
         >>> T = Poly(cyclotomic_poly(5))
         >>> A = PowerBasis(T)
         >>> e = A(to_col([1, 2, 3, 4]), denom=3)
-        >>> print(e)  # doctest: +SKIP
+        >>> print(e)
         [1, 2, 3, 4]/3
         >>> f = A(2)
-        >>> print(f)  # doctest: +SKIP
+        >>> print(f)
         [0, 0, 1, 0]
 
         Parameters
@@ -554,7 +554,7 @@ class Module:
         >>> T = Poly(cyclotomic_poly(5))
         >>> A = PowerBasis(T)
         >>> a = A.element_from_rational(QQ(2, 3))
-        >>> print(a)  # doctest: +SKIP
+        >>> print(a)
         [2, 0, 0, 0]/3
 
         Parameters
@@ -584,7 +584,7 @@ class Module:
         >>> A = PowerBasis(T)
         >>> gens = [A(0), 2*A(1), 3*A(2), 4*A(3)//5]
         >>> B = A.submodule_from_gens(gens)
-        >>> print(B)  # doctest: +SKIP
+        >>> print(B)
         Submodule[[5, 0, 0, 0], [0, 10, 0, 0], [0, 0, 15, 0], [0, 0, 0, 4]]/5
 
         Parameters
@@ -638,7 +638,7 @@ class Module:
         ...     [0, 10, 0, 0],
         ...     [0,  0, 7, 0],
         ... ], ZZ).transpose(), denom=15)
-        >>> print(B)  # doctest: +SKIP
+        >>> print(B)
         Submodule[[0, 10, 0, 0], [0, 0, 7, 0]]/15
 
         Parameters
@@ -1778,7 +1778,7 @@ class ModuleHomomorphism:
         >>> A = PowerBasis(T)
         >>> B = A.submodule_from_gens([2*A(j) for j in range(4)])
         >>> phi = ModuleHomomorphism(A, B, lambda x: 6*x)
-        >>> print(phi.matrix())  # doctest: +SKIP
+        >>> print(phi.matrix())
         DomainMatrix([[3, 0, 0, 0], [0, 3, 0, 0], [0, 0, 3, 0], [0, 0, 0, 3]], (4, 4), ZZ)
 
         """
@@ -1963,10 +1963,8 @@ class EndomorphismRing:
 
         >>> zeta = M(1)
         >>> tau = E.inner_endomorphism(zeta)
-        >>> tau.matrix().transpose()  # doctest: +SKIP
-        DomainMatrix(
-            [[0, 1, 0, 0], [0, 0, 1, 0], [0, 0, 0, 1], [-1, -1, -1, -1]],
-            (4, 4), ZZ)
+        >>> tau.matrix().transpose()
+        DomainMatrix([[0, 1, 0, 0], [0, 0, 1, 0], [0, 0, 0, 1], [-1, -1, -1, -1]], (4, 4), ZZ)
 
         The matrix representation of $\tau$ is as expected. The first column
         shows that multiplying by $\zeta$ carries $1$ to $\zeta$, the second
@@ -1975,10 +1973,8 @@ class EndomorphismRing:
         The ``represent`` method of the endomorphism ring ``E`` stacks these
         into a single column:
 
-        >>> E.represent(tau).transpose()  # doctest: +SKIP
-        DomainMatrix(
-            [[0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, -1, -1, -1, -1]],
-            (1, 16), ZZ)
+        >>> E.represent(tau).transpose()
+        DomainMatrix([[0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, -1, -1, -1, -1]], (1, 16), ZZ)
 
         This is useful when we want to consider a homomorphism $\varphi$ having
         ``E`` as codomain:
@@ -1987,13 +1983,8 @@ class EndomorphismRing:
 
         and we want to compute the matrix of such a homomorphism:
 
-        >>> phi.matrix().transpose()  # doctest: +SKIP
-        DomainMatrix(
-            [[1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1],
-            [0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, -1, -1, -1, -1],
-            [0, 0, 1, 0, 0, 0, 0, 1, -1, -1, -1, -1, 1, 0, 0, 0],
-            [0, 0, 0, 1, -1, -1, -1, -1, 1, 0, 0, 0, 0, 1, 0, 0]],
-            (4, 16), ZZ)
+        >>> phi.matrix().transpose()
+        DomainMatrix([[1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1], [0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, -1, -1, -1, -1], [0, 0, 1, 0, 0, 0, 0, 1, -1, -1, -1, -1, 1, 0, 0, 0], [0, 0, 0, 1, -1, -1, -1, -1, 1, 0, 0, 0, 0, 1, 0, 0]], (4, 16), ZZ)
 
         Note that the stacked matrix of $\tau$ occurs as the second column in
         this example. This is because $\zeta$ is the second basis element of

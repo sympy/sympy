@@ -192,9 +192,9 @@ class AlgIntPowers:
     [1, 0, 0, 0]
     >>> print(zeta_pow[1])
     [0, 1, 0, 0]
-    >>> print(zeta_pow[4])  # doctest: +SKIP
+    >>> print(zeta_pow[4])
     [-1, -1, -1, -1]
-    >>> print(zeta_pow[24])  # doctest: +SKIP
+    >>> print(zeta_pow[24])
     [-1, -1, -1, -1]
 
     References
@@ -410,7 +410,7 @@ def isolate(alg, eps=None, fast=False):
     ========
 
     >>> from sympy import isolate, sqrt, Rational
-    >>> print(isolate(sqrt(2)))  # doctest: +SKIP
+    >>> print(isolate(sqrt(2)))
     (1, 2)
     >>> print(isolate(sqrt(2), eps=Rational(1, 100)))
     (24/17, 17/12)
