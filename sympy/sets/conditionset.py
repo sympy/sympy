@@ -227,14 +227,16 @@ with
 
     def _eval_subs(self, old, new):
         sym, cond, base = self.args
-        dsym = sym.subs(old, adummy)
-        insym = dsym.has(adummy)
-        if not insym:
-            cond = cond.subs(old, new)
-            if cond is S.false:
-                return S.EmptySet
-        newbase = base.subs(old, new)
-        return self.func(sym, cond, newbase)
+
+        # Leave bound symbols unchanged in the condition.
+        if sym.subs(old, adummy).has(adummy):
+            return self.func(sym, cond, base.subs(old, new))
+
+        cond = cond.subs(old, new)
+        if cond is S.false:
+            return S.EmptySet
+
+        return self.func(sym, cond, base.subs(old, new))
 
     def _kind(self):
         return SetKind(self.sym.kind)
