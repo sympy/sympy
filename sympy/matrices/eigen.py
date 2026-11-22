@@ -1609,8 +1609,9 @@ def _singular_values(M):
 
     # Pad with zeros if singular values are computed in reverse way,
     # to give consistent format.
-    if len(vals) < M.cols:
-        vals += [M.zero] * (M.cols - len(vals))
+    n = min(M.rows, M.cols)
+    if len(vals) < n:
+        vals += [M.zero] * (n - len(vals))
 
     # sort them in descending order
     vals.sort(reverse=True, key=default_sort_key)
