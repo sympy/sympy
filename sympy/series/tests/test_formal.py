@@ -617,3 +617,10 @@ def test_fps__inverse():
 
     assert f3.inverse(x).truncate() == 1 + x**2/2 + 5*x**4/24 + O(x**6)
     assert f3.inverse(x).truncate(8) == 1 + x**2/2 + 5*x**4/24 + 61*x**6/720 + O(x**8)
+
+    # issue 31259: constant term is the reciprocal of f(0)
+    f4 = fps(2 + x)
+    assert f4.inverse()._eval_terms(3) == S(1)/2 - x/4 + x**2/8
+    assert f4.inverse().truncate() == \
+        S(1)/2 - x/4 + x**2/8 - x**3/16 + x**4/32 - x**5/64 + O(x**6)
+    assert (f4.inverse().truncate().removeO() * f4.function).expand() == 1 - x**6/64
