@@ -600,6 +600,9 @@ class IntegerPowerable:
 from sympy.polys.domains.modularinteger import ModularInteger
 
 
+_GF_types: tuple[type, ...]
+
+
 if GROUND_TYPES == 'flint':
     import flint
     _GF_types = (ModularInteger, flint.nmod, flint.fmpz_mod)

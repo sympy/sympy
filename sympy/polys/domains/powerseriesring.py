@@ -71,6 +71,8 @@ class SeriesRingProto(Protocol[Er]):
 
     def ring_new(self, arg: Expr | Er | int) -> PowerSeriesElement[Er]: ...
 
+    def inverse(self, s: PowerSeriesElement[Er]) -> PowerSeriesElement[Er]: ...
+
 
 class PowerSeriesRing(Ring[PowerSeriesElement[Er]], CompositeDomain):
     """A Domain class for representing univariate power series rings.
