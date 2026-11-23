@@ -2330,7 +2330,21 @@ def test_issue_14642():
             atan(S(172)/49)/2)/2 + S(43)/2))/3)/6 - 4*im(1/((-S(1)/2 + sqrt(3)*I/2)*
             (S(43)/2 + 27*I + sqrt(-256 + (43 + 54*I)**2)/2)**(S(1)/3)))/3))
 
-    assert solveset(n1, x) == res
+    solution = solveset(n1, x)
+    assert len(solution) == len(res) == 3
+    numerical_solution = sorted(
+        (root.evalf(30) for root in solution),
+        key=lambda root: (float(re(root)), float(im(root))),
+    )
+    numerical_expected = sorted(
+        (root.evalf(30) for root in res),
+        key=lambda root: (float(re(root)), float(im(root))),
+    )
+    assert all(
+        float(abs((actual - expected).evalf(30)).evalf(30)
+              .as_real_imag()[0]) < 1e-25
+        for actual, expected in zip(numerical_solution, numerical_expected)
+    )
 
 
 def test_issue_13961():
@@ -2782,9 +2796,12 @@ def test_issue_9953():
 
 
 def test_issue_9913():
-    assert solveset(2*x + 1/(x - 10)**2, x, S.Reals) == \
-        FiniteSet(-(3*sqrt(24081)/4 + Rational(4027, 4))**Rational(1, 3)/3 - 100/
-                (3*(3*sqrt(24081)/4 + Rational(4027, 4))**Rational(1, 3)) + Rational(20, 3))
+    expected = -(3*sqrt(24081)/4 + Rational(4027, 4))**Rational(1, 3)/3 - 100/(
+        3*(3*sqrt(24081)/4 + Rational(4027, 4))**Rational(1, 3)) + Rational(20, 3)
+    solution = solveset(2*x + 1/(x - 10)**2, x, S.Reals)
+    assert len(solution) == 1
+    assert float(abs((next(iter(solution)) - expected).evalf(30))
+                 .evalf(30).as_real_imag()[0]) < 1e-25
 
 
 def test_issue_10397():

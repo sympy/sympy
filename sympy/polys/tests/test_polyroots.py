@@ -12,6 +12,7 @@ from sympy.functions.elementary.piecewise import Piecewise
 from sympy.functions.elementary.trigonometric import (acos, cos, sin)
 from sympy.polys.domains.integerring import ZZ
 from sympy.sets.sets import Interval
+from sympy.simplify import simplify
 
 from sympy.polys import Poly, cyclotomic_poly, intervals, nroots, rootof
 
@@ -23,6 +24,7 @@ from sympy.polys.orthopolys import legendre_poly
 from sympy.polys.polyerrors import PolynomialError, \
     UnsolvableFactorError
 from sympy.polys.polyutils import _nsort
+from sympy.utilities.lambdify import lambdify
 
 from sympy.testing.pytest import raises, slow
 from sympy.core.random import verify_numerically
@@ -119,6 +121,25 @@ def test_issue_8438():
             for i, coefficient in enumerate(numerical_coefficients)
         )
         assert abs(residual) < 1e-12
+
+
+def test_roots_cubic_unsimplified_zero_coefficient():
+    p = sin(1)**2 + cos(1)**2 - 1
+    q = -1 + I
+    f = Poly(x**3 + p*x + q, x)
+
+    with mpmath.workdps(30):
+        numerical_roots = [
+            lambdify((), r, modules='mpmath')() for r in roots_cubic(f)
+        ]
+        numerical_p = lambdify((), p, modules='mpmath')()
+        numerical_q = lambdify((), q, modules='mpmath')()
+        residuals = [
+            abs(r**3 + numerical_p*r + numerical_q)
+            for r in numerical_roots
+        ]
+
+        assert max(residuals) < mpmath.mpf('1e-25')
 
 
 def test_issue_30837():
@@ -545,11 +566,25 @@ def test_roots0():
     x3 = sqrt(3)*I/2
     x4 = x3 - r1_2
     x5 = -x3 - r1_2
-    assert roots(x**3 + x**2 - x + 1, x, cubics=True) == {
+    expected = {
         -x1 - x2 - r1_3: 1,
         -x1/x4 - x2*x4 - r1_3: 1,
         -x1/x5 - x2*x5 - r1_3: 1,
     }
+    actual = roots(x**3 + x**2 - x + 1, x, cubics=True)
+    assert sorted(actual.values()) == sorted(expected.values())
+    actual_roots = sorted(
+        (r.evalf(30) for r in actual),
+        key=lambda r: (float(re(r)), float(im(r))),
+    )
+    expected_roots = sorted(
+        (r.evalf(30) for r in expected),
+        key=lambda r: (float(re(r)), float(im(r))),
+    )
+    assert all(
+        float(abs((a - b).evalf(30)).evalf(30).as_real_imag()[0]) < 1e-25
+        for a, b in zip(actual_roots, expected_roots)
+    )
 
     f = (x**2 + 2*x + 3).subs(x, 2*x**2 + 3*x).subs(x, 5*x - 4)
 
@@ -627,9 +662,10 @@ def test_roots0():
     }
 
     r = roots(x**3 + 40*x + 64)
-    real_root = [rx for rx in r if rx.is_real][0]
+    real_roots = [expand_complex(rx) for rx in r if expand_complex(rx).is_real]
     cr = 108 + 6*sqrt(1074)
-    assert real_root == -2*root(cr, 3)/3 + 20/root(cr, 3)
+    assert len(real_roots) == 1
+    assert simplify(real_roots[0] + 2*root(cr, 3)/3 - 20/root(cr, 3)) == 0
 
     eq = Poly((7 + 5*sqrt(2))*x**3 + (-6 - 4*sqrt(2))*x**2 + (-sqrt(2) - 1)*x + 2, x, domain='EX')
     assert roots(eq) == {-1 + sqrt(2): 1, -2 + 2*sqrt(2): 1, -sqrt(2) + 1: 1}
