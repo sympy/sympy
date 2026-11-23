@@ -826,6 +826,7 @@ def test_dup_isolate_all_roots():
 def test_dup_count_real_roots_unsupported_domain():
     from sympy.polys.polytools import Poly
     from sympy.core.symbol import symbols
-    x, a, b, c = symbols("x a b c")
-    p = Poly(x**7 + a*x**3 + b*x**2 + c, x)
+    x, a = symbols("x a")
+    p = Poly(x**2 + a, x)
     raises(DomainError, lambda: p.count_roots())
+
