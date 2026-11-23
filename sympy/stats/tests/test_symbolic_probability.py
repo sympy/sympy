@@ -6,13 +6,67 @@ from sympy.core.relational import Eq
 from sympy.core.symbol import (Dummy, symbols)
 from sympy.functions.elementary.exponential import exp
 from sympy.functions.elementary.miscellaneous import sqrt
+from sympy.functions.elementary.piecewise import Piecewise, piecewise_fold
 from sympy.functions.elementary.trigonometric import sin
 from sympy.integrals.integrals import Integral
 from sympy.core.expr import unchanged
 from sympy.core.singleton import S
-from sympy.stats import (Normal, Poisson, variance, Covariance, Variance,
+from sympy.stats import (Binomial, Normal, Poisson, density, variance, Covariance, Variance,
                          Probability, Expectation, Moment, CentralMoment)
 from sympy.stats.rv import probability, expectation
+
+
+def test_statistical_operators_piecewise_fold():
+    X = Normal('X', 0, 1)
+    Y = Normal('Y', 0, 1)
+    x = symbols('x', real=True)
+    indicator = Piecewise((1, X > 0), (0, True))
+    cases = [
+        Expectation(indicator),
+        Variance(indicator),
+        Covariance(indicator, indicator),
+        Moment(indicator, 2),
+        CentralMoment(indicator, 2),
+        Probability(Piecewise((X > 0, X < 0), (S.false, True))),
+    ]
+    for expr in cases:
+        assert expr.operator_variables == (X,)
+        assert expr.bound_symbols == ()
+        assert expr.as_dummy() == expr
+        assert piecewise_fold(expr) == expr
+
+    conditional = [
+        Expectation(indicator, Y > 0),
+        Probability(X > 0, Y > 0),
+        Variance(indicator, Y > 0),
+        Covariance(indicator, X, Y > 0),
+        Moment(indicator, 2, condition=Y > 0),
+        CentralMoment(indicator, 2, condition=Y > 0),
+    ]
+    for expr in conditional:
+        assert expr.operator_variables == (X, Y)
+        assert piecewise_fold(expr) == expr
+
+    assert piecewise_fold(Expectation(indicator)).doit() == S.Half
+    conditional_expectation = Expectation(indicator, X > 0)
+    assert piecewise_fold(conditional_expectation) == conditional_expectation
+    assert piecewise_fold(conditional_expectation).doit() == 1
+
+    for operator in (Expectation, Variance):
+        independent = operator(Piecewise((X, x > 0), (2*X, True)))
+        assert piecewise_fold(independent) == Piecewise(
+            (operator(X), x > 0), (operator(2*X), True))
+
+
+def test_issue_17784():
+    n = symbols('n', integer=True, positive=True)
+    i = symbols('i', integer=True, nonnegative=True)
+    p = symbols('p', positive=True)
+    X = Binomial('X', n, p)
+    total = Sum(i*density(X)(i), (i, 0, n))
+    assert piecewise_fold(total) == total
+    assert i not in piecewise_fold(total).free_symbols
+    assert piecewise_fold(total).subs({n: 3, p: S.Half}).doit() == 3*S.Half
 
 
 def test_literal_probability():

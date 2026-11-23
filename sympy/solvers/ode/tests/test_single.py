@@ -319,6 +319,24 @@ def _test_all_examples_for_one_hint(our_hint, all_examples=[], runxfail=None):
         print(msg)
 
 
+def test_issue_19208():
+    t = Symbol('t', real=True)
+    y = Function('y')(t)
+    forcing = Piecewise((1, t < 5), (0, True))
+    equation = Eq(diff(y, t, 2) + diff(y, t) + y, forcing)
+    solution = dsolve(equation, ics={y.subs(t, 0): 0, diff(y, t).subs(t, 0): 0}).rhs
+    assert solution.subs(t, 0).simplify() == 0
+    assert diff(solution, t).subs(t, 0).simplify() == 0
+
+    piecewise = next(iter(solution.atoms(Piecewise)))
+    branches = [solution.xreplace({piecewise: pair.expr}) for pair in piecewise.args]
+    left, right = branches
+    assert (diff(left, t, 2) + diff(left, t) + left).simplify() == 1
+    assert (diff(right, t, 2) + diff(right, t) + right).simplify() == 0
+    assert (left - right).subs(t, 5).simplify() == 0
+    assert (diff(left, t) - diff(right, t)).subs(t, 5).simplify() == 0
+
+
 def test_SingleODESolver():
     # Test that not implemented methods give NotImplementedError
     # Subclasses should override these methods.

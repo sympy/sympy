@@ -463,6 +463,10 @@ class SeqExpr(SeqBase):
     def variables(self):
         return (self.args[1][0],)
 
+    @property
+    def operator_variables(self) -> tuple[Basic, ...]:
+        return self.variables
+
 
 class SeqPer(SeqExpr):
     """

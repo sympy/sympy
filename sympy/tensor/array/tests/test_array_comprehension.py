@@ -39,7 +39,7 @@ def test_array_comprehension():
                                   [[7, 8, 9, 10, 11], [8, 9, 10, 11, 12], [9, 10, 11, 12, 13], [10, 11, 12, 13, 14]]]]
     assert c.free_symbols == set()
     assert c.variables == [i, j, k, l]
-    assert c.bound_symbols == [i, j, k, l]
+    assert c.bound_symbols == (i, j, k, l)
     assert d.doit().tolist() == [k, k, k, k, k]
     assert len(e) == 5
     raises(TypeError, lambda: ArrayComprehension(i*j, (i, 1, 3), (j, 2, [1, 3, 2])))

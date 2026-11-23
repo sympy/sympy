@@ -24,6 +24,7 @@ from sympy.functions.special.hyper import hyper
 from sympy.functions.special.tensor_functions import KroneckerDelta
 from sympy.geometry.polygon import rad
 from sympy.integrals.integrals import (Integral, integrate)
+from sympy.tensor.indexed import IndexedBase
 from sympy.logic.boolalg import (And, Or)
 from sympy.matrices.dense import (Matrix, eye)
 from sympy.matrices.expressions.matexpr import MatrixSymbol
@@ -33,6 +34,16 @@ from sympy.solvers.solvers import solve
 
 from sympy.testing.pytest import XFAIL, slow, _both_exp_pow
 from sympy.abc import x, y, z, t, a, b, c, d, e, f, g, h, i, n
+
+
+def test_issue_27359():
+    i, j, n = symbols('i j n', integer=True)
+    x = IndexedBase('x')
+    total = Sum(Piecewise((KroneckerDelta(i, j, (1, n)), x[i] > 0),
+        (0, True)), (i, 1, n))
+    assert simplify(total) == total
+    assert simplify(-total) == -total
+    assert i not in simplify(-total).free_symbols
 
 
 def test_issue_7263():
