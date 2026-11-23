@@ -545,8 +545,9 @@ def _two_elt_rep(gens, ZK, p, f=None, Np=None):
             Np = abs(pb.submodule_from_gens(gens).matrix.det())
 
     omega = ZK.basis_element_pullbacks()
-    beta = [p*om for om in omega[1:]]  # note: we omit omega[0] == 1
+    beta = [p*om for om in omega[1:]]
     beta += gens
+    beta.append(p*omega[0])
     search = coeff_search(len(beta), 1)
     for c in search:
         alpha = sum(ci*betai for ci, betai in zip(c, beta))
