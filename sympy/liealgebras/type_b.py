@@ -90,7 +90,7 @@ class TypeB(Standard_Cartan):
         """
 
         n = self.rank()
-        return "so(" + str(2*n) + ")"
+        return f"so({2*n+1})"
 
     def dynkin_diagram(self) -> str:
         n = self.rank()

@@ -11,7 +11,7 @@ def test_type_B():
     assert c.simple_root(3) == Matrix([[0, 0, 1]])
     assert c.highest_root() == Matrix([[1, 1, 0]])
     assert c.basis() == 21
-    assert c.lie_algebra() == "so(6)"
+    assert c.lie_algebra() == "so(7)"
     diag = "0---0=>=0\n1   2   3"
     assert c.dynkin_diagram() == diag
     assert c.positive_roots() ==  [
