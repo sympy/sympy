@@ -42,6 +42,7 @@ class CyclotomicField(AlgebraicField):
 
     _zeta_order: int
 
+    alias = "AlgebraicField"
     is_CyclotomicField = is_Cyclotomic = True
 
     def __init__(

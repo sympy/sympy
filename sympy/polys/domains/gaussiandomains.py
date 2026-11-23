@@ -6,7 +6,7 @@ from typing import Generic, TypeVar, Any, TYPE_CHECKING
 from sympy.external.gmpy import MPZ, MPQ
 from sympy.core.numbers import I
 from sympy.polys.polyclasses import DMP
-from sympy.polys.polyerrors import CoercionFailed
+from sympy.polys.polyerrors import CoercionFailed, NotReversible
 from sympy.polys.domains.integerring import ZZ, IntegerRing
 from sympy.polys.domains.rationalfield import QQ, RationalField
 from sympy.polys.domains.algebraicfield import AlgebraicField
@@ -312,6 +312,9 @@ class GaussianDomain(RingExtension[Telem, Tdom], ConjugateDomain):
         """Inject generators into this domain. """
         return self.poly_ring(*gens)
 
+    def drop(self, *gens):
+        return self
+
     def canonical_unit(self, a: Telem) -> Telem:
         unit = self.units[-a.quadrant()]  # - for inverse power
         return unit
@@ -547,7 +550,17 @@ class GaussianIntegerRing(GaussianDomain[GaussianInteger, MPZ], Ring[MPZ]):
 
     def lcm(self, a: GaussianInteger, b: GaussianInteger) -> GaussianInteger:
         """Least common multiple of a and b over ZZ_I."""
+        if not a or not b:
+            return self.zero
         return (a * b) // self.gcd(a, b)
+
+    def is_unit(self, a: GaussianInteger) -> bool:
+        return a in self.units
+
+    def revert(self, a: GaussianInteger) -> GaussianInteger:
+        if not self.is_unit(a):
+            raise NotReversible("only units are reversible in a ring")
+        return self.conjugate(a)
 
     def from_GaussianIntegerRing(K1, a, K0) -> GaussianInteger:
         """Convert a ZZ_I element to ZZ_I."""

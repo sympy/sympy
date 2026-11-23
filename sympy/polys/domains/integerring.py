@@ -234,6 +234,10 @@ class IntegerRing(Ring[MPZ], CharacteristicZero, SimpleDomain, ConjugateDomain):
         if a.y == 0:
             return a.x
 
+    def from_GaussianRationalField(K1, a, K0):
+        if a.y == 0 and a.x.denominator == 1:
+            return a.x.numerator
+
     def from_EX(K1, a, K0):
         """Convert ``Expression`` to GMPY's ``mpz``. """
         if a.is_Integer:
