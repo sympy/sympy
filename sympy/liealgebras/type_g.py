@@ -62,12 +62,6 @@ class TypeG(Standard_Cartan):
         """
         return 12
 
-    def basis(self) -> int:
-        """
-        Returns the number of independent generators of G_2
-        """
-        return 14
-
     def dynkin_diagram(self) -> str:
         diag = "0≡<≡0\n1   2"
         return diag

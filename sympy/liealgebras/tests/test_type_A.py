@@ -6,7 +6,7 @@ def test_type_A():
     c = CartanType("A3")
     m = Matrix(3, 3, [2, -1, 0, -1, 2, -1, 0, -1, 2])
     assert m == c.cartan_matrix()
-    assert c.basis() == 8
+    assert c.basis() == 15
     assert c.roots() == 12
     assert c.dimension() == 4
     assert c.simple_root(1) == Matrix([[1, -1, 0, 0]])

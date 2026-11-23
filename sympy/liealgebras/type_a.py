@@ -84,13 +84,6 @@ class TypeA(Standard_Cartan):
         n = self.rank()
         return n*(n+1)
 
-    def basis(self) -> int:
-        """
-        Returns the number of independent generators of A_n
-        """
-        n = self.rank()
-        return n**2 - 1
-
     def lie_algebra(self) -> str:
         """
         Returns the Lie algebra associated with A_n

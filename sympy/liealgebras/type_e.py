@@ -104,18 +104,6 @@ class TypeE(Standard_Cartan):
             return 126
         return 240
 
-    def basis(self) -> int:
-        """
-        Returns the number of independent generators of E_n
-        """
-
-        n = self.rank()
-        if n == 6:
-            return 78
-        if n == 7:
-            return 133
-        return 248
-
     def dynkin_diagram(self) -> str:
         n = self.rank()
         diag = " "*8 + str(2) + "\n"

@@ -81,14 +81,6 @@ class TypeC(Standard_Cartan):
         n = self.rank()
         return 2*(n**2)
 
-    def basis(self) -> int:
-        """
-        Returns the number of independent generators of C_n
-        """
-
-        n = self.rank()
-        return n*(2*n + 1)
-
     def lie_algebra(self) -> str:
         """
         Returns the Lie algebra associated with C_n"

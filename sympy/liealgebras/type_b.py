@@ -84,14 +84,6 @@ class TypeB(Standard_Cartan):
         n = self.rank()
         return 2*(n**2)
 
-    def basis(self) -> int:
-        """
-        Returns the number of independent generators of B_n
-        """
-
-        n = self.rank()
-        return (n**2 - n) // 2
-
     def lie_algebra(self) -> str:
         """
         Returns the Lie algebra associated with B_n

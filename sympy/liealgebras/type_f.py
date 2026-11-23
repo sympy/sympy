@@ -79,12 +79,6 @@ class TypeF(Standard_Cartan):
         """
         return 48
 
-    def basis(self) -> int:
-        """
-        Returns the number of independent generators of F_4
-        """
-        return 52
-
     def dynkin_diagram(self) -> str:
         diag = "0---0=>=0---0\n"
         diag += "   ".join(str(i) for i in range(1, 5))

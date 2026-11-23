@@ -84,6 +84,13 @@ class Standard_Cartan(Atom):
         """
         return self.n
 
+    @final
+    def basis(self) -> int:
+        """
+        Returns the number of independent generators of the Lie algebra.
+        """
+        return self.rank() + 2*len(self.positive_roots())
+
     @property
     def series(self) -> str:
         """

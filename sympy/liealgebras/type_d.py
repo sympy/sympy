@@ -88,13 +88,6 @@ class TypeD(Standard_Cartan):
         n = self.rank()
         return 2*n*(n-1)
 
-    def basis(self) -> int:
-        """
-        Returns the number of independent generators of D_n
-        """
-        n = self.rank()
-        return n*(n-1) // 2
-
     def lie_algebra(self) -> str:
         """
         Returns the Lie algebra associated with D_n"
