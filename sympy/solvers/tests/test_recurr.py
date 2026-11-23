@@ -264,27 +264,19 @@ def test_issue_17990():
     f = -10*y(n) + 4*y(n + 1) + 6*y(n + 2) + 46*y(n + 3)
     sol = rsolve(f, y(n))
     C0,C1,C2 = symbols("C:3")
-    _r0 = Rational(1, 276)
-    _r1 = Rational(1, 138)
-    _r2 = Rational(1, 23)
-    _r3 = Rational(1, 3)
-    _r4 = Rational(1, 2)
-    _r5 = Rational(43, 69)
-    _r6 = Rational(86, 69)
-    x0 = 9165**_r4
-    x1 = (3036*x0 + 290412)**_r3
-    x2 = 18**_r3
-    x3 = (253*x0 + 24201)**_r3
-    x4 = 1/x3
-    x5 = 3**_r4*I
-    x6 = x5 - 1
-    x7 = _r6*x2
-    x8 = _r0*x3
-    x9 = x5 + 1
+    x0 = sqrt(9165)
+    x1 = (253*x0 - 24201)**Rational(1, 3)
+    x2 = (253*x0 + 24201)**Rational(1, 3)
+    x3 = 2**Rational(2, 3)*3**Rational(5, 6)*I
     expected = (
-        C0*(x4*(x6*x8*(x1*x6 - 12) - x7)/x6)**n +
-        C1*(x4*(x7 + x8*x9*(x1*(-x5 - 1) - 12))/x9)**n +
-        C2*(_r1*x1 - _r2 - _r5*x2*x4)**n)
+        C0*((3036*x0 + 290412)**Rational(1, 3)/138 -
+            (3036*x0 - 290412)**Rational(1, 3)/138 - Rational(1, 23))**n +
+        C1*((3036*x0 - 290412)**Rational(1, 3)/276 -
+            (3036*x0 + 290412)**Rational(1, 3)/276 - Rational(1, 23)
+            + x3*(-x1 - x2)/276)**n +
+        C2*((3036*x0 - 290412)**Rational(1, 3)/276 -
+            (3036*x0 + 290412)**Rational(1, 3)/276 - Rational(1, 23)
+            + x3*(x1 + x2)/276)**n)
     assert sol == expected
     e = sol.subs({C0: 1, C1: 1, C2: 1, n: 1}).evalf()
     assert abs(e + 0.130434782608696) < 1e-13
