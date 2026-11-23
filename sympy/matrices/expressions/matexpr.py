@@ -18,12 +18,16 @@ from sympy.utilities.misc import filldedent
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
+    from collections.abc import Callable
+    from typing import Any, TypeVar
     from sympy.core.logic import FuzzyBool
 
+    _F = TypeVar('_F', bound=Callable[..., Any])
 
-def _sympifyit(arg, retval=None):
+
+def _sympifyit(arg: str, retval: Any = None) -> Callable[[_F], _F]:
     # This version of _sympifyit sympifies MutableMatrix objects
-    def deco(func):
+    def deco(func: _F) -> _F:
         @wraps(func)
         def __sympifyit_wrapper(a, b):
             try:
@@ -32,7 +36,7 @@ def _sympifyit(arg, retval=None):
             except SympifyError:
                 return retval
 
-        return __sympifyit_wrapper
+        return __sympifyit_wrapper  # type: ignore[return-value]
 
     return deco
 
@@ -99,7 +103,7 @@ class MatrixExpr(Expr):
     def _mul_handler(self):
         return MatMul
 
-    def __neg__(self):
+    def __neg__(self) -> MatrixExpr:
         return MatMul(S.NegativeOne, self).doit()
 
     def __abs__(self):
@@ -107,48 +111,48 @@ class MatrixExpr(Expr):
 
     @_sympifyit('other', NotImplemented)
     @call_highest_priority('__radd__')
-    def __add__(self, other):
+    def __add__(self, other: MatrixExpr | MatrixBase) -> MatrixExpr: # type: ignore[override]
         return MatAdd(self, other).doit()
 
     @_sympifyit('other', NotImplemented)
     @call_highest_priority('__add__')
-    def __radd__(self, other):
+    def __radd__(self, other: MatrixExpr | MatrixBase) -> MatrixExpr: # type: ignore[override]
         return MatAdd(other, self).doit()
 
     @_sympifyit('other', NotImplemented)
     @call_highest_priority('__rsub__')
-    def __sub__(self, other):
+    def __sub__(self, other: MatrixExpr | MatrixBase) -> MatrixExpr: # type: ignore[override]
         return MatAdd(self, -other).doit()
 
     @_sympifyit('other', NotImplemented)
     @call_highest_priority('__sub__')
-    def __rsub__(self, other):
+    def __rsub__(self, other: MatrixExpr | MatrixBase) -> MatrixExpr: # type: ignore[override]
         return MatAdd(other, -self).doit()
 
     @_sympifyit('other', NotImplemented)
     @call_highest_priority('__rmul__')
-    def __mul__(self, other):
+    def __mul__(self, other: MatrixExpr | MatrixBase | Expr | complex) -> MatrixExpr:
         return MatMul(self, other).doit()
 
     @_sympifyit('other', NotImplemented)
     @call_highest_priority('__rmul__')
-    def __matmul__(self, other):
+    def __matmul__(self, other: MatrixExpr | MatrixBase) -> MatrixExpr:
         return MatMul(self, other).doit()
 
     @_sympifyit('other', NotImplemented)
     @call_highest_priority('__mul__')
-    def __rmul__(self, other):
+    def __rmul__(self, other: MatrixExpr | MatrixBase | Expr | complex) -> MatrixExpr: # type: ignore[misc]
         return MatMul(other, self).doit()
 
     @_sympifyit('other', NotImplemented)
     @call_highest_priority('__mul__')
-    def __rmatmul__(self, other):
+    def __rmatmul__(self, other: MatrixExpr | MatrixBase) -> MatrixExpr:
         return MatMul(other, self).doit()
 
     @_sympifyit('other', NotImplemented)
     @call_highest_priority('__rpow__')
-    def __pow__(self, other):
-        return MatPow(self, other).doit()
+    def __pow__(self, other: Expr | complex, mod: None = None, /) -> MatrixExpr: # type: ignore[override]
+        return MatPow(self, other).doit() # type: ignore[return-value]
 
     @_sympifyit('other', NotImplemented)
     @call_highest_priority('__pow__')
@@ -157,7 +161,7 @@ class MatrixExpr(Expr):
 
     @_sympifyit('other', NotImplemented)
     @call_highest_priority('__rtruediv__')
-    def __truediv__(self, other):
+    def __truediv__(self, other: Expr | complex) -> MatrixExpr:
         return self * other**S.NegativeOne
 
     @_sympifyit('other', NotImplemented)
