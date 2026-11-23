@@ -255,14 +255,11 @@ point. There are two simple supports below the beam. One at the end
 and another one at a distance of 10 meters from the start. The
 deflection is restricted at both the supports.
 
-::
+.. image:: beam_example2.svg
+   :align: center
+   :alt: Beam Example 2 diagram
 
-  || 8 N                                       ↺ 120 Nm
-  \/______________________________________________|
-  |_______________________________________________|
-              /\                                 /\
-  |------------|---------------------------------|
-      10 m                  20 m
+ 
 
 .. note::
 

@@ -1,0 +1,33 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 520 170" width="520" height="170">
+  <style>
+    text { font-family: sans-serif; font-size: 14px; fill: #000; }
+  </style>
+  <!-- Beam (30 m = 360 px: x=60 to x=420) -->
+  <rect x="60" y="75" width="360" height="8" fill="#cccccc" stroke="#000" stroke-width="1.5"/>
+
+  <!-- Point Load: 8 N downward at x=60 -->
+  <line x1="60" y1="22" x2="60" y2="66" stroke="#000" stroke-width="2"/>
+  <polygon points="60,74 55,64 65,64" fill="#000"/>
+  <text x="70" y="45">8 N</text>
+
+  <!-- Counter-clockwise Moment: 120 Nm at x=420 -->
+  <path d="M 435 100 A 24 24 0 1 0 435 58" fill="none" stroke="#000" stroke-width="2"/>
+  <polygon points="432,54 443,55 436,64" fill="#000"/>
+  <text x="450" y="52">120 Nm</text>
+
+  <!-- Simple Support 1 at 10 m (x=180) -->
+  <polygon points="180,83 171,100 189,100" fill="none" stroke="#000" stroke-width="1.5"/>
+  <line x1="166" y1="100" x2="194" y2="100" stroke="#000" stroke-width="1.5"/>
+
+  <!-- Simple Support 2 at 30 m (x=420) -->
+  <polygon points="420,83 411,100 429,100" fill="none" stroke="#000" stroke-width="1.5"/>
+  <line x1="406" y1="100" x2="434" y2="100" stroke="#000" stroke-width="1.5"/>
+
+  <!-- Dimension Lines -->
+  <line x1="60" y1="125" x2="420" y2="125" stroke="#000" stroke-width="1"/>
+  <line x1="60" y1="117" x2="60" y2="133" stroke="#000" stroke-width="1"/>
+  <line x1="180" y1="117" x2="180" y2="133" stroke="#000" stroke-width="1"/>
+  <line x1="420" y1="117" x2="420" y2="133" stroke="#000" stroke-width="1"/>
+  <text x="105" y="148">10 m</text>
+  <text x="285" y="148">20 m</text>
+</svg>
