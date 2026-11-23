@@ -531,6 +531,8 @@ def res_q(f, g, x):
     1. J. S. Cohen: Computer Algebra and Symbolic Computation
      - Mathematical Methods. A. K. Peters, 2003.
     """
+    if f == 0 or g == 0:
+        return 0
     m = degree(f, x)
     n = degree(g, x)
     if m < n:
@@ -559,6 +561,8 @@ def res_z(f, g, x):
     1. J. S. Cohen: Computer Algebra and Symbolic Computation
      - Mathematical Methods. A. K. Peters, 2003.
     """
+    if f == 0 or g == 0:
+        return 0
     m = degree(f, x)
     n = degree(g, x)
     if m < n:
@@ -2098,6 +2102,7 @@ def subresultants_rem(p, q, x):
     # initialize
     s1 = sylvester(f, g, x, 1)
     sr_list = [f, g]      # subresultant list
+    p, q = f, g
 
     # main loop
     while deg_g > 0:

@@ -293,3 +293,13 @@ def test_macaulay_example_two():
                                                 [0, -a_1, 0, 0],
                                                 [0, 0, -a_1, 0],
                                                 [0, 0, 0, -a_1]])
+
+
+def test_macaulay_four_variables():
+    x, y, z, w, a, b, c, d = symbols("x y z w a b c d")
+    mac = MacaulayResultant([a*x + y, b*y + z, c*z + w, d*w**2 + x**2],
+                            [x, y, z, w])
+    matrix = mac.get_matrix()
+    denominator = mac.get_submatrix(matrix).det()
+    assert denominator == a**2*b
+    assert matrix.det() == denominator*(1 + d*(a*b*c)**2)

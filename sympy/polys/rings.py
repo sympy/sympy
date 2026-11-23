@@ -36,6 +36,7 @@ from sympy.polys.polyerrors import (
     CoercionFailed,
     GeneratorsError,
     ExactQuotientFailed,
+    HeuristicGCDFailed,
     MultivariatePolynomialError,
 )
 from sympy.polys.polyoptions import (
@@ -2898,7 +2899,10 @@ class PolyElement(
     def _gcd_ZZ(
         self, other: PolyElement[Er]
     ) -> tuple[PolyElement[Er], PolyElement[Er], PolyElement[Er]]:
-        return heugcd(self, other) # type: ignore
+        try:
+            return heugcd(self, other) # type: ignore
+        except HeuristicGCDFailed:
+            return self.ring.dmp_rr_prs_gcd(self, other)
 
     def _gcd_QQ(
         self, g: PolyElement[Er]

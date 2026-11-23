@@ -20,7 +20,7 @@ from sympy.polys.densebasic import (
     dup_strip,
     dup_LC, dmp_ground_LC,
     dmp_zero_p,
-    dmp_ground,
+    dmp_ground, dmp_ground_p,
     dup_degree, dmp_degree, dmp_degree_in, dmp_degree_list,
     dmp_raise, dmp_inject,
     dup_convert)
@@ -93,8 +93,18 @@ def dmp_sqf_p(f, u, K):
     True
 
     """
-    if dmp_zero_p(f, u):
+    if dmp_ground_p(f, None, u):
         return True
+
+    if K.is_FiniteField and K.is_Field:
+        gcd = f
+        for i in range(u + 1):
+            fp = dmp_diff_in(f, 1, i, u, K)
+            if not dmp_zero_p(fp, u):
+                gcd = dmp_gcd(gcd, fp, u, K)
+                if dmp_ground_p(gcd, None, u):
+                    return True
+        return False
 
     for i in range(u+1):
 

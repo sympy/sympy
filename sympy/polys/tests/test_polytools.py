@@ -3463,6 +3463,8 @@ def test_cancel():
     assert cancel(0) == 0
     assert cancel(7) == 7
     assert cancel(x) == x
+    f = (x - 1000)/(x - 39979541902686728755502667193825395189197200)
+    assert cancel(f) == f
 
     assert cancel(oo) is oo
 

@@ -435,9 +435,9 @@ class MacaulayResultant():
                 temp.append(bool(total_degree(m, v) >= self.degrees[i]))
             divisible.append(temp)
         reduced = [i for i, r in enumerate(divisible)
-                   if sum(r) < self.n - 1]
+                   if sum(r) == 1]
         non_reduced = [i for i, r in enumerate(divisible)
-                       if sum(r) >= self.n -1]
+                       if sum(r) > 1]
 
         return reduced, non_reduced
 
