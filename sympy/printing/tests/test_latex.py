@@ -2900,7 +2900,9 @@ def test_Quaternion_latex_printing():
     q = Quaternion(x, y, z, x + t)
     assert latex(q) == r"x + y i + z j + \left(t + x\right) k"
     q = Quaternion(x, -y, z, t)
-    assert latex(q) == r"x + \left(- y\right) i + z j + t k"
+    assert latex(q) == r"x - y i + z j + t k"
+    q = Quaternion(-x, -2*y, z, -x - t)
+    assert latex(q) == r"- x - 2 y i + z j - \left(t + x\right) k"
 
 
 def test_TensorProduct_printing():
