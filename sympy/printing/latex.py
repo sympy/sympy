@@ -2901,10 +2901,16 @@ class LatexPrinter(Printer):
     def _print_Quaternion(self, expr):
         # TODO: This expression is potentially confusing,
         # shall we print it as `Quaternion( ... )`?
-        s = [self.parenthesize(i, PRECEDENCE["Mul"], strict=True)
-             for i in expr.args]
-        a = [s[0]] + [i+" "+j for i, j in zip(s[1:], "ijk")]
-        return " + ".join(a)
+        tex = ""
+        for c, unit in zip(expr.args, ("", " i", " j", " k")):
+            neg = c.could_extract_minus_sign()
+            term = self.parenthesize(-c if neg else c, PRECEDENCE["Mul"],
+                                     strict=True) + unit
+            if tex:
+                tex += (" - " if neg else " + ") + term
+            else:
+                tex = ("- " if neg else "") + term
+        return tex
 
     def _print_QuotientRing(self, R):
         # TODO nicer fractions for few generators...
