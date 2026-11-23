@@ -2143,9 +2143,20 @@ class Triangle(Polygon):
             nodup.pop()  # last point was same as first
 
         # remove collinear points
-        if len(nodup) == 3:
-            a, b, c = sorted(nodup, key=default_sort_key)
-            if Point.is_collinear(a, b, c):
+        if len(nodup) == 3 and Point.is_collinear(*nodup):
+            for i in range(3):
+                b = nodup[i]
+                a, c = nodup[(i + 1) % 3], nodup[(i + 2) % 3]
+                dot = (a - b).dot(c - b)
+                if dot.is_negative or (dot < 0) == True:
+                    nodup = sorted([a, c], key=default_sort_key)
+                    break
+                sim = simplify(dot)
+                if sim.is_negative or (sim < 0) == True:
+                    nodup = sorted([a, c], key=default_sort_key)
+                    break
+            else:
+                a, b, c = sorted(nodup, key=default_sort_key)
                 nodup = [a, c]
 
         vertices = nodup
