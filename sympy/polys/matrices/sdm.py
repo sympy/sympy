@@ -86,6 +86,16 @@ class SDM(dict):
         if not all(0 <= c < n for row in self.values() for c in row):
             raise DMBadInputError("Column out of range")
 
+        empty_rows = []
+        for i, row in self.items():
+            if not all(row.values()):
+                row = {j: value for j, value in row.items() if value}
+                self[i] = row
+            if not row:
+                empty_rows.append(i)
+        for i in empty_rows:
+            del self[i]
+
     def getitem(self, i, j):
         try:
             return self[i][j]

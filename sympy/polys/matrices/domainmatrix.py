@@ -1902,7 +1902,7 @@ class DomainMatrix:
         K0 = self.domain
         K1 = K0.get_ring() if K0.has_assoc_Ring else K0
 
-        diagonals = [K0.one] * self.shape[0]
+        diagonals = [K1.one] * self.shape[0]
         dod_num = {}
         for i, rowi in dod.items():
             indices, elems = zip(*rowi.items())
@@ -2083,19 +2083,17 @@ class DomainMatrix:
 
         if K.is_zero(denom):
             raise ZeroDivisionError('denominator is zero')
-        elif K.is_one(denom):
-            M_numers = M.copy()
-            M_denoms = M.ones(M.shape, M.domain)
-            return (M_numers, M_denoms)
 
-        elements, data = M.to_flat_nz()
+        M_numers = M.copy()
+        if K.is_one(denom):
+            return M_numers, M.ones(M.shape, K)
 
-        cofactors = [K.cofactors(numer, denom) for numer in elements]
-        gcds, numers, denoms = zip(*cofactors)
-
-        M_numers = M.from_flat_nz(list(numers), data, K)
-        M_denoms = M.from_flat_nz(list(denoms), data, K)
-
+        M_denoms = M.from_rep(type(M.rep).ones(M.shape, K))
+        for (i, j), numer in M.iter_items():
+            _, n, d = K.cofactors(numer, denom)
+            unit = -K.one if K.is_negative(d) else K.canonical_unit(d)
+            M_numers[i, j] = unit*n
+            M_denoms[i, j] = unit*d
         return (M_numers, M_denoms)
 
     def content(self):
@@ -3147,15 +3145,13 @@ class DomainMatrix:
 
         if not p:
             return self.zeros(self.shape, self.domain)
-        elif len(p) == 1:
-            return p[0] * self.eye(self.shape, self.domain)
 
         # Evaluate p(A) using Horner's method:
         # XXX: Use Paterson-Stockmeyer method?
         I = A.eye(A.shape, A.domain)
-        p_A = p[0] * I
+        p_A = I.rmul(p[0])
         for pi in p[1:]:
-            p_A = A*p_A + pi*I
+            p_A = A*p_A + I.rmul(pi)
 
         return p_A
 
@@ -3225,10 +3221,10 @@ class DomainMatrix:
         if not p:
             return B.zeros(B.shape, B.domain, fmt=B.rep.fmt)
 
-        p_A_B = p[0]*B
+        p_A_B = B.rmul(p[0])
 
         for p_i in p[1:]:
-            p_A_B = A*p_A_B + p_i*B
+            p_A_B = A*p_A_B + B.rmul(p_i)
 
         return p_A_B
 
@@ -3388,7 +3384,12 @@ class DomainMatrix:
             raise DMShapeError("Shape")
         if not self.domain.is_Field:
             raise DMNotAField('Not a field')
-        sol = self.rep.lu_solve(rhs.rep)
+        if self.domain != rhs.domain:
+            raise DMDomainError("Matrices must have the same domain")
+        rhs_rep = rhs.rep
+        if type(self.rep) is not type(rhs_rep):
+            rhs_rep = type(self.rep).from_dod(rhs.to_dod(), rhs.shape, rhs.domain)
+        sol = self.rep.lu_solve(rhs_rep)
         return self.from_rep(sol)
 
     def fflu(self):
@@ -3471,6 +3472,8 @@ class DomainMatrix:
             raise DMNotAField('Not a field')
         Aaug = A.hstack(b)
         Arref, pivots = Aaug.rref()
+        if pivots and pivots[-1] >= A.shape[1]:
+            raise DMNonInvertibleMatrixError("Inconsistent system.")
         particular = Arref.from_rep(Arref.rep.particular())
         nullspace_rep, nonpivots = Arref[:,:-1].rep.nullspace()
         nullspace = Arref.from_rep(nullspace_rep)

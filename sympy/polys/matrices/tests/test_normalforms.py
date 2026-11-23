@@ -97,6 +97,15 @@ def test_smith_normal():
     dx = m.domain.gens[0]
     assert invariant_factors(m) == (1, dx-1, dx**2-1)
 
+    K = QQ[x]
+    for m, snf in ((DM([[2*x, 0], [0, 4*x]], K), DM([[x, 0], [0, x]], K)),
+                   (DM([[2*x, 0], [0, 3]], K), DM([[1, 0], [0, x]], K))):
+        assert smith_normal_form(m).to_dense() == snf
+        a, s, t = smith_normal_decomp(m)
+        assert a == snf == s*m*t
+        assert K.is_unit(s.det())
+        assert K.is_unit(t.det())
+
     zr = DomainMatrix([], (0, 2), ZZ)
     zc = DomainMatrix([[], []], (2, 0), ZZ)
     assert smith_normal_form(zr).to_dense() == zr
