@@ -2118,6 +2118,19 @@ def test_issue_18894():
     assert a == result
 
 
+def test_PolyRing_gf_wrappers():
+    R, x = ring("x", FF(7))
+    f = (x - 1)*(x - 2)
+
+    assert R.gf_trunc(f) == f
+    assert R.gf_normal(f) == f
+    assert set(R.gf_edf_zassenhaus(f, 1)) == {x - 1, x - 2}
+    assert set(R.gf_edf_shoup(f, 1)) == {x - 1, x - 2}
+
+    R, x, y = ring("x,y", FF(7))
+    raises(NotImplementedError, lambda: R.dmp_gf_sqf_part(x**2*y))
+
+
 def test_PolyElement_factor_list():
     _, x = ring("x", ZZ)
 

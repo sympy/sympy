@@ -2084,18 +2084,7 @@ def dmp_slice_in(f: dmp[Er], m: int, n: int, j: int, u: int, K: Domain[Er]) -> d
         return _dmp(dup_slice(_dup(f), m, n, K))
 
     d: dict[tuple[int, ...], Er] = dmp_to_dict(f, u, K)
-    g: dict[tuple[int, ...], Er] = {}
-
-    for monom, coeff in d.items():
-        k = monom[j]
-
-        if k < m or k >= n:
-            monom = monom[:j] + (0,) + monom[j + 1 :]
-
-        if monom in g:
-            g[monom] += coeff
-        else:
-            g[monom] = coeff
+    g = {monom: coeff for monom, coeff in d.items() if m <= monom[j] < n}
 
     return dmp_from_dict(g, u, K)
 

@@ -252,6 +252,8 @@ from sympy.polys.galoistools import (
     gf_LC,
     gf_TC,
     gf_strip,
+    gf_trunc,
+    gf_normal,
     gf_from_dict,
     gf_to_dict,
     gf_from_int_poly,
@@ -1386,7 +1388,9 @@ class IPolys(Generic[Er]):
         return self.from_dense(dup_gf_sqf_part(self.to_dense(f), self.domain))
 
     def dmp_gf_sqf_part(self, f):
-        return self.from_dense(dmp_gf_sqf_part(self.to_dense(f), self.domain))
+        return self.from_dense(
+            dmp_gf_sqf_part(self.to_dense(f), self.ngens - 1, self.domain)
+        )
 
     def dup_sqf_part(self, f):
         return self.from_dense(dup_sqf_part(self.to_dense(f), self.domain))
@@ -1634,11 +1638,11 @@ class IPolys(Generic[Er]):
         return self.from_gf_dense(gf_strip(self.to_gf_dense(f)))
 
     def gf_trunc(self, f):
-        return self.from_gf_dense(gf_strip(self.to_gf_dense(f), self.domain.mod))
+        return self.from_gf_dense(gf_trunc(self.to_gf_dense(f), self.domain.mod))
 
     def gf_normal(self, f):
         return self.from_gf_dense(
-            gf_strip(self.to_gf_dense(f), self.domain.mod, self.domain.dom)
+            gf_normal(self.to_gf_dense(f), self.domain.mod, self.domain.dom)
         )
 
     def gf_from_dict(self, f):
@@ -1923,7 +1927,7 @@ class IPolys(Generic[Er]):
 
     def gf_edf_zassenhaus(self, f, n):
         factors = gf_edf_zassenhaus(
-            self.to_gf_dense(f), self.domain.mod, self.domain.dom
+            self.to_gf_dense(f), n, self.domain.mod, self.domain.dom
         )
         return [self.from_gf_dense(g) for g in factors]
 
@@ -1932,7 +1936,7 @@ class IPolys(Generic[Er]):
         return [(self.from_gf_dense(g), k) for g, k in factors]
 
     def gf_edf_shoup(self, f, n):
-        factors = gf_edf_shoup(self.to_gf_dense(f), self.domain.mod, self.domain.dom)
+        factors = gf_edf_shoup(self.to_gf_dense(f), n, self.domain.mod, self.domain.dom)
         return [self.from_gf_dense(g) for g in factors]
 
     def gf_zassenhaus(self, f):

@@ -238,6 +238,8 @@ def test_dmp_eval_tail():
     assert dmp_eval_tail([[]], [1], 1, ZZ) == []
     assert dmp_eval_tail([[[]]], [1], 2, ZZ) == [[]]
     assert dmp_eval_tail([[[]]], [1, 2], 2, ZZ) == []
+    assert dmp_eval_tail([[[]]], [1, 2, 3], 2, ZZ) == ZZ.zero
+    assert dmp_eval_tail([[[1]], [[1, -1]]], [1], 2, ZZ) == [[1], []]
 
     assert dmp_eval_tail(f_0, [], 2, ZZ) == f_0
 
@@ -290,6 +292,7 @@ def test_dmp_revert():
 
 def test_dup_series_reversion():
     assert dup_series_reversion([], 3, QQ) == []
+    assert dup_series_reversion(QQ.map([1, 2, 0]), 1, QQ) == []
     assert dup_series_reversion([ZZ(12), ZZ(1), ZZ(0)], 3, ZZ) == \
            dup_from_list([-12, 1, 0], QQ)
 
@@ -315,7 +318,8 @@ def test_dup_series_reversion_small():
     assert _dup_series_reversion_small(ZZ.map([12, 7, 1, 0]), 4, ZZ) == [86, -7, 1, 0]
     assert _dup_series_reversion_small(ZZ.map([2, 1, 0]), 2, ZZ) == [1, 0]
 
-    raises(NotReversible, lambda: _dup_series_reversion_small(ZZ.map([1, 1, 0]), 1, ZZ))
+    assert _dup_series_reversion_small(ZZ.map([1, 1, 0]), 1, ZZ) == []
+    raises(NotReversible, lambda: _dup_series_reversion_small(ZZ.map([1, 2, 0]), 1, ZZ))
     raises(ValueError, lambda: _dup_series_reversion_small(ZZ.map([0]), 0, ZZ))
 
 
@@ -488,6 +492,9 @@ def test_dmp_ground_primitive():
 
 
 def test_dup_extract():
+    assert dup_extract([], [], ZZ) == (ZZ.zero, [], [])
+    assert dup_extract([], [ZZ(2)], ZZ) == (ZZ(2), [], [ZZ.one])
+
     f = dup_normal([2930944, 0, 2198208, 0, 549552, 0, 45796], ZZ)
     g = dup_normal([17585664, 0, 8792832, 0, 1099104, 0], ZZ)
 
@@ -498,6 +505,8 @@ def test_dup_extract():
 
 
 def test_dmp_ground_extract():
+    assert dmp_ground_extract([[]], [[]], 1, ZZ) == (ZZ.zero, [[]], [[]])
+
     f = dmp_normal(
         [[2930944], [], [2198208], [], [549552], [], [45796]], 1, ZZ)
     g = dmp_normal([[17585664], [], [8792832], [], [1099104], []], 1, ZZ)
@@ -538,6 +547,8 @@ def test_dup_mirror():
 def test_dup_scale():
     assert dup_scale([], -1, ZZ) == []
     assert dup_scale([1], -1, ZZ) == [1]
+    assert dup_scale([3, 1], 0, ZZ) == [1]
+    assert dup_scale([1, 1, 0], 0, ZZ) == []
 
     assert dup_scale([1, 2, 3, 4, 5], -1, ZZ) == [1, -2, 3, -4, 5]
     assert dup_scale([1, 2, 3, 4, 5], -7, ZZ) == [2401, -686, 147, -28, 5]

@@ -370,7 +370,7 @@ def _rec_eval_tail(g: dmp[Er], i: int, A: list[Er], u: int, K: Domain[Er]) -> dm
         h = [ _rec_eval_tail(c, i + 1, A, u, K) for c in g ]
 
         if i < u - len(A) + 1:
-            return h
+            return dmp_strip(h, u - len(A) - i, K)
         else:
             return _ground_dmp(dup_eval(_dup(h), A[-u + i - 1], K))
 
@@ -397,14 +397,11 @@ def dmp_eval_tail(f: dmp[Er], A: list[Er], u: int, K: Domain[Er]) -> dmp[Er]:
         return f
 
     if dmp_zero_p(f, u):
+        if len(A) == u + 1:
+            return _ground_dmp(K.zero)
         return dmp_zero(u - len(A), K)
 
-    e = _rec_eval_tail(f, 0, A, u, K)
-
-    if u == len(A) - 1:
-        return e
-    else:
-        return dmp_strip(e, u - len(A), K)
+    return _rec_eval_tail(f, 0, A, u, K)
 
 
 def _rec_diff_eval(g: dmp[Er], m: int, a: Er, v: int, i: int, j: int, K: Domain[Er]) -> dmp[Er]:
@@ -762,7 +759,7 @@ def dup_extract(f: dup[Er], g: dup[Er], K: Domain[Er]) -> tuple[Er, dup[Er], dup
 
     gcd = K.gcd(fc, gc)
 
-    if not K.is_one(gcd):
+    if not K.is_zero(gcd) and not K.is_one(gcd):
         f = dup_exquo_ground(f, gcd, K)
         g = dup_exquo_ground(g, gcd, K)
 
@@ -790,7 +787,7 @@ def dmp_ground_extract(
 
     gcd = K.gcd(fc, gc)
 
-    if not K.is_one(gcd):
+    if not K.is_zero(gcd) and not K.is_one(gcd):
         f = dmp_exquo_ground(f, gcd, u, K)
         g = dmp_exquo_ground(g, gcd, u, K)
 
@@ -890,7 +887,7 @@ def dup_scale(f: dup[Er], a: Er, K: Domain[Er]) -> dup[Er]:
     for i in range(n - 1, -1, -1):
         f[i], b = b*f[i], b*a
 
-    return f
+    return dup_strip(f, K)
 
 
 def dup_shift(f: dup[Er], a: Er, K: Domain[Er]) -> dup[Er]:
@@ -1493,7 +1490,7 @@ def _dup_series_reversion_small(f: dup[Er], n: int, K: Domain[Er]) -> dup[Er]:
     if n < 1 or n > 4:
         raise ValueError("Only n <= 4 supported")
 
-    f = dup_truncate(f, n, K)
+    f = dup_truncate(f, max(n, 2), K)
     f = [K.zero] * (4 - len(f)) + f
     a, b, c, d = f
 
