@@ -180,7 +180,7 @@ class Standard_Cartan(Atom):
         """
         simple_roots = [self.simple_root(i) for i in range(1, self.rank() + 1)]
         return Matrix([
-                2 * x / x.dot(x) for x in simple_roots])
+                list(2 * x / x.dot(x)) for x in simple_roots])
 
     def _omega_matrix(self) -> Matrix:
         """
