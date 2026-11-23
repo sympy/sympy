@@ -1007,7 +1007,8 @@ def test_solve_trig():
 
     # This is the only remaining solveset test that actually ends up being solved
     # by _solve_trig2(). All others are handled by the improved _solve_trig1.
-    assert dumeq(solveset_real(2*cos(x)*cos(2*x) - 1, x),
+    res = solveset_real(2*cos(x)*cos(2*x) - 1, x)
+    expected = (
           Union(ImageSet(Lambda(n, 2*n*pi + 2*atan(sqrt(-2*2**Rational(1, 3)*(67 +
                   9*sqrt(57))**Rational(2, 3) + 8*2**Rational(2, 3) + 11*(67 +
                   9*sqrt(57))**Rational(1, 3))/(3*(67 + 9*sqrt(57))**Rational(1, 6)))), S.Integers),
@@ -1015,6 +1016,15 @@ def test_solve_trig():
                   9*sqrt(57))**Rational(2, 3) + 8*2**Rational(2, 3) + 11*(67 +
                   9*sqrt(57))**Rational(1, 3))/(3*(67 + 9*sqrt(57))**Rational(1, 6))) +
                   2*pi), S.Integers)))
+    assert isinstance(res, Union) and len(res.args) == 2
+    assert all(isinstance(i, ImageSet) and i.base_set == S.Integers
+               for i in res.args)
+
+    def vals(u):
+        return sorted((i.lamda(k).evalf(30) for i in u.args for k in (0, 1)),
+                      key=float)
+    assert all(abs((a - b).evalf(30)) < 1e-25
+               for a, b in zip(vals(res), vals(expected)))
 
     # issue #16870
     assert dumeq(simplify(solveset(sin(x/180*pi) - S.Half, x, S.Reals)), Union(
