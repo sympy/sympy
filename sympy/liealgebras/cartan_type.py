@@ -163,7 +163,7 @@ class Standard_Cartan(Atom):
         return cartan_matrix
 
 
-    def cocartan_matrix(self) -> Matrix:
+    def _cocartan_matrix(self) -> Matrix:
         r"""
         Returns the Cocartan matrix. The Cocartan matrix
         row elements, $c_i$, are built from covectors of simple roots, $\alpha_i$.
@@ -182,13 +182,13 @@ class Standard_Cartan(Atom):
         return Matrix([
                 2 * x / x.dot(x) for x in simple_roots])
 
-    def omega_matrix(self) -> Matrix:
+    def _omega_matrix(self) -> Matrix:
         """
         Returns the omega matrix whose rows are built from
         the fundamental weights of the algebra in the orthogonal
         basis.
         """
-        return self.cocartan_matrix().pinv().T
+        return self._cocartan_matrix().pinv().T
 
 
     def fundamental_weight(self, i: int) -> Matrix:
@@ -218,7 +218,7 @@ class Standard_Cartan(Atom):
         - https://en.wikipedia.org/wiki/Weight_(representation_theory)
         - http://www.math.columbia.edu/~woit/notes11.pdf
         """
-        return self.omega_matrix().row(i - 1)
+        return self._omega_matrix().row(i - 1)
 
 
     def dynkin_diagram(self) -> str:

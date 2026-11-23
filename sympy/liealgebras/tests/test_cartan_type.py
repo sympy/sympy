@@ -22,13 +22,13 @@ def test_Standard_Cartan():
 def test_CartanType():
     c = CartanType("A4")
 
-    omega = c.omega_matrix()
-    cocartan = c.cocartan_matrix()
+    omega = c._omega_matrix()
+    cocartan = c._cocartan_matrix()
 
     assert cocartan * omega.T == eye(4)
 
     c2 = CartanType("A2")
-    assert c2.omega_matrix() == Matrix([
+    assert c2._omega_matrix() == Matrix([
                         [Rational(2,3), Rational(-1,3), Rational(-1,3)],
                         [Rational(1,3),  Rational(1,3), Rational(-2,3)]])
 
