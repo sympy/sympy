@@ -441,8 +441,6 @@ def test_laplace_transform():
             LaplaceTransform(DiracDelta(t**2), t, s))
     assert LT(DiracDelta(t**2 - 1), t, s) == (exp(-s)/2, -oo, True)
     assert LT(DiracDelta(t*(1 - t)), t, s) == (1 + exp(-s), -oo, True)
-    # The cofactor of DiracDelta must be evaluated at the root of the delta
-    # argument, not at s; the slope must enter as Abs(slope).
     assert (LT(DiracDelta(t**2 - 1)*exp(-t), t, s, noconds=True) ==
             exp(-1)*exp(-s)/2)
     assert (LT(DiracDelta(t*(1 - t))*exp(-t), t, s, noconds=True) ==
