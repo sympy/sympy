@@ -184,6 +184,14 @@ class KroneckerProduct(MatrixExpr):
             from sympy.matrices.expressions.inverse import Inverse
             return Inverse(self)
 
+    def _eval_power(self, exp):
+        exp = sympify(exp)
+        if exp is S.Zero:
+            return Identity(self.rows)
+        if exp.is_Integer and all(a.is_square for a in self.args):
+            return KroneckerProduct(*[a**exp for a in self.args]).doit()
+        return MatPow(self, exp)
+
     def structurally_equal(self, other):
         '''Determine whether two matrices have the same Kronecker product structure
 

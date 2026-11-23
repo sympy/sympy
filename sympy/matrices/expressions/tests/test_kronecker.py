@@ -286,3 +286,36 @@ def test_KroneckerProduct_zeromatrix():
     Z_exp = Matrix.zeros(2, 2)
     assert kronecker_product(M, Z_exp) == Matrix.zeros(4, 4)
     assert KroneckerProduct(M, ZeroMatrix(2, 2)).doit() == ZeroMatrix(4, 4)
+
+
+def test_KroneckerProduct_power():
+    from sympy.core import S
+    from sympy.matrices.expressions.matpow import MatPow
+    A = MatrixSymbol('A', 2, 2)
+    B = MatrixSymbol('B', 2, 2)
+    K = KroneckerProduct(A, B)
+
+    assert K**0 == Identity(4)
+    assert K**1 == K
+    assert K**2 == KroneckerProduct(A**2, B**2)
+    assert K**-1 == KroneckerProduct(A**-1, B**-1)
+    assert K**-2 == KroneckerProduct(A**-2, B**-2)
+    assert (K**2).doit() == KroneckerProduct(A**2, B**2)
+
+    # Square KroneckerProduct with non-square factors must not distribute power
+    C = MatrixSymbol('C', 2, 3)
+    D = MatrixSymbol('D', 3, 2)
+    K_nonsq = KroneckerProduct(C, D)
+    assert K_nonsq.is_square
+    assert isinstance(K_nonsq**2, MatPow)
+
+    # Symbolic / non-integer exponents remain MatPow
+    p = symbols('p')
+    assert isinstance(K**p, MatPow)
+    assert isinstance(K**(S.One / 2), MatPow)
+
+    # Explicit matrices match (A x B)**p == A**p x B**p
+    M1 = Matrix([[1, 2], [0, 1]])
+    M2 = Matrix([[2, 0], [1, 3]])
+    assert (KroneckerProduct(M1, M2)**2).as_explicit() == (KroneckerProduct(M1, M2).as_explicit())**2
+    assert (KroneckerProduct(M1, M2)**-2).as_explicit() == (KroneckerProduct(M1, M2).as_explicit())**-2
