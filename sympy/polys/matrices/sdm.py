@@ -86,10 +86,11 @@ class SDM(dict):
         if not all(0 <= c < n for row in self.values() for c in row):
             raise DMBadInputError("Column out of range")
 
+        zero = domain.zero
         empty_rows = []
         for i, row in self.items():
-            if not all(row.values()):
-                row = {j: value for j, value in row.items() if value}
+            if any(value == zero for value in row.values()):
+                row = {j: value for j, value in row.items() if value != zero}
                 self[i] = row
             if not row:
                 empty_rows.append(i)
