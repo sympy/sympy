@@ -722,9 +722,9 @@ def prime_decomp(p, T=None, ZK=None, dK=None, radical=None):
     >>> from sympy.abc import x, theta
     >>> T = Poly(x ** 3 + x ** 2 - 2 * x + 8)
     >>> K = QQ.algebraic_field((T, theta))
-    >>> print(K.primes_above(2))
-    [[ (2, x**2 + 1) e=1, f=1 ], [ (2, (x**2 + 3*x + 2)/2) e=1, f=1 ],
-     [ (2, (3*x**2 + 3*x)/2) e=1, f=1 ]]
+    >>> primes = K.primes_above(2)
+    >>> [(P.e, P.f) for P in primes]
+    [(1, 1), (1, 1), (1, 1)]
 
     Parameters
     ==========

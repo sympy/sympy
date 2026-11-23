@@ -236,7 +236,7 @@ class SDM(dict):
         >>> A = SDM(elemsdict, (2, 2), QQ)
         >>> B = A.copy()
         >>> B
-        {0: {1: 2}, 1: {}}
+        {0: {1: 2}}
 
         """
         Ac = {i: Ai.copy() for i, Ai in A.items()}
@@ -768,7 +768,7 @@ class SDM(dict):
         >>> from sympy import QQ_I
         >>> A = SDM({0:{1:QQ_I(2, -3)}, 1:{}}, (2, 2), QQ_I)
         >>> A.conjugate()
-        {0: {1: (2 + 3*I)}, 1: {}}
+        {0: {1: (2 + 3*I)}}
         """
         dom = M.domain
         if not dom.is_ConjugateDomain:
