@@ -2272,6 +2272,7 @@ def test_nonlinsolve_issue_29750():
     assert sol == expected
 
 
+@slow
 def test_issue_14642():
     x = Symbol('x')
     n1 = 0.5*x**3+x**2+0.5+I #add I in the Polynomials
