@@ -6,7 +6,7 @@ from sympy.core.symbol import Symbol
 from sympy.functions.special.tensor_functions import KroneckerDelta
 from sympy.matrices.dense import Matrix
 from sympy.matrices.expressions.matmul import MatMul
-from sympy.matrices.expressions.special import Identity
+from sympy.matrices.expressions.special import Identity, ZeroMatrix
 from sympy.testing.pytest import raises
 
 
@@ -155,3 +155,41 @@ def test_DiagMatrix():
     assert expr.doit() == result
     expr = DiagMatrix(a.T)
     assert expr.doit() == result
+
+
+def test_DiagMatrix_zeromatrix():
+    # Issue #30900 (item E3-7): DiagMatrix(ZeroMatrix(3, 1)).doit() mutated
+    # the square matrix shape (3, 3) into a non-square shape (3, 1).
+    z_col = ZeroMatrix(3, 1)
+    d_col = DiagMatrix(z_col)
+    assert d_col.shape == (3, 3)
+    assert d_col.doit() == ZeroMatrix(3, 3)
+    assert d_col.doit().shape == (3, 3)
+    assert diagonalize_vector(z_col) == ZeroMatrix(3, 3)
+
+    z_row = ZeroMatrix(1, 3)
+    d_row = DiagMatrix(z_row)
+    assert d_row.shape == (3, 3)
+    assert d_row.doit() == ZeroMatrix(3, 3)
+    assert d_row.doit().shape == (3, 3)
+    assert diagonalize_vector(z_row) == ZeroMatrix(3, 3)
+
+    # Transposed zero vector
+    d_trans = DiagMatrix(z_col.T)
+    assert d_trans.shape == (3, 3)
+    assert d_trans.doit() == ZeroMatrix(3, 3)
+
+    # Symbolic dimensions
+    k = Symbol('k', integer=True)
+    z_sym = ZeroMatrix(k, 1)
+    d_sym = DiagMatrix(z_sym)
+    assert d_sym.shape == (k, k)
+    assert d_sym.doit() == ZeroMatrix(k, k)
+    assert d_sym.doit().shape == (k, k)
+    assert diagonalize_vector(z_sym) == ZeroMatrix(k, k)
+
+    z_sym_row = ZeroMatrix(1, k)
+    d_sym_row = DiagMatrix(z_sym_row)
+    assert d_sym_row.shape == (k, k)
+    assert d_sym_row.doit() == ZeroMatrix(k, k)
+    assert d_sym_row.doit().shape == (k, k)

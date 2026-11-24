@@ -196,17 +196,24 @@ class DiagMatrix(MatrixExpr):
         from sympy.assumptions import ask, Q
         from sympy.matrices.expressions.matmul import MatMul
         from sympy.matrices.expressions.transpose import Transpose
+        from sympy.matrices.expressions.special import ZeroMatrix
         from sympy.matrices.dense import eye
         from sympy.matrices.matrixbase import MatrixBase
         vector = self._vector
-        # This accounts for shape (1, 1) and identity matrices, among others:
-        if ask(Q.diagonal(vector)):
-            return vector
+        if hints.get('deep', True):
+            vector = vector.doit(**hints)
+        if isinstance(vector, Transpose):
+            vector = vector.arg
         if isinstance(vector, MatrixBase):
             ret = eye(max(vector.shape))
             for i in range(ret.shape[0]):
                 ret[i, i] = vector[i]
             return type(vector)(ret)
+        if vector.is_ZeroMatrix:
+            return ZeroMatrix(*self.shape)
+        # This accounts for shape (1, 1) and identity matrices, among others:
+        if vector.shape == self.shape and ask(Q.diagonal(vector)):
+            return vector
         if vector.is_MatMul:
             matrices = [arg for arg in vector.args if arg.is_Matrix]
             scalars = [arg for arg in vector.args if arg not in matrices]
