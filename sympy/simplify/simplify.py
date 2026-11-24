@@ -57,6 +57,7 @@ from sympy.external.mpmath import (
 
 
 if TYPE_CHECKING:
+    from collections.abc import Iterable
     from sympy.logic.boolalg import Boolean
     from sympy.sets.sets import Set
     from typing import Literal
@@ -1435,8 +1436,21 @@ def nthroot(expr, n, max_len=4, prec=15):
     return expr
 
 
-def nsimplify(expr, constants=(), tolerance=None, full=False, rational=None,
-    rational_conversion='base10'):
+@overload
+def nsimplify(expr: Expr | complex, constants: Iterable[Expr | float] = (),
+    tolerance: float | Expr | None = None, full: bool = False,
+    rational: bool | None = None,
+    rational_conversion: Literal['base10', 'exact'] = 'base10') -> Expr: ...
+@overload
+def nsimplify(expr: Basic, constants: Iterable[Expr | float] = (),
+    tolerance: float | Expr | None = None, full: bool = False, *,
+    rational: Literal[True],
+    rational_conversion: Literal['base10', 'exact'] = 'base10') -> Basic: ...
+
+def nsimplify(expr: Basic | complex, constants: Iterable[Expr | float] = (),
+    tolerance: float | Expr | None = None, full: bool = False,
+    rational: bool | None = None,
+    rational_conversion: Literal['base10', 'exact'] = 'base10') -> Basic:
     """
     Find a simple representation for a number or, if there are free symbols or
     if ``rational=True``, then replace Floats with their Rational equivalents. If
@@ -1519,6 +1533,8 @@ def nsimplify(expr, constants=(), tolerance=None, full=False, rational=None,
             raise ValueError("constants must be real-valued")
         constants_dict[str(constant)] = v._to_mpmath(bprec)
 
+    if not isinstance(expr, Expr):
+        return expr
     exprval = expr.evalf(prec, chop=True)
     re, im = exprval.as_real_imag()
 
