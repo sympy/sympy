@@ -386,15 +386,28 @@ class MarginalDistribution(Distribution):
 
     def pdf(self, *x):
         expr, rvs = self.args[0], self.args[1]
+        if hasattr(expr, '_marginal_distribution') and all(isinstance(rv, Indexed) for rv in rvs):
+            indices = [rv.args[1] for rv in rvs]
+            base_sym = rvs[0].base
+            marginal = expr._marginal_distribution(indices, base_sym)
+            if callable(marginal):
+                return marginal(*x) if x else marginal
+            return marginal
         marginalise_out = [i for i in random_symbols(expr) if i not in rvs]
         if isinstance(expr, JointDistribution):
-            count = len(expr.domain.args)
-            x = Dummy('x', real=True)
-            syms = tuple(Indexed(x, i) for i in count)
-            expr = expr.pdf(syms)
+            if hasattr(expr, 'set') and hasattr(expr.set, 'args'):
+                count = len(expr.set.args)
+            elif hasattr(expr, 'domain') and hasattr(expr.domain, 'args'):
+                count = len(expr.domain.args)
+            else:
+                count = len(rvs)
+            dummy_x = Dummy('x', real=True)
+            syms = tuple(Indexed(dummy_x, i) for i in range(count))
+            expr = expr.pdf(*syms)
         else:
             syms = tuple(rv.pspace.symbol if isinstance(rv, RandomSymbol) else rv.args[0] for rv in rvs)
-        return Lambda(syms, self.compute_pdf(expr, marginalise_out))(*x)
+        pdf_lambda = Lambda(syms, self.compute_pdf(expr, marginalise_out))
+        return pdf_lambda(*x) if x else pdf_lambda
 
     def compute_pdf(self, expr, rvs):
         for rv in rvs:
