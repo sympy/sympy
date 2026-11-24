@@ -451,6 +451,8 @@ class FourierSeries(SeriesBase):
         return self.scale(-1)
 
     def __add__(self, other):
+        if isinstance(other, FiniteFourierSeries):
+            return other + self
         if isinstance(other, FourierSeries):
             if self.period != other.period:
                 raise ValueError("Both the series should have same periods")
@@ -550,6 +552,8 @@ class FiniteFourierSeries(FourierSeries):
 
     @property
     def interval(self):
+        if not self.an and not self.bn:
+            return Interval(0, 1)
         _length = 1 if self.a0 else 0
         _length += max(set(self.an.keys()).union(set(self.bn.keys()))) + 1
         return Interval(0, _length)
@@ -600,10 +604,7 @@ class FiniteFourierSeries(FourierSeries):
         return _term
 
     def __add__(self, other):
-        if isinstance(other, FourierSeries):
-            return other.__add__(fourier_series(self.function, self.args[1],\
-                                                finite=False))
-        elif isinstance(other, FiniteFourierSeries):
+        if isinstance(other, FiniteFourierSeries):
             if self.period != other.period:
                 raise ValueError("Both the series should have same periods")
 
@@ -614,6 +615,13 @@ class FiniteFourierSeries(FourierSeries):
                 return function
 
             return fourier_series(function, limits=self.args[1])
+        if isinstance(other, FourierSeries):
+            if self.period != other.period:
+                raise ValueError("Both the series should have same periods")
+            if self.x not in self.function.free_symbols:
+                return other.shift(self.a0.subs(self.x, other.x))
+            return other + fourier_series(self.function, self.args[1], finite=False)
+        return super().__add__(other)
 
 
 def fourier_series(f, limits=None, finite=True):
@@ -786,7 +794,7 @@ def fourier_series(f, limits=None, finite=True):
     x = limits[0]
 
     if x not in f.free_symbols:
-        return f
+        return FiniteFourierSeries(f, limits, (f, {}, {}))
 
     if finite:
         L = abs(limits[2] - limits[1]) / 2

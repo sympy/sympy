@@ -25,7 +25,6 @@ def _get_examples():
 def test_FourierSeries():
     fo, fe, fp = _get_examples()
 
-    assert fourier_series(1, (-pi, pi)) == 1
     assert (Piecewise((0, x < 0), (pi, True)).
             fourier_series((x, -pi, pi)).truncate()) == fp.truncate()
     assert isinstance(fo, FourierSeries)
@@ -146,6 +145,26 @@ def test_FourierSeries__add__sub():
     assert isinstance(fo + 1, Add)
 
     raises(ValueError, lambda: fo + fourier_series(x, (x, 0, 2)))
+
+
+def test_FourierSeries_constant():
+    for series, value in (
+        (fourier_series(1, (-pi, pi)), 1),
+        (fourier_series(0), 0),
+        (fourier_series(y, (x, -pi, pi), finite=False), y),
+    ):
+        assert isinstance(series, FourierSeries)
+        assert list(series) == [value]
+        assert series.truncate() == value
+        assert series.shift(2).truncate() == value + 2
+        assert series.scale(3).truncate() == 3*value
+
+    constant = fourier_series(3, (x, -pi, pi))
+    finite = fourier_series(sin(x), (x, -pi, pi))
+    infinite, _, _ = _get_examples()
+    assert (constant + finite).truncate() == 3 + sin(x)
+    assert (constant + infinite).truncate() == infinite.shift(3).truncate()
+    assert (infinite + constant).truncate() == infinite.shift(3).truncate()
 
 
 def test_FourierSeries_finite():
