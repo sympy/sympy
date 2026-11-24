@@ -561,31 +561,19 @@ def test_roots0():
 
     r1_2, r1_3 = S.Half, Rational(1, 3)
 
-    x0 = (3*sqrt(33) + 19)**r1_3
-    x1 = 4/x0/3
-    x2 = x0/3
     x3 = sqrt(3)*I/2
-    x4 = x3 - r1_2
-    x5 = -x3 - r1_2
-    expected = {
-        -x1 - x2 - r1_3: 1,
-        -x1/x4 - x2*x4 - r1_3: 1,
-        -x1/x5 - x2*x5 - r1_3: 1,
+    assert roots(x**3 + x**2 - x + 1, x, cubics=True) == {
+        -(sqrt(33)/9 + Rational(19, 27))**r1_3 -
+            (Rational(19, 27) - sqrt(33)/9)**r1_3 - r1_3: 1,
+        -r1_3 + r1_2*((sqrt(33)/9 + Rational(19, 27))**r1_3 +
+            (Rational(19, 27) - sqrt(33)/9)**r1_3) + x3*(
+            (sqrt(33)/9 + Rational(19, 27))**r1_3 -
+            (Rational(19, 27) - sqrt(33)/9)**r1_3): 1,
+        -r1_3 + r1_2*((sqrt(33)/9 + Rational(19, 27))**r1_3 +
+            (Rational(19, 27) - sqrt(33)/9)**r1_3) - x3*(
+            (sqrt(33)/9 + Rational(19, 27))**r1_3 -
+            (Rational(19, 27) - sqrt(33)/9)**r1_3): 1,
     }
-    actual = roots(x**3 + x**2 - x + 1, x, cubics=True)
-    assert sorted(actual.values()) == sorted(expected.values())
-    actual_roots = sorted(
-        (r.evalf(30) for r in actual),
-        key=lambda r: (float(re(r)), float(im(r))),
-    )
-    expected_roots = sorted(
-        (r.evalf(30) for r in expected),
-        key=lambda r: (float(re(r)), float(im(r))),
-    )
-    assert all(
-        float(abs((a - b).evalf(30)).evalf(30).as_real_imag()[0]) < 1e-25
-        for a, b in zip(actual_roots, expected_roots)
-    )
 
     f = (x**2 + 2*x + 3).subs(x, 2*x**2 + 3*x).subs(x, 5*x - 4)
 

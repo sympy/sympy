@@ -188,9 +188,11 @@ def roots_cubic(f, trig=False):
     s = sqrt(D)
     A, B = -q/2 + s, -q/2 - s
 
-    if a.is_real and b.is_real and c.is_real:
-        if D.is_zero and p.is_zero is False:
-            return [3*q/p - aon3, -3*q/(2*p) - aon3, -3*q/(2*p) - aon3]
+    if D.is_zero and p.is_zero is False:
+        return [3*q/p - aon3, -3*q/(2*p) - aon3, -3*q/(2*p) - aon3]
+
+    real = all(coeff.is_real for coeff in f.all_coeffs())
+    if real:
         if D.is_positive:
             r, t = _real_cbrt(A), _real_cbrt(B)
             if r is not None and t is not None:
@@ -206,14 +208,15 @@ def roots_cubic(f, trig=False):
                 -re(u) - sqrt(3)*im(u) - aon3,
                 -re(u) + sqrt(3)*im(u) - aon3,
             ]
-        if q.is_negative:
-            u = cbrt(A)
-            v = -pon3/u
-        else:
-            u, v = _modified_cbrt(A), _modified_cbrt(B)
-    elif re(q).is_negative or im(A).is_nonzero or re(A).is_positive:
+
+    if re(q).is_negative or (re(q).is_zero and im(q).is_negative):
         u = cbrt(A)
         v = -pon3/u
+    elif re(q).is_positive or (re(q).is_zero and im(q).is_positive):
+        v = -cbrt(-B)
+        u = -pon3/v
+    elif real:
+        u, v = _modified_cbrt(A), _modified_cbrt(B)
     elif p.is_zero is False:
         u = _modified_cbrt(A)
         v = -pon3/u
