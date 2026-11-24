@@ -3628,7 +3628,7 @@ class Expr(Basic, EvalfMixin):
     ##################### DERIVATIVE, INTEGRAL, FUNCTIONAL METHODS ####################
     ###################################################################################
 
-    def diff(self, *symbols: Expr | int | tuple[Expr, int | Expr], **assumptions: bool) -> Expr:
+    def diff(self, *symbols: Basic | int | tuple[Basic, int | Expr], **assumptions: bool) -> Expr:
         assumptions.setdefault("evaluate", True)
         return _derivative_dispatch(self, *symbols, **assumptions)
 
