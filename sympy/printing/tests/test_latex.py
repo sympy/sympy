@@ -826,6 +826,9 @@ def test_latex_functions():
     assert latex(2 * Mod(x, 7)) == r'2 \left(x \bmod 7\right)'
     assert latex(Mod(7, 2 * x)**n) == r'\left(7 \bmod 2 x\right)^{n}'
     assert latex(Mod(-x, 7)) == r'\left(- x\right) \bmod 7'
+    e = Mul(-1, UnevaluatedExpr(x + y), evaluate=False)
+    assert latex(Mod(e, 7, evaluate=False)) == (
+        r'\left(- \left(x + y\right)\right) \bmod 7')
 
     # some unknown function name should get rendered with \operatorname
     fjlkd = Function('fjlkd')
