@@ -829,8 +829,14 @@ def test_imageset_intersect_diophantine():
             Lambda(n, 55*pi*n/12 + 17*pi/4), S.Integers))
     # TypeError raised by diophantine (#18081)
     assert ImageSet(Lambda(n, n*log(2)), S.Integers).intersection(
+        S.Integers) == FiniteSet(0)
+    assert ImageSet(Lambda(n, n*log(2) + log(2)), S.Integers).intersection(
+        S.Integers) == FiniteSet(0)
+    assert ImageSet(Lambda(n, n*pi + 2), S.Integers).intersection(
+        S.Integers) == FiniteSet(2)
+    assert ImageSet(Lambda(n, n*sqrt(2) + sqrt(3)), S.Integers).intersection(
         S.Integers).dummy_eq(Intersection(ImageSet(
-        Lambda(n, n*log(2)), S.Integers), S.Integers))
+        Lambda(n, n*sqrt(2) + sqrt(3)), S.Integers), S.Integers))
     # NotImplementedError raised by diophantine (no solver for cubic_thue)
     assert ImageSet(Lambda(n, n**3 + 1), S.Integers).intersect(
             ImageSet(Lambda(n, n**3), S.Integers)).dummy_eq(Intersection(

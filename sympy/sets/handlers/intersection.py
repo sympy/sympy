@@ -242,6 +242,23 @@ def _(a, b):
     return a
 
 
+def _irrational_affine_integers(fn, n):
+    """Intersect ``{a*n + b : n in Integers}`` with the integers when ``a`` is
+    irrational. Such a set contains at most one integer, found when ``b`` or
+    ``-b/a`` is an integer. Returns None if that cannot be decided.
+    """
+    if not fn.is_polynomial(n):
+        return
+    a = fn.diff(n)
+    if a.has(n) or a.is_rational is not False:
+        return
+    b = fn.subs(n, 0)
+    if b.is_integer:
+        return FiniteSet(b)
+    if (-b/a).is_integer:
+        return FiniteSet(S.Zero)
+
+
 @intersection_sets.register(ImageSet, Set)
 def _(self, other):
     from sympy.solvers.diophantine import diophantine
@@ -279,6 +296,8 @@ def _(self, other):
         except (TypeError, NotImplementedError):
             # TypeError if equation not polynomial with rational coeff.
             # NotImplementedError if correct format but no solver.
+            if other is S.Integers:
+                return _irrational_affine_integers(fn, n)
             return
         # 3 cases are possible for solns:
         # - empty set,
