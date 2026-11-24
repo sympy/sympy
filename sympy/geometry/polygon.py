@@ -2148,7 +2148,7 @@ class Triangle(Polygon):
                 b = nodup[i]
                 a, c = nodup[(i + 1) % 3], nodup[(i + 2) % 3]
                 dot = (a - b).dot(c - b)
-                if dot.is_negative:
+                if dot.is_nonpositive:  # b is between a and c
                     nodup = sorted([a, c], key=default_sort_key)
                     break
                 try:
