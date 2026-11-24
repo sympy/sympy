@@ -86,7 +86,7 @@ class PermutationMatrix(MatrixExpr):
         return KroneckerDelta(perm.apply(i), j)
 
     def _eval_power(self, exp):
-        if isinstance(exp, int) or exp.is_Integer:
+        if exp.is_Integer:
             return PermutationMatrix(self.args[0] ** int(exp)).doit()
         return super()._eval_power(exp)
 
