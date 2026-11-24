@@ -477,6 +477,8 @@ def _(expr, assumptions):
 
 @HermitianPredicate.register(MatrixBase) # type:ignore
 def _(mat, assumptions):
+    if not mat.is_square:
+        return False
     rows, cols = mat.shape
     ret_val = True
     for i in range(rows):
@@ -748,6 +750,8 @@ def _(expr, assumptions):
 
 @AntihermitianPredicate.register(MatrixBase) # type:ignore
 def _(mat, assumptions):
+    if not mat.is_square:
+        return False
     rows, cols = mat.shape
     ret_val = True
     for i in range(rows):

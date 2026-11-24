@@ -253,38 +253,6 @@ class SparseRepMatrix(RepMatrix):
                         iszerofunc=kwargs.get('iszerofunc', _iszero),
                         try_block_diag=kwargs.get('try_block_diag', False))
 
-    def applyfunc(self, f):
-        """Apply a function to each element of the matrix.
-
-        Examples
-        ========
-
-        >>> from sympy import SparseMatrix
-        >>> m = SparseMatrix(2, 2, lambda i, j: i*2+j)
-        >>> m
-        Matrix([
-        [0, 1],
-        [2, 3]])
-        >>> m.applyfunc(lambda i: 2*i)
-        Matrix([
-        [0, 2],
-        [4, 6]])
-
-        """
-        if not callable(f):
-            raise TypeError("`f` must be callable.")
-
-        # XXX: This only applies the function to the nonzero elements of the
-        # matrix so is inconsistent with DenseMatrix.applyfunc e.g.
-        #   zeros(2, 2).applyfunc(lambda x: x + 1)
-        dok = {}
-        for k, v in self.todok().items():
-            fv = f(v)
-            if fv != 0:
-                dok[k] = fv
-
-        return self.from_dok(self.rows, self.cols, dok)
-
     def as_immutable(self):
         """Returns an Immutable version of this Matrix."""
         from .immutable import ImmutableSparseMatrix
@@ -414,7 +382,7 @@ class SparseRepMatrix(RepMatrix):
         1.5
 
         """
-        t = self.T
+        t = self.H
         return (t*self).inv(method=method)*t*rhs
 
     def solve(self, rhs, method='LDL'):

@@ -3,7 +3,7 @@ Boolean algebra module for SymPy
 """
 
 from __future__ import annotations
-from typing import TYPE_CHECKING, overload, Any
+from typing import TYPE_CHECKING, overload, Any, Literal
 
 from collections import defaultdict
 from itertools import chain, combinations, product, permutations
@@ -84,12 +84,15 @@ class Boolean(Basic):
         def __new__(cls, *args: Basic | complex) -> Boolean:
             ...
 
+        def __bool__(self) -> bool:
+            ...
+
         @overload # type: ignore
         def subs(self, arg1: _SupportsItems[Basic | complex, Boolean | complex]
                  | Iterable[tuple[Basic | complex, Boolean | complex]],
                  arg2: None=None, **kwargs: Any) -> Boolean: ...
         @overload
-        def subs(self, arg1: Boolean | complex, arg2: Boolean | complex) -> Boolean: ...
+        def subs(self, arg1: Basic | complex, arg2: Boolean | complex, **kwargs: Any) -> Boolean: ...
         @overload
         def subs(self, arg1: _SupportsItems[Basic | complex, Basic | complex]
                  | Iterable[tuple[Basic | complex, Basic | complex]],
@@ -380,7 +383,7 @@ class BooleanTrue(BooleanAtom, metaclass=Singleton):
     sympy.logic.boolalg.BooleanFalse
 
     """
-    def __bool__(self):
+    def __bool__(self) -> Literal[True]:
         return True
 
     def __hash__(self):
@@ -455,7 +458,7 @@ class BooleanFalse(BooleanAtom, metaclass=Singleton):
     sympy.logic.boolalg.BooleanTrue
 
     """
-    def __bool__(self):
+    def __bool__(self) -> Literal[False]:
         return False
 
     def __hash__(self):

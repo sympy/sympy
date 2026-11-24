@@ -355,8 +355,8 @@ def _laplace_build_rules():
          And(a < 0, b < 0), S.Zero, dco),  # 4.4.1
         (Heaviside(a*t-b), 1/s,
          And(a > 0, b <= 0), S.Zero, dco),  # 4.4.1
-        (Heaviside(a*t-b), 0,
-         And(a < 0, b > 0), S.Zero, dco),  # 4.4.1
+        (Heaviside(a*t-b), S.Zero,
+         And(a < 0, b > 0), S.NegativeInfinity, dco),  # 4.4.1
         (t, 1/s**2,
          S.true, S.Zero, dco),  # 4.2.3
         (1/(a*t+b), -exp(-b/a*s)*Ei(-b/a*s)/a,
@@ -592,7 +592,7 @@ def _laplace_rule_heaviside(f, t, s):
                 return (r, pr, cr)
             if ma2[a].is_negative:
                 _debug('     rule: Heaviside window closed')
-                return (0, 0, S.true)
+                return (0, S.NegativeInfinity, S.true)
     return None
 
 
@@ -658,7 +658,7 @@ def _laplace_rule_delta(f, t, s):
             if ro != {} and set(ro.values()) == {1}:
                 slope = diff(ma1[y], t)
                 r = Add(
-                    *[exp(-x*s)*ma1[z].subs(t, s)/slope.subs(t, x)
+                    *[exp(-x*s)*ma1[z].subs(t, x)/Abs(slope.subs(t, x))
                       for x in list(ro.keys()) if im(x) == 0 and re(x) >= 0])
                 return (r, S.NegativeInfinity, S.true)
     return None
@@ -1105,7 +1105,7 @@ def laplace_correspondence(f, fdict, /):
 
     f : sympy expression
         Expression containing unevaluated ``LaplaceTransform`` or
-        ``LaplaceTransform`` objects.
+        ``InverseLaplaceTransform`` objects.
     fdict : dictionary
         Dictionary containing one or more function correspondences,
         e.g., ``{x: X, y: Y}`` meaning that ``X`` and ``Y`` are the

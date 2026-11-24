@@ -45,8 +45,14 @@ def test_inverse():
     assert OneMatrix(1, 1).I == Identity(1)
     assert isinstance(OneMatrix(n, n).I, Inverse)
 
+    assert ZeroMatrix(0, 0).I == ZeroMatrix(0, 0)
+    assert OneMatrix(0, 0).I == OneMatrix(0, 0)
+    assert Inverse(ZeroMatrix(0, 0)).doit() == ZeroMatrix(0, 0)
+    assert Inverse(OneMatrix(0, 0)).doit() == OneMatrix(0, 0)
+
 def test_inverse_non_invertible():
     raises(NonInvertibleMatrixError, lambda: ZeroMatrix(n, n).I)
+    raises(NonInvertibleMatrixError, lambda: ZeroMatrix(2, 2).I)
     raises(NonInvertibleMatrixError, lambda: OneMatrix(2, 2).I)
 
 def test_refine():

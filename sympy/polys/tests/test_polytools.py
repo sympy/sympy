@@ -4455,3 +4455,10 @@ def test_PurePoly_without_generator_from_coefficients():
 
     # Poly continues to require an explicit generator for coefficient lists.
     raises(GeneratorsNeeded, lambda: Poly([1, 0]))
+
+
+def test_factor_list_symbolic_powers():
+    f = 2*x**y*(x + 1)**2
+    expected = (2, [(x + 1, 2), (x, y)])
+    assert factor_list(f) == expected
+    assert sqf_list(f) == expected
