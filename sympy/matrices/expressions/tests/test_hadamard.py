@@ -100,10 +100,12 @@ def test_hadamard_product_with_explicit_mat():
 def test_hadamard_power():
     m, n, p = symbols('m, n, p', integer=True)
     A = MatrixSymbol('A', m, n)
+    B = MatrixSymbol('B', m, n)
 
     assert hadamard_power(A, 1) == A
     assert isinstance(hadamard_power(A, 2), HadamardPower)
     assert hadamard_power(A, n).T == hadamard_power(A.T, n)
+    assert HadamardPower(A, B).T == HadamardPower(A.T, B.T)
     assert hadamard_power(A, n)[0, 0] == A[0, 0]**n
     assert hadamard_power(m, n) == m**n
     raises(ValueError, lambda: hadamard_power(A, A))
@@ -130,7 +132,7 @@ def test_hadamard_power_explicit():
         Matrix([
             [A[0, 0]**B[0, 0], A[0, 1]**B[0, 1]],
             [A[1, 0]**B[1, 0], A[1, 1]**B[1, 1]]])
-
+    assert HadamardPower(A, B).T.as_explicit() == (HadamardPower(A, B).as_explicit()).T 
 
 def test_shape_error():
     A = MatrixSymbol('A', 2, 3)

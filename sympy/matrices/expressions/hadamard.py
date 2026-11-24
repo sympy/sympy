@@ -387,7 +387,9 @@ class HadamardPower(MatrixExpr):
 
     def _eval_transpose(self):
         from sympy.matrices.expressions.transpose import transpose
-        return HadamardPower(transpose(self.base), self.exp)
+        from sympy.matrices.expressions.matexpr import MatrixExpr
+        exp= transpose(self.exp) if isinstance(self.exp, MatrixExpr) else self.exp
+        return HadamardPower(transpose(self.base), exp)
 
     def _eval_derivative(self, x):
         dexp = self.exp.diff(x)
