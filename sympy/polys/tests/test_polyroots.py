@@ -123,7 +123,6 @@ def test_issue_8438():
         assert abs(residual) < 1e-12
 
 
-@slow
 def test_roots_cubic_unsimplified_zero_coefficient():
     p = sin(1)**2 + cos(1)**2 - 1
     q = -1 + I
