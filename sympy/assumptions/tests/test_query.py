@@ -2163,6 +2163,18 @@ def test_matrix():
     _A = Matrix([[0, -2 - I, 0], [z, 0, -I], [0, -I, 0]])
     assert _ask_recursive(Q.antihermitian(_A)) is None
 
+    # non-square matrices cannot be hermitian or antihermitian
+    tall = Matrix([[1, 2], [2, 3], [4, 5]])
+    wide = Matrix([[1, 2, 3], [2, 5, 6]])
+    assert _ask_recursive(Q.hermitian(tall)) is False
+    assert _ask_recursive(Q.hermitian(wide)) is False
+    assert _ask_recursive(Q.antihermitian(tall)) is False
+    assert _ask_recursive(Q.antihermitian(wide)) is False
+    assert _ask_recursive(Q.hermitian(SparseMatrix(tall))) is False
+    assert _ask_recursive(Q.hermitian(SparseMatrix(wide))) is False
+    assert _ask_recursive(Q.antihermitian(SparseMatrix(tall))) is False
+    assert _ask_recursive(Q.antihermitian(SparseMatrix(wide))) is False
+
 
 @_both_exp_pow
 def test_algebraic():
