@@ -2,8 +2,9 @@ from __future__ import annotations
 from sympy.combinatorics import Permutation
 from sympy.core.expr import unchanged
 from sympy.matrices import Matrix
+from sympy.core.singleton import S
 from sympy.matrices.expressions import \
-    MatMul, BlockDiagMatrix, Determinant, Inverse
+    MatMul, BlockDiagMatrix, Determinant, Inverse, MatPow
 from sympy.matrices.expressions.matexpr import MatrixSymbol
 from sympy.matrices.expressions.special import ZeroMatrix, OneMatrix, Identity
 from sympy.matrices.expressions.permutation import \
@@ -40,6 +41,21 @@ def test_PermutationMatrix_matpow():
     P2 = PermutationMatrix(p2)
     assert P1**2 == P2
     assert P1**3 == Identity(3)
+    assert P1**-1 == P2
+    assert P1**-2 == P1
+    assert P1**-3 == Identity(3)
+
+    assert P1**S.Half == MatPow(P1, S.Half)
+    assert (P1**S.Half).doit() == MatPow(P1, S.Half)
+    assert P1**S.Half != Identity(3)
+
+    n = Symbol('n')
+    assert P1**n == MatPow(P1, n)
+    assert (P1**n).doit() == MatPow(P1, n)
+
+    n_int = Symbol('n', integer=True)
+    assert P1**n_int == MatPow(P1, n_int)
+    assert (P1**n_int).doit() == MatPow(P1, n_int)
 
 
 def test_PermutationMatrix_identity():
