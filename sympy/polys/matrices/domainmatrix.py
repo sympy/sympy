@@ -1394,7 +1394,7 @@ class DomainMatrix(Generic[Er]):
     @overload
     def hstack(A, *B: DomainMatrix[Any]) -> DomainMatrix[Any]: ...
 
-    def hstack(A, *B):
+    def hstack(A, *B: DomainMatrix[Any]) -> DomainMatrix[Any]:
         r"""Horizontally stack the given matrices.
 
         Parameters
@@ -1429,15 +1429,17 @@ class DomainMatrix(Generic[Er]):
 
         unify
         """
-        A, *B = A.unify(*B, fmt=A.rep.fmt)
-        return DomainMatrix.from_rep(A.rep.hstack(*(Bk.rep for Bk in B)))
+        A_unified, *B_unified = A.unify(*B, fmt=A.rep.fmt)
+        return DomainMatrix.from_rep(
+            A_unified.rep.hstack(*(Bk.rep for Bk in B_unified))  # type: ignore
+        )
 
     @overload
     def vstack(A, *B: DomainMatrix[Er]) -> DomainMatrix[Er]: ...
     @overload
     def vstack(A, *B: DomainMatrix[Any]) -> DomainMatrix[Any]: ...
 
-    def vstack(A, *B):
+    def vstack(A, *B: DomainMatrix[Any]) -> DomainMatrix[Any]:
         r"""Vertically stack the given matrices.
 
         Parameters
@@ -1472,8 +1474,10 @@ class DomainMatrix(Generic[Er]):
 
         unify
         """
-        A, *B = A.unify(*B, fmt="dense")
-        return DomainMatrix.from_rep(A.rep.vstack(*(Bk.rep for Bk in B)))
+        A_unified, *B_unified = A.unify(*B, fmt="dense")
+        return DomainMatrix.from_rep(
+            A_unified.rep.vstack(*(Bk.rep for Bk in B_unified))  # type: ignore
+        )
 
     @overload
     def applyfunc(
