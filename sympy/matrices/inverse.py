@@ -71,16 +71,19 @@ def _pinv_diagonalization(M):
     try:
         if M.rows >= M.cols:
             P, D   = AH.multiply(A).diagonalize(normalize=True)
-            D_pinv = D.applyfunc(lambda x: 0 if _iszero(x) else 1 / x)
-
-            return P.multiply(D_pinv).multiply(P.H).multiply(AH)
-
         else:
             P, D   = A.multiply(AH).diagonalize(
                         normalize=True)
-            D_pinv = D.applyfunc(lambda x: 0 if _iszero(x) else 1 / x)
 
-            return AH.multiply(P).multiply(D_pinv).multiply(P.H)
+        D_pinv = D.applyfunc(lambda x: 0 if _iszero(x) else 1 / x)
+        # Distinct eigenspaces of a Hermitian matrix are orthogonal, but
+        # eigenvectors within a repeated eigenspace need not be.
+        P_inv = P.H if len(set(D.diagonal())) == D.rows else P.inv()
+
+        if M.rows >= M.cols:
+            return P.multiply(D_pinv).multiply(P_inv).multiply(AH)
+        else:
+            return AH.multiply(P).multiply(D_pinv).multiply(P_inv)
 
     except MatrixError:
         raise NotImplementedError(
