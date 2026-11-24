@@ -3735,6 +3735,10 @@ class atan2(InverseTrigonometricFunction):
     @classmethod
     def eval(cls, y, x):
         from sympy.functions.special.delta_functions import Heaviside
+
+        if S.NaN in (x, y) or S.ComplexInfinity in (x, y):
+            return S.NaN
+
         if x is S.NegativeInfinity:
             if y.is_zero:
                 # Special case y = 0 because we define Heaviside(0) = 1/2
@@ -3765,7 +3769,14 @@ class atan2(InverseTrigonometricFunction):
             if x.is_extended_nonzero:
                 return pi*(S.One - Heaviside(x))
             if x.is_number:
-                return Piecewise((pi, re(x) < 0),
+                rx = re(x)
+                if rx.is_negative:
+                    return pi
+                elif rx.is_positive or (rx.is_zero and bool(Ne(x, 0))):
+                    return S.Zero
+                elif rx is S.NaN:
+                    return S.NaN
+                return Piecewise((pi, rx < 0),
                                  (0, Ne(x, 0)),
                                  (S.NaN, True))
         if x.is_number and y.is_number:
