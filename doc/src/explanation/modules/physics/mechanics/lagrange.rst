@@ -62,7 +62,7 @@ constraint forces:
 
 .. math::
 
-  \mathbf{m}_d(\mathbf{q}, t) \ddot{\mathbf{q}} + \mathbf{\Lambda}(\mathbf{q}, t) \mathbf{\lambda} + \mathbf{f}_d(\dot{\mathbf{q}}, \mathbf{q}, t) = 0
+  \mathbf{m}_d(\mathbf{q}, t) \ddot{\mathbf{q}} - \mathbf{\Lambda}(\mathbf{q}, t) \mathbf{\lambda} + \mathbf{f}_d(\dot{\mathbf{q}}, \mathbf{q}, t) = 0
 
 where :math:`\mathbf{\Lambda}(\mathbf{q}, t) = \mathbf{m}_v^T` and :math:`\mathbf{\lambda}` are
 the :math:`M + m` unknown Lagrange multipliers.
@@ -90,7 +90,7 @@ constraints, there are :math:`n` equations of the form:
 
    \mathbf{M}(\mathbf{q}, t)\mathbf{x} =
    \begin{bmatrix}
-     \mathbf{m}_d(\mathbf{q}, t) & \mathbf{\Lambda}(\mathbf{q}, t)
+     \mathbf{m}_d(\mathbf{q}, t) & -\mathbf{\Lambda}(\mathbf{q}, t)
    \end{bmatrix}\mathbf{x} =
    -\mathbf{f}_d(\dot{\mathbf{q}}, \mathbf{q}, t) =
    \mathbf{F}(\dot{\mathbf{q}}, \mathbf{q}, t)
@@ -159,13 +159,21 @@ The Lagrange multipliers :math:`\mathbf{\lambda}` are accessed with::
   >>> lm.lam_vec
   Matrix([[lam1]])
 
-The :math:`-\mathbf{\Lambda}^T` matrix is accessed with::
+Use ``constraints_jacobian`` to get the velocity constraint coefficients
+:math:`\mathbf{m}_v = \mathbf{\Lambda}^T`. The ``lam_coeffs`` attribute
+holds their negative::
+
+  >>> lm.constraints_jacobian
+  Matrix([[1, -1]])
 
   >>> lm.lam_coeffs
   Matrix([[-1, 1]])
 
 The augmented mass matrix :math:`\left[ \mathbf{m}_d \quad
--\mathbf{\Lambda}\right]` is then::
+-\mathbf{\Lambda}\right]` uses ``lam_coeffs.T`` for its multiplier
+columns. The multiplier values obtained by solving this system have the
+opposite sign to those obtained by setting the residuals returned by
+``form_lagranges_equations()`` to zero. ::
 
   >>> lm.mass_matrix
   Matrix([
@@ -176,9 +184,10 @@ The augmented mass matrix :math:`\left[ \mathbf{m}_d \quad
   [-3],
   [-4]])
 
-In the case of systems with constraints, the 'full' mass matrix includes the
-kinematical differential equations. The 'full' mass matrix is of size (2n + M +
-m) x (2n + M + m), i.e. it's a square matrix. ::
+For a constrained system, the full mass matrix also includes the kinematic
+differential equations and the acceleration constraints. The acceleration
+rows use ``constraints_jacobian`` for the coefficients of the generalized
+accelerations. The resulting matrix is square with :math:`2n + M + m` rows. ::
 
   >>> lm.mass_matrix_full
   Matrix([
