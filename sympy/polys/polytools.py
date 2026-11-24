@@ -6765,6 +6765,15 @@ def _symbolic_factor_list(expr, opt, method):
         else:
             base, exp = arg, S.One
 
+        if not base.free_symbols and opt.domain is not None:
+            try:
+                opt.domain.from_sympy(base)
+            except CoercionFailed:
+                pass
+            else:
+                coeff *= base**exp
+                continue
+
         try:
             poly, _ = _poly_from_expr(base, opt)
         except PolificationFailed as exc:
