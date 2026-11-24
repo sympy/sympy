@@ -33,7 +33,7 @@ class ExprCondPair(Tuple):
     if TYPE_CHECKING:
 
         @property
-        def args(self) -> tuple[Basic, Boolean]:
+        def args(self) -> tuple[Expr, Boolean]:
             ...
 
     def __new__(cls, expr, cond):
@@ -54,7 +54,7 @@ class ExprCondPair(Tuple):
         return Tuple.__new__(cls, expr, cond)
 
     @property
-    def expr(self) -> Basic:
+    def expr(self) -> Expr:
         """
         Returns the expression of this pair.
         """
@@ -151,25 +151,10 @@ class Piecewise(DefinedFunction):
         def args(self) -> tuple[ExprCondPair, ...]:
             ...
 
-    @overload
     def __new__(  # type: ignore
-        cls, *args: tuple[Expr | complex, Boolean | bool | int],
-        evaluate: bool | None = True,
-    ) -> Expr: ...
-
-    @overload
-    def __new__(  # type: ignore
-        cls, *args: tuple[Basic | complex, Boolean | bool | int],
-        evaluate: bool | None = True,
-    ) -> Basic: ...
-
-    @overload
-    def __new__(  # type: ignore
-        cls, *args: tuple[Expr | complex, Boolean | bool | int] | ExprCondPair | tuple[Basic | complex, Boolean | bool | int],
-        evaluate: bool | None = True,
-    ) -> Basic: ...
-
-    def __new__(cls, *args: tuple[Expr | complex, Boolean | bool | int] | ExprCondPair | tuple[Basic | complex, Boolean | bool | int], **options: bool | None) -> Expr | Basic:  # type: ignore
+        cls, *args: ExprCondPair | tuple[Expr | complex, Boolean | bool | int],
+        **options: bool | None,
+    ) -> Expr:
         if len(args) == 0:
             raise TypeError("At least one (expr, cond) pair expected.")
         # (Try to) sympify args first
@@ -186,7 +171,7 @@ class Piecewise(DefinedFunction):
 
         eval: bool | None = options.pop('evaluate', global_parameters.evaluate)
         if eval:
-            r: Basic | None = cls.eval(*newargs)
+            r: Expr | None = cls.eval(*newargs)
             if r is not None:
                 return r
         elif len(newargs) == 1 and newargs[0].cond == True:
@@ -1125,12 +1110,12 @@ def piecewise_fold(expr: Basic | T, evaluate: bool | None = True) -> Basic | T:
                     com: Sequence[Boolean] = common_prefix(*[
                         [i.cond for i in j] for j in pargs])
                     n: int = len(com)
-                    collected: list[tuple[Basic, Boolean]] = []
+                    collected: list[tuple[Expr, Boolean]] = []
                     for i in range(n):
                         collected.append((
                             expr.func(*[ai[i].expr for ai in pargs]),
                             com[i]))
-                    remains: list[Basic] = []
+                    remains: list[Expr] = []
                     for a in pargs:
                         if n == len(a):  # no more args
                             continue
@@ -1160,7 +1145,7 @@ def piecewise_fold(expr: Basic | T, evaluate: bool | None = True) -> Basic | T:
         # don't return duplicate conditions, otherwise don't evaluate
         new_args = list(reversed([(e, c) for c, e in {
             c: e for e, c in reversed(new_args)}.items()]))
-    rv: Basic = Piecewise(*new_args, evaluate=evaluate)
+    rv: Basic = Piecewise(*new_args, evaluate=evaluate)  # type: ignore[arg-type]
     if (evaluate is None and isinstance(rv, Piecewise) and len(rv.args) == 1
             and rv.args[0].cond == True):
         return rv.args[0].expr
