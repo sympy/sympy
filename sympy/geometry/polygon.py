@@ -2157,9 +2157,6 @@ class Triangle(Polygon):
                         break
                 except (Undecidable, ValueError):
                     continue
-            else:
-                a, b, c = sorted(nodup, key=default_sort_key)
-                nodup = [a, c]
 
         vertices = nodup
 

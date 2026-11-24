@@ -242,6 +242,8 @@ def test_polygon():
     sx = Symbol('sx', real=True)
     assert Triangle(Point(0, 0), Point(sx, 0), Point(2*sx, 0)) == Segment(Point(0, 0), Point(2*sx, 0))
     assert Triangle(Point(sx, 0), Point(2*sx, 0), Point(0, 0)) == Segment(Point(0, 0), Point(2*sx, 0))
+    x = Symbol('x')
+    assert isinstance(Triangle((0, 0), (x, 0), (1, 0)), Triangle)
     assert t1.area == Rational(25, 2)
     assert t1.is_right()
     assert t2.is_right() is False
