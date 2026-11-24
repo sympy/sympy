@@ -310,24 +310,19 @@ class OrdinalZero(Ordinal):
         raise ValueError("OrdinalZero has no trailing term")
 
 
-class OrdinalOmega(Ordinal):
+def OrdinalOmega():
     """The ordinal omega which forms the base of all ordinals in cantor normal form.
 
-    OrdinalOmega can be imported as ``omega``.
+    OrdinalOmega can be imported as ``w``.
 
     Examples
     ========
 
-    >>> from sympy.sets.ordinals import omega
-    >>> omega + omega
+    >>> from sympy.sets.ordinals import w
+    >>> w + w
     w*2
     """
-    def __new__(cls):
-        return Ordinal.__new__(cls)
-
-    @property
-    def terms(self) -> tuple[OmegaPower]:
-        return (OmegaPower(1, 1),)
+    return Ordinal(OmegaPower(1, 1))
 
 
 ord0 = OrdinalZero()
