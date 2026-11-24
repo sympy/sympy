@@ -17,7 +17,7 @@ from sympy.matrices import Matrix
 from sympy.simplify.simplify import simplify
 from sympy.solvers.solvers import solve
 from sympy.utilities.iterables import has_dups, has_variety, uniq, rotate_left, least_rotation
-from sympy.utilities.misc import as_int, func_name
+from sympy.utilities.misc import as_int, func_name, Undecidable
 
 
 import warnings
@@ -2155,7 +2155,7 @@ class Triangle(Polygon):
                     if b in Segment(a, c):
                         nodup = sorted([a, c], key=default_sort_key)
                         break
-                except Exception:
+                except (Undecidable, ValueError):
                     continue
             else:
                 a, b, c = sorted(nodup, key=default_sort_key)
