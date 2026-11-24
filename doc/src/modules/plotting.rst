@@ -2,7 +2,7 @@
 Plotting
 ========
 
-.. module:: sympy.plotting
+.. module:: sympy.plotting.plot
 
 Introduction
 ------------
@@ -24,6 +24,7 @@ The plotting module has the following functions:
 The above functions are only for convenience and ease of use. It is possible to
 plot any plot by passing the corresponding ``Series`` class to :class:`~.Plot` as
 argument.
+
 .. note::
 
    All public plotting functions (such as ``plot``, ``plot3d``,
@@ -33,6 +34,7 @@ argument.
    as an attribute will raise an ``AttributeError`` because
    ``sympy.plotting.plot`` resolves to the :func:`~sympy.plotting.plot`
    function itself rather than the submodule.
+
 Plot Class
 ----------
 

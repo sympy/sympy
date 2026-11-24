@@ -141,7 +141,7 @@ solvers if they are installed. Note that `satisfiable()` is also used by
 
 ### Plotting
 
-The {mod}`sympy.plotting` module makes heavy use of external plotting
+The {mod}`sympy.plotting.plot` module makes heavy use of external plotting
 libraries to render plots. The primarily plotting module that is supported is
 Matplotlib.
 
