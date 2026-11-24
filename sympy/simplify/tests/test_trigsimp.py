@@ -1,7 +1,9 @@
 from __future__ import annotations
 from itertools import product
-from sympy.core.function import (Subs, count_ops, diff, expand)
+from sympy.core.containers import Tuple
+from sympy.core.function import (Function, Subs, count_ops, diff, expand)
 from sympy.core.numbers import (E, I, Rational, pi)
+from sympy.core.relational import Eq
 from sympy.core.singleton import S
 from sympy.core.symbol import (Symbol, symbols)
 from sympy.functions.elementary.exponential import (exp, log)
@@ -20,6 +22,16 @@ from sympy.simplify.trigsimp import (exptrigsimp, trigsimp)
 from sympy.testing.pytest import XFAIL
 
 from sympy.abc import x, y
+
+
+def test_trigsimp_relational_custom_hook():
+    class Controlled(Function):
+        def _eval_trigsimp(self, **kwargs):
+            return Symbol('controlled')
+
+    expr = Controlled(Eq(x, y))
+    assert trigsimp(expr) == Symbol('controlled')
+    assert trigsimp(Tuple(expr, x)) == Tuple(Symbol('controlled'), x)
 
 
 

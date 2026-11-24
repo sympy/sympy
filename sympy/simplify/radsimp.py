@@ -17,6 +17,7 @@ from sympy.functions.elementary.complexes import Abs
 from sympy.polys import gcd
 from sympy.simplify.sqrtdenest import sqrtdenest
 from sympy.utilities.iterables import iterable, sift
+from sympy.utilities.decorator import _relational_opaque
 
 if TYPE_CHECKING:
     from sympy.core.expr import Expr
@@ -491,7 +492,7 @@ def rcollect(expr, *vars):
 
     collect, collect_const, collect_sqrt
     """
-    if expr.is_Atom or not expr.has(*vars):
+    if expr.is_Atom or expr.is_Relational or not expr.has(*vars):
         return expr
     else:
         expr = expr.__class__(*[rcollect(arg, *vars) for arg in expr.args])
@@ -581,6 +582,7 @@ def collect_sqrt(expr, evaluate=None):
     return coeff*d
 
 
+@_relational_opaque
 def collect_abs(expr):
     """Return ``expr`` with arguments of multiple Abs in a term collected
     under a single instance.
@@ -766,6 +768,7 @@ def collect_const(expr, *vars, Numbers=True):
     return expr
 
 
+@_relational_opaque
 def radsimp(expr, symbolic=True, max_terms=4):
     r"""
     Rationalize the denominator by removing square roots.

@@ -6,6 +6,7 @@ import sys
 import types
 import inspect
 from functools import wraps
+from itertools import groupby
 
 # Keep this import for backwards compatibility:
 from sympy.external.mpmath import conserve_mpmath_dps # noqa: F401
@@ -17,31 +18,128 @@ T = TypeVar('T')
 """A generic type"""
 
 
+def _rebuild_opaque(expr, args):
+    """Rebuild an expression only if it retains its arguments' relationals."""
+    from sympy.core.basic import Basic
+    from sympy.core.relational import Relational
+
+    args = tuple(args)
+    result = expr.func(*args)
+    if isinstance(expr, Basic) and expr.has(Relational):
+        protected = set().union(*(arg.atoms(Relational)
+            for arg in args if isinstance(arg, Basic)))
+        if protected and (not isinstance(result, Basic) or not protected <= result.atoms(Relational)):
+            return expr
+    return result
+
+
+def _relational_opaque(func=None, *, allow_relational=False):
+    """Keep relational operands opaque to an algebraic transformation.
+
+    This is for transformations that would otherwise use structural APIs
+    such as ``rewrite``, ``replace`` or ``xreplace`` to alter relational
+    operands. It preserves relations while transforming surrounding arguments.
+    ``allow_relational=True`` requires the decorated function to implement
+    explicit semantics for a whole ``Relational``. The decorator passes
+    the complete object to that implementation; the flag does not assert
+    that transforming its two sides independently is safe. The function
+    is responsible for the truth value and definedness of its result.
+    In that mode, an existing ``_eval_<function name>`` hook also receives
+    the whole object.
+    Consecutive arithmetic arguments without relations are transformed
+    together, preserving noncommutative order around protected operands.
+    """
+    if func is None:
+        return lambda func: _relational_opaque(func, allow_relational=allow_relational)
+    signature = inspect.signature(func)
+    first_arg = next(iter(signature.parameters))
+    eval_method = '_eval_' + func.__name__
+
+    @wraps(func)
+    def wrapper(*args, **kwargs):
+        expr = args[0] if args else kwargs.get(first_arg)
+        if getattr(expr, 'is_Atom', False):
+            return func(*args, **kwargs)
+
+        # Basic imports this module, so core imports must be deferred.
+        from sympy.core.basic import Basic
+        from sympy.core.expr import Expr
+        from sympy.core.relational import Relational
+        from sympy.core.sympify import sympify
+
+        if not args and first_arg not in kwargs:
+            return func(**kwargs)
+        expr = sympify(expr)
+        has_relational = isinstance(expr, Basic) and expr.has(Relational)
+        if has_relational:
+            signature.bind(*args, **kwargs)
+        if args:
+            args = args[1:]
+        else:
+            kwargs.pop(first_arg)
+
+        def apply(expr):
+            if allow_relational and getattr(expr, eval_method, None) is not None:
+                return func(expr, *args, **kwargs)
+            if isinstance(expr, Relational):
+                if allow_relational:
+                    return func(expr, *args, **kwargs)
+                return expr
+            if isinstance(expr, Basic) and (
+                    not isinstance(expr, Expr) or expr.has(Relational)):
+                if expr.is_Add or expr.is_Mul:
+                    newargs = []
+                    for has_relational, group in groupby(
+                            expr.args, lambda a: a.has(Relational)):
+                        if has_relational:
+                            newargs.extend(apply(a) for a in group)
+                        else:
+                            newargs.append(func(expr.func(*group), *args, **kwargs))
+                    newargs = tuple(newargs)
+                else:
+                    newargs = tuple(apply(a) for a in expr.args)
+                if newargs != expr.args:
+                    return _rebuild_opaque(expr, newargs)
+                return expr
+            return func(expr, *args, **kwargs)
+
+        if has_relational:
+            return apply(expr)
+        return func(expr, *args, **kwargs)
+
+    return wrapper
+
+
 def threaded_factory(func, use_add):
     """A factory for ``threaded`` decorators. """
     from sympy.core import sympify
     from sympy.matrices import MatrixBase
     from sympy.utilities.iterables import iterable
 
+    signature = inspect.signature(func)
+
+    def apply(expr, *args, **kwargs):
+        if getattr(expr, 'is_Relational', False):
+            signature.bind(expr, *args, **kwargs)
+            return expr
+        return func(expr, *args, **kwargs)
+
     @wraps(func)
     def threaded_func(expr, *args, **kwargs):
         if isinstance(expr, MatrixBase):
-            return expr.applyfunc(lambda f: func(f, *args, **kwargs))
+            return expr.applyfunc(lambda f: apply(f, *args, **kwargs))
         elif iterable(expr):
             try:
-                return expr.__class__([func(f, *args, **kwargs) for f in expr])
+                return expr.__class__([apply(f, *args, **kwargs) for f in expr])
             except TypeError:
                 return expr
         else:
             expr = sympify(expr)
 
             if use_add and expr.is_Add:
-                return expr.__class__(*[ func(f, *args, **kwargs) for f in expr.args ])
-            elif expr.is_Relational:
-                return expr.__class__(func(expr.lhs, *args, **kwargs),
-                                      func(expr.rhs, *args, **kwargs))
+                return expr.__class__(*[apply(f, *args, **kwargs) for f in expr.args])
             else:
-                return func(expr, *args, **kwargs)
+                return apply(expr, *args, **kwargs)
 
     return threaded_func
 
@@ -52,6 +150,9 @@ def threaded(func):
     This decorator is intended to make it uniformly possible to apply a
     function to all elements of composite objects, e.g. matrices, lists, tuples
     and other iterable containers, or just expressions.
+
+    Relationals are left unchanged: applying an arbitrary function to
+    each side need not preserve the truth value or definedness of a relation.
 
     This version of :func:`threaded` decorator allows threading over
     elements of :class:`~.Add` class. If this behavior is not desirable
@@ -72,6 +173,9 @@ def xthreaded(func):
     This decorator is intended to make it uniformly possible to apply a
     function to all elements of composite objects, e.g. matrices, lists, tuples
     and other iterable containers, or just expressions.
+
+    Relationals are left unchanged: applying an arbitrary function to
+    each side need not preserve the truth value or definedness of a relation.
 
     This version of :func:`threaded` decorator disallows threading over
     elements of :class:`~.Add` class. If this behavior is not desirable

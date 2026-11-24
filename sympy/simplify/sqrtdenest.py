@@ -5,6 +5,7 @@ from sympy.core.sorting import default_sort_key
 from sympy.core.symbol import Dummy
 from sympy.functions import root, sign, sqrt
 from sympy.polys import Poly, PolynomialError
+from sympy.utilities.decorator import _relational_opaque
 
 
 def is_sqrt(expr):
@@ -99,6 +100,7 @@ def _subsets(n):
     return a
 
 
+@_relational_opaque
 def sqrtdenest(expr, max_iter=3):
     """Denests sqrts in an expression that contain other square roots
     if possible, otherwise returns the expr unchanged. This is based on the

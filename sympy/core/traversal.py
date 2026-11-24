@@ -5,6 +5,7 @@ from typing import Iterator
 from .basic import Basic
 from .sorting import ordered
 from .sympify import sympify
+from sympy.utilities.decorator import _rebuild_opaque
 from sympy.utilities.iterables import iterable
 
 
@@ -227,13 +228,19 @@ def bottom_up(rv, F, atoms=False, nonbasic=False):
     """Apply ``F`` to all expressions in an expression tree from the
     bottom up. If ``atoms`` is True, apply ``F`` even if there are no args;
     if ``nonbasic`` is True, try to apply ``F`` to non-Basic objects.
+
+    Relationals are passed to ``F`` without traversing their sides. A
+    transformation must explicitly handle a relation to preserve its truth
+    value and definedness; algebraic equivalence of its sides is insufficient.
     """
     args = getattr(rv, 'args', None)
     if args is not None:
         if args:
+            if getattr(rv, 'is_Relational', False):
+                return F(rv)
             args = tuple([bottom_up(a, F, atoms, nonbasic) for a in args])
             if args != rv.args:
-                rv = rv.func(*args)
+                rv = _rebuild_opaque(rv, args)
             rv = F(rv)
         elif atoms:
             rv = F(rv)
