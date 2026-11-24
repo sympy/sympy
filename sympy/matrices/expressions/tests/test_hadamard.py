@@ -132,7 +132,7 @@ def test_hadamard_power_explicit():
         Matrix([
             [A[0, 0]**B[0, 0], A[0, 1]**B[0, 1]],
             [A[1, 0]**B[1, 0], A[1, 1]**B[1, 1]]])
-    assert HadamardPower(A, B).T.as_explicit() == (HadamardPower(A, B).as_explicit()).T 
+    assert HadamardPower(A, B).T.as_explicit() == (HadamardPower(A, B).as_explicit()).T
 
 def test_shape_error():
     A = MatrixSymbol('A', 2, 3)
