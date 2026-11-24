@@ -11,13 +11,14 @@ It assists in Scalar Multiplication and getitem for DomainMatrix.
 """
 
 from __future__ import annotations
-from typing import TYPE_CHECKING, Generic
+from typing import TYPE_CHECKING, Generic, overload
 from ..constructor import construct_domain
 
 from sympy.polys.domains import Domain, ZZ
 from sympy.polys.domains.domain import Er, Es
 
 if TYPE_CHECKING:
+    from typing import Any
     from sympy.core.expr import Expr
 
 
@@ -47,7 +48,7 @@ class DomainScalar(Generic[Er]):
         return repr(self.element)
 
     @classmethod
-    def from_sympy(cls, expr):
+    def from_sympy(cls, expr: Expr | complex) -> DomainScalar[Any]:
         [domain, [element]] = construct_domain([expr])
         return cls.new(element, domain)
 
@@ -61,26 +62,52 @@ class DomainScalar(Generic[Er]):
     def convert_to(self, domain: Domain[Es]) -> DomainScalar[Es]:
         return self.to_domain(domain)
 
-    def unify(self, other):
+    @overload
+    def unify(
+        self, other: DomainScalar[Er]
+    ) -> tuple[DomainScalar[Er], DomainScalar[Er]]: ...
+    @overload
+    def unify(
+        self, other: DomainScalar[Any]
+    ) -> tuple[DomainScalar[Any], DomainScalar[Any]]: ...
+
+    def unify(
+        self, other: DomainScalar[Any]
+    ) -> tuple[DomainScalar[Any], DomainScalar[Any]]:
         domain = self.domain.unify(other.domain)
         return self.to_domain(domain), other.to_domain(domain)
 
     def __bool__(self) -> bool:
         return bool(self.element)
 
-    def __add__(self, other):
+    @overload
+    def __add__(self, other: DomainScalar[Er]) -> DomainScalar[Er]: ...
+    @overload
+    def __add__(self, other: DomainScalar[Any]) -> DomainScalar[Any]: ...
+
+    def __add__(self, other: object) -> DomainScalar[Any]:
         if not isinstance(other, DomainScalar):
             return NotImplemented
         self, other = self.unify(other)
         return self.new(self.element + other.element, self.domain)
 
-    def __sub__(self, other):
+    @overload
+    def __sub__(self, other: DomainScalar[Er]) -> DomainScalar[Er]: ...
+    @overload
+    def __sub__(self, other: DomainScalar[Any]) -> DomainScalar[Any]: ...
+
+    def __sub__(self, other: object) -> DomainScalar[Any]:
         if not isinstance(other, DomainScalar):
             return NotImplemented
         self, other = self.unify(other)
         return self.new(self.element - other.element, self.domain)
 
-    def __mul__(self, other):
+    @overload
+    def __mul__(self, other: DomainScalar[Er] | int) -> DomainScalar[Er]: ...
+    @overload
+    def __mul__(self, other: DomainScalar[Any]) -> DomainScalar[Any]: ...
+
+    def __mul__(self, other: object) -> DomainScalar[Any]:
         if not isinstance(other, DomainScalar):
             if isinstance(other, int):
                 other = DomainScalar(ZZ(other), ZZ)
@@ -90,19 +117,38 @@ class DomainScalar(Generic[Er]):
         self, other = self.unify(other)
         return self.new(self.element * other.element, self.domain)
 
-    def __floordiv__(self, other):
+    @overload
+    def __floordiv__(self, other: DomainScalar[Er]) -> DomainScalar[Er]: ...
+    @overload
+    def __floordiv__(self, other: DomainScalar[Any]) -> DomainScalar[Any]: ...
+
+    def __floordiv__(self, other: object) -> DomainScalar[Any]:
         if not isinstance(other, DomainScalar):
             return NotImplemented
         self, other = self.unify(other)
         return self.new(self.domain.quo(self.element, other.element), self.domain)
 
-    def __mod__(self, other):
+    @overload
+    def __mod__(self, other: DomainScalar[Er]) -> DomainScalar[Er]: ...
+    @overload
+    def __mod__(self, other: DomainScalar[Any]) -> DomainScalar[Any]: ...
+
+    def __mod__(self, other: object) -> DomainScalar[Any]:
         if not isinstance(other, DomainScalar):
             return NotImplemented
         self, other = self.unify(other)
         return self.new(self.domain.rem(self.element, other.element), self.domain)
 
-    def __divmod__(self, other):
+    @overload
+    def __divmod__(
+        self, other: DomainScalar[Er]
+    ) -> tuple[DomainScalar[Er], DomainScalar[Er]]: ...
+    @overload
+    def __divmod__(
+        self, other: DomainScalar[Any]
+    ) -> tuple[DomainScalar[Any], DomainScalar[Any]]: ...
+
+    def __divmod__(self, other: object) -> tuple[DomainScalar[Any], DomainScalar[Any]]:
         if not isinstance(other, DomainScalar):
             return NotImplemented
         self, other = self.unify(other)

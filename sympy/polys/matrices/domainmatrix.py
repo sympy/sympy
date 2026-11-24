@@ -38,7 +38,7 @@ from .exceptions import (
 from .domainscalar import DomainScalar
 
 from sympy.polys.domains import ZZ, EXRAW, QQ
-from sympy.polys.domains.domain import Er, Es
+from sympy.polys.domains.domain import Er, Es, Ef
 
 from sympy.polys.densearith import dup_mul, dup_exquo_ground
 from sympy.polys.densebasic import dup_convert
@@ -61,10 +61,21 @@ from .dfm import DFM
 from .rref import _dm_rref, _dm_rref_den
 
 if TYPE_CHECKING:
-    from typing import Any, Iterator, Sequence, Callable, Mapping, TypeGuard
+    from typing import (
+        Any,
+        Iterable,
+        Iterator,
+        Literal,
+        Sequence,
+        Callable,
+        Mapping,
+        TypeGuard,
+    )
+    from sympy.external.gmpy import MPZ, MPQ
     from sympy.polys.matrices._typing import FlatNzData
     from sympy.core.expr import Expr
     from sympy.matrices.dense import MutableDenseMatrix
+    from sympy.matrices.matrixbase import MatrixBase
     from ..domains import Domain
 
 
@@ -365,7 +376,13 @@ class DomainMatrix(Generic[Er]):
         return DomainMatrix(domain_rows, (nrows, ncols), domain)
 
     @classmethod
-    def from_list_sympy(cls, nrows, ncols, rows, **kwargs):
+    def from_list_sympy(
+        cls,
+        nrows: int,
+        ncols: int,
+        rows: Sequence[Sequence[Expr | complex]],
+        **kwargs: Any,
+    ) -> DomainMatrix[Any]:
         r"""
         Convert a list of lists of Expr into a DomainMatrix using construct_domain
 
@@ -410,7 +427,13 @@ class DomainMatrix(Generic[Er]):
         return DomainMatrix(domain_rows, (nrows, ncols), domain)
 
     @classmethod
-    def from_dict_sympy(cls, nrows, ncols, elemsdict, **kwargs):
+    def from_dict_sympy(
+        cls,
+        nrows: int,
+        ncols: int,
+        elemsdict: Mapping[int, Mapping[int, Expr | complex]],
+        **kwargs: Any,
+    ) -> DomainMatrix[Any]:
         """
 
         Parameters
@@ -452,7 +475,7 @@ class DomainMatrix(Generic[Er]):
         domain, items_domain = cls.get_domain(items_sympy, **kwargs)
 
         idx = 0
-        items_dict = {}
+        items_dict: dict[int, dict[int, Any]] = {}
         for i, row in elemsdict.items():
             items_dict[i] = {}
             for j in row:
@@ -462,7 +485,9 @@ class DomainMatrix(Generic[Er]):
         return DomainMatrix(items_dict, (nrows, ncols), domain)
 
     @classmethod
-    def from_Matrix(cls, M, fmt="sparse", **kwargs):
+    def from_Matrix(
+        cls, M: MatrixBase, fmt: str = "sparse", **kwargs: Any
+    ) -> DomainMatrix[Any]:
         r"""
         Convert Matrix to DomainMatrix
 
@@ -507,11 +532,13 @@ class DomainMatrix(Generic[Er]):
         return cls.from_dict_sympy(*M.shape, M.todod(), **kwargs)
 
     @classmethod
-    def get_domain(cls, items_sympy, **kwargs):
+    def get_domain(
+        cls, items_sympy: Sequence[Expr | complex], **kwargs: Any
+    ) -> tuple[Domain[Any], list[Any]]:
         K, items_K = construct_domain(items_sympy, **kwargs)
         return K, items_K
 
-    def choose_domain(self, **opts):
+    def choose_domain(self, **opts: Any) -> DomainMatrix[Any]:
         """Convert to a domain found by :func:`~.construct_domain`.
 
         Examples
@@ -592,10 +619,15 @@ class DomainMatrix(Generic[Er]):
 
         return self.from_rep(rep_K)
 
-    def to_sympy(self):
+    def to_sympy(self) -> DomainMatrix[Expr]:
         return self.convert_to(EXRAW)
 
-    def to_field(self):
+    @overload
+    def to_field(self: DomainMatrix[MPZ] | DomainMatrix[MPQ]) -> DomainMatrix[MPQ]: ...
+    @overload
+    def to_field(self) -> DomainMatrix[Any]: ...
+
+    def to_field(self) -> DomainMatrix[Any]:
         r"""
         Returns a DomainMatrix with the appropriate field
 
@@ -779,7 +811,9 @@ class DomainMatrix(Generic[Er]):
         return self.rep.to_dfm_or_ddm()
 
     @classmethod
-    def _unify_domain(cls, *matrices):
+    def _unify_domain(
+        cls, *matrices: DomainMatrix[Any] | DomainScalar[Any]
+    ) -> tuple[DomainMatrix[Any] | DomainScalar[Any], ...]:
         """Convert matrices to a common domain"""
         domains = {matrix.domain for matrix in matrices}
         if len(domains) == 1:
@@ -805,7 +839,34 @@ class DomainMatrix(Generic[Er]):
         else:
             raise ValueError("fmt should be 'sparse' or 'dense'")
 
-    def unify(self, *others, fmt=None):
+    @overload
+    def unify(
+        self, other: DomainMatrix[Er], /, *, fmt: str | None = None
+    ) -> tuple[DomainMatrix[Er], DomainMatrix[Er]]: ...
+    @overload
+    def unify(
+        self, other: DomainScalar[Er], /
+    ) -> tuple[DomainMatrix[Er], DomainScalar[Er]]: ...
+    @overload
+    def unify(
+        self, other: DomainMatrix[Any], /, *, fmt: str | None = None
+    ) -> tuple[DomainMatrix[Any], DomainMatrix[Any]]: ...
+    @overload
+    def unify(
+        self, other: DomainScalar[Any], /
+    ) -> tuple[DomainMatrix[Any], DomainScalar[Any]]: ...
+    @overload
+    def unify(
+        self, *others: DomainMatrix[Er], fmt: str | None = None
+    ) -> tuple[DomainMatrix[Er], ...]: ...
+    @overload
+    def unify(
+        self, *others: DomainMatrix[Any], fmt: str | None = None
+    ) -> tuple[DomainMatrix[Any], ...]: ...
+
+    def unify(
+        self, *others: DomainMatrix[Any] | DomainScalar[Any], fmt: str | None = None
+    ) -> tuple[DomainMatrix[Any] | DomainScalar[Any], ...]:
         """
         Unifies the domains and the format of self and other
         matrices.
@@ -1324,9 +1385,14 @@ class DomainMatrix(Generic[Er]):
         """
         return self.shape[0] == self.shape[1]
 
-    def rank(self):
+    def rank(self) -> int:
         rref, pivots = self.rref()
         return len(pivots)
+
+    @overload
+    def hstack(A, *B: DomainMatrix[Er]) -> DomainMatrix[Er]: ...
+    @overload
+    def hstack(A, *B: DomainMatrix[Any]) -> DomainMatrix[Any]: ...
 
     def hstack(A, *B):
         r"""Horizontally stack the given matrices.
@@ -1365,6 +1431,11 @@ class DomainMatrix(Generic[Er]):
         """
         A, *B = A.unify(*B, fmt=A.rep.fmt)
         return DomainMatrix.from_rep(A.rep.hstack(*(Bk.rep for Bk in B)))
+
+    @overload
+    def vstack(A, *B: DomainMatrix[Er]) -> DomainMatrix[Er]: ...
+    @overload
+    def vstack(A, *B: DomainMatrix[Any]) -> DomainMatrix[Any]: ...
 
     def vstack(A, *B):
         r"""Vertically stack the given matrices.
@@ -1422,13 +1493,23 @@ class DomainMatrix(Generic[Er]):
             return self.from_rep(self.rep.applyfunc(func, self.domain))
         return self.from_rep(self.rep.applyfunc(func, domain))
 
-    def __add__(A, B):
+    @overload
+    def __add__(A, B: DomainMatrix[Er]) -> DomainMatrix[Er]: ...
+    @overload
+    def __add__(A, B: DomainMatrix[Any]) -> DomainMatrix[Any]: ...
+
+    def __add__(A, B: object) -> DomainMatrix[Any]:
         if not isinstance(B, DomainMatrix):
             return NotImplemented
         A, B = A.unify(B, fmt="dense")
         return A.add(B)
 
-    def __sub__(A, B):
+    @overload
+    def __sub__(A, B: DomainMatrix[Er]) -> DomainMatrix[Er]: ...
+    @overload
+    def __sub__(A, B: DomainMatrix[Any]) -> DomainMatrix[Any]: ...
+
+    def __sub__(A, B: object) -> DomainMatrix[Any]:
         if not isinstance(B, DomainMatrix):
             return NotImplemented
         A, B = A.unify(B, fmt="dense")
@@ -1437,7 +1518,14 @@ class DomainMatrix(Generic[Er]):
     def __neg__(A) -> DomainMatrix[Er]:
         return A.neg()
 
-    def __mul__(A, B):
+    @overload
+    def __mul__(
+        A, B: DomainMatrix[Er] | DomainScalar[Er] | Er | int
+    ) -> DomainMatrix[Er]: ...
+    @overload
+    def __mul__(A, B: DomainMatrix[Any] | DomainScalar[Any]) -> DomainMatrix[Any]: ...
+
+    def __mul__(A, B: Any) -> DomainMatrix[Any]:
         """A * B"""
         if isinstance(B, DomainMatrix):
             A, B = A.unify(B, fmt="dense")
@@ -1450,7 +1538,12 @@ class DomainMatrix(Generic[Er]):
         else:
             return NotImplemented
 
-    def __rmul__(A, B):
+    @overload
+    def __rmul__(A, B: DomainScalar[Er] | Er | int) -> DomainMatrix[Er]: ...
+    @overload
+    def __rmul__(A, B: DomainScalar[Any]) -> DomainMatrix[Any]: ...
+
+    def __rmul__(A, B: Any) -> DomainMatrix[Any]:
         if B in A.domain:
             return A.rscalarmul(B)
         elif isinstance(B, DomainScalar):
@@ -1710,7 +1803,20 @@ class DomainMatrix(Generic[Er]):
         assert A.domain == B.domain
         return A.from_rep(A.rep.mul_elementwise(B.rep))  # type: ignore
 
-    def __truediv__(A, lamda):
+    @overload
+    def __truediv__(
+        A: DomainMatrix[MPZ],
+        lamda: DomainScalar[MPZ] | DomainScalar[MPQ] | MPZ | int,
+    ) -> DomainMatrix[MPQ]: ...
+    @overload
+    def __truediv__(
+        A: DomainMatrix[MPQ],
+        lamda: DomainScalar[MPZ] | DomainScalar[MPQ] | MPZ | MPQ | int,
+    ) -> DomainMatrix[MPQ]: ...
+    @overload
+    def __truediv__(A, lamda: DomainScalar[Any] | Er | int) -> DomainMatrix[Any]: ...
+
+    def __truediv__(A, lamda: Any) -> DomainMatrix[Any]:
         """Method for Scalar Division"""
         if isinstance(lamda, int) or ZZ.of_type(lamda):
             lamda = DomainScalar(ZZ(lamda), ZZ)
@@ -1785,7 +1891,7 @@ class DomainMatrix(Generic[Er]):
             sqrtAn = A ** (n // 2)
             return sqrtAn * sqrtAn
 
-    def scc(self):
+    def scc(self) -> list[list[int]]:
         """Compute the strongly connected components of a DomainMatrix
 
         Explanation
@@ -1861,7 +1967,18 @@ class DomainMatrix(Generic[Er]):
 
         return self.rep.scc()
 
-    def clear_denoms(self, convert=False):
+    @overload
+    def clear_denoms(
+        self, convert: Literal[False] = False
+    ) -> tuple[DomainScalar[Any], DomainMatrix[Er]]: ...
+    @overload
+    def clear_denoms(
+        self, convert: bool
+    ) -> tuple[DomainScalar[Any], DomainMatrix[Any]]: ...
+
+    def clear_denoms(
+        self, convert: bool = False
+    ) -> tuple[DomainScalar[Any], DomainMatrix[Any]]:
         """
         Clear denominators, but keep the domain unchanged.
 
@@ -1919,7 +2036,18 @@ class DomainMatrix(Generic[Er]):
 
         return den, num
 
-    def clear_denoms_rowwise(self, convert=False):
+    @overload
+    def clear_denoms_rowwise(
+        self, convert: Literal[False] = False
+    ) -> tuple[DomainMatrix[Any], DomainMatrix[Er]]: ...
+    @overload
+    def clear_denoms_rowwise(
+        self, convert: bool
+    ) -> tuple[DomainMatrix[Any], DomainMatrix[Any]]: ...
+
+    def clear_denoms_rowwise(
+        self, convert: bool = False
+    ) -> tuple[DomainMatrix[Any], DomainMatrix[Any]]:
         """
         Clear denominators from each row of the matrix.
 
@@ -1990,7 +2118,7 @@ class DomainMatrix(Generic[Er]):
 
         return den, num
 
-    def cancel_denom(self, denom):
+    def cancel_denom(self, denom: Er) -> tuple[DomainMatrix[Er], Er]:
         """
         Cancel factors between a matrix and a denominator.
 
@@ -2104,7 +2232,9 @@ class DomainMatrix(Generic[Er]):
 
         return M_cancelled, denom
 
-    def cancel_denom_elementwise(self, denom):
+    def cancel_denom_elementwise(
+        self, denom: Er
+    ) -> tuple[DomainMatrix[Er], DomainMatrix[Er]]:
         """
         Cancel factors between the elements of a matrix and a denominator.
 
@@ -2225,7 +2355,30 @@ class DomainMatrix(Generic[Er]):
         M_primitive = self.from_flat_nz(prims, data, K)
         return content, M_primitive
 
-    def rref(self, *, method="auto"):
+    @overload
+    def rref(
+        self: DomainMatrix[MPZ] | DomainMatrix[MPQ],
+        *,
+        method: Literal[
+            "auto", "GJ", "FF", "CD", "GJ_dense", "FF_dense", "CD_dense"
+        ] = "auto",
+    ) -> tuple[DomainMatrix[MPQ], tuple[int, ...]]: ...
+    @overload
+    def rref(
+        self,
+        *,
+        method: Literal[
+            "auto", "GJ", "FF", "CD", "GJ_dense", "FF_dense", "CD_dense"
+        ] = "auto",
+    ) -> tuple[DomainMatrix[Any], tuple[int, ...]]: ...
+
+    def rref(
+        self,
+        *,
+        method: Literal[
+            "auto", "GJ", "FF", "CD", "GJ_dense", "FF_dense", "CD_dense"
+        ] = "auto",
+    ) -> tuple[DomainMatrix[Any], tuple[int, ...]]:
         r"""
         Returns reduced-row echelon form (RREF) and list of pivots.
 
@@ -2316,7 +2469,33 @@ class DomainMatrix(Generic[Er]):
         """
         return _dm_rref(self, method=method)
 
-    def rref_den(self, *, method="auto", keep_domain=True):
+    @overload
+    def rref_den(
+        self,
+        *,
+        method: Literal[
+            "auto", "GJ", "FF", "CD", "GJ_dense", "FF_dense", "CD_dense"
+        ] = "auto",
+        keep_domain: Literal[True] = True,
+    ) -> tuple[DomainMatrix[Er], Er, tuple[int, ...]]: ...
+    @overload
+    def rref_den(
+        self,
+        *,
+        method: Literal[
+            "auto", "GJ", "FF", "CD", "GJ_dense", "FF_dense", "CD_dense"
+        ] = "auto",
+        keep_domain: bool,
+    ) -> tuple[DomainMatrix[Any], Any, tuple[int, ...]]: ...
+
+    def rref_den(
+        self,
+        *,
+        method: Literal[
+            "auto", "GJ", "FF", "CD", "GJ_dense", "FF_dense", "CD_dense"
+        ] = "auto",
+        keep_domain: bool = True,
+    ) -> tuple[DomainMatrix[Any], Any, tuple[int, ...]]:
         r"""
         Returns reduced-row echelon form with denominator and list of pivots.
 
@@ -2422,7 +2601,7 @@ class DomainMatrix(Generic[Er]):
         """
         return _dm_rref_den(self, method=method, keep_domain=keep_domain)
 
-    def columnspace(self):
+    def columnspace(self) -> DomainMatrix[Er]:
         r"""
         Returns the columnspace for the DomainMatrix
 
@@ -2450,7 +2629,7 @@ class DomainMatrix(Generic[Er]):
         rows, cols = self.shape
         return self.extract(range(rows), pivots)
 
-    def rowspace(self):
+    def rowspace(self) -> DomainMatrix[Er]:
         r"""
         Returns the rowspace for the DomainMatrix
 
@@ -2478,7 +2657,7 @@ class DomainMatrix(Generic[Er]):
         rows, cols = self.shape
         return self.extract(range(len(pivots)), range(cols))
 
-    def nullspace(self, divide_last=False):
+    def nullspace(self, divide_last: bool = False) -> DomainMatrix[Er]:
         r"""
         Returns the nullspace for the DomainMatrix
 
@@ -2592,7 +2771,9 @@ class DomainMatrix(Generic[Er]):
 
         return A_null
 
-    def nullspace_from_rref(self, pivots=None):
+    def nullspace_from_rref(
+        self, pivots: Sequence[int] | None = None
+    ) -> DomainMatrix[Er]:
         """
         Compute nullspace from rref and pivots.
 
@@ -2693,7 +2874,7 @@ class DomainMatrix(Generic[Er]):
             raise DMNonSquareMatrixError
         return self.rep.det()
 
-    def adj_det(self):
+    def adj_det(self) -> tuple[DomainMatrix[Er], Er]:
         """
         Adjugate and determinant of a square :class:`DomainMatrix`.
 
@@ -2736,7 +2917,7 @@ class DomainMatrix(Generic[Er]):
             adjA = adjA.to_dense()
         return adjA, detA
 
-    def adjugate(self):
+    def adjugate(self) -> DomainMatrix[Er]:
         """
         Adjugate of a square :class:`DomainMatrix`.
 
@@ -2771,7 +2952,9 @@ class DomainMatrix(Generic[Er]):
         adjA, detA = self.adj_det()
         return adjA
 
-    def inv_den(self, method=None):
+    def inv_den(
+        self, method: Literal["rref", "charpoly"] | None = None
+    ) -> tuple[DomainMatrix[Er], Er]:
         """
         Return the inverse as a :class:`DomainMatrix` with denominator.
 
@@ -2831,7 +3014,9 @@ class DomainMatrix(Generic[Er]):
         I = self.eye(self.shape, self.domain)
         return self.solve_den(I, method=method)
 
-    def solve_den(self, b, method=None):
+    def solve_den(
+        self, b: DomainMatrix[Er], method: Literal["rref", "charpoly"] | None = None
+    ) -> tuple[DomainMatrix[Er], Er]:
         """
         Solve matrix equation $Ax = b$ without fractions in the ground domain.
 
@@ -2975,7 +3160,7 @@ class DomainMatrix(Generic[Er]):
 
         return xnum, xden
 
-    def solve_den_rref(self, b):
+    def solve_den_rref(self, b: DomainMatrix[Er]) -> tuple[DomainMatrix[Er], Er]:
         """
         Solve matrix equation $Ax = b$ using fraction-free RREF
 
@@ -3028,7 +3213,9 @@ class DomainMatrix(Generic[Er]):
 
         return xnum, xden
 
-    def solve_den_charpoly(self, b, cp=None, check=True):
+    def solve_den_charpoly(
+        self, b: DomainMatrix[Er], cp: list[Er] | None = None, check: bool = True
+    ) -> tuple[DomainMatrix[Er], Er]:
         """
         Solve matrix equation $Ax = b$ using the characteristic polynomial.
 
@@ -3114,7 +3301,7 @@ class DomainMatrix(Generic[Er]):
 
         return (adjA_b, detA)
 
-    def adj_poly_det(self, cp=None):
+    def adj_poly_det(self, cp: list[Er] | None = None) -> tuple[list[Er], Er]:
         """
         Return the polynomial $p$ such that $p(A) = adj(A)$ and also the
         determinant of $A$.
@@ -3185,7 +3372,7 @@ class DomainMatrix(Generic[Er]):
 
         return f, detA
 
-    def eval_poly(self, p):
+    def eval_poly(self, p: Sequence[Er]) -> DomainMatrix[Er]:
         """
         Evaluate polynomial function of a matrix $p(A)$.
 
@@ -3227,7 +3414,7 @@ class DomainMatrix(Generic[Er]):
 
         return p_A
 
-    def eval_poly_mul(self, p, B):
+    def eval_poly_mul(self, p: Sequence[Er], B: DomainMatrix[Er]) -> DomainMatrix[Er]:
         r"""
         Evaluate polynomial matrix product $p(A) \times B$.
 
@@ -3300,7 +3487,9 @@ class DomainMatrix(Generic[Er]):
 
         return p_A_B
 
-    def lu(self):
+    def lu(
+        self,
+    ) -> tuple[DomainMatrix[Er], DomainMatrix[Er], list[tuple[int, int]]]:
         r"""
         Returns Lower and Upper decomposition of the DomainMatrix
 
@@ -3345,7 +3534,7 @@ class DomainMatrix(Generic[Er]):
         L, U, swaps = self.rep.lu()
         return self.from_rep(L), self.from_rep(U), swaps
 
-    def qr(self):
+    def qr(self) -> tuple[DomainMatrix[Er], DomainMatrix[Er]]:
         r"""
         QR decomposition of the DomainMatrix.
 
@@ -3459,7 +3648,9 @@ class DomainMatrix(Generic[Er]):
         sol = self.rep.lu_solve(rhs.rep)
         return self.from_rep(sol)
 
-    def fflu(self):
+    def fflu(
+        self,
+    ) -> tuple[DomainMatrix[Er], DomainMatrix[Er], DomainMatrix[Er], DomainMatrix[Er]]:
         """
         Fraction-free LU decomposition of DomainMatrix.
 
@@ -3530,7 +3721,7 @@ class DomainMatrix(Generic[Er]):
         P, L, D, U = self.rep.fflu()
         return from_rep(P), from_rep(L), from_rep(D), from_rep(U)
 
-    def _solve(A, b):
+    def _solve(A, b: DomainMatrix[Er]) -> tuple[DomainMatrix[Er], DomainMatrix[Er]]:
         # XXX: Not sure about this method or its signature. It is just created
         # because it is needed by the holonomic module.
         if A.shape[0] != b.shape[0]:
@@ -3544,7 +3735,7 @@ class DomainMatrix(Generic[Er]):
         nullspace = Arref.from_rep(nullspace_rep)
         return particular, nullspace
 
-    def charpoly(self):
+    def charpoly(self) -> list[Er]:
         r"""
         Characteristic polynomial of a square matrix.
 
@@ -3595,7 +3786,7 @@ class DomainMatrix(Generic[Er]):
 
         return cp
 
-    def charpoly_factor_list(self):
+    def charpoly_factor_list(self) -> list[tuple[list[Er], int]]:
         """
         Full factorization of the characteristic polynomial.
 
@@ -3648,7 +3839,7 @@ class DomainMatrix(Generic[Er]):
         # for free by M.charpoly_factor_blocks than the expanded M.charpoly.
         factors = M.charpoly_factor_blocks()
 
-        factors_irreducible = []
+        factors_irreducible: list[tuple[list[Er], int]] = []
 
         for factor_i, mult_i in factors:
             _, factors_list = dup_factor_list(factor_i, K)
@@ -3658,7 +3849,7 @@ class DomainMatrix(Generic[Er]):
 
         return _collect_factors(factors_irreducible)
 
-    def charpoly_factor_blocks(self):
+    def charpoly_factor_blocks(self) -> list[tuple[list[Er], int]]:
         """
         Partial factorisation of the characteristic polynomial.
 
@@ -3726,7 +3917,7 @@ class DomainMatrix(Generic[Er]):
         # the product of the diagonal block charpolys.
         components = M.scc()
 
-        block_factors = []
+        block_factors: list[tuple[list[Er], int]] = []
 
         for indices in components:
             block = M.extract(indices, indices)
@@ -3798,7 +3989,7 @@ class DomainMatrix(Generic[Er]):
 
         return cp
 
-    def charpoly_berk(self):
+    def charpoly_berk(self) -> list[Er]:
         """Compute the characteristic polynomial using the Berkowitz algorithm.
 
         This method directly calls the underlying implementation of the
@@ -3837,7 +4028,7 @@ class DomainMatrix(Generic[Er]):
         """
         return self.rep.charpoly()
 
-    def ground_eigenvals(self):
+    def ground_eigenvals(self: DomainMatrix[Ef]) -> dict[Ef, int]:
         """
         Return the eigenvalues in the ground domain together with their
         algebraic multiplicities.
@@ -3856,14 +4047,16 @@ class DomainMatrix(Generic[Er]):
         """
         p = self.charpoly()
         _, factors = dup_factor_list(p, self.domain)
-        eigs = {}
+        eigs: dict[Ef, int] = {}
         for base, exp in factors:
             if len(base) == 2:
                 v = -base[1] / base[0]
                 eigs[v] = exp
         return eigs
 
-    def ground_eigenvects(self):
+    def ground_eigenvects(
+        self: DomainMatrix[Ef],
+    ) -> list[tuple[Ef, int, DomainMatrix[Ef]]]:
         """
         Return the eigenvalues in the ground domain together with
         their algebraic multiplicities and eigenvectors.
@@ -3881,7 +4074,7 @@ class DomainMatrix(Generic[Er]):
         [(9, 2, DomainMatrix([[-1/3], [1], [0], [0]], (4, 1), QQ))]
         """
         eigs = self.ground_eigenvals()
-        result = []
+        result: list[tuple[Ef, int, DomainMatrix[Ef]]] = []
         for v, m in eigs.items():
             B = self - self.diag([v] * self.shape[0], self.domain)
             result.append((v, m, B.nullspace(divide_last=False).transpose()))
@@ -4004,14 +4197,14 @@ class DomainMatrix(Generic[Er]):
             return NotImplemented
         return A.domain == B.domain and A.rep == B.rep
 
-    def unify_eq(A, B):
+    def unify_eq(A, B: DomainMatrix[Any]) -> bool:
         if A.shape != B.shape:
             return False
         if A.domain != B.domain:
             A, B = A.unify(B)
         return A == B
 
-    def lll(A, delta=QQ(3, 4)):
+    def lll(A: DomainMatrix[MPZ], delta: MPQ = QQ(3, 4)) -> DomainMatrix[MPZ]:
         """
         Performs the Lenstra–Lenstra–Lovász (LLL) basis reduction algorithm.
         See [1]_ and [2]_.
@@ -4074,7 +4267,9 @@ class DomainMatrix(Generic[Er]):
         """
         return DomainMatrix.from_rep(A.rep.lll(delta=delta))
 
-    def lll_transform(A, delta=QQ(3, 4)):
+    def lll_transform(
+        A: DomainMatrix[MPZ], delta: MPQ = QQ(3, 4)
+    ) -> tuple[DomainMatrix[MPZ], DomainMatrix[MPZ]]:
         """
         Performs the Lenstra–Lenstra–Lovász (LLL) basis reduction algorithm
         and returns the reduced basis and transformation matrix.
@@ -4115,7 +4310,9 @@ def _has_domain(M: DomainMatrix[Er], K: Domain[Es]) -> TypeGuard[DomainMatrix[Es
     return K == M.domain
 
 
-def _collect_factors(factors_list):
+def _collect_factors(
+    factors_list: Iterable[tuple[list[Er], int]],
+) -> list[tuple[list[Er], int]]:
     """
     Collect repeating factors and sort.
 
@@ -4123,7 +4320,7 @@ def _collect_factors(factors_list):
     >>> _collect_factors([([1, 2], 2), ([1, 4], 3), ([1, 2], 5)])
     [([1, 4], 3), ([1, 2], 7)]
     """
-    factors = Counter()
+    factors: Counter[tuple[Er, ...]] = Counter()
     for factor, exponent in factors_list:
         factors[tuple(factor)] += exponent
 
