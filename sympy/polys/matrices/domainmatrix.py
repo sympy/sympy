@@ -2083,17 +2083,19 @@ class DomainMatrix:
 
         if K.is_zero(denom):
             raise ZeroDivisionError('denominator is zero')
+        elif K.is_one(denom):
+            M_numers = M.copy()
+            M_denoms = M.ones(M.shape, M.domain)
+            return (M_numers, M_denoms)
 
-        M_numers = M.copy()
-        if K.is_one(denom):
-            return M_numers, M.ones(M.shape, K)
+        elements, data = M.to_flat_nz()
 
-        M_denoms = M.from_rep(type(M.rep).ones(M.shape, K))
-        for (i, j), numer in M.iter_items():
-            _, n, d = K.cofactors(numer, denom)
-            unit = -K.one if K.is_negative(d) else K.canonical_unit(d)
-            M_numers[i, j] = unit*n
-            M_denoms[i, j] = unit*d
+        cofactors = [K.cofactors(numer, denom) for numer in elements]
+        gcds, numers, denoms = zip(*cofactors)
+
+        M_numers = M.from_flat_nz(list(numers), data, K)
+        M_denoms = M.from_flat_nz(list(denoms), data, K)
+
         return (M_numers, M_denoms)
 
     def content(self):

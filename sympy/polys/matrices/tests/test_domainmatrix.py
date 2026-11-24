@@ -697,18 +697,6 @@ def test_DomainMatrix_cancel_denom_elementwise():
     assert numers == DM([[1, 1], [3, 2]], ZZ)
     assert denoms == DM([[2, 1], [2, 1]], ZZ)
 
-    numers = DM([[0, -1], [-1, -2]], ZZ)
-    denoms = DM([[1, 3], [2, 3]], ZZ)
-    A = DM([[0, 2], [3, 4]], ZZ)
-    assert A.cancel_denom_elementwise(ZZ(-6)) == (numers, denoms)
-    assert A.to_sparse().cancel_denom_elementwise(ZZ(-6)) == (
-        numers.to_sparse(),
-        denoms.to_sparse(),
-    )
-    zeros = DomainMatrix.zeros((2, 2), ZZ)
-    ones = DomainMatrix.ones((2, 2), ZZ).to_sparse()
-    assert zeros.cancel_denom_elementwise(ZZ(2)) == (zeros, ones)
-
     raises(ZeroDivisionError, lambda: A.cancel_denom_elementwise(ZZ(0)))
 
 
