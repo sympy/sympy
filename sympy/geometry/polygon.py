@@ -2148,13 +2148,15 @@ class Triangle(Polygon):
                 b = nodup[i]
                 a, c = nodup[(i + 1) % 3], nodup[(i + 2) % 3]
                 dot = (a - b).dot(c - b)
-                if dot.is_negative or (dot < 0) == True:
+                if dot.is_negative:
                     nodup = sorted([a, c], key=default_sort_key)
                     break
-                sim = simplify(dot)
-                if sim.is_negative or (sim < 0) == True:
-                    nodup = sorted([a, c], key=default_sort_key)
-                    break
+                try:
+                    if b in Segment(a, c):
+                        nodup = sorted([a, c], key=default_sort_key)
+                        break
+                except Exception:
+                    continue
             else:
                 a, b, c = sorted(nodup, key=default_sort_key)
                 nodup = [a, c]
