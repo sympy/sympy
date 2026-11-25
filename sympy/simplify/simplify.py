@@ -942,19 +942,14 @@ def product_simplify(s, **kwargs):
     used = [False] * len(p_t)
 
     for method in range(2):
-        changed = True
-        while changed:
-            changed = False
-            for i, p_term1 in enumerate(p_t):
-                if not used[i]:
-                    for j, p_term2 in enumerate(p_t):
-                        if not used[j] and i != j:
-                            tmp_prod = product_mul(p_term1, p_term2, method)
-                            if isinstance(tmp_prod, Product):
-                                p_t[i] = tmp_prod
-                                p_term1 = tmp_prod
-                                used[j] = True
-                                changed = True
+        for i, p_term1 in enumerate(p_t):
+            if not used[i]:
+                for j, p_term2 in enumerate(p_t):
+                    if not used[j] and i != j:
+                        tmp_prod = product_mul(p_term1, p_term2, method)
+                        if isinstance(tmp_prod, Product):
+                            p_term1 = p_t[i] = tmp_prod
+                            used[j] = True
 
     result = Mul(*o_t)
 

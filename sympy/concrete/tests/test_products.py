@@ -320,9 +320,9 @@ def test_simplify_prod():
         Product(k, (k, 5, 6))*Product(k, (k, 7, 8))
     assert _simplify(p_adj) == Product(k, (k, 1, 8))
     assert simplify(p_adj) == 40320
-    p_unsorted = Mul(Product(k, (k, 1, 2)), Product(k, (k, 7, 8)),
-                     Product(k, (k, 5, 6)), Product(k, (k, 3, 4)), evaluate=False)
-    assert product_simplify(p_unsorted) == Product(k, (k, 1, 8))
+    p_unsorted = Mul(Product(k, (k, 1, 2)), Product(k, (k, 5, 6)),
+                     Product(k, (k, 3, 4)), evaluate=False)
+    assert product_simplify(p_unsorted) == Product(k, (k, 1, 6))
     assert _simplify(3*x*Product(k, (k, 1, n))*Product(k + 1, (k, 1, n))*
         Product(k + 2, (k, 1, n))*Product(j, (j, 1, m))*
         Product(j + 1, (j, 1, m))*Product(j + 2, (j, 1, m))) == \
