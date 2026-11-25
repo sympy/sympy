@@ -258,7 +258,6 @@ def test_exp_derivative_n_times_affine():
     n = Symbol('n', integer=True, nonnegative=True)
     X = IndexedBase('X')
     A = Symbol('A', commutative=False)
-    s_infinite = Symbol('s', infinite=True)
 
     assert exp(x).diff(x, 2) == exp(x)
     assert exp(x).diff((x, 10**8)) == exp(x)
@@ -266,7 +265,6 @@ def test_exp_derivative_n_times_affine():
     assert exp(x).diff((x, n)) == exp(x)
     assert exp(X[0]).diff((X[0], n)) == exp(X[0])
     assert exp(A).diff((A, n)) == exp(A)
-    assert exp(s_infinite).diff((s_infinite, n)) == exp(s_infinite)
 
     assert exp(a*x + b).diff((x, 2)) == a**2*exp(a*x + b)
     assert exp(a*x + b).diff((x, 3)) == a**3*exp(a*x + b)
@@ -366,6 +364,7 @@ def test_exp_derivative_n_times_fallback():
         assert expr.diff((x, n)) == Derivative(exp(value*x), (x, n))
 
     s = Symbol('s', infinite=True)
+    assert exp(s).diff((s, n)) == Derivative(exp(s), (s, n))
     expr = exp(2*s + 1)
     assert expr.diff((s, n)) == Derivative(expr, (s, n))
 

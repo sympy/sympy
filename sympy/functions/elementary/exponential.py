@@ -589,7 +589,8 @@ class exp(ExpBase, metaclass=ExpMeta):
 
     def _eval_derivative_n_times(self, s, n):
         arg = self.args[0]
-        if arg == s and n.is_integer and n.is_nonnegative:
+        if (arg == s and n.is_integer and n.is_nonnegative
+                and not s.is_infinite):
             return self
         if n is S.One:
             return self._eval_derivative(s)
