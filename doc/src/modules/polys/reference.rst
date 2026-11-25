@@ -97,6 +97,29 @@ Domain constructors
 
 .. autofunction:: construct_domain
 
+.. py:class:: _ConstructedElement
+
+   The type of ``construct_domain(expr)``: a ``(domain, element)`` pair in
+   which the element belongs to the domain.
+
+.. py:class:: _ConstructedList
+
+   The type of ``construct_domain(exprs)``: a ``(domain, elements)`` pair in
+   which every element of the list belongs to the domain.
+
+.. py:class:: _ConstructedDict
+
+   The type of ``construct_domain(dict_of_exprs)``: a ``(domain, elements)``
+   pair with the keys of the input and values that belong to the domain.
+
+.. py:class:: _K
+
+   Type variable for the keys of a dict passed to ``construct_domain``.
+
+.. py:class:: _V
+
+   Type variable for the values of a dict passed to ``construct_domain``.
+
 Monomials encoded as tuples
 ===========================
 
