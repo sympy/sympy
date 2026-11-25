@@ -111,34 +111,41 @@ def singularities(
     if domain is None:
         domain = S.Reals if symbol.is_real else S.Complexes
 
-    sings: Set = S.EmptySet
-    e: Expr = expression.rewrite([sec, csc, cot, tan], cos)
-    e = e.rewrite([sech, csch, coth, tanh], cosh)
-    for i in e.atoms(Pow):
-        if i.base == S.Zero:
-            sings += solveset(i.exp < 0, symbol, domain)
-            continue
-        if i.exp.is_infinite:
-            message: str = (f"I received {expression = }, which contains the"
-                f" power `{i}` with the infinite exponent `{i.exp}`, but I do"
-                " not have a method to find the singularities of a power with"
-                " an infinite exponent.")
-            raise NotImplementedError(filldedent('''
-                %s''' % message))
-        if i.exp.is_negative:
-            sings += solveset(i.base, symbol, domain)
-        elif symbol in i.exp.free_symbols:
-            roots: Set = solveset(i.base, symbol, domain)
-            negative: Set = solveset(i.exp < 0, symbol, domain)
-            sings += roots.intersect(negative)
-    for logarithm in expression.atoms(log):
-        sings += solveset(logarithm.args[0], symbol, domain)
-    for function in expression.atoms(asech, acsch):
-        sings += solveset(function.args[0], symbol, domain)
-    for function in expression.atoms(atanh, acoth):
-        sings += solveset(function.args[0] - 1, symbol, domain)
-        sings += solveset(function.args[0] + 1, symbol, domain)
-    return sings
+    try:
+        sings: Set = S.EmptySet
+        e: Expr = expression.rewrite([sec, csc, cot, tan], cos)
+        e = e.rewrite([sech, csch, coth, tanh], cosh)
+        for i in e.atoms(Pow):
+            if i.base == S.Zero:
+                sings += solveset(i.exp < 0, symbol, domain)
+                continue
+            if i.exp.is_infinite:
+                message: str = (f"I found the power `{i}`, which has the"
+                    f" infinite exponent `{i.exp}`, but I do not have a method"
+                    " to find the singularities of a power with an infinite"
+                    " exponent.")
+                raise NotImplementedError(filldedent('''
+                    %s''' % message))
+            if i.exp.is_negative:
+                sings += solveset(i.base, symbol, domain)
+            elif symbol in i.exp.free_symbols:
+                roots: Set = solveset(i.base, symbol, domain)
+                negative: Set = solveset(i.exp < 0, symbol, domain)
+                sings += roots.intersect(negative)
+        for logarithm in expression.atoms(log):
+            sings += solveset(logarithm.args[0], symbol, domain)
+        for function in expression.atoms(asech, acsch):
+            sings += solveset(function.args[0], symbol, domain)
+        for function in expression.atoms(atanh, acoth):
+            sings += solveset(function.args[0] - 1, symbol, domain)
+            sings += solveset(function.args[0] + 1, symbol, domain)
+        return sings
+    except NotImplementedError as error:
+        message = (f"I received `{expression = }`, `{symbol = }`, and"
+            f" `{domain = }`, but I do not have a method to find all of the"
+            " singularities of `expression`.")
+        raise NotImplementedError(filldedent('''
+            %s''' % message)) from error
 
 
 ###########################################################################
