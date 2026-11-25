@@ -1624,6 +1624,24 @@ def test_Rational_gcd_lcm_cofactors():
     assert Rational(4, 5).lcm(Rational(2, 9)) == Integer(4)
     assert Rational(5, 9).lcm(Rational(3, 7)) == Rational(Integer(5).lcm(3),Integer(9).gcd(7))
 
+    assert Integer(5).gcd(0) == Integer(5)
+    assert Integer(0).gcd(5) == Integer(5)
+    assert Integer(0).gcd(0) == Integer(0)
+    assert Integer(-5).gcd(0) == Integer(5)
+    assert Rational(1, 2).gcd(0) == Rational(1, 2)
+    assert Rational(-1, 2).gcd(0) == Rational(1, 2)
+
+    assert Integer(-6).lcm(4) == Integer(12)
+    assert Integer(6).lcm(-4) == Integer(12)
+    assert Integer(-6).lcm(-4) == Integer(12)
+    assert Integer(0).lcm(0) == Integer(0)
+    assert Integer(5).lcm(0) == Integer(0)
+    assert Integer(0).lcm(5) == Integer(0)
+    assert Rational(-2, 3).lcm(Rational(1, 2)) == Integer(2)
+    assert Rational(2, 3).lcm(Rational(-1, 2)) == Integer(2)
+    assert Rational(0).lcm(Rational(2, 3)) == Integer(0)
+    assert Rational(2, 3).lcm(Rational(0)) == Integer(0)
+
     assert Integer(4).cofactors(2) == (Integer(2), Integer(2), Integer(1))
     assert Integer(4).cofactors(Integer(2)) == \
         (Integer(2), Integer(2), Integer(1))
