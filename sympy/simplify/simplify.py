@@ -1443,8 +1443,8 @@ def nsimplify(expr: Expr | complex, constants: Iterable[Expr | float] = (),
     rational_conversion: Literal['base10', 'exact'] = 'base10') -> Expr: ...
 @overload
 def nsimplify(expr: Basic, constants: Iterable[Expr | float] = (),
-    tolerance: float | Expr | None = None, full: bool = False, *,
-    rational: Literal[True],
+    tolerance: float | Expr | None = None, full: bool = False,
+    rational: bool | None = None,
     rational_conversion: Literal['base10', 'exact'] = 'base10') -> Basic: ...
 
 def nsimplify(expr: Basic | complex, constants: Iterable[Expr | float] = (),
