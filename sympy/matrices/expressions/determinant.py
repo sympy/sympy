@@ -89,6 +89,7 @@ class Permanent(Expr):
     >>> Permanent(ones(3, 3)).doit()
     6
     """
+    is_commutative = True
 
     def __new__(cls, mat):
         mat = sympify(mat)
@@ -100,6 +101,10 @@ class Permanent(Expr):
     @property
     def arg(self):
         return self.args[0]
+
+    @property
+    def kind(self):
+        return self.arg.kind.element_kind
 
     def doit(self, expand=False, **hints):
         if isinstance(self.arg, MatrixBase):

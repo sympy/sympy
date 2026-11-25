@@ -1,5 +1,6 @@
 from __future__ import annotations
 from sympy.core import Lambda, S, symbols
+from sympy.core.kind import NumberKind
 from sympy.concrete import Sum
 from sympy.functions import adjoint, conjugate, transpose
 from sympy.matrices import eye, Matrix, ShapeError, ImmutableMatrix
@@ -22,6 +23,8 @@ def test_Trace():
     assert isinstance(Trace(A), Trace)
     assert not isinstance(Trace(A), MatrixExpr)
     raises(ShapeError, lambda: Trace(C))
+    assert Trace(A).kind is NumberKind
+    assert Trace(eye(3)).kind is NumberKind
     assert trace(eye(3)) == 3
     assert trace(Matrix(3, 3, [1, 2, 3, 4, 5, 6, 7, 8, 9])) == 15
 
