@@ -1,5 +1,6 @@
 from __future__ import annotations
 from sympy.core import S, symbols
+from sympy.core.kind import NumberKind
 from sympy.matrices import eye, ones, Matrix, ShapeError
 from sympy.matrices.expressions import (
     Identity, MatrixExpr, MatrixSymbol, Determinant,
@@ -21,6 +22,7 @@ def test_det():
     assert isinstance(Determinant(A), Determinant)
     assert not isinstance(Determinant(A), MatrixExpr)
     raises(ShapeError, lambda: Determinant(C))
+    assert Determinant(A).kind is NumberKind
     assert det(eye(3)) == 1
     assert det(Matrix(3, 3, [1, 3, 2, 4, 1, 3, 2, 5, 2])) == 17
     _ = A / det(A)  # Make sure this is possible
@@ -52,15 +54,20 @@ def test_refine():
 def test_commutative():
     det_a = Determinant(A)
     det_b = Determinant(B)
+    perm_a = Permanent(A)
     assert det_a.is_commutative
     assert det_b.is_commutative
+    assert perm_a.is_commutative
     assert det_a * det_b == det_b * det_a
+    assert perm_a * det_a == det_a * perm_a
 
 
 def test_permanent():
     assert isinstance(Permanent(A), Permanent)
     assert not isinstance(Permanent(A), MatrixExpr)
     assert isinstance(Permanent(C), Permanent)
+    assert Permanent(A).kind is NumberKind
+    assert Permanent(ones(3, 3)).kind is NumberKind
     assert Permanent(ones(3, 3)).doit() == 6
     _ = C / per(C)
     assert per(Matrix(3, 3, [1, 3, 2, 4, 1, 3, 2, 5, 2])) == 103
