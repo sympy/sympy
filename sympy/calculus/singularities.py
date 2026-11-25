@@ -108,13 +108,8 @@ def singularities(
 
     expression = sympify(expression)
 
-    # Remove the `sherpa` type-narrowing technique after adding type annotations to `SingletonRegistry`.
-    if domain is None and symbol.is_real:
-        sherpa: Set = S.Reals
-        domain = sherpa
-    elif domain is None:
-        sherpa = S.Complexes
-        domain = sherpa
+    if domain is None:
+        domain = S.Reals if symbol.is_real else S.Complexes
 
     sings: Set = S.EmptySet
     e: Expr = expression.rewrite([sec, csc, cot, tan], cos)
