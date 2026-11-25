@@ -297,6 +297,30 @@ def test_pow_im():
     assert Mul(I*Pow(I, S.Half, evaluate=False)) == sqrt(I)*I
 
 
+def test_mul_additive_base_symbolic_exponent():
+    x, y, z = symbols('x y z')
+    a, b = symbols('a b')
+
+    ans = (x + y) ** (3 * a)
+    assert Mul(
+        Pow(x + y, a, evaluate=False),
+        Pow(x + y, 2 * a, evaluate=False),
+    ) == ans
+
+    ans = (x + y) ** (3 * a) * (y + z) ** b
+    assert Mul(
+        Pow(x + y, a, evaluate=False),
+        Pow(y + z, b, evaluate=False),
+        Pow(x + y, 2 * a, evaluate=False),
+    ) == ans
+
+    ans = (x + y) ** a * (y + z) ** b
+    assert Mul(
+        Pow(x + y, a, evaluate=False),
+        Pow(y + z, b, evaluate=False),
+    ) == ans
+
+
 def test_real_mul():
     assert Float(0) * pi * x == 0
     assert set((Float(1) * pi * x).args) == {Float(1), pi, x}

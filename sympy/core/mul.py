@@ -500,8 +500,18 @@ class Mul(Expr, AssocOp):
                 new_c_powers.extend([(b, c*t) for t, c in e.items()])
             return new_c_powers
 
+        def _gather_if_needed(c_powers):
+            seen = set()
+
+            for b, _ in c_powers:
+                if b in seen:
+                    return _gather(c_powers)
+                seen.add(b)
+
+            return c_powers
+
         # in c_powers
-        c_powers = _gather(c_powers)
+        c_powers = _gather_if_needed(c_powers)
 
         # and in num_exp
         num_exp = _gather(num_exp)
