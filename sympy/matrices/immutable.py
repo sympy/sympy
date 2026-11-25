@@ -46,8 +46,25 @@ class ImmutableRepMatrix(RepMatrix, MatrixExpr): # type: ignore
         return cls._new(*args, **kwargs)
 
     def __hash__(self):
-        return MatrixExpr.__hash__(self)
+        h = self._mhash
 
+        if h is None:
+            rep = self._rep
+            table = rep.to_dod()
+            hashable_table = tuple(
+                (
+                    row,
+                    tuple(
+                        (col, rep.domain.to_sympy(value))
+                        for col, value in sorted(columns.items())
+                    )
+                )
+                for row, columns in sorted(table.items())
+            )
+            h = hash((hashable_table, rep.shape))
+            self._mhash = h
+
+        return h
     def copy(self):
         return self
 

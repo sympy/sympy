@@ -12,6 +12,9 @@ from sympy.matrices.immutable import \
     ImmutableDenseMatrix, ImmutableSparseMatrix
 from sympy.abc import x, y
 from sympy.testing.pytest import raises
+from sympy.core.symbol import symbols
+from sympy.core.numbers import Rational
+from sympy.polys.domains import QQ
 
 IM = ImmutableDenseMatrix([[1, 2, 3], [4, 5, 6], [7, 8, 9]])
 ISM = ImmutableSparseMatrix([[1, 2, 3], [4, 5, 6], [7, 8, 9]])
@@ -135,3 +138,415 @@ def test_integrate():
     assert intIM.shape == IM.shape
     assert all(intIM[i, j] == (1 + j + 3*i)*x for i, j in
                 product(range(3), range(3)))
+
+
+
+def test_hash():
+    A = ImmutableMatrix([[1, 0]])
+    B = ImmutableSparseMatrix([[1, 0]])
+
+    assert A == B
+    assert hash(A) == hash(B)
+    assert len({A, B}) == 1
+
+
+# 1x1 matrices
+
+def test_hash_1x1_numeric():
+    A = ImmutableMatrix([[1]])
+    B = ImmutableSparseMatrix([[1]])
+
+    assert A == B
+    assert hash(A) == hash(B)
+    assert len({A, B}) == 1
+
+
+def test_hash_1x1_symbolic():
+    x = symbols('x')
+
+    A = ImmutableMatrix([[x]])
+    B = ImmutableSparseMatrix([[x]])
+
+    assert A == B
+    assert hash(A) == hash(B)
+    assert len({A, B}) == 1
+
+
+def test_hash_1x1_mixed():
+    x = symbols('x')
+
+    A = ImmutableMatrix([[x + 1]])
+    B = ImmutableSparseMatrix([[x + 1]])
+
+    assert A == B
+    assert hash(A) == hash(B)
+    assert len({A, B}) == 1
+
+
+# 1x2 matrices
+
+def test_hash_1x2_numeric():
+    A = ImmutableMatrix([[1, 2]])
+    B = ImmutableSparseMatrix([[1, 2]])
+
+    assert A == B
+    assert hash(A) == hash(B)
+    assert len({A, B}) == 1
+
+
+def test_hash_1x2_symbolic():
+    x, y = symbols('x y')
+
+    A = ImmutableMatrix([[x, y]])
+    B = ImmutableSparseMatrix([[x, y]])
+
+    assert A == B
+    assert hash(A) == hash(B)
+    assert len({A, B}) == 1
+
+
+def test_hash_1x2_mixed():
+    x = symbols('x')
+
+    A = ImmutableMatrix([[x, 1]])
+    B = ImmutableSparseMatrix([[x, 1]])
+
+    assert A == B
+    assert hash(A) == hash(B)
+    assert len({A, B}) == 1
+
+
+# 2x1 matrices
+
+def test_hash_2x1_numeric():
+    A = ImmutableMatrix([[1], [2]])
+    B = ImmutableSparseMatrix([[1], [2]])
+
+    assert A == B
+    assert hash(A) == hash(B)
+    assert len({A, B}) == 1
+
+
+def test_hash_2x1_symbolic():
+    x, y = symbols('x y')
+
+    A = ImmutableMatrix([[x], [y]])
+    B = ImmutableSparseMatrix([[x], [y]])
+
+    assert A == B
+    assert hash(A) == hash(B)
+    assert len({A, B}) == 1
+
+
+def test_hash_2x1_mixed():
+    x = symbols('x')
+
+    A = ImmutableMatrix([[x], [1]])
+    B = ImmutableSparseMatrix([[x], [1]])
+
+    assert A == B
+    assert hash(A) == hash(B)
+    assert len({A, B}) == 1
+
+
+# 3x3 matrices
+
+def test_hash_3x3_numeric():
+    A = ImmutableMatrix([
+        [1, 2, 3],
+        [4, 5, 6],
+        [7, 8, 9]
+    ])
+
+    B = ImmutableSparseMatrix([
+        [1, 2, 3],
+        [4, 5, 6],
+        [7, 8, 9]
+    ])
+
+    assert A == B
+    assert hash(A) == hash(B)
+    assert len({A, B}) == 1
+
+
+def test_hash_3x3_symbolic():
+    x, y, z = symbols('x y z')
+
+    A = ImmutableMatrix([
+        [x, y, z],
+        [y, z, x],
+        [z, x, y]
+    ])
+
+    B = ImmutableSparseMatrix([
+        [x, y, z],
+        [y, z, x],
+        [z, x, y]
+    ])
+
+    assert A == B
+    assert hash(A) == hash(B)
+    assert len({A, B}) == 1
+
+
+def test_hash_3x3_mixed():
+    x, y, z = symbols('x y z')
+
+    A = ImmutableMatrix([
+        [x, 1, 0],
+        [2, y, 3],
+        [0, 4, z]
+    ])
+
+    B = ImmutableSparseMatrix([
+        [x, 1, 0],
+        [2, y, 3],
+        [0, 4, z]
+    ])
+
+    assert A == B
+    assert hash(A) == hash(B)
+    assert len({A, B}) == 1
+
+
+# 3x2 matrices
+
+def test_hash_3x2_numeric():
+    A = ImmutableMatrix([
+        [1, 2],
+        [3, 4],
+        [5, 6]
+    ])
+
+    B = ImmutableSparseMatrix([
+        [1, 2],
+        [3, 4],
+        [5, 6]
+    ])
+
+    assert A == B
+    assert hash(A) == hash(B)
+    assert len({A, B}) == 1
+
+
+def test_hash_3x2_symbolic():
+    x, y, z = symbols('x y z')
+
+    A = ImmutableMatrix([
+        [x, y],
+        [y, z],
+        [z, x]
+    ])
+
+    B = ImmutableSparseMatrix([
+        [x, y],
+        [y, z],
+        [z, x]
+    ])
+
+    assert A == B
+    assert hash(A) == hash(B)
+    assert len({A, B}) == 1
+
+
+def test_hash_3x2_mixed():
+    x, y, z = symbols('x y z')
+
+    A = ImmutableMatrix([
+        [x, 1],
+        [2, y],
+        [z, 0]
+    ])
+
+    B = ImmutableSparseMatrix([
+        [x, 1],
+        [2, y],
+        [z, 0]
+    ])
+
+    assert A == B
+    assert hash(A) == hash(B)
+    assert len({A, B}) == 1
+
+
+# Identity matrix
+
+def test_hash_identity():
+    A = ImmutableMatrix.eye(3)
+    B = ImmutableSparseMatrix.eye(3)
+
+    assert A == B
+    assert hash(A) == hash(B)
+    assert len({A, B}) == 1
+
+
+# Diagonal matrices
+
+def test_hash_diagonal_symbolic():
+    x, y, z = symbols('x y z')
+
+    A = ImmutableMatrix.diag(x, y, z)
+    B = ImmutableSparseMatrix.diag(x, y, z)
+
+    assert A == B
+    assert hash(A) == hash(B)
+    assert len({A, B}) == 1
+
+
+def test_hash_diagonal_mixed():
+    x, y = symbols('x y')
+
+    A = ImmutableMatrix.diag(x, 1, y)
+    B = ImmutableSparseMatrix.diag(x, 1, y)
+
+    assert A == B
+    assert hash(A) == hash(B)
+    assert len({A, B}) == 1
+
+
+# Zero matrix
+
+def test_hash_zero():
+    A = ImmutableMatrix.zeros(3, 3)
+    B = ImmutableSparseMatrix.zeros(3, 3)
+
+    assert A == B
+    assert hash(A) == hash(B)
+    assert len({A, B}) == 1
+
+
+# Empty matrices
+
+def test_hash_empty_0x0():
+    A = ImmutableMatrix([])
+    B = ImmutableSparseMatrix([])
+
+    assert A == B
+    assert hash(A) == hash(B)
+    assert len({A, B}) == 1
+
+
+def test_hash_empty_0x3():
+    A = ImmutableMatrix(0, 3, [])
+    B = ImmutableSparseMatrix(0, 3, [])
+
+    assert A == B
+    assert hash(A) == hash(B)
+    assert len({A, B}) == 1
+
+
+def test_hash_empty_3x0():
+    A = ImmutableMatrix(3, 0, [])
+    B = ImmutableSparseMatrix(3, 0, [])
+
+    assert A == B
+    assert hash(A) == hash(B)
+    assert len({A, B}) == 1
+
+
+# Negative numbers
+
+def test_hash_negative():
+    A = ImmutableMatrix([
+        [-1, -2],
+        [-3, -4]
+    ])
+
+    B = ImmutableSparseMatrix([
+        [-1, -2],
+        [-3, -4]
+    ])
+
+    assert A == B
+    assert hash(A) == hash(B)
+    assert len({A, B}) == 1
+
+
+# Rational numbers
+
+def test_hash_rational():
+    A = ImmutableMatrix([
+        [Rational(1, 2), 0],
+        [0, Rational(3, 4)]
+    ])
+
+    B = ImmutableSparseMatrix([
+        [Rational(1, 2), 0],
+        [0, Rational(3, 4)]
+    ])
+
+    assert A == B
+    assert hash(A) == hash(B)
+    assert len({A, B}) == 1
+
+
+# Different insertion order
+
+def test_hash_insertion_order():
+    A = ImmutableSparseMatrix(2, 2, {
+        (0, 0): 1,
+        (1, 1): 2
+    })
+
+    B = ImmutableSparseMatrix(2, 2, {
+        (1, 1): 2,
+        (0, 0): 1
+    })
+
+    assert A == B
+    assert hash(A) == hash(B)
+    assert len({A, B}) == 1
+
+
+# Different domains: Dense vs Sparse
+
+def test_hash_different_domains_dense_sparse():
+    A = ImmutableMatrix([[1, 0]])
+    B = ImmutableSparseMatrix._fromrep(
+        A._rep.convert_to(QQ)
+    )
+
+    assert A._rep.domain != B._rep.domain
+    assert A == B
+    assert hash(A) == hash(B)
+    assert len({A, B}) == 1
+
+
+# Different domains: Dense vs Dense
+
+def test_hash_different_domains_dense_dense():
+    A = ImmutableMatrix([[1, 0]])
+    B = ImmutableMatrix._fromrep(
+        A._rep.convert_to(QQ)
+    )
+
+    assert A._rep.domain != B._rep.domain
+    assert A == B
+    assert hash(A) == hash(B)
+    assert len({A, B}) == 1
+
+
+# Different domains: Sparse vs Sparse
+
+def test_hash_different_domains_sparse_sparse():
+    A = ImmutableSparseMatrix([[1, 0]])
+    B = ImmutableSparseMatrix._fromrep(
+        A._rep.convert_to(QQ)
+    )
+
+    assert A._rep.domain != B._rep.domain
+    assert A == B
+    assert hash(A) == hash(B)
+    assert len({A, B}) == 1
+
+def test_hash_different_domains_rational():
+    from sympy.polys.domains import EXRAW
+
+    A = ImmutableMatrix([[Rational(1, 2), 0]])
+    B = ImmutableSparseMatrix._fromrep(
+        A._rep.convert_to(EXRAW)
+    )
+
+    assert A == B
+    assert hash(A) == hash(B)
+    assert len({A, B}) == 1
