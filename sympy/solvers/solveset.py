@@ -610,7 +610,7 @@ def _invert_abs(f, g_ys, symbol):
         parg = _invert_real(f, pos, symbol)
         narg = _invert_real(-f, pos, symbol)
         if parg[0] != narg[0]:
-            message: str = (f"I inverted `{f = }` and `-f` over the nonnegative"
+            message = (f"I inverted `{f = }` and `-f` over the nonnegative"
                 f" part of `{g_ys = }`, and I got different expressions in"
                 f" `{symbol = }`: `{parg[0] = }` and `{narg[0] = }`. I can"
                 " combine the two branches of `Abs` only if I get the same"
@@ -2400,8 +2400,8 @@ def _transolve(f, symbol, domain):
     return result
 
 
-def solveset(f: Expr | Boolean,
-             symbol: Expr | Symbol | None = None, domain: Set = S.Complexes) -> Set:
+def solveset(f: Expr | Boolean | complex,
+             symbol: Expr | None = None, domain: Set = S.Complexes) -> Set:
     r"""Solves a given inequality or equation with set as output
 
     Parameters
@@ -2576,23 +2576,23 @@ def solveset(f: Expr | Boolean,
     # can look better if the 2nd condition is x <= 0. Since
     # the solution is a set, duplication of results is not
     # an issue, e.g. {y, -y} when y is 0 will be {0}
-    f, mask = _masked(f, Abs)
-    f = f.rewrite(Piecewise) # everything that's not an Abs
+    f_masked, mask = _masked(f, Abs)
+    f_masked = f_masked.rewrite(Piecewise) # everything that's not an Abs
     for d, e in mask:
         # everything *in* an Abs
         e = e.func(e.args[0].rewrite(Piecewise))
-        f = f.xreplace({d: e})
-    f = piecewise_fold(f)
+        f_masked = f_masked.xreplace({d: e})
+    f_masked = piecewise_fold(f_masked)
 
-    return _solveset(f, symbol, domain, _check=True)
+    return _solveset(f_masked, symbol, domain, _check=True)
 
 
-def solveset_real(f: Expr | Boolean,
+def solveset_real(f: Expr | Boolean | complex,
                   symbol: Expr) -> Set:
     return solveset(f, symbol, S.Reals)
 
 
-def solveset_complex(f: Expr | Boolean,
+def solveset_complex(f: Expr | Boolean | complex,
                      symbol: Expr) -> Set:
     return solveset(f, symbol, S.Complexes)
 
@@ -3410,7 +3410,7 @@ def substitution(system, symbols, result=[{}], known_symbols=[],
         if isinstance(sol, Union):
             sol_args = sol.args
             sol = S.EmptySet
-            # We need in sequence so append finteset elements
+            # We need in sequence so append FiniteSet elements
             # and then imageset or other.
             for sol_arg2 in sol_args:
                 if isinstance(sol_arg2, FiniteSet):
