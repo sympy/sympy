@@ -948,7 +948,7 @@ def product_simplify(s, **kwargs):
                     if not used[j] and i != j:
                         tmp_prod = product_mul(p_term1, p_term2, method)
                         if isinstance(tmp_prod, Product):
-                            p_t[i] = tmp_prod
+                            p_term1 = p_t[i] = tmp_prod
                             used[j] = True
 
     result = Mul(*o_t)
@@ -967,8 +967,8 @@ def product_mul(self, other, method=0):
             if self.limits == other.limits:
                 return Product(self.function * other.function, *self.limits)
         elif method == 1:
-            if simplify(self.function - other.function) == 0:
-                if len(self.limits) == len(other.limits) == 1:
+            if len(self.limits) == len(other.limits) == 1:
+                if simplify(self.function - other.function) == 0:
                     i = self.limits[0][0]
                     x1 = self.limits[0][1]
                     y1 = self.limits[0][2]
