@@ -179,6 +179,10 @@ def precedence_traditional(item):
         return precedence_traditional(item.args[0])
 
     n = item.__class__.__name__
+    if n == "Mul" and item.could_extract_minus_sign():
+            return PRECEDENCE["Add"]
+    if n in PRECEDENCE_FUNCTIONS:
+        return PRECEDENCE_FUNCTIONS[n](item)
     if n in PRECEDENCE_TRADITIONAL:
         return PRECEDENCE_TRADITIONAL[n]
 

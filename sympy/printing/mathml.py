@@ -574,7 +574,7 @@ class MathMLPresentationPrinter(MathMLPrinterBase):
             'GreaterThan': '&#x2265;',
             'LessThan': '&#x2264;',
             'StrictGreaterThan': '>',
-            'StrictLessThan': '<',
+            'StrictLessThan': '&lt;',
             'lerchphi': '&#x3A6;',
             'zeta': '&#x3B6;',
             'dirichlet_eta': '&#x3B7;',
@@ -707,7 +707,7 @@ class MathMLPresentationPrinter(MathMLPrinterBase):
 
             coeff, terms = expr.as_coeff_mul()
             if coeff is S.One and len(terms) == 1:
-                mrow.appendChild(self._print(terms[0]))
+                mrow.appendChild(self.parenthesize(terms[0], PRECEDENCE['Add']))
                 return mrow
             if self.order != 'old':
                 terms = Mul._from_args(terms).as_ordered_factors()
@@ -745,7 +745,7 @@ class MathMLPresentationPrinter(MathMLPrinterBase):
                 # use minus
                 x = self.dom.createElement('mo')
                 x.appendChild(self.dom.createTextNode('-'))
-                y = self._print(-arg)
+                y = self.parenthesize(-arg, PRECEDENCE['Add'])
                 # invert expression since this is now minused
             else:
                 x = self.dom.createElement('mo')
@@ -1150,17 +1150,15 @@ class MathMLPresentationPrinter(MathMLPrinterBase):
         dim = 0  # Total diff dimension, for numerator
         for sym, num in reversed(e.variable_count):
             dim += num
-            if num >= 2:
-                x = self.dom.createElement('msup')
-                xx = self.dom.createElement('mo')
-                xx.appendChild(self.dom.createTextNode(d))
-                x.appendChild(xx)
-                x.appendChild(self._print(num))
-            else:
-                x = self.dom.createElement('mo')
-                x.appendChild(self.dom.createTextNode(d))
+            x = self.dom.createElement('mo')
+            x.appendChild(self.dom.createTextNode(d))
             m.appendChild(x)
             y = self._print(sym)
+            if num >= 2:
+                power = self.dom.createElement('msup')
+                power.appendChild(y)
+                power.appendChild(self._print(num))
+                y = power
             m.appendChild(y)
 
         mnum = self.dom.createElement('mrow')

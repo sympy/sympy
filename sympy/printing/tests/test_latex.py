@@ -60,6 +60,7 @@ from sympy.physics.quantum import Commutator, Operator
 from sympy.physics.quantum.trace import Tr
 from sympy.physics.units import meter, gibibyte, gram, microgram, second, milli, micro
 from sympy.polys.domains.integerring import ZZ
+from sympy.polys.domains.rationalfield import QQ
 from sympy.polys.fields import field
 from sympy.polys.polytools import Poly
 from sympy.polys.rings import ring
@@ -824,6 +825,10 @@ def test_latex_functions():
     assert latex(Mod(x, 7) + 1) == r'\left(x \bmod 7\right) + 1'
     assert latex(2 * Mod(x, 7)) == r'2 \left(x \bmod 7\right)'
     assert latex(Mod(7, 2 * x)**n) == r'\left(7 \bmod 2 x\right)^{n}'
+    assert latex(Mod(-x, 7)) == r'\left(- x\right) \bmod 7'
+    e = Mul(-1, UnevaluatedExpr(x + y), evaluate=False)
+    assert latex(Mod(e, 7, evaluate=False)) == (
+        r'\left(- \left(x + y\right)\right) \bmod 7')
 
     # some unknown function name should get rendered with \operatorname
     fjlkd = Function('fjlkd')
@@ -1814,6 +1819,10 @@ def test_latex_FreeGroupElement():
 
 
 def test_latex_PolyElement():
+    R, t = ring("t", QQ)
+    assert latex(R(-2)) == "-2"
+    assert latex(t - QQ(2, 3)) == "t - 2/3"
+
     Ruv, u, v = ring("u,v", ZZ)
     Rxyz, x, y, z = ring("x,y,z", Ruv)
 
@@ -2946,6 +2955,10 @@ def test_Quaternion_latex_printing():
     assert latex(q) == r"x + y i + z j + t x k"
     q = Quaternion(x, y, z, x + t)
     assert latex(q) == r"x + y i + z j + \left(t + x\right) k"
+    q = Quaternion(x, -y, z, t)
+    assert latex(q) == r"x - y i + z j + t k"
+    q = Quaternion(-x, -2*y, z, -x - t)
+    assert latex(q) == r"- x - 2 y i + z j - \left(t + x\right) k"
 
 
 def test_TensorProduct_printing():

@@ -908,10 +908,11 @@ class PrettyPrinter(Printer):
             if s is None:
                 s = pform     # First element
             else:
-                coeff = item.as_coeff_mmul()[0]
-                if S(coeff).could_extract_minus_sign():
+                coeff = S(item.as_coeff_mmul()[0])
+                # an Add coefficient is printed in parentheses, so the
+                # term does not start with a minus sign
+                if not coeff.is_Add and coeff.could_extract_minus_sign():
                     s = prettyForm(*stringPict.next(s, ' '))
-                    pform = self._print(item)
                 else:
                     s = prettyForm(*stringPict.next(s, ' + '))
                 s = prettyForm(*stringPict.next(s, pform))
@@ -2325,7 +2326,7 @@ class PrettyPrinter(Printer):
 
         return self._print_seq(u.args, None, None, delimiter,
              parenthesize=lambda set: set.is_ProductSet or set.is_Intersection
-                               or set.is_Union)
+                               or set.is_Union or set.is_Complement)
 
     def _print_ImageSet(self, ts):
         if self._use_unicode:

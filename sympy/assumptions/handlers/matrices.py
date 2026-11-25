@@ -83,7 +83,7 @@ def _(expr, assumptions):
     if Q.symmetric(expr) in conjuncts(assumptions):
         return True
 
-@SymmetricPredicate.register_many(OneMatrix, ZeroMatrix)
+@SymmetricPredicate.register_many(OneMatrix, ZeroMatrix, DiagonalMatrix, DiagMatrix)
 def _(expr, assumptions):
     return _ask_recursive(Q.square(expr), assumptions)
 
@@ -447,7 +447,7 @@ def _(expr, assumptions):
     if Q.upper_triangular(expr) in conjuncts(assumptions):
         return True
 
-@UpperTriangularPredicate.register_many(Identity, ZeroMatrix)
+@UpperTriangularPredicate.register_many(Identity, ZeroMatrix, DiagonalMatrix, DiagMatrix)
 def _(expr, assumptions):
     return True
 
@@ -505,7 +505,7 @@ def _(expr, assumptions):
     if Q.lower_triangular(expr) in conjuncts(assumptions):
         return True
 
-@LowerTriangularPredicate.register_many(Identity, ZeroMatrix)
+@LowerTriangularPredicate.register_many(Identity, ZeroMatrix, DiagonalMatrix, DiagMatrix)
 def _(expr, assumptions):
     return True
 
@@ -647,6 +647,10 @@ def _(expr, assumptions):
 def _(expr, assumptions):
     return BM_elements(Q.integer_elements, expr, assumptions)
 
+@IntegerElementsPredicate.register_many(DiagMatrix, DiagonalMatrix)
+def _(expr, assumptions):
+    return _ask_recursive(Q.integer_elements(expr.args[0]), assumptions)
+
 
 # RealElementsPredicate
 
@@ -680,6 +684,10 @@ def _(expr, assumptions):
 def _(expr, assumptions):
     return BM_elements(Q.real_elements, expr, assumptions)
 
+@RealElementsPredicate.register_many(DiagMatrix, DiagonalMatrix)
+def _(expr, assumptions):
+    return _ask_recursive(Q.real_elements(expr.args[0]), assumptions)
+
 
 # ComplexElementsPredicate
 
@@ -712,6 +720,10 @@ def _(expr, assumptions):
 @ComplexElementsPredicate.register(BlockMatrix)
 def _(expr, assumptions):
     return BM_elements(Q.complex_elements, expr, assumptions)
+
+@ComplexElementsPredicate.register_many(DiagMatrix, DiagonalMatrix)
+def _(expr, assumptions):
+    return _ask_recursive(Q.complex_elements(expr.args[0]), assumptions)
 
 @ComplexElementsPredicate.register(DFT)
 def _(expr, assumptions):

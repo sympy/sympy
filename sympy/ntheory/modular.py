@@ -31,9 +31,9 @@ def crt(m, v, symmetric=False, check=True):
     returned, else \|f\| will be less than or equal to the LCM of the
     moduli, and thus f may be negative.
 
-    If the moduli are not co-prime the correct result will be returned
-    if/when the test of the result is found to be incorrect. This result
-    will be None if there is no solution.
+    If the moduli are not co-prime, ``solve_congruence`` is used to return
+    the canonical solution modulo the LCM of the moduli (or ``None`` if no
+    solution exists).
 
     The keyword ``check`` can be set to False if it is known that the moduli
     are coprime.
@@ -69,10 +69,10 @@ def crt(m, v, symmetric=False, check=True):
     Note: the order of gf_crt's arguments is reversed relative to crt,
     and that solve_congruence takes residue, modulus pairs.
 
-    Programmer's note: rather than checking that all pairs of moduli share
-    no GCD (an O(n**2) test) and rather than factoring all moduli and seeing
-    that there is no factor in common, a check that the result gives the
-    indicated residuals is performed -- an O(n) operation.
+    Programmer's note: rather than checking all O(n**2) pairs of moduli for
+    common factors, pairwise coprimality is tested by checking ``gcd(mm, mi)``
+    against the running product ``mm`` (n GCD calls), falling back to
+    ``solve_congruence`` when any common factor is found.
 
     See Also
     ========
@@ -83,17 +83,22 @@ def crt(m, v, symmetric=False, check=True):
     if check:
         m = list(map(as_int, m))
         v = list(map(as_int, v))
-
-    result = gf_crt(v, m, ZZ)
-    mm = prod(m)
-
-    if check:
-        if not all(v % m == result % m for v, m in zip(v, m)):
+        mm = 1
+        coprime = True
+        for mi in m:
+            if gcd(mm, mi) != 1:
+                coprime = False
+                break
+            mm *= mi
+        if not coprime:
             result = solve_congruence(*list(zip(v, m)),
                     check=False, symmetric=symmetric)
             if result is None:
                 return result
-            result, mm = result
+            return int(result[0]), int(result[1])
+    else:
+        mm = prod(m)
+    result = gf_crt(v, m, ZZ)
 
     if symmetric:
         return int(symmetric_residue(result, mm)), int(mm)

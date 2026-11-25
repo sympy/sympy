@@ -440,7 +440,11 @@ def test_laplace_transform():
     assert (LT(DiracDelta(t**2), t, s, noconds=True) ==
             LaplaceTransform(DiracDelta(t**2), t, s))
     assert LT(DiracDelta(t**2 - 1), t, s) == (exp(-s)/2, -oo, True)
-    assert LT(DiracDelta(t*(1 - t)), t, s) == (1 - exp(-s), -oo, True)
+    assert LT(DiracDelta(t*(1 - t)), t, s) == (1 + exp(-s), -oo, True)
+    assert (LT(DiracDelta(t**2 - 1)*exp(-t), t, s, noconds=True) ==
+            exp(-1)*exp(-s)/2)
+    assert (LT(DiracDelta(t*(1 - t))*exp(-t), t, s, noconds=True) ==
+            1 + exp(-1)*exp(-s))
     assert (LT((DiracDelta(t) + 1)*(DiracDelta(t - 1) + 1), t, s) ==
             (LaplaceTransform(DiracDelta(t)*DiracDelta(t - 1), t, s) +
              1 + exp(-s) + 1/s, 0, True))
@@ -454,6 +458,7 @@ def test_laplace_transform():
     assert LT(Heaviside(2*t+4), t, s) == (1/s, 0, True)
     assert (LT(Heaviside(-2*t+4), t, s, simplify=True) ==
             (1/s - exp(-2*s)/s, 0, True))
+    assert LT(Heaviside(-t - 2), t, s) == (0, -oo, True)
     assert (LT(g(t)*Heaviside(t - w), t, s) ==
             (LaplaceTransform(g(t)*Heaviside(t - w), t, s), -oo, True))
     assert (
@@ -467,7 +472,7 @@ def test_laplace_transform():
         (LaplaceTransform(g(t), t, s) -
          LaplaceTransform(g(a + t), t, s)*exp(-a*s), -oo, True))
     assert (
-        LT(Heaviside(-t-a)*g(t), t, s) == (0, 0, True))
+        LT(Heaviside(-t-a)*g(t), t, s) == (0, -oo, True))
     # Fresnel functions
     assert (laplace_transform(fresnels(t), t, s, simplify=True) ==
             ((-sin(s**2/(2*pi))*fresnels(s/pi) +

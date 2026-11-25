@@ -12,6 +12,7 @@ from sympy.core import (
     S, Expr, Add, Tuple
 )
 from sympy.core.basic import Basic
+from sympy.core.sorting import default_sort_key
 from sympy.core.decorators import _sympifyit
 from sympy.core.exprtools import Factors, factor_nc, factor_terms
 from sympy.core.evalf import (
@@ -6728,12 +6729,12 @@ def _sorted_factors(factors, method):
         def key(obj):
             poly, exp = obj
             rep = poly.rep.to_list()
-            return (exp, len(rep), len(poly.gens), str(poly.domain), rep)
+            return (default_sort_key(exp), len(rep), len(poly.gens), str(poly.domain), rep)
     else:
         def key(obj):
             poly, exp = obj
             rep = poly.rep.to_list()
-            return (len(rep), len(poly.gens), exp, str(poly.domain), rep)
+            return (len(rep), len(poly.gens), default_sort_key(exp), str(poly.domain), rep)
 
     return sorted(factors, key=key)
 

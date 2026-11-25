@@ -2,6 +2,7 @@ from __future__ import annotations
 from sympy.concrete.products import (Product, product)
 from sympy.concrete.summations import Sum
 from sympy.core.function import (Derivative, Function, diff)
+from sympy.core.mul import Mul
 from sympy.core.numbers import (Rational, oo, pi)
 from sympy.core.singleton import S
 from sympy.core.symbol import (Dummy, Symbol, symbols)
@@ -11,7 +12,7 @@ from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.functions.elementary.trigonometric import (cos, sin)
 from sympy.functions.special.tensor_functions import KroneckerDelta
 from sympy.simplify.combsimp import combsimp
-from sympy.simplify.simplify import simplify
+from sympy.simplify.simplify import (product_simplify, simplify)
 from sympy.testing.pytest import raises
 
 a, k, n, m, x = symbols('a,k,n,m,x', integer=True)
@@ -302,6 +303,33 @@ def test_simplify_prod():
            Product(0, (t, a, b))
     assert _simplify(Product(v*Product(sin(t)**2 + cos(t)**2, (t, a, b)),
                              (v, c, d))) == Product(v*Product(1, (t, a, b)), (v, c, d))
+
+    # Combine three or more products sharing limits or contiguous bounds
+    e, j, p, z = symbols('e j p z', integer=True)
+    p3 = Product(k, (k, 1, p))*Product(k + 1, (k, 1, p))*Product(k + 2, (k, 1, p))
+    assert _simplify(p3) == Product(k*(k + 1)*(k + 2), (k, 1, p))
+    assert simplify(p3).subs(p, 3) == 8640
+    assert _simplify(Product(x, (t, a, b))*Product(y, (t, a, b))*
+        Product(z, (t, a, b))*Product(v, (t, a, b))) == Product(v*x*y*z, (t, a, b))
+    assert _simplify(Product(x, (t, a, b))*Product(y, (t, a, b))*
+        Product(x*y, (t, b + 1, c))) == Product(x*y, (t, a, c))
+    assert _simplify(Product(f(k), (k, a, b))*Product(f(k), (k, b + 1, c))*
+        Product(f(k), (k, c + 1, d))*Product(f(k), (k, d + 1, e))) == \
+            Product(f(k), (k, a, e))
+    p_adj = Product(k, (k, 1, 2))*Product(k, (k, 3, 4))* \
+        Product(k, (k, 5, 6))*Product(k, (k, 7, 8))
+    assert _simplify(p_adj) == Product(k, (k, 1, 8))
+    assert simplify(p_adj) == 40320
+    p_unsorted = Mul(Product(k, (k, 1, 2)), Product(k, (k, 5, 6)),
+                     Product(k, (k, 3, 4)), evaluate=False)
+    assert product_simplify(p_unsorted) == Product(k, (k, 1, 6))
+    assert _simplify(3*x*Product(k, (k, 1, n))*Product(k + 1, (k, 1, n))*
+        Product(k + 2, (k, 1, n))*Product(j, (j, 1, m))*
+        Product(j + 1, (j, 1, m))*Product(j + 2, (j, 1, m))) == \
+            3*x*Product(j*(j + 1)*(j + 2), (j, 1, m))*Product(k*(k + 1)*(k + 2), (k, 1, n))
+    assert product_simplify(Product(sin(k)**2 + cos(k)**2, (k, 1, 3))*
+        Product(k, (k, 1, 3))*Product(k + 1, (k, 1, 3)), deep=False) == \
+            Product(k*(k + 1)*(sin(k)**2 + cos(k)**2), (k, 1, 3))
 
 
 def test_change_index():

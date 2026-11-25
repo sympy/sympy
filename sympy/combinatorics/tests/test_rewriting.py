@@ -48,3 +48,11 @@ def test_rewriting():
     R.add_rule(a**-3, b)
 
     assert R.add_rule(a, a) == set()
+
+
+def test_completion_preserves_cyclic_group_equality():
+    F, x = free_group('x')
+    G = FpGroup(F, [x**4])
+    G.make_confluent()
+    assert G.equals(x**2, x**-2)
+    assert G.equals(x**4, G.identity)

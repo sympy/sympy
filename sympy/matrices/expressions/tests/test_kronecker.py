@@ -257,3 +257,80 @@ def test_KroneckerProduct_singletons():
     assert KroneckerProduct(A, P, B, Q).doit() == KroneckerProduct(A, P, B, Q)
     assert KroneckerProduct(A, P, B, A1).doit() == KroneckerProduct(A, P, B, A1)
     assert KroneckerProduct(P, A1, A, B1).doit() == KroneckerProduct(P, A, A1*B1)
+
+
+def test_KroneckerProduct_zeromatrix():
+    from sympy.matrices.expressions.special import ZeroMatrix
+    A = MatrixSymbol('A', n, m)
+    B = MatrixSymbol('B', m, k)
+    Z_sym = ZeroMatrix(n, m)
+    Z_sq = ZeroMatrix(m, m)
+
+    # Unevaluated KroneckerProduct preserves arguments but knows is_zero_matrix
+    kp1 = KroneckerProduct(A, Z_sq)
+    assert kp1.is_zero_matrix is True
+    assert kp1.is_ZeroMatrix is False
+    # Generic symbolic product: zero status is unknown (None), not False
+    assert KroneckerProduct(A, B).is_zero_matrix is None
+
+    # doit() canonicalization evaluates to ZeroMatrix
+    assert kp1.doit() == ZeroMatrix(n*m, m**2)
+    assert KroneckerProduct(Z_sym, B).doit() == ZeroMatrix(n*m, m*k)
+    assert KroneckerProduct(Z_sym, Z_sq).doit() == ZeroMatrix(n*m, m**2)
+
+    # kronecker_product helper function evaluates to ZeroMatrix
+    assert kronecker_product(A, Z_sq) == ZeroMatrix(n*m, m**2)
+
+    # Explicit concrete matrices
+    M = Matrix([[1, 2], [3, 4]])
+    Z_exp = Matrix.zeros(2, 2)
+    assert kronecker_product(M, Z_exp) == Matrix.zeros(4, 4)
+    assert KroneckerProduct(M, ZeroMatrix(2, 2)).doit() == ZeroMatrix(4, 4)
+
+
+def test_KroneckerProduct_power():
+    from sympy.matrices.expressions.special import Identity, ZeroMatrix
+    from sympy.matrices.expressions.matpow import MatPow
+
+    p = symbols('p', integer=True)
+    x = symbols('x')
+
+    A = MatrixSymbol('A', n, n)
+    B = MatrixSymbol('B', m, m)
+    C = MatrixSymbol('C', k, k)
+    K = KroneckerProduct(A, B)
+
+    # Square factor power evaluations
+    assert K**0 == Identity(n*m)
+    assert K**1 == K
+    assert K**2 == KroneckerProduct(A**2, B**2)
+    assert K**5 == KroneckerProduct(A**5, B**5)
+    assert K**(-1) == KroneckerProduct(A**(-1), B**(-1))
+    assert K**(-2) == KroneckerProduct(A**(-2), B**(-2))
+    assert K**p == KroneckerProduct(A**p, B**p)
+
+    # Multiple factors
+    assert KroneckerProduct(A, B, C)**3 == KroneckerProduct(A**3, B**3, C**3)
+
+    # Non-integer powers remain un-evaluated MatPow
+    K_pow_x = K**x
+    assert isinstance(K_pow_x, MatPow) and K_pow_x.base == K
+
+    # Square KroneckerProduct with rectangular constituent factors does not distribute
+    R1 = MatrixSymbol('R1', 2, 4)
+    R2 = MatrixSymbol('R2', 2, 1)
+    K_rect = KroneckerProduct(R1, R2)
+    assert K_rect.is_square is True
+    K_rect_sq = K_rect**2
+    assert isinstance(K_rect_sq, MatPow) and K_rect_sq.base == K_rect
+
+    # Explicit concrete matrices
+    M1 = Matrix([[1, 2], [3, 4]])
+    M2 = Matrix([[2, 0], [0, 1]])
+    K_conc = KroneckerProduct(M1, M2)
+    assert (K_conc**2).as_explicit() == (K_conc.as_explicit())**2
+    assert (K_conc**(-2)).as_explicit() == (K_conc.as_explicit())**(-2)
+
+    # Identity and ZeroMatrix combinations
+    assert KroneckerProduct(Identity(n), Identity(m))**2 == Identity(n*m)
+    assert KroneckerProduct(ZeroMatrix(n, n), A)**2 == ZeroMatrix(n**2, n**2)

@@ -131,7 +131,8 @@ def horner(f, *gens, **args):
         for coeff in F.all_coeffs():
             form = form*gen + coeff
     else:
-        F, gens = Poly(F, gen), gens[1:]
+        F, gens = Poly(F, gen), F.gens[1:]
+        args.pop('gens', None)
 
         for coeff in F.all_coeffs():
             form = form*gen + horner(coeff, *gens, **args)

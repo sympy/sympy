@@ -57,6 +57,7 @@ from sympy.external.mpmath import (
 
 
 if TYPE_CHECKING:
+    from collections.abc import Iterable
     from sympy.logic.boolalg import Boolean
     from sympy.sets.sets import Set
     from typing import Literal
@@ -947,7 +948,7 @@ def product_simplify(s, **kwargs):
                     if not used[j] and i != j:
                         tmp_prod = product_mul(p_term1, p_term2, method)
                         if isinstance(tmp_prod, Product):
-                            p_t[i] = tmp_prod
+                            p_term1 = p_t[i] = tmp_prod
                             used[j] = True
 
     result = Mul(*o_t)
@@ -966,8 +967,8 @@ def product_mul(self, other, method=0):
             if self.limits == other.limits:
                 return Product(self.function * other.function, *self.limits)
         elif method == 1:
-            if simplify(self.function - other.function) == 0:
-                if len(self.limits) == len(other.limits) == 1:
+            if len(self.limits) == len(other.limits) == 1:
+                if simplify(self.function - other.function) == 0:
                     i = self.limits[0][0]
                     x1 = self.limits[0][1]
                     y1 = self.limits[0][2]
@@ -1435,8 +1436,21 @@ def nthroot(expr, n, max_len=4, prec=15):
     return expr
 
 
-def nsimplify(expr, constants=(), tolerance=None, full=False, rational=None,
-    rational_conversion='base10'):
+@overload
+def nsimplify(expr: Expr | complex, constants: Iterable[Expr | float] = (),
+    tolerance: float | Expr | None = None, full: bool = False,
+    rational: bool | None = None,
+    rational_conversion: Literal['base10', 'exact'] = 'base10') -> Expr: ...
+@overload
+def nsimplify(expr: Basic, constants: Iterable[Expr | float] = (),
+    tolerance: float | Expr | None = None, full: bool = False,
+    rational: bool | None = None,
+    rational_conversion: Literal['base10', 'exact'] = 'base10') -> Basic: ...
+
+def nsimplify(expr: Basic | complex, constants: Iterable[Expr | float] = (),
+    tolerance: float | Expr | None = None, full: bool = False,
+    rational: bool | None = None,
+    rational_conversion: Literal['base10', 'exact'] = 'base10') -> Basic:
     """
     Find a simple representation for a number or, if there are free symbols or
     if ``rational=True``, then replace Floats with their Rational equivalents. If
@@ -1519,6 +1533,8 @@ def nsimplify(expr, constants=(), tolerance=None, full=False, rational=None,
             raise ValueError("constants must be real-valued")
         constants_dict[str(constant)] = v._to_mpmath(bprec)
 
+    if not isinstance(expr, Expr):
+        return expr
     exprval = expr.evalf(prec, chop=True)
     re, im = exprval.as_real_imag()
 

@@ -25,8 +25,10 @@ if TYPE_CHECKING:
     from typing import Any, Hashable, TypeVar, SupportsIndex
     from typing_extensions import Self
     from .numbers import Number
-    from sympy.core.basic import Tbasic
+    from sympy.core.basic import _SupportsItems, Tbasic
     from sympy.logic.boolalg import Boolean
+    from .symbol import Symbol
+    from sympy.polys.orderings import MonomKey
 
     Texpr = TypeVar("Texpr", bound='Expr')
 
@@ -78,13 +80,13 @@ class Expr(Basic, EvalfMixin):
             ...
 
         @overload # type: ignore
-        def subs(self, arg1: Mapping[Basic | complex, Expr | complex], arg2: None=None) -> Expr: ...
+        def subs(self, arg1: _SupportsItems[Basic | complex, Expr | complex], arg2: None=None, **kwargs: Any) -> Expr: ...
         @overload
         def subs(self, arg1: Iterable[tuple[Basic | complex, Expr | complex]], arg2: None=None, **kwargs: Any) -> Expr: ...
         @overload
-        def subs(self, arg1: Expr | complex, arg2: Expr | complex) -> Expr: ...
+        def subs(self, arg1: Basic | complex, arg2: Expr | complex, **kwargs: Any) -> Expr: ...
         @overload
-        def subs(self, arg1: Mapping[Basic | complex, Basic | complex], arg2: None=None, **kwargs: Any) -> Basic: ...
+        def subs(self, arg1: _SupportsItems[Basic | complex, Basic | complex], arg2: None=None, **kwargs: Any) -> Basic: ...
         @overload
         def subs(self, arg1: Iterable[tuple[Basic | complex, Basic | complex]], arg2: None=None, **kwargs: Any) -> Basic: ...
         @overload
@@ -103,6 +105,9 @@ class Expr(Basic, EvalfMixin):
             ...
 
         def simplify(self, **kwargs) -> Expr:
+            ...
+
+        def refine(self, assumption: Boolean | bool = True) -> Expr:
             ...
 
         def doit(self, **hints: Any) -> Expr:
@@ -1190,7 +1195,7 @@ class Expr(Basic, EvalfMixin):
             # CoercionFailed is caught for e.g. pi.as_poly(x, domain='QQ')
             return None
 
-    def as_ordered_terms(self, order=None, data: Literal[False] = False) -> list[Expr]:
+    def as_ordered_terms(self, order: str | Symbol | MonomKey | None = None, data: Literal[False] = False) -> list[Expr]:
         """
         Transform an expression to an ordered list of terms.
 
@@ -3626,7 +3631,7 @@ class Expr(Basic, EvalfMixin):
     ##################### DERIVATIVE, INTEGRAL, FUNCTIONAL METHODS ####################
     ###################################################################################
 
-    def diff(self, *symbols, **assumptions) -> Expr:
+    def diff(self, *symbols: Basic | int | tuple[Basic, int | Expr], **assumptions: bool) -> Expr:
         assumptions.setdefault("evaluate", True)
         return _derivative_dispatch(self, *symbols, **assumptions)
 
