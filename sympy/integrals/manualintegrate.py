@@ -3689,9 +3689,27 @@ def partial_fractions_rule(integral):
         # use ratint as the final fallback for rational integration.
         return RatintRule(integrand, symbol)
 
+    pieces = []
+    _, denom = integrand.as_numer_denom()
+    if denom.is_polynomial(symbol):
+        denom_poly = Poly(denom, symbol)
+        if denom_poly.degree() > 0:
+            lc = denom_poly.LC()
+            if lc.free_symbols:
+                for fac, _ in factor_list(lc)[1]:
+                    if fac.is_Symbol and Eq(fac, 0) is not S.false and not _if_zero_implies_zero(fac, denom):
+                        deg_integrand = integrand.subs(fac, 0)
+                        deg_substep = yield IntegralInfo(deg_integrand, symbol)
+                        if not isinstance(deg_substep, DontKnowRule):
+                            pieces.append((RewriteRule(integrand, symbol, deg_integrand, deg_substep), Eq(fac, 0)))
+
     substep = yield IntegralInfo(rewritten, symbol)
     if not isinstance(substep, DontKnowRule):
-        return RewriteRule(integrand, symbol, rewritten, substep)
+        main_step = RewriteRule(integrand, symbol, rewritten, substep)
+        if pieces:
+            pieces.append((main_step, S.true))
+            return PiecewiseRule(integrand, symbol, pieces)
+        return main_step
 
 cancel_rule = rewriter(
     # lambda integrand, symbol: integrand.is_algebraic_expr(),

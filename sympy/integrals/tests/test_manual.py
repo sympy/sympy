@@ -1471,3 +1471,15 @@ def test_manualintegrate_trig_log_hang():
     expr = log((cos(x)/2 + 1) / (1 - cos(x)/2)) / cos(x)
     res = manualintegrate(expr, x)
     assert res is not None
+
+
+def test_issue_30438():
+    expr = sqrt((a*x + b)/(c*x + d))
+    F = manualintegrate(expr, x)
+    for subs_dict in (
+        {a: 1, b: 0, c: 0, d: 1},
+        {a: 1, b: 2, c: 0, d: 4},
+        {a: 1, b: 2, c: 3, d: 4},
+        {a: 0, b: 2, c: 3, d: 4},
+    ):
+        assert (expr.subs(subs_dict) - F.subs(subs_dict).diff(x)).simplify() == 0
