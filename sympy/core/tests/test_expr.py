@@ -2487,4 +2487,3 @@ def test_issue_28926_is_constant_equals_no_typeerror():
     assert dif.equals(0) is None
     assert dif.is_constant() is False
     assert atan2(a, 2/a).equals(0) is False
-
