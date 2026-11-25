@@ -155,3 +155,21 @@ def test_hadamard_product_symbolic_and_explicit():
 
     Ex2 = Matrix([[5, 6], [7, 8]])
     assert HadamardProduct(An, Ex, Ex2).doit() == HadamardProduct(Matrix([[5, 12], [21, 32]]), An)
+
+
+def test_hadamard_power_doit():
+    # Issue #16485: HadamardPower(Matrix(...), 2).doit() stayed unevaluated
+    A = Matrix([[1, 2], [3, 4]])
+    B = Matrix([[2, 1], [0, 3]])
+    assert HadamardPower(A, 2).doit() == Matrix([[1, 4], [9, 16]])
+    assert HadamardPower(A, B).doit() == Matrix([[1, 2], [1, 64]])
+    assert HadamardPower(2, A).doit() == Matrix([[2, 4], [8, 16]])
+
+    X = MatrixSymbol('X', 2, 2)
+    assert HadamardPower(X, 1).doit() == X
+    assert HadamardPower(X, 2).doit() == HadamardPower(X, 2)
+    assert HadamardPower(A, X).doit() == HadamardPower(A, X)
+    assert HadamardPower(X, A).doit() == HadamardPower(X, A)
+
+    # deep=True recursive doit evaluation
+    assert HadamardPower(HadamardPower(A, 2), 2).doit() == Matrix([[1, 16], [81, 256]])
