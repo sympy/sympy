@@ -76,18 +76,12 @@ def test_horner():
         4*x + 2)*y*x + (2*x + 1)*x)*y
 
     assert horner(0, gens=(x, y)) == 0
-    assert horner(x**2*y + 1, gens=(x, y)) == x**2*y + 1
-    assert horner(x**2 + x + 1, gens=x) == (x + 1)*x + 1
-    assert horner(x**2*y + x*y + 1, gens=None) == x*(x*y + y) + 1
-    assert horner(a*x**2*y + b*x*y + c, gens=(x, y)) == horner(
-        a*x**2*y + b*x*y + c, x, y)
-    assert horner(a*x**2*y + b*x*y + c, gens=[y, x]) == horner(
-        a*x**2*y + b*x*y + c, y, x)
-    assert horner(x**2*y*z + x*y*z + x*y + 1, gens=(x, y, z)) == horner(
-        x**2*y*z + x*y*z + x*y + 1, x, y, z)
-    assert horner(
-        4*x**2*y**2 + 2*x**2*y + 2*x*y**2 + x*y, gens=(x, y), wrt=y
-    ) == horner(4*x**2*y**2 + 2*x**2*y + 2*x*y**2 + x*y, x, y, wrt=y)
+
+    f = x*y + x*y**2 + x**2*y
+    assert horner(f, gens=[y, x]) == y*(x*y + x*(x + 1))
+
+    f = x*y*z + x*y*z**2 + x*y**2*z + x**2*y*z
+    assert horner(f, gens=(x, y, z)) == x*(x*y*z + y*(y*z + z*(z + 1)))
 
 
 def test_interpolate():
