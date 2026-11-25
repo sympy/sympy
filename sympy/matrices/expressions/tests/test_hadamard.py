@@ -142,3 +142,16 @@ def test_shape_error():
     A = MatrixSymbol('A', 3, 2)
     raises(ShapeError, lambda: HadamardProduct(A, B))
     raises(ShapeError, lambda: HadamardPower(A, B))
+
+
+def test_hadamard_product_symbolic_and_explicit():
+    # Issue #30900 (item E2-11): HadamardProduct(An, Ex).doit() with symbolic-shape
+    # An and explicit Ex crashed with TypeError during reshape(*self.shape).
+    n, m = symbols('n, m')
+    An = MatrixSymbol('An', n, m)
+    Ex = Matrix([[1, 2], [3, 4]])
+    assert HadamardProduct(An, Ex).doit() == HadamardProduct(Ex, An).doit()
+    assert HadamardProduct(An, Ex).doit() == HadamardProduct(Ex, An)
+
+    Ex2 = Matrix([[5, 6], [7, 8]])
+    assert HadamardProduct(An, Ex, Ex2).doit() == HadamardProduct(Matrix([[5, 12], [21, 32]]), An)

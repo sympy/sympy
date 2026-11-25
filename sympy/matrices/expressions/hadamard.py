@@ -112,7 +112,7 @@ class HadamardProduct(MatrixExpr):
             remainder = [i for i in expr.args if i not in explicit]
             expl_mat = ImmutableMatrix([
                 Mul.fromiter(i) for i in zip(*explicit)
-            ]).reshape(*self.shape)
+            ]).reshape(*explicit[0].shape)
             expr = HadamardProduct(*([expl_mat] + remainder))
 
         return canonicalize(expr)
