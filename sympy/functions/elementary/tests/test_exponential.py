@@ -314,6 +314,23 @@ def test_exp_derivative_n_times_monomial():
     assert exp(x**2).diff(x, 100).subs(x, 0) == factorial(100)/factorial(50)
 
 
+def test_exp_derivative_n_times_monomial_constant():
+    a, b = symbols('a b')
+
+    for arg in [
+        x**2 + 1,
+        3*x**2 + 5,
+        a*x**3 + b,
+        1/x + 3,
+    ]:
+        expr = exp(arg)
+        assert expand(expr.diff(x, 4) -
+                      expr.diff(x).diff(x).diff(x).diff(x)) == 0
+
+    assert exp(x**2 + 1).diff(x, 100).subs(x, 0) == (
+        E*factorial(100)/factorial(50))
+
+
 @_both_exp_pow
 def test_exp_derivative_n_times_pow_compat():
     a, b = symbols('a b')

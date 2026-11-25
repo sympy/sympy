@@ -605,7 +605,9 @@ class exp(ExpBase, metaclass=ExpMeta):
                 if not slope.is_zero and self.func(arg) == self:
                     return self*slope**n
             elif n.is_Integer and not arg.has(Float):
-                coefficient, monomial = arg.as_independent(s, as_Add=False)
+                _, dependent = arg.as_independent(s, as_Add=True)
+                coefficient, monomial = dependent.as_independent(
+                    s, as_Add=False)
                 base, exponent_of_s = monomial.as_base_exp()
                 if (base == s and exponent_of_s.is_Integer
                         and self.func(arg) == self):
