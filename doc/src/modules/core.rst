@@ -55,6 +55,8 @@ expr
 ----
 .. module:: sympy.core.expr
 
+.. py:class:: MonomKey
+
 .. autoclass:: Expr
    :members:
 
