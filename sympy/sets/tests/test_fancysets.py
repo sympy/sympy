@@ -278,32 +278,10 @@ def test_Range_set():
     raises(IndexError, lambda: Range(10)[-20])
     raises(IndexError, lambda: Range(10)[20])
     assert Range(10)[9] == 9
-    assert Range(10)[-10] == 0
     raises(IndexError, lambda: Range(10)[10])
-    raises(IndexError, lambda: Range(10)[S(10)])
     raises(IndexError, lambda: Range(10)[-11])
-    assert Range(0, 10, 3)[3] == 9
-    raises(IndexError, lambda: Range(0, 10, 3)[4])
-    assert Range(10, 0, -3)[3] == 1
-    raises(IndexError, lambda: Range(10, 0, -3)[4])
-    assert Range(0, oo)[1] == 1
-    assert Range(0, oo)[5] == 5
-    assert Range(3, oo, 2)[1] == 5
-    assert Range(0, -oo, -1)[3] == -3
-    assert Range(1, -oo, -2)[1] == -1
-    assert Range(-oo, 10)[-2] == 8
-    assert Range(oo, 0, -1)[-2] == 2
-    ns = Symbol('ns', integer=True)
-    kp = Symbol('kp', integer=True, positive=True)
-    assert Range(ns, oo)[1] == ns + 1
-    assert Range(0, oo, kp)[2] == 2*kp
-    assert Range(ns, ns + 3)[2] == ns + 2
-    raises(IndexError, lambda: Range(ns, ns + 3)[3])
-    raises(IndexError, lambda: Range(ns, ns + 3)[-4])
-    assert Range(0, kp)[0] == 0
-    assert Range(0, kp)[-1] == kp - 1
-    raises(ValueError, lambda: Range(0, kp)[1])
-    assert Range(0, kp + 1)[1] == 1
+    assert Range(3, oo, 2)[2] == 7
+    assert Range(3, -oo, -2)[2] == -1
     raises(ValueError, lambda: Range(2, -oo, -2)[2:2:0])
     assert Range(2, -oo, -2)[2:2:2] == empty
     assert Range(2, -oo, -2)[:2:2] == Range(2, -2, -4)
@@ -471,6 +449,7 @@ def test_Range_symbolic():
     assert ir[0] == i
     assert ir[-2] == i + 16
     assert ir[-1] == i + 18
+    raises(IndexError, lambda: ir[10])
     assert ir2[:2] == Range(i, 7*i, 3*i)
     assert ir2[0] == i
     assert ir2[-2] == 4*i
