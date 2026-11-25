@@ -50,11 +50,12 @@ def test_as_explicit():
 
 
 def test_entry_operations():
+    from sympy.core.singleton import S
     from sympy.core.symbol import symbols
     from sympy.functions.elementary.complexes import conjugate
     from sympy.matrices.expressions import Transpose, Adjoint
     c0, c1, c2 = symbols('c0:3')
-    x = Symbol('x')
+    x, i, j = symbols('x i j')
     A = CompanionMatrix(Poly([1, c2, c1, c0], x))
     assert Transpose(A)[2, 0] == -c0
     assert Transpose(A)[0, 1] == 1
@@ -62,3 +63,10 @@ def test_entry_operations():
     assert (A * A)[0, 0] == 0
     assert (A * A)[1, 0] == 0
     assert (A * A)[2, 0] == 1
+
+    # Symbolic indices and out-of-range fallback on last column
+    assert A[i, 2].subs(i, 0) == -c0
+    assert A[i, 2].subs(i, 3) is S.Zero
+    assert A[i, 2].subs(i, -1) is S.Zero
+    assert A[i, j].subs({i: 1, j: 2}) == -c1
+    assert A[i, j].subs({i: 5, j: 2}) is S.Zero
