@@ -415,3 +415,15 @@ def test_MatrixElement_printing():
 
     F = C[0, 0].subs(C, A - B)
     assert(jscode(F) == "(A - B)[0]")
+
+
+def test_jscode_reserved_words():
+    s1, s2 = symbols('if else')
+    raises(ValueError, lambda: jscode(s1 + s2, error_on_reserved=True))
+    js_str = jscode(s1 + s2)
+    assert js_str in ('else_ + if_', 'if_ + else_')
+    for name in ('var', 'let', 'const', 'function', 'new', 'class', 'await', 'null', 'true', 'false'):
+        symbol = symbols(name)
+        assert jscode(symbol + 1) == name + '_ + 1'
+        assert jscode(symbol, reserved_word_suffix='_symbol') == name + '_symbol'
+        raises(ValueError, lambda: jscode(symbol, error_on_reserved=True))
