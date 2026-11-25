@@ -1,4 +1,5 @@
 from __future__ import annotations
+from sympy.concrete.summations import Sum
 from sympy.core.function import expand, expand_func, expand_mul
 from sympy.core.numbers import (I, Rational, oo, pi)
 from sympy.core.singleton import S
@@ -9,6 +10,7 @@ from sympy.functions.elementary.hyperbolic import cosh, acosh, sinh
 from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.functions.elementary.piecewise import Piecewise, piecewise_fold
 from sympy.functions.elementary.trigonometric import (cos, sin, sinc, asin)
+from sympy.functions.special.delta_functions import DiracDelta
 from sympy.functions.special.error_functions import (erf, erfc)
 from sympy.functions.special.gamma_functions import (gamma, polygamma)
 from sympy.functions.special.hyper import (hyper, meijerg)
@@ -802,3 +804,8 @@ def test_issue_25949():
     from sympy.core.symbol import symbols
     y = symbols("y", nonzero=True)
     assert integrate(cosh(y*(x + 1)), (x, -1, -0.25), meijerg=True) == sinh(0.75*y)/y
+
+
+def test_issue_31320():
+    f = Sum(DiracDelta(x - y), (y, 1, 3))
+    assert integrate(f/2, (x, 0, 5)).doit() == Rational(3, 2)

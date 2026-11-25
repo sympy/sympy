@@ -411,6 +411,7 @@ def _find_splitting_points(expr, x):
     {-3, 0}
     """
     p, q = [Wild(n, exclude=[x]) for n in 'pq']
+    free = expr.free_symbols
     res = set()
     stack = [expr]
     while stack:
@@ -419,7 +420,9 @@ def _find_splitting_points(expr, x):
             continue
         m = expr.match(p*x + q)
         if m and m[p] != 0:
-            res.add(-m[q]/m[p])
+            a = -m[q]/m[p]
+            if a.free_symbols <= free:
+                res.add(a)
         elif not expr.is_Atom:
             stack.extend(expr.args)
     return res
