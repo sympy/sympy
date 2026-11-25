@@ -20,7 +20,7 @@ from sympy.functions.elementary.integers import ceiling, floor
 from sympy.functions.elementary.trigonometric import sin, cos
 from sympy.logic.boolalg import And, Or
 from .sets import tfn, Set, Interval, Union, FiniteSet, ProductSet, SetKind
-from sympy.utilities.misc import filldedent
+from sympy.utilities.misc import filldedent, as_int
 
 
 class Rationals(Set, metaclass=Singleton):
@@ -928,10 +928,11 @@ class Range(Set):
                 elif start > 0:
                     raise ValueError(ooslice)
         else:
+            i = as_int(i)
             if self.start == self.stop:
                 raise IndexError('Range index out of range')
-            if not (all(i.is_integer or i.is_infinite
-                    for i in self.args) and ((self.stop - self.start)/
+            if not (all(a.is_integer or a.is_infinite
+                    for a in self.args) and ((self.stop - self.start)/
                     self.step).is_extended_positive):
                 raise ValueError('Invalid method for symbolic Range')
             if i == 0:
