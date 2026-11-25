@@ -967,7 +967,6 @@ def product_mul(self, other, method=0):
             if self.limits == other.limits:
                 return Product(self.function * other.function, *self.limits)
         elif method == 1:
-            if simplify(self.function - other.function) == 0:
             if len(self.limits) == len(other.limits) == 1:
                 if simplify(self.function - other.function) == 0:
                     i = self.limits[0][0]
