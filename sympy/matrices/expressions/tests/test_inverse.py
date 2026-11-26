@@ -102,3 +102,10 @@ def test_inverse_derivative():
 
     # Matrix-by-matrix differentiation preserves tensor array engine
     assert isinstance(Inverse(X).diff(X), PermuteDims)
+
+
+def test_inverse_invalid_exponent():
+    # Issue #30900 (item E1-16): Inverse should reject exponents other than -1
+    raises(ValueError, lambda: Inverse(C, 2))
+    raises(ValueError, lambda: Inverse(C, 0))
+    raises(ValueError, lambda: Inverse(C, S.One))
