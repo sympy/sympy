@@ -38,6 +38,8 @@ class Inverse(MatPow):
         # inverse.func(*inverse.args) == inverse
         mat = _sympify(mat)
         exp = _sympify(exp)
+        if exp != S.NegativeOne:
+            raise ValueError("exponent of Inverse must be -1")
         if not mat.is_Matrix:
             raise TypeError("mat should be a matrix")
         if mat.is_square is False:
