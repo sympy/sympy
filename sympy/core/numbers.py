@@ -340,6 +340,10 @@ class Number(AtomicExpr):
     complex numbers ``3 + 4*I``, are not instances of Number class as
     they are not atomic.
 
+    Being an instance of this class is unrelated to the ``is_number``
+    property; see :ref:`assumptions-guide-other-is-properties` for the
+    distinction.
+
     See Also
     ========
 
