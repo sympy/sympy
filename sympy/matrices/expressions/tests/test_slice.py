@@ -3,7 +3,7 @@ from sympy.matrices.expressions.slice import MatrixSlice
 from sympy.matrices.expressions import MatrixSymbol
 from sympy.core.symbol import symbols
 from sympy.abc import a, b, c, d, l
-from sympy.testing.pytest import raises, XFAIL
+from sympy.testing.pytest import raises
 from sympy.functions.elementary.integers import ceiling
 from sympy.assumptions import assuming, Q
 
@@ -172,10 +172,11 @@ def test_issue_18411():
     assert sl2.subs(A, M).as_explicit() == M[::-1, ::-1]
 
 
-@XFAIL
 def test_symmetry():
     X = MatrixSymbol('x', 10, 10)
     Y = X[:5, 5:]
+    assert Y.T == X.T[5:, :5]
+    assert Y.T.T == Y
     with assuming(Q.symmetric(X)):
         assert Y.T == X[5:, :5]
 
