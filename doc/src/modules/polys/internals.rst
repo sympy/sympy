@@ -770,10 +770,10 @@ Zippel algorithm
 .. autofunction:: vandermonde_interp
 .. autofunction:: from_newt_to_poly
 .. autofunction:: incremental_newton_interp
-.. autofunction:: skeleton_sorter
-.. autofunction:: smp_zippel_gcd
-.. autofunction:: smp_zippel_gcd_mod
-.. autofunction:: smp_zippel_interp_mod
+.. autofunction:: _skeleton_sorter
+.. autofunction:: _smp_zippel_gcd
+.. autofunction:: _smp_zippel_gcd_mod
+.. autofunction:: _smp_zippel_interp_mod
 
 
 Undocumented
