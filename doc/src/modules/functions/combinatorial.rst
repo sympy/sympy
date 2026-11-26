@@ -81,6 +81,9 @@ This module implements various combinatorial functions.
 .. autoclass:: sympy.functions.combinatorial.numbers.primeomega
    :members:
 
+.. autoclass:: sympy.functions.combinatorial.numbers.jacobsthal
+   :members:
+
 .. autoclass:: sympy.functions.combinatorial.numbers.totient
    :members:
 
