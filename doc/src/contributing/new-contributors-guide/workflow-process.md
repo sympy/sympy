@@ -112,6 +112,18 @@ git branch <your-branch-name>
 git checkout <your-branch-name>
 ```
 
+Here `git pull` updates `master` from the `origin` remote, which is the main
+SymPy repository if you set up your remotes as in [](./dev-setup.md). If you
+cloned your fork instead, `origin` is your fork and `git pull` will not fetch
+the latest changes from SymPy. Run `git remote -v` to check. In that case add
+the main repository as a remote called `upstream` and pull from it:
+
+```
+git remote add upstream https://github.com/sympy/sympy.git
+git checkout master
+git pull upstream master
+```
+
 The last two commands can also be combined into a single command:
 
 ```
@@ -523,6 +535,37 @@ https://docs.github.com/pull-requests/committing-changes-to-your-project/creatin
 
 Once your changes are ready for review, push them up to GitHub, and make a
 pull request.
+
+First push your branch to your fork. With the remotes set up as in
+[](./dev-setup.md), your fork is the remote called `github`:
+
+```
+git push github <your-branch-name>
+```
+
+Then open the pull request **on the main SymPy repository**, not on your fork.
+The pull request asks for the changes on your branch to be merged into SymPy's
+`master`, so it must be set up as follows:
+
+- **base repository**: `sympy/sympy`, **base**: `master`
+- **head repository**: `<your-github-username>/sympy`, **compare**: `<your-branch-name>`
+
+The easiest way is to open <https://github.com/sympy/sympy> shortly after
+pushing and click the **Compare & pull request** button that GitHub shows for
+your recently pushed branch. Before clicking **Create pull request**, check
+the four selectors at the top of the page: the arrow should point from your
+branch (head repository and compare) to `sympy/sympy` and `master` (base
+repository and base). If the base repository is your fork, or base and head
+are swapped, the pull request will not be seen by the SymPy maintainers.
+
+If you use the [GitHub CLI](https://cli.github.com/), you can instead run
+
+```
+gh pr create --repo sympy/sympy --base master --head <your-github-username>:<your-branch-name>
+```
+
+If you push more commits to the same branch later, they are added to the
+pull request automatically. There is no need to open a new one.
 
 It is also OK to make a pull request before the changes are completely ready,
 to get some early feedback. It is better to get feedback early before you
