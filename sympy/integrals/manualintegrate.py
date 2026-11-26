@@ -2730,6 +2730,11 @@ def sqrt_fractional_linear_rule(integral : IntegralInfo):
                 simplified_b = simplified_b.subs({a0: 0, c0: 0}) # if det = 0, c = 0 and d != 0, a must be 0
                 degenerate_step_b = yield IntegralInfo(simplified_b, x)
                 pieces.append((degenerate_step_b, (And(Eq(det, 0), Eq(c0, 0)))))
+        if c0.is_Symbol and Eq(c0, 0) is not S.false and not _if_zero_implies_zero(c0, base0_denom):
+            simplified_c = integrand.subs(c0, 0)
+            degenerate_step_c = yield IntegralInfo(simplified_c, x)
+            if not degenerate_step_c.contains_dont_know():
+                pieces.append((RewriteRule(integrand, x, simplified_c, degenerate_step_c), Eq(c0, 0)))
         step: Rule = URule(integrand, x, u, u_x, substep)
         if pieces:
             pieces.append((step, S.true))
@@ -3689,27 +3694,9 @@ def partial_fractions_rule(integral):
         # use ratint as the final fallback for rational integration.
         return RatintRule(integrand, symbol)
 
-    pieces = []
-    _, denom = integrand.as_numer_denom()
-    if denom.is_polynomial(symbol):
-        denom_poly = Poly(denom, symbol)
-        if denom_poly.degree() > 0:
-            lc = denom_poly.LC()
-            if lc.free_symbols:
-                for fac, _ in factor_list(lc)[1]:
-                    if fac.is_Symbol and Eq(fac, 0) is not S.false and not _if_zero_implies_zero(fac, denom):
-                        deg_integrand = integrand.subs(fac, 0)
-                        deg_substep = yield IntegralInfo(deg_integrand, symbol)
-                        if not isinstance(deg_substep, DontKnowRule):
-                            pieces.append((RewriteRule(integrand, symbol, deg_integrand, deg_substep), Eq(fac, 0)))
-
     substep = yield IntegralInfo(rewritten, symbol)
     if not isinstance(substep, DontKnowRule):
-        main_step = RewriteRule(integrand, symbol, rewritten, substep)
-        if pieces:
-            pieces.append((main_step, S.true))
-            return PiecewiseRule(integrand, symbol, pieces)
-        return main_step
+        return RewriteRule(integrand, symbol, rewritten, substep)
 
 cancel_rule = rewriter(
     # lambda integrand, symbol: integrand.is_algebraic_expr(),
