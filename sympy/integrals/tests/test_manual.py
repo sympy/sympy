@@ -41,6 +41,10 @@ def test_find_substitutions():
     assert find_substitutions((sec(x)**2 + tan(x) * sec(x)) / (sec(x) + tan(x)),
                               x, u) == [(sec(x) + tan(x), 1, 1/u)]
     assert (-x**2, Rational(-1, 2), exp(u)) in find_substitutions(x * exp(-x**2), x, u)
+    assert find_substitutions(1/(1 + exp(n*x)), x, u) == \
+        [(exp(n*x), 1/n, 1/(u**2 + u))]
+    assert find_substitutions(1/(1 + exp((a**2 - b**2)*x)), x, u) == \
+        [(exp(x*(a**2 - b**2)), 1/((a - b)*(a + b)), 1/(u**2 + u))]
     assert not find_substitutions(Derivative(f(x), x)**2, x, u)
 
 
@@ -66,6 +70,22 @@ def test_manualintegrate_exponentials():
     assert manualintegrate(1 / x, x) == log(x)
     assert manualintegrate(1 / (2*x + 3), x) == log(2*x + 3) / 2
     assert manualintegrate(log(x)**2 / x, x) == log(x)**3 / 3
+
+    assert manualintegrate(1/(1 + exp(n*x)), x) == Piecewise(
+        ((-log(exp(n*x) + 1) + log(exp(n*x)))/n, Ne(n, 0)),
+        (x/2, True))
+
+    expected = (log(exp(n*x) - 1) - log(exp(n*x)))/n
+    assert manualintegrate(1/(exp(n*x) - 1), x) == expected
+
+    assert manualintegrate(1/(1 + exp(b*x/(a - b))), x) == Piecewise(
+        (x/2, Eq(b, 0) & Ne(a - b, 0)),
+        ((a - b)*(-log(exp(b*x/(a - b)) + 1) + log(exp(b*x/(a - b))))/b,
+         True))
+
+    F = manualintegrate(1/(1 + exp((a**2 - b**2)*x)), x)
+    assert F.subs(a, b) == x/2
+    assert F.subs(a, -b) == x/2
 
     assert_is_integral_of(x**x*(log(x)+1), x**x)
 
