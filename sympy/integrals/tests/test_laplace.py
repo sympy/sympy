@@ -68,6 +68,9 @@ def test_laplace_transform():
     assert (LT((t+a)**(-S(3)/2), t, s) ==
             (-2*sqrt(pi)*sqrt(s)*exp(a*s)*erfc(sqrt(a)*sqrt(s)) + 2/sqrt(a),
              0, True))
+    assert (LT((2*t+3)**(-S(3)/2), t, s) ==
+            (sqrt(3)/3 - sqrt(2)*sqrt(pi)*sqrt(s)*exp(3*s/2)*
+             erfc(sqrt(6)*sqrt(s)/2)/2, 0, True))
     assert (LT(t**(S(1)/2)*(t+a)**(-1), t, s) ==
             (-pi*sqrt(a)*exp(a*s)*erfc(sqrt(a)*sqrt(s)) + sqrt(pi)*sqrt(1/s),
              0, True))

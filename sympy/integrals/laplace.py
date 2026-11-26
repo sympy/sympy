@@ -364,7 +364,7 @@ def _laplace_build_rules():
         (1/sqrt(a*t+b), sqrt(a*pi/s)*exp(b/a*s)*erfc(sqrt(b/a*s))/a,
          Abs(arg(b/a)) < pi, S.Zero, dco),  # 4.2.18
         ((a*t+b)**(-S(3)/2),
-         2*b**(-S(1)/2)-2*(pi*s/a)**(S(1)/2)*exp(b/a*s) * erfc(sqrt(b/a*s))/a,
+         (2*b**(-S(1)/2)-2*(pi*s/a)**(S(1)/2)*exp(b/a*s) * erfc(sqrt(b/a*s)))/a,
          Abs(arg(b/a)) < pi, S.Zero, dco),  # 4.2.20
         (sqrt(t)/(t+b), sqrt(pi/s)-pi*sqrt(b)*exp(b*s)*erfc(sqrt(b*s)),
          Abs(arg(b)) < pi, S.Zero, dco),  # 4.2.22
