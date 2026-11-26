@@ -1,4 +1,7 @@
 from __future__ import annotations
+
+import pytest
+
 from sympy.core.containers import Tuple
 from sympy.core.function import Function
 from sympy.core.numbers import oo, Rational
@@ -314,9 +317,11 @@ def test_find_linear_recurrence():
     assert sequence(tribonacci(n)).find_linear_recurrence(30,gfvar=x) \
     ==  ([1, 1, 1], -x/(x**3 + x**2 + x - 1))
 
-def test_RecursiveSeq():
+@pytest.mark.parametrize('start', (0, 1, -1), ids=('zero', 'positive', 'negative'))
+def test_RecursiveSeq(start):
     y = Function('y')
     n = Symbol('n')
-    fib = RecursiveSeq(y(n - 1) + y(n - 2), y(n), n, [0, 1])
-    assert fib.coeff(3) == 2
-    assert (fib + fib).coeff(3) == 4
+    fib = RecursiveSeq(y(n - 1) + y(n - 2), y(n), n, [0, 1], start=start)
+    assert fib.coeff(start + 3) == 2
+    assert (fib + fib).coeff(start + 3) == 4
+    raises(IndexError, lambda: fib.coeff(start - 1))
