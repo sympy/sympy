@@ -1389,6 +1389,22 @@ def _eval_sum_hyper(f, i, a):
     return f.subs(i, 0)*hyperexpand(h), h.convergence_statement
 
 
+def _eval_sum_hyper_inf(f, i, a, old_sum):
+    res = _eval_sum_hyper(f, i, a)
+    if res is not None:
+        r, c = res
+        if c == False:
+            if r.is_number:
+                f = f.subs(i, Dummy('i', integer=True, positive=True) + a)
+                if f.is_positive or f.is_zero:
+                    return S.Infinity
+                elif f.is_negative:
+                    return S.NegativeInfinity
+            return None
+        return Piecewise(res, (old_sum, True))
+    return None
+
+
 def eval_sum_hyper(f, i_a_b):
     i, a, b = i_a_b
 
@@ -1403,9 +1419,7 @@ def eval_sum_hyper(f, i_a_b):
 
     if b != S.Infinity:
         if a is S.NegativeInfinity:
-            res = _eval_sum_hyper(f.subs(i, -i), i, -b)
-            if res is not None:
-                return Piecewise(res, (old_sum, True))
+            return _eval_sum_hyper_inf(f.subs(i, -i), i, -b, old_sum)
         else:
             n_illegal = lambda x: sum(x.count(_) for _ in _illegal)
             had = n_illegal(f)
@@ -1435,18 +1449,7 @@ def eval_sum_hyper(f, i_a_b):
         return Piecewise((res1 + res2, cond), (old_sum, True))
 
     # Now b == oo, a != -oo
-    res = _eval_sum_hyper(f, i, a)
-    if res is not None:
-        r, c = res
-        if c == False:
-            if r.is_number:
-                f = f.subs(i, Dummy('i', integer=True, positive=True) + a)
-                if f.is_positive or f.is_zero:
-                    return S.Infinity
-                elif f.is_negative:
-                    return S.NegativeInfinity
-            return None
-        return Piecewise(res, (old_sum, True))
+    return _eval_sum_hyper_inf(f, i, a, old_sum)
 
 
 def eval_sum_residue(f, i_a_b):
