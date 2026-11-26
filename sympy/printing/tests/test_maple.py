@@ -1,6 +1,6 @@
 from __future__ import annotations
 from sympy.core import (S, pi, oo, symbols, Function, Rational, Integer,
-                        Tuple, Symbol, Eq, Ne, Le, Lt, Gt, Ge)
+                        Tuple, Symbol, Eq, Ne, Le, Lt, Gt, Ge, Derivative)
 from sympy.core import EulerGamma, GoldenRatio, Catalan, Lambda, Mul, Pow
 from sympy.functions import Piecewise, sqrt, ceiling, exp, sin, cos, sinc, lucas
 from sympy.testing.pytest import raises
@@ -368,8 +368,14 @@ def test_maple_piecewise_times_const():
 
 def test_maple_derivatives():
     f = Function('f')
+    n = symbols('n')
     assert maple_code(f(x).diff(x)) == 'diff(f(x), x)'
     assert maple_code(f(x).diff(x, 2)) == 'diff(f(x), x$2)'
+    assert maple_code(f(x, y).diff(x, y)) == 'diff(f(x, y), x, y)'
+    assert maple_code(f(x, y).diff(x, 2, y)) == 'diff(f(x, y), x$2, y)'
+    assert maple_code(f(x, y, z).diff(x, 2, y, 3, z)) == 'diff(f(x, y, z), x$2, y$3, z)'
+    assert maple_code(Derivative(f(x), (x, n))) == 'diff(f(x), x$n)'
+    assert maple_code(Derivative(f(x, y), (x, n), (y, 2))) == 'diff(f(x, y), x$n, y$2)'
 
 
 def test_automatic_rewrites():

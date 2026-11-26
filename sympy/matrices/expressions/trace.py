@@ -56,6 +56,10 @@ class Trace(Expr):
     def arg(self):
         return self.args[0]
 
+    @property
+    def kind(self):
+        return self.arg.kind.element_kind
+
     def doit(self, **hints):
         if hints.get('deep', True):
             arg = self.arg.doit(**hints)

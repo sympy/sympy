@@ -1036,7 +1036,7 @@ class Domain(Generic[Er]):
         return not self == other
 
     def map(self, seq: Iterable[int | Er]) -> list[Er]:
-        """Rersively apply ``self`` to all elements of ``seq``. """
+        """Recursively apply ``self`` to all elements of ``seq``. """
         result = []
 
         for elt in seq:
@@ -1066,7 +1066,7 @@ class Domain(Generic[Er]):
         else:
             return self.poly_ring(*symbols)
 
-    def poly_ring(self, *symbols: str | Expr, order: str | MonomialOrder = lex) -> PolynomialRing:
+    def poly_ring(self, *symbols: str | Expr, order: str | MonomialOrder = lex) -> PolynomialRing[Er]:
         """Returns a polynomial ring, i.e. `K[X]`. """
         from sympy.polys.domains.polynomialring import PolynomialRing
         return PolynomialRing(self, symbols, order)
@@ -1085,7 +1085,7 @@ class Domain(Generic[Er]):
         from sympy.polys.domains.powerseriesring import PowerSeriesRing
         return PowerSeriesRing(self, symbols[0], prec)
 
-    def frac_field(self, *symbols: str | Expr, order: str | MonomialOrder = lex) -> FractionField:
+    def frac_field(self, *symbols: str | Expr, order: str | MonomialOrder = lex) -> FractionField[Er]:
         """Returns a fraction field, i.e. `K(X)`. """
         from sympy.polys.domains.fractionfield import FractionField
         return FractionField(self, symbols, order)

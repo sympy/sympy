@@ -21,6 +21,7 @@ from sympy.utilities.misc import filldedent, func_name
 
 
 if TYPE_CHECKING:
+    from collections.abc import Callable
     from typing import ClassVar, Any, Hashable, TypeVar, Protocol
     from typing_extensions import Self
     from .assumptions import StdFactKB
@@ -1613,7 +1614,10 @@ class Basic(Printable):
         # no success
         return False
 
-    def replace(self, query, value, map=False, simultaneous=True, exact=None) -> Basic:
+    def replace(self, query: type[Basic] | Basic | Callable[[Basic], object],
+                value: type[Basic] | Basic | Callable[..., Basic | None],
+                map: bool = False, simultaneous: bool = True,
+                exact: bool | None = None) -> Basic:
         """
         Replace matching subexpressions of ``self`` with ``value``.
 
@@ -1785,7 +1789,7 @@ class Basic(Printable):
         except SympifyError:
             pass
         if isinstance(query, type):
-            _query = lambda expr: isinstance(expr, query)
+            _query: Callable[[Basic], object] = lambda expr: isinstance(expr, query)
 
             if isinstance(value, type) or callable(value):
                 _value = lambda expr, result: value(*expr.args)
