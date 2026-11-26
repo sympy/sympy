@@ -1300,6 +1300,13 @@ def test_complex():
     assert _ask_recursive(Q.complex(2**x), Q.odd(x)) is True
     assert _ask_recursive(Q.complex(x**y), Q.complex(x) & Q.complex(y)) is True
 
+    # https://github.com/sympy/sympy/issues/28150
+    # A zero base with a negative exponent gives zoo, which is not complex
+    assert ask(Q.complex(Pow(S.Zero, -1, evaluate=False))) is False
+    assert _ask_recursive(Q.complex(x**(-1)), Q.zero(x)) is False
+    assert _ask_recursive(Q.complex(x**(-2)), Q.zero(x)) is False
+    assert _ask_recursive(Q.complex(x**Rational(-1, 2)), Q.zero(x)) is False
+
     # trigonometric expressions
     assert _ask_recursive(Q.complex(sin(x))) is True
     assert _ask_recursive(Q.complex(sin(2*x + 1))) is True
@@ -2104,6 +2111,16 @@ def test_real_pow():
     assert _ask_recursive(Q.real(x**pi), Q.zero(x)) is True
     assert _ask_recursive(Q.real(x**sqrt(2)), Q.zero(x)) is True
     assert _ask_recursive(Q.real(x**Rational(1/2)), Q.zero(x)) is True
+
+    # https://github.com/sympy/sympy/issues/28150
+    # https://github.com/sympy/sympy/issues/28151
+    # A zero base with a negative exponent gives zoo, which is not real
+    assert ask(Q.real(Pow(S.Zero, -1, evaluate=False))) is False
+    assert ask(Q.real(Pow(S.Zero, S.Half, evaluate=False))) is True
+    assert _ask_recursive(Q.real(x**Rational(-1, 2)), Q.zero(x)) is False
+    assert _ask_recursive(Q.real(x**Rational(-3, 2)), Q.zero(x)) is False
+    assert _ask_recursive(Q.real(x**Rational(-1, 2)), Q.positive(x)) is True
+    assert _ask_recursive(Q.real(x**Rational(-1, 2)), Q.nonnegative(x)) is None
 
 
 @_both_exp_pow
