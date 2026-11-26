@@ -52,7 +52,11 @@ def test_dup_sqf():
     assert R.dup_sqf_list(2*x**2 + 4*x + 2) == (2, [(x + 1, 2)])
 
     R, x = ring("x", FF(2))
+    assert R.dup_sqf_list(0) == (0, [])
+    assert R.dup_sqf_list(0, all=True) == (0, [])
     assert R.dup_sqf_list(x**2 + 1) == (1, [(x + 1, 2)])
+    assert R.dup_sqf_list(x**2 + 1, all=True) == \
+        (1, [(R.one, 1), (x + 1, 2)])
 
     R, x = ring("x", FF(3))
     assert R.dup_sqf_list(x**10 + 2*x**7 + 2*x**4 + x) == \
