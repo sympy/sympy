@@ -823,3 +823,45 @@ def test_satisfiable_true_z3():
     pytest.importorskip('z3')
     from sympy.logic.inference import satisfiable
     assert satisfiable(True, algorithm='z3') == {True: True}
+
+def test_sat_backend_result_contract():
+    from sympy.assumptions.cnf import EncodedCNF
+    from sympy.abc import x, y
+    from sympy.external import import_module
+
+    backends = [
+        ("dpll2", None),
+        ("pycosat", "pycosat"),
+        ("minisat22", "pysat"),
+        ("z3", "z3"),
+    ]
+
+    for algo, pkg in backends:
+        if pkg is not None and import_module(pkg) is None:
+            continue
+
+        # 1. Trivial True, tautology, and empty EncodedCNF
+        for expr in (True, Or(x, Not(x)), EncodedCNF()):
+            assert satisfiable(expr, algorithm=algo) == {True: True}
+            assert list(satisfiable(expr, algorithm=algo, all_models=True)) == [{True: True}]
+
+        # 2. Trivial False, contradiction, and [set()] EncodedCNF
+        for expr in (False, And(x, Not(x)), EncodedCNF([set()])):
+            assert satisfiable(expr, algorithm=algo) is False
+            assert list(satisfiable(expr, algorithm=algo, all_models=True)) == [False]
+
+        # 3. Non-trivial UNSAT
+        unsat_expr = And(Or(x, y), Or(x, Not(y)), Or(Not(x), y), Or(Not(x), Not(y)))
+        assert satisfiable(unsat_expr, algorithm=algo) is False
+        assert list(satisfiable(unsat_expr, algorithm=algo, all_models=True)) == [False]
+
+        # 4. Satisfiable (single model)
+        sat_expr = And(Or(x, y), Not(x))
+        assert satisfiable(sat_expr, algorithm=algo) == {x: False, y: True}
+        assert list(satisfiable(sat_expr, algorithm=algo, all_models=True)) == [{x: False, y: True}]
+
+        # 5. Model enumeration (multiple models)
+        multi_expr = Or(x, y)
+        models = list(satisfiable(multi_expr, algorithm=algo, all_models=True))
+        assert len(models) == 3
+        assert {x: False, y: False} not in models

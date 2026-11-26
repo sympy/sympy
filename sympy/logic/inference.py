@@ -98,7 +98,22 @@ def satisfiable(expr, algorithm=None, all_models=False, minimal=False, use_lra_t
         z3 = import_module('z3')
         if z3 is None:
             algorithm = "dpll2"
+    if algorithm != "dpll":
+        from sympy.assumptions.cnf import EncodedCNF
+        if not isinstance(expr, EncodedCNF):
+            cnf = EncodedCNF()
+            cnf.add_prop(expr)
+            expr = cnf
 
+        if not expr.data:
+            if all_models:
+                return iter([{True: True}])
+            return {True: True}
+
+        if set() in expr.data:
+            if all_models:
+                return (f for f in [False])
+            return False
     if algorithm == "dpll":
         from sympy.logic.algorithms.dpll import dpll_satisfiable
         return dpll_satisfiable(expr)

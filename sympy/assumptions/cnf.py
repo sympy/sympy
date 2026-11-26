@@ -388,24 +388,54 @@ class CNF:
 
         return And(*(Or(*(remove_literal(arg) for arg in clause)) for clause in cnf.clauses))
 
-
 class EncodedCNF:
     """
     Class for encoding the CNF expression.
+
+    Invariants:
+    - ``self.data`` is a list of sets of nonzero signed integers.
+    - ``self.data == []`` represents ``True`` (empty conjunction).
+    - ``self.data == [set()]`` represents ``False`` (contains an empty clause).
+    - Tautological clauses (containing ``x`` and ``-x``, or ``S.true``) are omitted.
     """
     def __init__(self, data=None, encoding=None):
-        if not data and not encoding:
-            data = []
-            encoding = {}
-        self.data = data
-        self.encoding = encoding
-        self._symbols = list(encoding.keys())
+        self.data = []
+        self.encoding = dict(encoding) if encoding is not None else {}
+        self._symbols = list(self.encoding.keys())
+        if data:
+            for clause in data:
+                self.add_clause(clause)
+
+    def add_clause(self, clause):
+        """Normalize and add a single clause of nonzero signed integer literals."""
+        if self.data == [set()]:
+            return
+
+        normalized = set()
+        for lit in clause:
+            if not isinstance(lit, int) or isinstance(lit, bool) or lit == 0:
+                raise ValueError(f"Invalid CNF literal {lit!r}: expected nonzero int.")
+            if -lit in normalized:
+                # Tautology (x or ~x) is always satisfied; drop the clause
+                return
+            normalized.add(lit)
+
+        if not normalized:
+            # An empty clause makes the entire CNF unsatisfiable (False)
+            self.data = [set()]
+            return
+
+        if normalized not in self.data:
+            self.data.append(normalized)
 
     def from_cnf(self, cnf):
         self._symbols = list(cnf.all_predicates())
+        # Filter out Boolean constants if present in all_predicates()
+        self._symbols = [s for s in self._symbols if s not in (S.true, S.false)]
         n = len(self._symbols)
         self.encoding = dict(zip(self._symbols, range(1, n + 1)))
-        self.data = [self.encode(clause) for clause in cnf.clauses]
+        self.data = []
+        self.add_from_cnf(cnf)
 
     @property
     def symbols(self):
@@ -416,16 +446,19 @@ class EncodedCNF:
         return range(1, len(self._symbols) + 1)
 
     def copy(self):
-        new_data = [set(clause) for clause in self.data]
-        return EncodedCNF(new_data, dict(self.encoding))
+        new_cnf = EncodedCNF(encoding=self.encoding)
+        new_cnf.data = [set(clause) for clause in self.data]
+        return new_cnf
 
     def add_prop(self, prop):
         cnf = CNF.from_prop(prop)
         self.add_from_cnf(cnf)
 
     def add_from_cnf(self, cnf):
-        clauses = [self.encode(clause) for clause in cnf.clauses]
-        self.data += clauses
+        for clause in cnf.clauses:
+            encoded = self.encode(clause)
+            if encoded is not None:
+                self.add_clause(encoded)
 
     def new_auxiliary_variable(self):
         token = object()
@@ -447,4 +480,18 @@ class EncodedCNF:
             return value
 
     def encode(self, clause):
-        return {self.encode_arg(arg) if not arg.lit == S.false else 0 for arg in clause}
+        """
+        Encode a ``CNF`` clause into a set of nonzero integers.
+        Returns ``None`` if the clause is tautologically True (e.g., contains ``S.true``).
+        Returns ``set()`` if the clause is unsatisfiable (e.g., all literals are ``S.false``).
+        """
+        encoded = set()
+        for arg in clause:
+            if arg.lit == S.true:
+                # (True | ...) is always True -> omit clause
+                return None
+            if arg.lit == S.false:
+                # (False | x) is equivalent to (x); skip False literal
+                continue
+            encoded.add(self.encode_arg(arg))
+        return encoded

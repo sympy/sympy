@@ -10,11 +10,16 @@ def pycosat_satisfiable(expr, all_models=False):
         expr = exprs
 
     # Return UNSAT when False (encoded as 0) or empty clause is present in the CNF
-    if {0} in expr.data or set() in expr.data:
+    if not expr.data:
         if all_models:
-            return (f for f in [False])
-        return False
+            return iter([{True: True}])
+        return {True: True}
 
+    if set() in expr.data:
+        if all_models:
+            return iter([])
+        return False
+    
     if not all_models:
         r = pycosat.solve(expr.data)
         result = (r != "UNSAT")

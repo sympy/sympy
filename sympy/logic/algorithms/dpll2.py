@@ -54,11 +54,14 @@ def dpll_satisfiable(expr, all_models=False, use_lra_theory=False):
         expr = exprs
 
     # Return UNSAT when False (encoded as 0) or empty clause is present in the CNF
-    if {0} in expr.data or set() in expr.data:
+    if not expr.data:
         if all_models:
-            return (f for f in [False])
+            return iter([{True: True}])
+        return {True: True}
+    if set() in expr.data:
+        if all_models:
+            return iter([])
         return False
-
     if use_lra_theory:
         lra, immediate_conflicts = LRASolver.from_encoded_cnf(expr)
     else:

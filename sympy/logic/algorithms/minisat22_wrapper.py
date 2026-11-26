@@ -11,9 +11,14 @@ def minisat22_satisfiable(expr, all_models=False, minimal=False):
     from pysat.solvers import Minisat22
 
     # Return UNSAT when False (encoded as 0) or empty clause is present in the CNF
-    if {0} in expr.data or set() in expr.data:
+    if not expr.data:
         if all_models:
-            return (f for f in [False])
+            return iter([{True: True}])
+        return {True: True}
+
+    if set() in expr.data:
+        if all_models:
+            return iter([])
         return False
 
     r = Minisat22(expr.data)

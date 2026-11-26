@@ -11,7 +11,7 @@ if TYPE_CHECKING:
 
 class ReasoningEngine:
     def __init__(self, factbase: EncodedCNF) -> None:
-        if {0} in factbase.data:
+        if set() in factbase.data:
             raise ValueError("Inconsistent assumptions")
 
         self._factbase = factbase
@@ -82,7 +82,7 @@ def _encode_with_selector(prop: CNF, encoded: EncodedCNF,
     clauses must hold; when False, the added literal satisfies every clause,
     deactivating them.
     """
-    encoded.data.extend(
-        (encoded.encode(clause) - {0}) | {-activation_literal}
-        for clause in prop.clauses
-    )
+    for clause in prop.clauses:
+        encoded_clause = encoded.encode(clause)
+        if encoded_clause is not None:
+            encoded.add_clause(encoded_clause | {-activation_literal})
