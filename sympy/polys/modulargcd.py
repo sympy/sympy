@@ -597,6 +597,7 @@ def modgcd_bivariate(f, g):
     badprimes = gamma1 * gamma2
     m = 1
     p = 1
+    a_start = 0
 
     while True:
         p = nextprime(p)
@@ -635,7 +636,8 @@ def modgcd_bivariate(f, g):
         hpeval = []
         unlucky = False
 
-        for a in range(p):
+        for a_idx in range(p):
+            a = (a_idx + a_start) % p
             deltaa = delta.evaluate(0, a)
             if not deltaa % p:
                 continue
@@ -702,6 +704,9 @@ def modgcd_bivariate(f, g):
             cff = fquo.mul_ground(cf // ch)
             cfg = gquo.mul_ground(cg // ch)
             return h, cff, cfg
+
+        m = 1
+        a_start += 1
 
 
 def _modgcd_multivariate_p(f, g, p, degbound, contbound):

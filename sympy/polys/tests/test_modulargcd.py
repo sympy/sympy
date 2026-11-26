@@ -324,3 +324,13 @@ def test_modgcd_func_field():
     f, g = x + 1, x - 1
 
     assert _func_field_modgcd_m(f, g, minpoly) == R.one
+
+
+def test_modgcd_bivariate_issue_30559():
+    R, x, y = ring('x, y', ZZ)
+    f = -(x**3)*y + x**3 - 2*x**2*y**3 + 2*x**2*y**2
+    g = x**3*y**3 - x**3*y**2
+    h, cff, cfg = modgcd_bivariate(f, g)
+    assert h == x**2*y - x**2
+    assert cff == -x - 2*y**2
+    assert cfg == x*y**2
