@@ -4,7 +4,7 @@ from sympy.core.expr import unchanged
 from sympy.matrices import Matrix
 from sympy.core.singleton import S
 from sympy.matrices.expressions import \
-    MatMul, BlockDiagMatrix, Determinant, Inverse, MatPow
+    MatMul, BlockDiagMatrix, Determinant, Inverse, MatPow, Trace
 from sympy.matrices.expressions.matexpr import MatrixSymbol
 from sympy.matrices.expressions.special import ZeroMatrix, OneMatrix, Identity
 from sympy.matrices.expressions.permutation import \
@@ -73,6 +73,19 @@ def test_PermutationMatrix_determinant():
     assert Determinant(P).doit() == -1
     P = PermutationMatrix(Permutation([2, 0, 1]))
     assert Determinant(P).doit() == 1
+
+
+def test_PermutationMatrix_trace():
+    P = PermutationMatrix(Permutation([0, 1, 2]))
+    assert Trace(P).doit() == 3
+    P = PermutationMatrix(Permutation([0, 2, 1]))
+    assert Trace(P).doit() == 1
+    P = PermutationMatrix(Permutation([2, 0, 1]))
+    assert Trace(P).doit() == 0
+    P = PermutationMatrix(Permutation(0, 1, size=4))
+    assert Trace(P).doit() == 2
+    P = PermutationMatrix(Permutation(size=0))
+    assert Trace(P).doit() == 0
 
 
 def test_PermutationMatrix_inverse():
@@ -181,3 +194,27 @@ def test_MatrixPermute_doit():
     assert expr.as_explicit() == expr.doit().as_explicit()
     expr = MatrixPermute(MatrixPermute(A, p1, 1), p2, 1)
     assert expr.as_explicit() == expr.doit().as_explicit()
+
+
+def test_MatrixPermute_determinant():
+    from sympy.matrices.exceptions import NonSquareMatrixError
+    p_even = Permutation([0, 1, 2])
+    p_odd = Permutation([0, 2, 1])
+    A = MatrixSymbol('A', 3, 3)
+
+    assert Determinant(MatrixPermute(A, p_even, 0)).doit() == Determinant(A)
+    assert Determinant(MatrixPermute(A, p_even, 1)).doit() == Determinant(A)
+    assert Determinant(MatrixPermute(A, p_odd, 0)).doit() == -Determinant(A)
+    assert Determinant(MatrixPermute(A, p_odd, 1)).doit() == -Determinant(A)
+
+    M = Matrix([[1, 2, 3], [4, 5, 6], [7, 8, 10]])
+    det_M = M.det()
+    assert Determinant(MatrixPermute(M, p_even, 0)).doit() == det_M
+    assert Determinant(MatrixPermute(M, p_even, 1)).doit() == det_M
+    assert Determinant(MatrixPermute(M, p_odd, 0)).doit() == -det_M
+    assert Determinant(MatrixPermute(M, p_odd, 1)).doit() == -det_M
+
+    B = MatrixSymbol('B', 2, 3)
+    MP_nonsquare = MatrixPermute(B, Permutation(0, 1), 0)
+    assert MP_nonsquare._eval_determinant() is None
+    raises(NonSquareMatrixError, lambda: Determinant(MP_nonsquare))

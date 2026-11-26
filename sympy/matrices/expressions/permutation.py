@@ -101,7 +101,12 @@ class PermutationMatrix(MatrixExpr):
             return S.One
         elif sign == -1:
             return S.NegativeOne
-        raise NotImplementedError
+        return None
+
+    def _eval_trace(self):
+        from sympy.core.numbers import Integer
+        perm = self.args[0]
+        return Integer(perm.size - len(perm.support()))
 
     def _eval_rewrite_as_BlockDiagMatrix(self, *args, **kwargs):
         from sympy.combinatorics.permutations import Permutation
@@ -304,3 +309,15 @@ class MatrixPermute(MatrixExpr):
             return MatMul(PermutationMatrix(perm), mat)
         elif axis == 1:
             return MatMul(mat, PermutationMatrix(perm**-1))
+
+    def _eval_determinant(self):
+        from .determinant import det
+        if not self.is_square:
+            return None
+        mat, perm, _ = self.args
+        sign = perm.signature()
+        if sign == 1:
+            return det(mat)
+        elif sign == -1:
+            return -det(mat)
+        return None
