@@ -66,6 +66,7 @@ from sympy.utilities import filldedent
 from sympy.utilities.iterables import (numbered_symbols, has_dups,
                                        is_sequence)
 from sympy.calculus.util import periodicity, continuous_domain, function_range
+from sympy.assumptions import ask
 
 
 from types import GeneratorType
@@ -1552,7 +1553,7 @@ def _invert_modular(modterm, rhs, n, symbol):
         # Check for complex arguments
         return modterm, rhs
 
-    if abs(rhs) >= abs(m):
+    if ask(abs(rhs) >= abs(m)):
         # if rhs has value greater than value of m.
         return symbol, S.EmptySet
 
