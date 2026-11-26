@@ -135,8 +135,8 @@ def test_integrate():
     assert intIM.shape == IM.shape
     assert all(intIM[i, j] == (1 + j + 3*i)*x for i, j in
                 product(range(3), range(3)))
-    
-    
+
+
 def test_immutable_matrix_hash():
     cases = [
         [],
