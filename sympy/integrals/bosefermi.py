@@ -19,6 +19,8 @@ the eta function), which is not a Meijer G function.  Therefore
 Meijer G machinery.
 """
 
+from __future__ import annotations
+
 from sympy.core import Add, S, Wild
 from sympy.functions.elementary.exponential import exp, log
 from sympy.functions.special.gamma_functions import gamma
