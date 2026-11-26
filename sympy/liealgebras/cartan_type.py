@@ -111,14 +111,17 @@ class Standard_Cartan(Atom):
         """
         positive_root_coeffs = _positive_root_coefficients(self.cartan_matrix())
         positive_roots: list[Matrix] = []
+        simple_roots = [self.simple_root(i + 1) for i in range(self.rank())]
+
         for coeffs in positive_root_coeffs:
             weighted_roots: list[Matrix] = [
-                coeff * self.simple_root(i + 1) for i, coeff in enumerate(coeffs) if coeff != 0
+                coeff * simple_roots[i] for i, coeff in enumerate(coeffs) if coeff != 0
                 ]
             root = weighted_roots.pop()
             while weighted_roots:
                 root += weighted_roots.pop()
             positive_roots.append(root)
+
         return positive_roots
 
     @final
@@ -227,18 +230,24 @@ class Standard_Cartan(Atom):
         )
 
 def _positive_root_coefficients(cartan_matrix: Matrix) -> list[tuple[int, ...]]:
-    n = cartan_matrix.rows
+    rows = cartan_matrix.rows
+    cols = cartan_matrix.cols
 
-    simple_roots = [tuple(1 if i == j else 0 for j in range(n)) for i in range(n)]
+    simple_roots = [tuple(1 if i == j else 0 for j in range(rows)) for i in range(rows)]
     positive_roots = set(simple_roots)
     queue = list(simple_roots)
 
+    mat_int: list[list[int]] = [
+        [int(cartan_matrix[r, c]) for c in range(cols)] # type: ignore
+        for r in range(rows)
+    ]
+
     while queue:
-        beta = queue.pop(0)
+        beta = queue.pop()
 
         # reflect beta
-        for i in range(n):
-            pairing = int(sum(beta[j] * cartan_matrix[j, i] for j in range(n)))
+        for i in range(rows):
+            pairing = int(sum(beta[j] * mat_int[j][i] for j in range(rows)))
 
             new_beta_list = list(beta)
             new_beta_list[i] -= pairing
