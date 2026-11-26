@@ -45,7 +45,7 @@ def _match_denominator(den, x):
 
     exp_term = const_term = None
     for term in terms:
-        if term.as_coeff_Mul()[1].func is exp:
+        if isinstance(term.as_coeff_Mul()[1], exp):
             if exp_term is not None:
                 return None
             exp_term = term
