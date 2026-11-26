@@ -1,4 +1,5 @@
 """Tests for the Bose-Einstein and Fermi-Dirac definite integrals."""
+from __future__ import annotations
 
 from sympy import (
     S, exp, gamma, integrate, Integral, log, oo, pi, simplify, symbols, zeta)
