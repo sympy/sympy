@@ -928,7 +928,8 @@ class Range(Set):
                 elif start > 0:
                     raise ValueError(ooslice)
         else:
-            i = as_int(i)
+            if not (isinstance(i, Expr) and i.is_integer):
+                i = as_int(i)
             if self.start == self.stop:
                 raise IndexError('Range index out of range')
             if not (all(a.is_integer or a.is_infinite
