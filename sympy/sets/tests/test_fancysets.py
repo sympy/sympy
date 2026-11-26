@@ -277,6 +277,11 @@ def test_Range_set():
     raises(ValueError, lambda: Range(-oo, 1)[2])
     raises(IndexError, lambda: Range(10)[-20])
     raises(IndexError, lambda: Range(10)[20])
+    assert Range(10)[9] == 9
+    raises(IndexError, lambda: Range(10)[10])
+    raises(IndexError, lambda: Range(10)[-11])
+    assert Range(3, oo, 2)[2] == 7
+    assert Range(3, -oo, -2)[2] == -1
     raises(ValueError, lambda: Range(2, -oo, -2)[2:2:0])
     assert Range(2, -oo, -2)[2:2:2] == empty
     assert Range(2, -oo, -2)[:2:2] == Range(2, -2, -4)
@@ -444,6 +449,7 @@ def test_Range_symbolic():
     assert ir[0] == i
     assert ir[-2] == i + 16
     assert ir[-1] == i + 18
+    raises(IndexError, lambda: ir[10])
     assert ir2[:2] == Range(i, 7*i, 3*i)
     assert ir2[0] == i
     assert ir2[-2] == 4*i
@@ -868,7 +874,8 @@ def test_ImageSet_contains():
     assert q.subs(y, I*i).intersection(S.Integers) is S.Integers
     q = imageset(x, x + I*y/x, S.Integers).intersection(S.Reals)
     assert q.subs(y, 0) is S.Integers
-    assert q.subs(y, I*i*x).intersection(S.Integers) is S.Integers
+    # bypass protection of x by using xreplace
+    assert q.xreplace({y: I*i*x}).intersection(S.Integers) is S.Integers
     z = cos(1)**2 + sin(1)**2 - 1
     q = imageset(x, x + I*z, S.Integers).intersection(S.Reals)
     assert q is not S.EmptySet

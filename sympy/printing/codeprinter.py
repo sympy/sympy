@@ -3,7 +3,7 @@ from typing import Any
 
 from functools import wraps
 
-from sympy.core import Add, Mul, Pow, S, sympify, Float
+from sympy.core import Add, Mul, sympify, Float
 from sympy.core.basic import Basic
 from sympy.core.expr import Expr, UnevaluatedExpr
 from sympy.core.function import Lambda
@@ -54,6 +54,7 @@ class CodePrinter(StrPrinter):
     """
     The base class for code-printing subclasses.
     """
+    _mod_precedence = PRECEDENCE["Mul"]
 
     _operators = {
         'and': '&&',
@@ -549,7 +550,7 @@ class CodePrinter(StrPrinter):
 
     def _print_Mul(self, expr):
 
-        prec = precedence(expr)
+        prec = PRECEDENCE["Mul"]
 
         c, e = expr.as_coeff_Mul()
         if c < 0:
@@ -558,30 +559,12 @@ class CodePrinter(StrPrinter):
         else:
             sign = ""
 
-        a = []  # items in the numerator
-        b = []  # items that are in the denominator (if any)
-
-        pow_paren = []  # Will collect all pow with more than one base element and exp = -1
-
         if self.order not in ('old', 'none'):
             args = expr.as_ordered_factors()
         else:
-            # use make_args in case expr was something like -x -> x
             args = Mul.make_args(expr)
 
-        # Gather args for numerator/denominator
-        for item in args:
-            if item.is_commutative and item.is_Pow and item.exp.is_Rational and item.exp.is_negative:
-                if item.exp != -1:
-                    b.append(Pow(item.base, -item.exp, evaluate=False))
-                else:
-                    if len(item.args[0].args) != 1 and isinstance(item.base, Mul):   # To avoid situations like #14160
-                        pow_paren.append(item)
-                    b.append(Pow(item.base, -item.exp))
-            else:
-                a.append(item)
-
-        a = a or [S.One]
+        a, b, _ = self._mul_factors(args)
 
         if len(a) == 1 and sign == "-":
             # Unary minus does not have a SymPy class, and hence there's no
@@ -593,14 +576,10 @@ class CodePrinter(StrPrinter):
             a_str = [self.parenthesize(x, prec) for x in a]
         b_str = [self.parenthesize(x, prec) for x in b]
 
-        # To parenthesize Pow with exp = -1 and having more than one Symbol
-        for item in pow_paren:
-            if item.base in b:
-                b_str[b.index(item.base)] = "(%s)" % b_str[b.index(item.base)]
-
         if not b:
             return sign + '*'.join(a_str)
         elif len(b) == 1:
+            b_str[0] = self._parenthesize_mul_denominator(b[0], b_str[0])
             return sign + '*'.join(a_str) + "/" + b_str[0]
         else:
             return sign + '*'.join(a_str) + "/(%s)" % '*'.join(b_str)

@@ -16,7 +16,7 @@ _kw = {
     'and', 'as', 'assert', 'break', 'class', 'continue', 'def', 'del', 'elif',
     'else', 'except', 'finally', 'for', 'from', 'global', 'if', 'import', 'in',
     'is', 'lambda', 'not', 'or', 'pass', 'raise', 'return', 'try', 'while',
-    'with', 'yield', 'None', 'False', 'nonlocal', 'True'
+    'with', 'yield', 'None', 'False', 'nonlocal', 'True', 'async', 'await'
 }
 
 _known_functions = {
@@ -214,7 +214,13 @@ class AbstractPythonCodePrinter(CodePrinter):
 
     def _print_Mod(self, expr):
         PREC = precedence(expr)
-        return ('{} % {}'.format(*(self.parenthesize(x, PREC) for x in expr.args)))
+        num, den = expr.args
+        if den.is_Pow and den.exp.is_negative:
+            den_prec = PRECEDENCE["Pow"]
+        else:
+            den_prec = PREC
+        return '{} % {}'.format(self.parenthesize(num, PREC),
+                                self.parenthesize(den, den_prec))
 
     def _print_Piecewise(self, expr):
         result = []
@@ -253,6 +259,10 @@ class AbstractPythonCodePrinter(CodePrinter):
             return '({lhs} {op} {rhs})'.format(op=expr.rel_op, lhs=lhs, rhs=rhs)
         return super()._print_Relational(expr)
 
+    def _print_Not(self, expr):
+        PREC = precedence(expr)
+        return self._operators['not'] + ' ' + self.parenthesize(expr.args[0], PREC)
+
     def _print_ITE(self, expr):
         from sympy.functions.elementary.piecewise import Piecewise
         return self._print(expr.rewrite(Piecewise))
@@ -270,6 +280,9 @@ class AbstractPythonCodePrinter(CodePrinter):
 
     def _print_ImaginaryUnit(self, expr):
         return '1j'
+
+    def _print_conjugate(self, expr):
+        return '({}).conjugate()'.format(self._print(expr.args[0]))
 
     def _print_KroneckerDelta(self, expr):
         a, b = expr.args
@@ -633,10 +646,6 @@ class PythonCodePrinter(AbstractPythonCodePrinter):
         return '(0.0 if {e} == 0 else {f}(1, {e}))'.format(
             f=self._module_format('math.copysign'), e=self._print(e.args[0]))
 
-    def _print_Not(self, expr):
-        PREC = precedence(expr)
-        return self._operators['not'] + ' ' + self.parenthesize(expr.args[0], PREC)
-
     def _print_IndexedBase(self, expr):
         return expr.name
 
@@ -655,7 +664,7 @@ class PythonCodePrinter(AbstractPythonCodePrinter):
         return self._print_Rational(expr)
 
     def _print_frac(self, expr):
-        return self._print_Mod(Mod(expr.args[0], 1))
+        return '({})'.format(self._print_Mod(Mod(expr.args[0], 1)))
 
     def _print_Symbol(self, expr):
 
@@ -752,9 +761,6 @@ class CmathPrinter(PythonCodePrinter):
 
     def _print_Pow(self, expr, rational=False):
         return self._hprint_Pow(expr, rational=rational, sqrt='cmath.sqrt')
-
-    def _print_Float(self, e):
-        return '{func}({val})'.format(func=self._module_format('cmath.mpf'), val=self._print(e))
 
     def _print_known_func(self, expr):
         func_name = expr.func.__name__
@@ -876,7 +882,7 @@ class MpmathPrinter(PythonCodePrinter):
             self._print(e.args[1]))
 
     def _print_log2(self, e):
-        return '{0}({1})/{0}(2)'.format(
+        return '({0}({1})/{0}(2))'.format(
             self._module_format('mpmath.log'), self._print(e.args[0]))
 
     def _print_log1p(self, e):

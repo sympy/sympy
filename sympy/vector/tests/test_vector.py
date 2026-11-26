@@ -24,6 +24,11 @@ i, j, k = C.base_vectors()
 a, b, c = symbols('a b c')
 
 
+def test_vector_constructor():
+    raises(TypeError, lambda: Vector())
+    raises(TypeError, lambda: Vector(a, b, c))
+
+
 def test_cross():
     v1 = C.x * i + C.z * C.z * j
     v2 = C.x * i + C.y * j + C.z * k

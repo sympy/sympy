@@ -3,7 +3,7 @@ Boolean algebra module for SymPy
 """
 
 from __future__ import annotations
-from typing import TYPE_CHECKING, overload, Any
+from typing import TYPE_CHECKING, overload, Any, Literal
 
 from collections import defaultdict
 from itertools import chain, combinations, product, permutations
@@ -24,8 +24,9 @@ from sympy.utilities.iterables import sift, ibin
 from sympy.utilities.misc import filldedent
 
 if TYPE_CHECKING:
-    from collections.abc import Iterable
-    from sympy.core.basic import _SupportsItems
+    from collections.abc import Iterable, Mapping
+    from sympy.core.basic import _SupportsItems, Tbasic
+    from sympy.core.expr import Expr, Texpr
 
 
 def as_Boolean(e):
@@ -83,12 +84,15 @@ class Boolean(Basic):
         def __new__(cls, *args: Basic | complex) -> Boolean:
             ...
 
+        def __bool__(self) -> bool:
+            ...
+
         @overload # type: ignore
         def subs(self, arg1: _SupportsItems[Basic | complex, Boolean | complex]
                  | Iterable[tuple[Basic | complex, Boolean | complex]],
                  arg2: None=None, **kwargs: Any) -> Boolean: ...
         @overload
-        def subs(self, arg1: Boolean | complex, arg2: Boolean | complex) -> Boolean: ...
+        def subs(self, arg1: Basic | complex, arg2: Boolean | complex, **kwargs: Any) -> Boolean: ...
         @overload
         def subs(self, arg1: _SupportsItems[Basic | complex, Basic | complex]
                  | Iterable[tuple[Basic | complex, Basic | complex]],
@@ -98,6 +102,16 @@ class Boolean(Basic):
 
         def subs(self, arg1: _SupportsItems[Basic | complex, Basic | complex] | Basic | complex, # type: ignore
                  arg2: Basic | complex | None = None, **kwargs: Any) -> Basic:
+            ...
+
+        @overload
+        def xreplace(self, rule: Mapping[Texpr, Expr]) -> Boolean: ...
+        @overload
+        def xreplace(self, rule: Mapping[Tbasic, Boolean]) -> Boolean: ...
+        @overload
+        def xreplace(self, rule: Mapping[Tbasic, Basic]) -> Basic: ...
+
+        def xreplace(self, rule: Mapping[Tbasic, Basic]) -> Basic:
             ...
 
         def simplify(self, **kwargs) -> Boolean:
@@ -369,7 +383,7 @@ class BooleanTrue(BooleanAtom, metaclass=Singleton):
     sympy.logic.boolalg.BooleanFalse
 
     """
-    def __bool__(self):
+    def __bool__(self) -> Literal[True]:
         return True
 
     def __hash__(self):
@@ -444,7 +458,7 @@ class BooleanFalse(BooleanAtom, metaclass=Singleton):
     sympy.logic.boolalg.BooleanTrue
 
     """
-    def __bool__(self):
+    def __bool__(self) -> Literal[False]:
         return False
 
     def __hash__(self):
@@ -670,7 +684,7 @@ class And(LatticeOp, BooleanFunction):
 
     def _eval_simplify(self, **kwargs):
         from sympy.core.relational import Equality, Relational
-        from sympy.solvers.solveset import linear_coeffs
+        from sympy.core.exprtools import linear_coeffs
         # standard simplify
         rv = super()._eval_simplify(**kwargs)
         if not isinstance(rv, And):
@@ -3533,13 +3547,13 @@ def simplify_univariate(expr):
             if b is S.Infinity:
                 c = true
             else:
-                if c.subs(x, b) == True:
+                if expr.subs(x, b) == True:
                     c = (x <= b)
                 else:
                     c = (x < b)
         else:
-            incl_a = (c.subs(x, a) == True)
-            incl_b = (c.subs(x, b) == True)
+            incl_a = (expr.subs(x, a) == True)
+            incl_b = (expr.subs(x, b) == True)
             if incl_a and incl_b:
                 if b.is_infinite:
                     c = (x >= a)

@@ -18,6 +18,42 @@ def test_crt():
     assert crt([656, 350], [811, 133], symmetric=True) == (-56917, 114800)
 
 
+def test_crt_noncoprime_and_edge_cases():
+    # Issue #31177: non-coprime moduli where gf_crt satisfies all congruences
+    assert crt([3, 6], [0, 3]) == (3, 6)
+    assert crt([3, 6], [0, 3], symmetric=True) == (3, 6)
+    assert crt([2, 4, 3], [0, 0, 1]) == (4, 12)
+    assert crt([2, 4, 3], [0, 0, 1], symmetric=True) == (4, 12)
+    assert crt([4, 6], [0, 0]) == (0, 12)
+    assert crt([4, 6], [0, 0], symmetric=True) == (0, 12)
+
+    # Consistent and inconsistent non-coprime systems
+    assert crt([3, 6], [2, 5]) == (5, 6)
+    assert crt([3, 6], [2, 5], symmetric=True) == (-1, 6)
+    assert crt([12, 6, 17], [3, 4, 2]) is None
+
+    # Negative and non-canonical residues with non-coprime moduli
+    assert crt([3, 6], [-3, -3]) == (3, 6)
+    assert crt([3, 6], [9, 15]) == (3, 6)
+
+    # Duplicate moduli (consistent and inconsistent)
+    assert crt([5, 5], [0, 0]) == (0, 5)
+    assert crt([5, 5], [2, 2]) == (2, 5)
+    assert crt([5, 5], [2, 3]) is None
+
+    # Empty, singleton, and large pairwise-coprime inputs
+    assert crt([], []) == (0, 1)
+    assert crt([5], [2]) == (2, 5)
+    assert crt([5], [4], symmetric=True) == (-1, 5)
+    m1, m2 = 10**20 + 7, 10**20 + 9
+    r, mod = crt([m1, m2], [12345, 67890])
+    assert mod == m1 * m2
+    assert r % m1 == 12345 and r % m2 == 67890
+
+    # Existing check=False semantics remain unchanged
+    assert crt([12, 6, 17], [3, 4, 2], check=False) == (954, 1224)
+
+
 def test_modular():
     assert solve_congruence(*list(zip([3, 4, 2], [12, 35, 17]))) == (1719, 7140)
     assert solve_congruence(*list(zip([3, 4, 2], [12, 6, 17]))) is None

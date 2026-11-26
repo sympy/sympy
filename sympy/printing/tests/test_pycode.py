@@ -2,14 +2,14 @@ from __future__ import annotations
 from sympy import Not
 from sympy.codegen import Assignment
 from sympy.codegen.ast import none
-from sympy.codegen.cfunctions import expm1, log1p
+from sympy.codegen.cfunctions import expm1, log1p, log2
 from sympy.codegen.scipy_nodes import cosm1
 from sympy.codegen.matrix_nodes import MatrixSolve
 from sympy.core import Expr, Mod, symbols, Eq, Le, Gt, zoo, oo, Rational, Pow
 from sympy.core.function import Derivative
 from sympy.core.numbers import pi
 from sympy.core.singleton import S
-from sympy.functions import acos, KroneckerDelta, Piecewise, sign, sqrt, Min, Max, cot, acsch, asec, coth, sec, log, sin, cos, tan, asin, atan, sinh, cosh, tanh, asinh, acosh, atanh
+from sympy.functions import acos, conjugate, KroneckerDelta, Piecewise, sign, sqrt, Min, Max, cot, acsch, asec, coth, sec, log, sin, cos, tan, asin, atan, sinh, cosh, tanh, asinh, acosh, atanh
 from sympy.functions.elementary.trigonometric import atan2
 from sympy.logic import And, Or
 from sympy.matrices import SparseMatrix, MatrixSymbol, Identity
@@ -24,6 +24,7 @@ from sympy.tensor import IndexedBase, Idx
 from sympy.tensor.array.expressions.array_expressions import ArraySymbol, ArrayDiagonal, ArrayContraction, ZeroArray, OneArray
 from sympy.external import import_module
 from sympy.functions.special.gamma_functions import loggamma
+from sympy.utilities.lambdify import lambdify
 
 
 
@@ -40,6 +41,11 @@ def test_PythonCodePrinter():
     assert prntr.doprint(Mod(x, 2)) == 'x % 2'
     assert prntr.doprint(-Mod(x, y)) == '-(x % y)'
     assert prntr.doprint(Mod(-x, y)) == '(-x) % y'
+    assert prntr.doprint(-2*Mod(x, 3)) == '-2*(x % 3)'
+    assert prntr.doprint(-x*Mod(x, y)) == '-x*(x % y)'
+    assert prntr.doprint(-x/Mod(x, 3)) == '-x/(x % 3)'
+    assert prntr.doprint(Mod(x, 1/y)) == 'x % (1/y)'
+    assert prntr.doprint(Mod(1, 1/x)) == '1 % (1/x)'
     assert prntr.doprint(And(x, y)) == 'x and y'
     assert prntr.doprint(Or(x, y)) == 'x or y'
     assert prntr.doprint(1/(x+y)) == '1/(x + y)'
@@ -55,7 +61,7 @@ def test_PythonCodePrinter():
 
     assert prntr.doprint(acos(x)) == 'math.acos(x)'
     assert prntr.doprint(cot(x)) == '(1/math.tan(x))'
-    assert prntr.doprint(coth(x)) == '((math.exp(x) + math.exp(-x))/(math.exp(x) - math.exp(-x)))'
+    assert prntr.doprint(coth(x)) == '((math.exp(-x) + math.exp(x))/(math.exp(x) - math.exp(-x)))'
     assert prntr.doprint(asec(x)) == '(math.acos(1/x))'
     assert prntr.doprint(acsch(x)) == '(math.log(math.sqrt(1 + x**(-2)) + 1/x))'
 
@@ -74,6 +80,7 @@ def test_PythonCodePrinter():
 
     assert prntr.doprint(Min(x, y)) == "min(x, y)"
     assert prntr.doprint(Max(x, y)) == "max(x, y)"
+    assert prntr.doprint(conjugate(x)) == "(x).conjugate()"
 
 def test_PythonCodePrinter_print_Indexed():
     from sympy import Symbol
@@ -107,6 +114,8 @@ def test_PythonCodePrinter_standard():
 
 def test_CmathPrinter():
     p = CmathPrinter()
+    assert p.doprint(S(2.5)) == '2.50000000000000'
+    assert p.doprint(S(-2.5)) == '-2.50000000000000'
 
     assert p.doprint(sqrt(x)) == 'cmath.sqrt(x)'
     assert p.doprint(log(x)) == 'cmath.log(x)'
@@ -141,6 +150,8 @@ def test_MpmathPrinter():
     assert p.doprint(S.Infinity) == 'mpmath.inf'
     assert p.doprint(S.NegativeInfinity) == 'mpmath.ninf'
     assert p.doprint(loggamma(x)) == 'mpmath.loggamma(x)'
+    assert p.doprint(log2(x)**2) == '(mpmath.log(x)/mpmath.log(2))**2'
+    assert p.doprint(1/log2(x)) == '1/(mpmath.log(x)/mpmath.log(2))'
 
 
 def test_NumPyPrinter():
@@ -174,6 +185,7 @@ def test_NumPyPrinter():
     assert p.doprint(HadamardProduct(A, B)) == "numpy.multiply(A, B)"
     assert p.doprint(KroneckerProduct(A, B)) == "numpy.kron(A, B)"
     assert p.doprint(Adjoint(A)) == "numpy.conjugate(numpy.transpose(A))"
+    assert p.doprint(conjugate(x)) == "numpy.conjugate(x)"
     assert p.doprint(DiagonalOf(A)) == "numpy.reshape(numpy.diag(A), (-1, 1))"
     assert p.doprint(DiagMatrix(C)) == "numpy.diagflat(C)"
     assert p.doprint(DiagonalMatrix(D)) == "numpy.multiply(D, numpy.eye(3, 4))"
@@ -239,6 +251,17 @@ def test_pycode_reserved_words():
     assert py_str in ('else_ + if_', 'if_ + else_')
 
 
+def test_pycode_async_keywords():
+    for name in ['async', 'await']:
+        symbol = symbols(name)
+        code = pycode(symbol + 1)
+        assert code == name + '_ + 1'
+        assert eval(code, {name + '_': 2}) == 3
+        assert pycode(symbol, reserved_word_suffix='_symbol') == name + '_symbol'
+        raises(ValueError, lambda: pycode(symbol, error_on_reserved=True))
+        assert NumPyPrinter().doprint(symbol + 1) == code
+
+
 def test_issue_20762():
     # Make sure pycode removes curly braces from subscripted variables
     a_b, b, a_11 = symbols('a_{b} b a_{11}')
@@ -286,7 +309,11 @@ def test_frac():
     assert prntr.doprint(expr) == 'numpy.mod(x, 1)'
 
     prntr = PythonCodePrinter()
-    assert prntr.doprint(expr) == 'x % 1'
+    assert prntr.doprint(expr) == '(x % 1)'
+    assert prntr.doprint(2*expr) == '2*(x % 1)'
+    assert prntr.doprint(-expr) == '-(x % 1)'
+    assert prntr.doprint(expr**2) == '(x % 1)**2'
+    assert prntr.doprint(x*expr) == 'x*(x % 1)'
 
     prntr = MpmathPrinter()
     assert prntr.doprint(expr) == 'mpmath.frac(x)'
@@ -547,3 +574,29 @@ def test_piecewise_assign_to():
 
     assert pyprint == 'x = ((a + b) if c else (0))'
     assert symprint == 'x = ((a + b) if c else (0))'
+
+
+def test_sympyprinter_not():
+    prntr = SymPyPrinter()
+    pyprntr = PythonCodePrinter()
+
+    assert prntr.doprint(Not(x)) == 'not x'
+    assert prntr.doprint(Not(x, evaluate=False)) == 'not x'
+    assert prntr.doprint(Not(And(x, y))) == 'not (x and y)'
+    assert prntr.doprint(Not(And(x, y), evaluate=False)) == 'not (x and y)'
+    assert prntr.doprint(Not(Or(x, y))) == 'not (x or y)'
+    assert prntr.doprint(Not(Or(x, y), evaluate=False)) == 'not (x or y)'
+    assert prntr.doprint(Not(Not(x, evaluate=False), evaluate=False)) == 'not (not x)'
+    assert prntr.doprint(Not(x > y)) == '(x <= y)'
+    assert prntr.doprint(Not(x > y, evaluate=False)) == 'not ((x > y))'
+
+    assert prntr.doprint(Not(x)) == pyprntr.doprint(Not(x))
+    assert prntr.doprint(Not(And(x, y))) == pyprntr.doprint(Not(And(x, y)))
+
+    f = lambdify(x, Not(x), 'sympy')
+    assert f(True) is False
+    assert f(False) is True
+
+    f2 = lambdify((x, y), Not(And(x, y)), 'sympy')
+    assert f2(True, True) is False
+    assert f2(True, False) is True

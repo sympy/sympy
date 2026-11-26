@@ -101,7 +101,7 @@ you're wrong.  Let's see what really happens
 Changing ``x`` to ``2`` had no effect on ``expr``.  This is because ``x = 2``
 changes the Python variable ``x`` to ``2``, but has no effect on the SymPy
 Symbol ``x``, which was what we used in creating ``expr``.  When we created
-``expr``, the Python variable ``x`` was a Symbol.  After we created, it, we
+``expr``, the Python variable ``x`` was a Symbol.  After we created it, we
 changed the Python variable ``x`` to 2.  But ``expr`` remains the same.  This
 behavior is not unique to SymPy.  All Python programs work this way: if a
 variable is changed, expressions that were already created with that variable

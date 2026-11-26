@@ -241,7 +241,7 @@ def _RealPredicate_number(expr, assumptions):
     # let as_real_imag() work first since the expression may
     # be simpler to evaluate
     i = expr.as_real_imag()[1].evalf(2)
-    if i._prec != 1:
+    if getattr(i, '_prec', 1) != 1:
         return not i
     # allow None to be returned if we couldn't show for sure
     # that i was 0
@@ -477,6 +477,8 @@ def _(expr, assumptions):
 
 @HermitianPredicate.register(MatrixBase) # type:ignore
 def _(mat, assumptions):
+    if not mat.is_square:
+        return False
     rows, cols = mat.shape
     ret_val = True
     for i in range(rows):
@@ -534,7 +536,7 @@ def _Imaginary_number(expr, assumptions):
     # let as_real_imag() work first since the expression may
     # be simpler to evaluate
     r = expr.as_real_imag()[0].evalf(2)
-    if r._prec != 1:
+    if getattr(r, '_prec', 1) != 1:
         return not r
     # allow None to be returned if we couldn't show for sure
     # that r was 0
@@ -748,6 +750,8 @@ def _(expr, assumptions):
 
 @AntihermitianPredicate.register(MatrixBase) # type:ignore
 def _(mat, assumptions):
+    if not mat.is_square:
+        return False
     rows, cols = mat.shape
     ret_val = True
     for i in range(rows):

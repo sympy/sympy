@@ -70,7 +70,7 @@ is not able to find solutions then a ``ConditionSet`` is returned.
     >>> solveset(exp(x), x)     # No solution exists
     ∅
     >>> solveset(cos(x) - x, x)  # Not able to find solution
-    {x │ x ∊ ℂ ∧ (-x + cos(x) = 0)}
+    {x │ x ∊ ℂ ∧ (cos(x) - x = 0)}
 
 
 In the ``solveset`` module, the linear system of equations is solved using ``linsolve``.
@@ -96,7 +96,7 @@ is an example of the syntax of ``linsolve``.
 
 .. note::
 
-   The order of solution corresponds the order of given symbols.
+   The order of solution corresponds to the order of given symbols.
 
 
 In the ``solveset`` module, the non linear system of equations is solved using
@@ -125,7 +125,7 @@ In the ``solveset`` module, the non linear system of equations is solved using
 
     >>> system = [exp(x) - sin(y), 1/y - 3]
     >>> nonlinsolve(system, vars)
-    {({2⋅n⋅ⅈ⋅π + log(sin(1/3)) │ n ∊ ℤ}, 1/3)}
+    {({log(sin(1/3)) + 2⋅n⋅ⅈ⋅π │ n ∊ ℤ}, 1/3)}
 
 4. When the system is positive-dimensional system (has infinitely many solutions):
 
@@ -139,7 +139,7 @@ In the ``solveset`` module, the non linear system of equations is solved using
 
 .. note::
 
-   1. The order of solution corresponds the order of given symbols.
+   1. The order of solution corresponds to the order of given symbols.
 
    2. Currently ``nonlinsolve`` doesn't return solution in form of ``LambertW`` (if there
    is solution present in the form of ``LambertW``).

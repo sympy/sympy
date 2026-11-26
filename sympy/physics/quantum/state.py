@@ -4,7 +4,7 @@ from __future__ import annotations
 from sympy.core.cache import cacheit
 from sympy.core.containers import Tuple
 from sympy.core.expr import Expr
-from sympy.core.function import Function
+from sympy.core.function import DefinedFunction
 from sympy.core.numbers import oo, equal_valued
 from sympy.core.singleton import S
 from sympy.functions.elementary.complexes import conjugate
@@ -361,7 +361,7 @@ class Ket(State, KetBase):
         >>> k0 = Ket(0)
         >>> k1 = Ket(1)
         >>> 2*I*k0 - 4*k1
-        2*I*|0> - 4*|1>
+        -4*|1> + 2*I*|0>
 
     Compound labels are passed as tuples::
 
@@ -424,7 +424,7 @@ class Bra(State, BraBase):
         >>> n, m = symbols('n,m')
         >>> b = Bra(n,m) - I*Bra(m,n)
         >>> b
-        -I*<mn| + <nm|
+        <nm| - I*<mn|
 
     Symbols in a Bra can be substituted using ``.subs``::
 
@@ -654,7 +654,7 @@ class OrthogonalBra(OrthogonalState, BraBase):
         return OrthogonalKet
 
 
-class Wavefunction(Function):
+class Wavefunction(DefinedFunction):
     """Class for representations in continuous bases
 
     This class takes an expression and coordinates in its constructor. It can

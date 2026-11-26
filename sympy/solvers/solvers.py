@@ -21,6 +21,7 @@ from sympy.core.function import (expand_mul, expand_log, Derivative,
                                  Function, expand_power_exp, _mexpand, expand,
                                  expand_func)
 from sympy.core.logic import fuzzy_not, fuzzy_and
+from sympy.core.evalf import pure_complex
 from sympy.core.numbers import Float, Rational, _illegal
 from sympy.core.intfunc import integer_log, ilcm
 from sympy.core.power import Pow
@@ -349,7 +350,12 @@ def checksol(f, symbol, sol=None, **flags):
         if val.is_Rational:
             return val == 0
         if numerical and val.is_number:
-            return (abs(val.n(18).n(12, chop=True)) < 1e-9) is S.true
+            if val is S.NaN:
+                return False
+            val_n = val.n(18).n(12, chop=True)
+            if val_n is S.NaN:
+                return False
+            return (abs(val_n) < 1e-9) is S.true
 
     if flags.get('warn', False):
         warnings.warn("\n\tWarning: could not verify solution %s." % sol)
@@ -373,6 +379,16 @@ def _reject_by_denominator(d, sol, **flags):
         return True
     val = d.subs(sol)
     return bool(val.is_number and val.is_finite is False)
+
+
+def _reject_by_factor_finiteness(factor, sol, **flags):
+    """Return True if a candidate solution makes another factor affirmatively non-finite."""
+    if factor.is_polynomial(*sol):
+        return False
+    val = factor.subs(sol)
+    if val.is_finite is False or val in _illegal:
+        return True
+    return False
 
 
 def solve(f, *symbols, **flags):
@@ -476,7 +492,7 @@ def solve(f, *symbols, **flags):
         >>> solve(e, [a, b])
         {a: 2, b: 3}
         >>> solve([e], [a, b])
-        {a: -b/x + (2*x + 3)/x}
+        {a: (2*x + 3)/x - b/x}
 
     When there is no solution for any given symbol which will make all
     expressions zero, the empty list is returned (or an empty set in
@@ -505,7 +521,7 @@ def solve(f, *symbols, **flags):
         >>> solve(f(x).diff(x) - f(x) - x, f(x).diff(x))
         [x + f(x)]
         >>> solve(f(x).diff(x) - f(x) - x, f(x))
-        [-x + Derivative(f(x), x)]
+        [Derivative(f(x), x) - x]
         >>> solve(x + exp(x)**2, exp(x), set=True)
         ([exp(x)], {(-sqrt(-x),), (sqrt(-x),)})
 
@@ -530,14 +546,14 @@ def solve(f, *symbols, **flags):
         >>> solve(x + 2 + sqrt(3), x + 2)
         [-sqrt(3)]
         >>> solve((x + 2 + sqrt(3), x + 4 + y), y, x + 2)
-        {y: -2 + sqrt(3), x + 2: -sqrt(3)}
+        {y: sqrt(3) - 2, x + 2: -sqrt(3)}
 
         * Nothing heroic is done in this implicit solving so you may end up
           with a symbol still in the solution:
 
             >>> eqs = (x*y + 3*y + sqrt(3), x + 4 + y)
             >>> solve(eqs, y, x + 2)
-            {y: -sqrt(3)/(x + 3), x + 2: -2*x/(x + 3) - 6/(x + 3) + sqrt(3)/(x + 3)}
+            {y: -sqrt(3)/(x + 3), x + 2: -2*x/(x + 3) + sqrt(3)/(x + 3) - 6/(x + 3)}
             >>> solve(eqs, y*x, x)
             {x: -y - 4, x*y: -3*y - sqrt(3)}
 
@@ -550,7 +566,7 @@ def solve(f, *symbols, **flags):
             >>> solve(x - y + 1, 1)  # /!\ -1 is targeted, too
             [x/(y - 1)]
             >>> [_.subs(z, -1) for _ in solve((x - y + 1).subs(-1, z), 1)]
-            [-x + y]
+            [y - x]
 
     **Additional Examples**
 
@@ -660,12 +676,7 @@ def solve(f, *symbols, **flags):
     instances will be returned instead:
 
         >>> solve(x**3 - x + 1)
-        [-1/((-1/2 - sqrt(3)*I/2)*(3*sqrt(69)/2 + 27/2)**(1/3)) -
-        (-1/2 - sqrt(3)*I/2)*(3*sqrt(69)/2 + 27/2)**(1/3)/3,
-        -(-1/2 + sqrt(3)*I/2)*(3*sqrt(69)/2 + 27/2)**(1/3)/3 -
-        1/((-1/2 + sqrt(3)*I/2)*(3*sqrt(69)/2 + 27/2)**(1/3)),
-        -(3*sqrt(69)/2 + 27/2)**(1/3)/3 -
-        1/(3*sqrt(69)/2 + 27/2)**(1/3)]
+        [-1/((3*sqrt(69)/2 + 27/2)**(1/3)*(-1/2 - sqrt(3)*I/2)) - (3*sqrt(69)/2 + 27/2)**(1/3)*(-1/2 - sqrt(3)*I/2)/3, -1/((3*sqrt(69)/2 + 27/2)**(1/3)*(-1/2 + sqrt(3)*I/2)) - (3*sqrt(69)/2 + 27/2)**(1/3)*(-1/2 + sqrt(3)*I/2)/3, -1/(3*sqrt(69)/2 + 27/2)**(1/3) - (3*sqrt(69)/2 + 27/2)**(1/3)/3]
         >>> solve(x**3 - x + 1, cubics=False)
         [CRootOf(x**3 - x + 1, 0),
          CRootOf(x**3 - x + 1, 1),
@@ -683,7 +694,7 @@ def solve(f, *symbols, **flags):
 
         >>> eq = x**3 + 3*x**2 + x - 1
         >>> solve(eq, cubics=False)
-        [-1, -1 + sqrt(2), -sqrt(2) - 1]
+        [-1, -sqrt(2) - 1, sqrt(2) - 1]
 
     **Solving Equations Involving Radicals**
 
@@ -1411,13 +1422,14 @@ def _solve(f, *symbols, **flags):
             result.update(set(soln))
         result = [{symbol: v} for v in result]
         if check:
-            # all solutions have been checked but now we must
-            # check that the solutions do not set denominators
-            # in any factor to zero or to a non-finite value
+            # all solutions have been checked for each individual factor, but
+            # now we must check that the candidate solution does not set any
+            # denominator to zero or to a non-finite value, and that it does
+            # not make other factors non-finite (e.g. 0 * zoo = nan).
             dens = flags.get('_denominators', _simple_dens(f, symbols))
             result = [s for s in result if
-                not any(_reject_by_denominator(den, s, **flags) for den in
-                        dens)]
+                not any(_reject_by_denominator(den, s, **flags) for den in dens)
+                and not any(_reject_by_factor_finiteness(m, s, **flags) for m in f.args)]
         # set flags for quick exit at end; solutions for each
         # factor were already checked and simplified
         check = False
@@ -1451,10 +1463,8 @@ def _solve(f, *symbols, **flags):
                     continue
                 try:
                     v = cond.subs(symbol, candidate)
-                    _eval_simplify = getattr(v, '_eval_simplify', None)
-                    if _eval_simplify is not None:
-                        # unconditionally take the simplification of v
-                        v = _eval_simplify(ratio=2, measure=lambda x: 1)
+                    if hasattr(v, '_eval_simplify'):
+                        v = simplify(v, ratio=2)
                 except TypeError:
                     # incompatible type with condition(s)
                     continue
@@ -1780,11 +1790,17 @@ def _remove_duplicate_solutions(solutions: list[dict[Expr, Expr]]
 
 def _solve_system(exprs, symbols, **flags):
     """return ``(linear, solution)`` where ``linear`` is True
-    if the system was linear, else False; ``solution``
+    if the system was linear or if no symbols were provided, else False; ``solution``
     is a list of dictionaries giving solutions for the symbols
     """
     if not exprs:
         return False, []
+
+    if not symbols:
+        u = Dummy()
+        if all(e.is_zero or checksol(u, u, e) for e in exprs):
+            return True, [{}]
+        return True, []
 
     if flags.pop('_split', True):
         # Split the system into connected components
@@ -2679,7 +2695,7 @@ def _tsolve(eq, sym, **flags):
     >>> from sympy.abc import x
 
     >>> list(ordered(tsolve(3**(2*x + 5) - 4, x)))
-    [-5/2 + log(2)/log(3), (-5*log(3)/2 + log(2) + I*pi)/log(3)]
+    [log(2)/log(3) - 5/2, (I*pi + log(2) - 5*log(3)/2)/log(3)]
 
     >>> tsolve(log(x) + 2*x, x)
     [LambertW(2)/2]
@@ -2696,7 +2712,22 @@ def _tsolve(eq, sym, **flags):
 
     if lhs == sym:
         return [rhs]
+    if not lhs.has_free(sym) and not rhs.has_free(sym):
+        # Inversion eliminated the symbol; an identity may still have
+        # domain restrictions, so it cannot be treated as a list of roots.
+        # e.g. _invert(2**x*4**(-x/2)-1,x) -> (1,1)
+        return None
     try:
+        if lhs.is_Mul and rhs.is_positive is True and not rhs.has_free(sym):
+            factors = [p.as_base_exp() for p in lhs.args]
+            powers = [(b, e) for (b, e) in factors if e.has_free(sym)]
+            if (len(powers) > 1 and
+                all(b.is_positive is True and
+                    not b.has_free(sym) and
+                    e.is_extended_real is True
+                    for b, e in factors)):
+                lhs = Add(*(e*log(b) for b, e in factors))
+                rhs = log(rhs)
         if lhs.is_Add:
             # it's time to try factoring; powdenest is used
             # to try get powers in standard form for better factoring
@@ -3078,6 +3109,14 @@ def nsolve(*args, dict=False, **kwargs):
         f = Matrix(f).T
     if iterable(x0):
         x0 = list(x0)
+
+    for i in (x0 if isinstance(x0, list) else [x0]):
+        if isinstance(i, Expr) and pure_complex(i, or_real=True) is None:
+            raise TypeError(
+                "You must evaluate numeric initial guesses; "
+                "e.g. use pi.n() instead of pi"
+            )
+
     if not isinstance(f, Matrix):
         # assume it's a SymPy expression
         if isinstance(f, Eq):
@@ -3157,7 +3196,7 @@ def _invert(eq, *symbols, **kwargs):
     >>> invert(sqrt(x) + y, y)
     (-sqrt(x), y)
     >>> invert(sqrt(x) + y, x, y)
-    (0, sqrt(x) + y)
+    (0, y + sqrt(x))
 
     If there is more than one symbol in a power's base and the exponent
     is not an Integer, then the principal root will be used for the

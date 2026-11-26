@@ -12,7 +12,7 @@ def strip_file(filename, write, report):
     # from unnecessarily re-writing files with no changes.
 
     # newline="" keeps current line endings
-    with open(filename, newline="") as f:
+    with open(filename, encoding="utf-8", newline="") as f:
         lines = f.readlines()
     hit = False
     cr = False
@@ -52,7 +52,7 @@ def strip_file(filename, write, report):
 
     if write and hit:
         # newline="" leaves line endings unchanged
-        with open(filename, "w", newline="") as f:
+        with open(filename, "w", encoding="utf-8", newline="") as f:
             f.writelines(lines)
 
 

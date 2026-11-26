@@ -100,10 +100,12 @@ def test_hadamard_product_with_explicit_mat():
 def test_hadamard_power():
     m, n, p = symbols('m, n, p', integer=True)
     A = MatrixSymbol('A', m, n)
+    B = MatrixSymbol('B', m, n)
 
     assert hadamard_power(A, 1) == A
     assert isinstance(hadamard_power(A, 2), HadamardPower)
     assert hadamard_power(A, n).T == hadamard_power(A.T, n)
+    assert HadamardPower(A, B).T == HadamardPower(A.T, B.T)
     assert hadamard_power(A, n)[0, 0] == A[0, 0]**n
     assert hadamard_power(m, n) == m**n
     raises(ValueError, lambda: hadamard_power(A, A))
@@ -130,7 +132,7 @@ def test_hadamard_power_explicit():
         Matrix([
             [A[0, 0]**B[0, 0], A[0, 1]**B[0, 1]],
             [A[1, 0]**B[1, 0], A[1, 1]**B[1, 1]]])
-
+    assert HadamardPower(A, B).T.as_explicit() == (HadamardPower(A, B).as_explicit()).T
 
 def test_shape_error():
     A = MatrixSymbol('A', 2, 3)
@@ -140,3 +142,34 @@ def test_shape_error():
     A = MatrixSymbol('A', 3, 2)
     raises(ShapeError, lambda: HadamardProduct(A, B))
     raises(ShapeError, lambda: HadamardPower(A, B))
+
+
+def test_hadamard_product_symbolic_and_explicit():
+    # Issue #30900 (item E2-11): HadamardProduct(An, Ex).doit() with symbolic-shape
+    # An and explicit Ex crashed with TypeError during reshape(*self.shape).
+    n, m = symbols('n, m')
+    An = MatrixSymbol('An', n, m)
+    Ex = Matrix([[1, 2], [3, 4]])
+    assert HadamardProduct(An, Ex).doit() == HadamardProduct(Ex, An).doit()
+    assert HadamardProduct(An, Ex).doit() == HadamardProduct(Ex, An)
+
+    Ex2 = Matrix([[5, 6], [7, 8]])
+    assert HadamardProduct(An, Ex, Ex2).doit() == HadamardProduct(Matrix([[5, 12], [21, 32]]), An)
+
+
+def test_hadamard_power_doit():
+    # Issue #16485: HadamardPower(Matrix(...), 2).doit() stayed unevaluated
+    A = Matrix([[1, 2], [3, 4]])
+    B = Matrix([[2, 1], [0, 3]])
+    assert HadamardPower(A, 2).doit() == Matrix([[1, 4], [9, 16]])
+    assert HadamardPower(A, B).doit() == Matrix([[1, 2], [1, 64]])
+    assert HadamardPower(2, A).doit() == Matrix([[2, 4], [8, 16]])
+
+    X = MatrixSymbol('X', 2, 2)
+    assert HadamardPower(X, 1).doit() == X
+    assert HadamardPower(X, 2).doit() == HadamardPower(X, 2)
+    assert HadamardPower(A, X).doit() == HadamardPower(A, X)
+    assert HadamardPower(X, A).doit() == HadamardPower(X, A)
+
+    # deep=True recursive doit evaluation
+    assert HadamardPower(HadamardPower(A, 2), 2).doit() == Matrix([[1, 16], [81, 256]])

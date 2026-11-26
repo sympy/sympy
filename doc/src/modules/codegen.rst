@@ -80,10 +80,10 @@ Here is another simple example of printing a C version of a SymPy expression::
     ────────
       2⋅r
     >>> ccode(expr)
-    -1.0/2.0*Z*pow(e, 2)*k/r
+    -(1.0/2.0)*Z*pow(e, 2)*k/r
     >>> from sympy.codegen.ast import real, float80
     >>> ccode(expr, assign_to="E", type_aliases={real: float80})
-    E = -1.0L/2.0L*Z*powl(e, 2)*k/r;
+    E = -(1.0L/2.0L)*Z*powl(e, 2)*k/r;
 
 To generate code with some math functions provided by e.g. the C99 standard we need
 to import functions from :mod:`sympy.codegen.cfunctions`::
@@ -155,15 +155,15 @@ An example of Mathematica code printer::
     >>> expr = x_(n*T) * sin((t - n*T) / T)
     >>> expr = expr / ((-T*n + t) / T)
     >>> expr
-                ⎛-T⋅n + t⎞
-    T⋅x(T⋅n)⋅sin⎜────────⎟
-                ⎝   T    ⎠
-    ──────────────────────
-           -T⋅n + t
+                ⎛t - T⋅n⎞
+    T⋅x(T⋅n)⋅sin⎜───────⎟
+                ⎝   T   ⎠
+    ─────────────────────
+           t - T⋅n
 
     >>> expr = summation(expr, (n, -1, 1))
     >>> mathematica_code(expr)
-    T*(x[-T]*Sin[(T + t)/T]/(T + t) + x[T]*Sin[(-T + t)/T]/(-T + t) + x[0]*Sin[t/T]/t)
+    T*(x[-T]*Sin[(T + t)/T]/(T + t) + x[T]*Sin[(t - T)/T]/(t - T) + x[0]*Sin[t/T]/t)
 
 We can go through a common expression in different languages we support and see
 how it works::

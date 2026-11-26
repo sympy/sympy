@@ -173,6 +173,13 @@ def to_NNF(expr, composite_map=None):
     if composite_map is None:
         composite_map = {}
 
+    if expr == S.true:
+        # Use sympy.assumptions.cnf.AND() because an empty conjunction represents True
+        return AND()
+    if expr == S.false:
+        # Use sympy.assumptions.cnf.OR() because an empty disjunction represents False
+        return OR()
+
 
     binrelpreds = {Eq: Q.eq, Ne: Q.ne, Gt: Q.gt, Lt: Q.lt, Ge: Q.ge, Le: Q.le}
     if type(expr) in binrelpreds:
@@ -352,6 +359,8 @@ class CNF:
 
     @classmethod
     def all_or(cls, *cnfs):
+        if not cnfs:
+            return CNF({frozenset()})
         b = cnfs[0].copy()
         for rest in cnfs[1:]:
             b = b._or(rest)

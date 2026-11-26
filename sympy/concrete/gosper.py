@@ -113,25 +113,24 @@ def gosper_term(f, n):
     A, B, C = gosper_normal(p, q, n)
     B = B.shift(-1)
 
-    N = S(A.degree())
-    M = S(B.degree())
-    K = S(C.degree())
+    N = A.degree()
+    M = B.degree()
+    K = C.degree()
 
     if (N != M) or (A.LC() != B.LC()):
-        D = {K - max(N, M)}
+        d = K - max(N, M)
     elif not N:
-        D = {K - N + 1, S.Zero}
+        d = K + 1
     else:
-        D = {K - N + 1, (B.nth(N - 1) - A.nth(N - 1))/A.LC()}
+        d1 = K - N + 1
+        d2 = (B.nth(N - 1) - A.nth(N - 1))/A.LC()
+        if not d2.is_Integer:
+            # could be symbolic or Rational
+            d2 = -1 # invalid degree candidate
+        d = max(d1, d2)
 
-    for d in set(D):
-        if not d.is_Integer or d < 0:
-            D.remove(d)
-
-    if not D:
+    if d < 0:
         return None    # 'f(n)' is *not* Gosper-summable
-
-    d = max(D)
 
     coeffs = symbols('c:%s' % (d + 1), cls=Dummy)
     domain = A.get_domain().inject(*coeffs)
@@ -182,11 +181,11 @@ def gosper_sum(f, k):
 
     >>> f = (4*k + 1)*factorial(k)/factorial(2*k + 1)
     >>> gosper_sum(f, (k, 0, n))
-    (-factorial(n) + 2*factorial(2*n + 1))/factorial(2*n + 1)
+    (2*factorial(2*n + 1) - factorial(n))/factorial(2*n + 1)
     >>> _.subs(n, 2) == sum(f.subs(k, i) for i in [0, 1, 2])
     True
     >>> gosper_sum(f, (k, 3, n))
-    (-60*factorial(n) + factorial(2*n + 1))/(60*factorial(2*n + 1))
+    (factorial(2*n + 1) - 60*factorial(n))/(60*factorial(2*n + 1))
     >>> _.subs(n, 5) == sum(f.subs(k, i) for i in [3, 4, 5])
     True
 

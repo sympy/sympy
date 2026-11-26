@@ -6,6 +6,8 @@ from sympy.interactive.session import (init_ipython_session,
 
 from sympy.core import Symbol, Rational, Integer
 from sympy.external import import_module
+from sympy.polys.domains import GF, ZZ
+from sympy.polys.domains.modularinteger import ModularIntegerFactory
 from sympy.testing.pytest import raises
 
 # TODO: The code below could be made more granular with something like:
@@ -72,6 +74,9 @@ def test_int_to_Integer():
     assert isinstance(app.user_ns['a'], int)
     app.run_cell("a = (1/\n2)")
     assert app.user_ns['a'] == Rational(1, 2)
+    app.run_cell("a = 2**2 + 1/2", store_history=True)
+    assert app.user_ns['a'] == Rational(9, 2)
+    assert app.history_manager.input_hist_raw[-1] == "a = 2**2 + 1/2"
     # TODO: How can we test that the output of a SyntaxError is the original
     # input, not the transformed input?
 
@@ -108,6 +113,18 @@ def test_ipythonprinting():
     else:
         assert app.user_ns['a'][0]['text/plain'] in ('\N{GREEK SMALL LETTER PI}', 'pi')
         assert app.user_ns['a2'][0]['text/plain'] in (' 2\n\N{GREEK SMALL LETTER PI} ', '  2\npi ')
+
+
+def test_modular_integer_printing():
+    app = init_ipython_session()
+    app.run_cell("from sympy import init_printing")
+    app.run_cell("init_printing(use_latex=False)")
+    for symmetric in (True, False):
+        dtype = ModularIntegerFactory(7, ZZ, symmetric, GF(7))
+        value = dtype(2) + 8
+        assert app.display_formatter.format(value)[0]['text/plain'] == '3 mod 7'
+        assert app.display_formatter.format([value])[0]['text/plain'] == '[3 mod 7]'
+        assert repr(value) == '%s(3)' % dtype.__name__
 
 
 def test_print_builtin_option():

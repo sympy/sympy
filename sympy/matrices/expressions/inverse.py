@@ -68,6 +68,9 @@ class Inverse(MatPow):
         from sympy.matrices.expressions.determinant import det
         return 1/det(self.arg)
 
+    def _eval_derivative(self, x):
+        return -self * self.arg.diff(x) * self
+
     def doit(self, **hints):
         if 'inv_expand' in hints and hints['inv_expand'] == False:
             return self
@@ -92,11 +95,14 @@ def refine_Inverse(expr, assumptions):
     >>> with assuming(Q.orthogonal(X)):
     ...     print(refine(X.I))
     X.T
+    >>> with assuming(Q.unitary(X)):
+    ...     print(refine(X.I))
+    Adjoint(X)
     """
     if ask(Q.orthogonal(expr), assumptions):
         return expr.arg.T
     elif ask(Q.unitary(expr), assumptions):
-        return expr.arg.conjugate()
+        return expr.arg.adjoint()
     elif ask(Q.singular(expr), assumptions):
         raise ValueError("Inverse of singular matrix %s" % expr.arg)
 

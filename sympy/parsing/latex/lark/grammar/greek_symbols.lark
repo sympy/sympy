@@ -23,6 +23,12 @@ PHI: "\\phi" | "\\varphi"
 CHI: "\\chi"
 PSI: "\\psi"
 OMEGA: "\\omega"
+IOTA: "\\iota"
+PI: "\\pi" | "\\varpi"
+SIGMA: "\\sigma" | "\\varsigma"
+UPPERCASE_GREEK: "\\Gamma" | "\\Delta" | "\\Theta" | "\\Lambda" | "\\Xi" | "\\Pi" | "\\Sigma"
+    | "\\Upsilon" | "\\Phi" | "\\Psi" | "\\Omega"
 
-GREEK_SYMBOL: ALPHA | BETA | GAMMA | DELTA | EPSILON | ZETA | ETA | THETA | KAPPA
-    | LAMBDA | MU | NU | XI | RHO | TAU | UPSILON | PHI | CHI | PSI | OMEGA
+GREEK_SYMBOL: ALPHA | BETA | GAMMA | DELTA | EPSILON | ZETA | ETA | THETA | IOTA | KAPPA
+    | LAMBDA | MU | NU | XI | PI | RHO | SIGMA | TAU | UPSILON | PHI | CHI | PSI | OMEGA
+    | UPPERCASE_GREEK

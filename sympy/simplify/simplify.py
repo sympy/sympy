@@ -42,6 +42,7 @@ from sympy.simplify.cse_opts import sub_pre, sub_post
 from sympy.simplify.hyperexpand import hyperexpand
 from sympy.simplify.powsimp import powsimp
 from sympy.simplify.radsimp import radsimp, fraction, collect_abs
+from sympy.simplify.ratsimp import ratsimp
 from sympy.simplify.sqrtdenest import sqrtdenest
 from sympy.simplify.trigsimp import trigsimp, exptrigsimp
 from sympy.utilities.decorator import deprecated
@@ -56,6 +57,7 @@ from sympy.external.mpmath import (
 
 
 if TYPE_CHECKING:
+    from collections.abc import Iterable
     from sympy.logic.boolalg import Boolean
     from sympy.sets.sets import Set
     from typing import Literal
@@ -380,11 +382,11 @@ def signsimp(expr, evaluate=None):
     >>> i = symbols('i', odd=True)
     >>> n = -1 + 1/x
     >>> n/x/(-n)**2 - 1/n/x
-    (-1 + 1/x)/(x*(1 - 1/x)**2) - 1/(x*(-1 + 1/x))
+    (1/x - 1)/(x*(1 - 1/x)**2) - 1/(x*(1/x - 1))
     >>> signsimp(_)
     0
     >>> x*n + x*-n
-    x*(-1 + 1/x) + x*(1 - 1/x)
+    x*(1/x - 1) + x*(1 - 1/x)
     >>> signsimp(_)
     0
 
@@ -397,7 +399,7 @@ def signsimp(expr, evaluate=None):
     exponent into canonical form:
 
     >>> n**i
-    (-1 + 1/x)**i
+    (1/x - 1)**i
 
     By default, signsimp does not leave behind any hollow simplification:
     if making an Add canonical wrt sign didn't change the expression, the
@@ -624,7 +626,8 @@ def simplify(expr, ratio=1.7, measure=count_ops, rational=False, inverse=False, 
     if _eval_simplify is not None:
         return _eval_simplify(**kwargs)
 
-    original_expr = expr = collect_abs(signsimp(expr))
+    original_expr = expr
+    expr = collect_abs(signsimp(expr))
 
     if not isinstance(expr, Basic) or not expr.args:  # XXX: temporary hack
         return expr
@@ -663,6 +666,19 @@ def simplify(expr, ratio=1.7, measure=count_ops, rational=False, inverse=False, 
         expr = nsimplify(expr, rational=True)
 
     expr = _bottom_up(expr, lambda w: getattr(w, 'normal', lambda: w)())
+
+    def safe_ratsimp(arg):
+        if arg.is_commutative is not True or arg.is_Atom:
+            return arg
+        n, d = arg.as_numer_denom()
+        if d.is_Number or not n.has(Add):
+            return arg
+        return ratsimp(arg)
+    expr = expr.replace(
+        lambda e: isinstance(e, exp) and not e.is_Pow,
+        lambda a: exp(safe_ratsimp(a.args[0]))).replace(
+        Pow, lambda b, e: safe_ratsimp(b)**safe_ratsimp(e))
+
     expr = Mul(*powsimp(expr).as_content_primitive())
     _e = cancel(expr)
     expr1 = shorter(_e, _mexpand(_e).cancel())  # issue 6829
@@ -932,7 +948,7 @@ def product_simplify(s, **kwargs):
                     if not used[j] and i != j:
                         tmp_prod = product_mul(p_term1, p_term2, method)
                         if isinstance(tmp_prod, Product):
-                            p_t[i] = tmp_prod
+                            p_term1 = p_t[i] = tmp_prod
                             used[j] = True
 
     result = Mul(*o_t)
@@ -951,8 +967,8 @@ def product_mul(self, other, method=0):
             if self.limits == other.limits:
                 return Product(self.function * other.function, *self.limits)
         elif method == 1:
-            if simplify(self.function - other.function) == 0:
-                if len(self.limits) == len(other.limits) == 1:
+            if len(self.limits) == len(other.limits) == 1:
+                if simplify(self.function - other.function) == 0:
                     i = self.limits[0][0]
                     x1 = self.limits[0][1]
                     y1 = self.limits[0][2]
@@ -1420,8 +1436,21 @@ def nthroot(expr, n, max_len=4, prec=15):
     return expr
 
 
-def nsimplify(expr, constants=(), tolerance=None, full=False, rational=None,
-    rational_conversion='base10'):
+@overload
+def nsimplify(expr: Expr | complex, constants: Iterable[Expr | float] = (),
+    tolerance: float | Expr | None = None, full: bool = False,
+    rational: bool | None = None,
+    rational_conversion: Literal['base10', 'exact'] = 'base10') -> Expr: ...
+@overload
+def nsimplify(expr: Basic, constants: Iterable[Expr | float] = (),
+    tolerance: float | Expr | None = None, full: bool = False,
+    rational: bool | None = None,
+    rational_conversion: Literal['base10', 'exact'] = 'base10') -> Basic: ...
+
+def nsimplify(expr: Basic | complex, constants: Iterable[Expr | float] = (),
+    tolerance: float | Expr | None = None, full: bool = False,
+    rational: bool | None = None,
+    rational_conversion: Literal['base10', 'exact'] = 'base10') -> Basic:
     """
     Find a simple representation for a number or, if there are free symbols or
     if ``rational=True``, then replace Floats with their Rational equivalents. If
@@ -1455,7 +1484,7 @@ def nsimplify(expr, constants=(), tolerance=None, full=False, rational=None,
 
     >>> from sympy import nsimplify, sqrt, GoldenRatio, exp, I, pi
     >>> nsimplify(4/(1+sqrt(5)), [GoldenRatio])
-    -2 + 2*GoldenRatio
+    2*GoldenRatio - 2
     >>> nsimplify((1/(exp(3*pi*I/5)+1)))
     1/2 - I*sqrt(sqrt(5)/10 + 1/4)
     >>> nsimplify(I**I, [pi])
@@ -1504,6 +1533,8 @@ def nsimplify(expr, constants=(), tolerance=None, full=False, rational=None,
             raise ValueError("constants must be real-valued")
         constants_dict[str(constant)] = v._to_mpmath(bprec)
 
+    if not isinstance(expr, Expr):
+        return expr
     exprval = expr.evalf(prec, chop=True)
     re, im = exprval.as_real_imag()
 

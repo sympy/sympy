@@ -3,6 +3,7 @@ from sympy.core.add import Add
 from sympy.core.expr import unchanged
 from sympy.core.mul import Mul
 from sympy.core.symbol import symbols
+from sympy.core.singleton import S
 from sympy.core.relational import Eq
 from sympy.concrete.summations import Sum
 from sympy.functions.elementary.complexes import im, re
@@ -132,6 +133,17 @@ def test_ZeroMatrix():
     assert ZeroMatrix(n, n)**0 == Identity(n)
     assert ZeroMatrix(3, 3).as_explicit() == ImmutableDenseMatrix.zeros(3, 3)
 
+    # 0x0 empty ZeroMatrix determinant and inverse
+    Z0 = ZeroMatrix(0, 0)
+    assert Z0.rows == 0 and Z0.cols == 0
+    assert Z0.is_square is True
+    assert Z0._eval_determinant() == S.One
+    assert Z0.inverse() == Z0
+    assert Z0**-1 == Z0
+    assert Z0**-2 == Z0
+    assert Z0.as_explicit() == ImmutableDenseMatrix.zeros(0, 0)
+    assert Z0.as_explicit().det() == S.One
+
 
 def test_ZeroMatrix_doit():
     n = symbols('n', integer=True)
@@ -162,6 +174,17 @@ def test_OneMatrix():
     U = OneMatrix(2, 3)
     assert U.as_explicit() == ImmutableDenseMatrix.ones(2, 3)
 
+    # 0x0 empty OneMatrix determinant and inverse
+    U0 = OneMatrix(0, 0)
+    assert U0.rows == 0 and U0.cols == 0
+    assert U0.is_square is True
+    assert U0._eval_determinant() == S.One
+    assert U0.inverse() == U0
+    assert U0**-1 == U0
+    assert U0**-2 == U0
+    assert U0.as_explicit() == ImmutableDenseMatrix.ones(0, 0)
+    assert U0.as_explicit().det() == S.One
+
 
 def test_OneMatrix_doit():
     n = symbols('n', integer=True)
@@ -180,6 +203,10 @@ def test_OneMatrix_mul():
 
 
 def test_MatrixUnit():
+    from sympy.matrices.expressions.trace import Trace
+    from sympy.matrices.exceptions import NonSquareMatrixError
+    from sympy.functions.special.tensor_functions import KroneckerDelta
+
     mu = MatrixUnit(3, 3, 1, 2)
 
     assert mu.as_explicit() == ImmutableDenseMatrix([[0, 0, 0], [0, 0, 1], [0, 0, 0]])
@@ -196,6 +223,51 @@ def test_MatrixUnit():
     assert ma.shape == (3, 4)
     assert ma.rows == 3
     assert ma.cols == 4
+
+    # Trace evaluation tests: compare all 9 entries of 3x3 against explicit matrix trace
+    for r in range(3):
+        for c in range(3):
+            u = MatrixUnit(3, 3, r, c)
+            expected = 1 if r == c else 0
+            assert Trace(u).doit() == expected
+            assert Trace(u.as_explicit()).doit() == expected
+
+    # Different matrix dimensions
+    assert Trace(MatrixUnit(1, 1, 0, 0)).doit() == 1
+    assert Trace(MatrixUnit(2, 2, 0, 0)).doit() == 1
+    assert Trace(MatrixUnit(2, 2, 1, 1)).doit() == 1
+    assert Trace(MatrixUnit(2, 2, 0, 1)).doit() == 0
+    assert Trace(MatrixUnit(4, 4, 3, 3)).doit() == 1
+    assert Trace(MatrixUnit(10, 10, 9, 9)).doit() == 1
+    assert Trace(MatrixUnit(10, 10, 4, 7)).doit() == 0
+
+    # Out of bounds indices evaluate to 0
+    assert Trace(MatrixUnit(3, 3, 5, 5)).doit() == 0
+    assert Trace(MatrixUnit(3, 3, -1, -1)).doit() == 0
+
+    # Linearity and trace function helper
+    from sympy.matrices.expressions.trace import trace
+    assert trace(MatrixUnit(3, 3, 1, 1)) == 1
+    assert trace(MatrixUnit(3, 3, 0, 1)) == 0
+    assert Trace(2 * MatrixUnit(3, 3, 1, 1) + 3 * MatrixUnit(3, 3, 0, 0)).doit() == 5
+    assert Trace(MatrixUnit(3, 3, 1, 2) + MatrixUnit(3, 3, 2, 1)).doit() == 0
+
+    # Symbolic dimensions and indices
+    n, m, i, j = symbols('n m i j', integer=True)
+    assert Trace(MatrixUnit(n, n, 1, 1)).doit() == 1
+    assert Trace(MatrixUnit(n, n, 1, 2)).doit() == 0
+    assert Trace(MatrixUnit(n, n, i, i)).doit() == 1
+    assert Trace(MatrixUnit(n, n, i, i + 1)).doit() == 0
+    assert Trace(MatrixUnit(n, n, i, j)).doit() == KroneckerDelta(i, j, (0, n - 1))
+    assert isinstance(Trace(MatrixUnit(n, m, 1, 1)).doit(), Trace)
+
+    # is_square behavior and NonSquareMatrixError enforcement
+    assert MatrixUnit(3, 3, 1, 1).is_square is True
+    assert MatrixUnit(3, 4, 1, 1).is_square is False
+    assert MatrixUnit(n, n, 1, 1).is_square is True
+    assert MatrixUnit(n, m, 1, 1).is_square is None
+    raises(NonSquareMatrixError, lambda: Trace(MatrixUnit(3, 4, 1, 1)))
+    raises(NonSquareMatrixError, lambda: Trace(MatrixUnit(4, 3, 1, 1)))
 
 
 def test_Identity():

@@ -2236,6 +2236,11 @@ def test_abc():
 
 def test_floordiv():
     assert S(2)//S.Half == 4
+    assert S(7)//S(2) == 3
+    assert 7//S(2) == 3
+    assert -7//S(2) == -4
+    assert -0.5//S(2) == -1
+    assert 0.5//S(-2) == -1
 
 
 def test_negation():
@@ -2342,3 +2347,48 @@ def test_issue_19988_Float_pickle_precision():
     original = Float(pi, dps=100)
     unpickled = pickle.loads(pickle.dumps(original))
     assert original._prec == unpickled._prec
+
+
+def test_no_evalf_for_Rational_assumptions():
+    from unittest.mock import patch
+    from sympy.core.expr import Expr
+
+    cases = [
+        ('is_negative', 101, False),
+        ('is_negative', -101, True),
+        ('is_extended_negative', 103, False),
+        ('is_extended_negative', -103, True),
+        ('is_extended_positive', 107, True),
+        ('is_extended_positive', -107, False),
+    ]
+    with patch.object(Expr, 'evalf', side_effect=AssertionError):
+        for fact, p, expected in cases:
+            assert getattr(Rational(p, 503), fact) is expected
+
+
+def test_issue_26206():
+    import math
+    from sympy import Rational, Float, Integer, sqrt
+
+    cases = [
+        (Rational(3, 2), 1, 2, 1),
+        (Rational(-3, 2), -2, -1, -1),
+        (Float('2.7'), 2, 3, 2),
+        (Float('-2.7'), -3, -2, -2),
+        (Integer(5), 5, 5, 5),
+        (Integer(-5), -5, -5, -5),
+    ]
+    for val, flr, cil, trc in cases:
+        assert type(math.floor(val)) is int
+        assert type(math.ceil(val)) is int
+        assert type(math.trunc(val)) is int
+        assert math.floor(val) == flr
+        assert math.ceil(val) == cil
+        assert math.trunc(val) == trc
+        assert isinstance(val.floor(), Integer)
+        assert isinstance(val.ceiling(), Integer)
+        assert val.floor() == flr
+        assert val.ceiling() == cil
+
+    assert type(math.trunc(sqrt(2))) is int
+    assert math.trunc(sqrt(2)) == 1

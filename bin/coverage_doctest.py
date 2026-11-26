@@ -277,7 +277,7 @@ def find_sphinx(name, mod_path, found={}):
     sphinx_path = os.path.join(sympy_top, 'doc', '_build', 'html', '_modules', *doc_path)
     if not os.path.exists(sphinx_path):
         return False
-    html_txt = Path(sphinx_path).read_text()
+    html_txt = Path(sphinx_path).read_text(encoding='utf-8')
     p = FindInSphinx()
     p.feed(html_txt)
     found[mod_path] = p.is_imported

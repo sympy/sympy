@@ -16,10 +16,11 @@ from sympy.matrices.expressions.matexpr import MatrixExpr
 from sympy.tensor.array.expressions.array_expressions import \
     ArrayElementwiseApplyFunc, _array_tensor_product, _array_contraction, \
     _array_diagonal, _array_add, _permute_dims, Reshape, get_shape, _ArrayExpr
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, cast
 
 if TYPE_CHECKING:
     from sympy.core.basic import Basic
+    from sympy.core.expr import Expr
 
 
 def _array_elementwise_apply_func(function, element):
@@ -68,7 +69,7 @@ def convert_matrix_to_array(expr: Basic) -> Basic:
         if get_shape(base) == ():
             if not isinstance(base, (MatrixExpr, _ArrayExpr)):
                 # Plain scalar base: return a plain scalar power.
-                return base**expr.exp
+                return cast('Expr', base)**expr.exp
             if isinstance(expr.exp, (int, Integer)) and expr.exp > 0:
                 # Positive integer power of a rank-0 array expression (e.g. a
                 # power of a trace): expand it into a rank-0 tensor product,
@@ -78,8 +79,8 @@ def convert_matrix_to_array(expr: Basic) -> Basic:
                 return _array_tensor_product(*[base for i in range(expr.exp)])
             d = Dummy("d")
             return _array_elementwise_apply_func(Lambda(d, d**expr.exp), base)
-        if (expr.exp > 0) == True:
-            return _array_tensor_product(*[base for i in range(expr.exp)])
+        if isinstance(exp := expr.exp, Integer) and exp > 0:
+            return _array_tensor_product(*[base for i in range(exp)])
         else:
             return expr
     elif isinstance(expr, MatPow):

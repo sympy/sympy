@@ -1,11 +1,16 @@
 from __future__ import annotations
+from xml.dom.minidom import parseString
+
 from sympy.calculus.accumulationbounds import AccumBounds
 from sympy.concrete.summations import Sum
+from sympy.core.add import Add
 from sympy.core.basic import Basic
 from sympy.core.containers import Tuple
 from sympy.core.function import Derivative, Lambda, diff, Function
+from sympy.core.mul import Mul
 from sympy.core.numbers import (zoo, Float, Integer, I, oo, pi, E,
     Rational)
+from sympy.core.power import Pow
 from sympy.core.relational import Lt, Ge, Ne, Eq
 from sympy.core.singleton import S
 from sympy.core.symbol import symbols, Symbol
@@ -226,6 +231,17 @@ def test_content_mathml_add():
     assert mml.childNodes[0].nodeName == 'plus'
     assert mml.childNodes[1].childNodes[0].nodeName == 'minus'
     assert mml.childNodes[1].childNodes[1].nodeName == 'apply'
+
+
+def test_content_mathml_add_repeated_terms():
+    assert mathml(Add(x, y, y, evaluate=False)) == \
+        '<apply><plus/><ci>x</ci><ci>y</ci><ci>y</ci></apply>'
+    assert mathml(Add(x, y, y, y, evaluate=False)) == \
+        '<apply><plus/><ci>x</ci><ci>y</ci><ci>y</ci><ci>y</ci></apply>'
+    assert mathml(Add(x**2, y, y, evaluate=False)) == \
+        '<apply><plus/><apply><power/><ci>x</ci><cn>2</cn></apply><ci>y</ci><ci>y</ci></apply>'
+    assert mathml(Add(x, -y, -y, evaluate=False)) == \
+        '<apply><minus/><apply><minus/><ci>x</ci><ci>y</ci></apply><ci>y</ci></apply>'
 
 
 def test_content_mathml_Rational():
@@ -754,7 +770,24 @@ def test_print_derivative():
     assert mathml(d) == \
         '<apply><partialdiff/><bvar><ci>y</ci><ci>z</ci><degree><cn>2</cn></degree><ci>x</ci><ci>z</ci><ci>x</ci></bvar><apply><f/><ci>x</ci><ci>y</ci><ci>z</ci></apply></apply>'
     assert mathml(d, printer='presentation') == \
-        '<mrow><mfrac><mrow><msup><mo>&#x2202;</mo><mn>6</mn></msup></mrow><mrow><mo>&#x2202;</mo><mi>y</mi><msup><mo>&#x2202;</mo><mn>2</mn></msup><mi>z</mi><mo>&#x2202;</mo><mi>x</mi><mo>&#x2202;</mo><mi>z</mi><mo>&#x2202;</mo><mi>x</mi></mrow></mfrac><mrow><mi>f</mi><mrow><mo>(</mo><mi>x</mi><mo>,</mo><mi>y</mi><mo>,</mo><mi>z</mi><mo>)</mo></mrow></mrow></mrow>'
+        '<mrow><mfrac><mrow><msup><mo>&#x2202;</mo><mn>6</mn></msup></mrow><mrow><mo>&#x2202;</mo><mi>y</mi><mo>&#x2202;</mo><msup><mi>z</mi><mn>2</mn></msup><mo>&#x2202;</mo><mi>x</mi><mo>&#x2202;</mo><mi>z</mi><mo>&#x2202;</mo><mi>x</mi></mrow></mfrac><mrow><mi>f</mi><mrow><mo>(</mo><mi>x</mi><mo>,</mo><mi>y</mi><mo>,</mo><mi>z</mi><mo>)</mo></mrow></mrow></mrow>'
+
+
+def test_presentation_mathml_derivative_denominator_powers():
+    f = Function('f')
+    for expr, denominator in [
+        (Derivative(f(x), x), '<mrow><mo>&dd;</mo><mi>x</mi></mrow>'),
+        (Derivative(f(x), (x, 2)),
+         '<mrow><mo>&dd;</mo><msup><mi>x</mi><mn>2</mn></msup></mrow>'),
+        (Derivative(f(x, y), (x, 2), y),
+         '<mrow><mo>&#x2202;</mo><mi>y</mi><mo>&#x2202;</mo>'
+         '<msup><mi>x</mi><mn>2</mn></msup></mrow>'),
+        (Derivative(f(x, y), (x, 2), (y, 3)),
+         '<mrow><mo>&#x2202;</mo><msup><mi>y</mi><mn>3</mn></msup>'
+         '<mo>&#x2202;</mo><msup><mi>x</mi><mn>2</mn></msup></mrow>'),
+    ]:
+        fraction = mpp._print(expr).childNodes[0]
+        assert fraction.childNodes[1].toxml() == denominator
 
 
 def test_presentation_mathml_limits():
@@ -878,6 +911,31 @@ def test_presentation_mathml_add():
     assert mml.childNodes[4].childNodes[0].nodeValue == 'x'
 
 
+def test_presentation_mathml_negated_sum():
+    expr = Mul(-1, Add(x, y, evaluate=False), evaluate=False)
+    assert mpp.doprint(expr) == \
+        '<mrow><mo>-</mo><mrow><mo>(</mo><mrow><mi>x</mi><mo>+</mo>' \
+        '<mi>y</mi></mrow><mo>)</mo></mrow></mrow>'
+    power = Pow(z, expr, evaluate=False)
+    assert mpp.doprint(power) == \
+        '<msup><mi>z</mi><mrow><mo>-</mo><mrow><mo>(</mo><mrow><mi>x</mi>' \
+        '<mo>+</mo><mi>y</mi></mrow><mo>)</mo></mrow></mrow></msup>'
+
+
+def test_presentation_mathml_subtracted_sum():
+    negative = Mul(-1, Add(y, -z, evaluate=False), evaluate=False)
+    expr = Add(x, negative, evaluate=False)
+    assert mpp.doprint(expr) == \
+        '<mrow><mi>x</mi><mo>-</mo><mrow><mo>(</mo><mrow><mi>y</mi>' \
+        '<mo>-</mo><mi>z</mi></mrow><mo>)</mo></mrow></mrow>'
+
+
+def test_presentation_mathml_subtracted_product():
+    assert mpp.doprint(x - 2*y) == \
+        '<mrow><mi>x</mi><mo>-</mo><mrow><mn>2</mn><mo>&InvisibleTimes;</mo>' \
+        '<mi>y</mi></mrow></mrow>'
+
+
 def test_presentation_mathml_Rational():
     mml_1 = mpp._print(Rational(1, 1))
     assert mml_1.nodeName == 'mn'
@@ -985,9 +1043,25 @@ def test_presentation_mathml_relational():
     assert mml_4.childNodes[0].nodeName == 'mn'
     assert mml_4.childNodes[0].childNodes[0].nodeValue == '1'
     assert mml_4.childNodes[1].nodeName == 'mo'
-    assert mml_4.childNodes[1].childNodes[0].nodeValue == '<'
+    assert mml_4.childNodes[1].childNodes[0].nodeValue == '&lt;'
     assert mml_4.childNodes[2].nodeName == 'mi'
     assert mml_4.childNodes[2].childNodes[0].nodeValue == 'x'
+
+
+def test_presentation_mathml_relational_xml():
+    for expr, operator in [
+        (x < y, '<'), (x > y, '>'), (x <= y, '\u2264'),
+        (x >= y, '\u2265'), (Eq(x, y), '='), (Ne(x, y), '\u2260'),
+    ]:
+        tree = parseString(mathml(expr, printer='presentation'))
+        operation = tree.documentElement.childNodes[1]
+        assert operation.nodeName == 'mo'
+        assert operation.firstChild.nodeValue == operator
+
+    expr = And(x < y, y < z)
+    tree = parseString(mathml(expr, printer='presentation'))
+    operators = tree.getElementsByTagName('mo')
+    assert sum(node.firstChild.nodeValue == '<' for node in operators) == 2
 
 
 def test_presentation_symbol():
@@ -1293,6 +1367,24 @@ def test_mul_symbol_print():
         '<mrow><mi>x</mi><mo>&#xD7;</mo><mi>y</mi></mrow>'
 
 
+def test_presentation_mathml_repeated_factors():
+    A, B = symbols('A B', commutative=False)
+    cases = [
+        (A*B*A, ['<mi>A</mi>', '<mi>B</mi>', '<mi>A</mi>']),
+        (2*A*B*A, ['<mn>2</mn>', '<mi>A</mi>', '<mi>B</mi>', '<mi>A</mi>']),
+        (Mul(A, A, A, evaluate=False), ['<mi>A</mi>']*3),
+    ]
+    for mul_symbol, operator in [
+        (None, '&InvisibleTimes;'), ('dot', '&#xB7;'),
+        ('ldot', '&#x2024;'), ('times', '&#xD7;'),
+    ]:
+        for order in ['lex', 'old']:
+            for expr, factors in cases:
+                expected = '<mrow>' + ('<mo>' + operator + '</mo>').join(factors) + '</mrow>'
+                assert mathml(expr, printer='presentation', mul_symbol=mul_symbol,
+                    order=order) == expected
+
+
 def test_print_lerchphi():
     assert mpp.doprint(lerchphi(1, 2, 3)) == \
         '<mrow><mi>&#x3A6;</mi><mrow><mo>(</mo><mn>1</mn><mo>,</mo><mn>2</mn><mo>,</mo><mn>3</mn><mo>)</mo></mrow></mrow>'
@@ -1435,7 +1527,7 @@ def test_print_logic():
     assert mpp.doprint(And(Eq(x, 3), y < 3, x > y + 1)) == \
         '<mrow><mrow><mi>x</mi><mo>=</mo><mn>3</mn></mrow><mo>&#x2227;</mo>'\
         '<mrow><mi>x</mi><mo>></mo><mrow><mi>y</mi><mo>+</mo><mn>1</mn></mrow>'\
-        '</mrow><mo>&#x2227;</mo><mrow><mi>y</mi><mo><</mo><mn>3</mn></mrow></mrow>'
+        '</mrow><mo>&#x2227;</mo><mrow><mi>y</mi><mo>&lt;</mo><mn>3</mn></mrow></mrow>'
     assert mpp.doprint(Or(Eq(x, y), x > 4)) == \
         '<mrow><mrow><mi>x</mi><mo>=</mo><mi>y</mi></mrow><mo>&#x2228;</mo>'\
         '<mrow><mi>x</mi><mo>></mo><mn>4</mn></mrow></mrow>'
@@ -1443,11 +1535,19 @@ def test_print_logic():
         '<mrow><mrow><mi>x</mi><mo>=</mo><mn>3</mn></mrow>'\
         '<mo>&#x2227;</mo><mrow><mo>(</mo><mrow><mrow><mi>x</mi><mo>></mo><mrow>'\
         '<mi>y</mi><mo>+</mo><mn>1</mn></mrow></mrow><mo>&#x2228;</mo><mrow>'\
-        '<mi>y</mi><mo><</mo><mn>3</mn></mrow></mrow><mo>)</mo></mrow></mrow>'
+        '<mi>y</mi><mo>&lt;</mo><mn>3</mn></mrow></mrow><mo>)</mo></mrow></mrow>'
 
     assert mpp.doprint(Not(x)) == '<mrow><mo>&#xAC;</mo><mi>x</mi></mrow>'
     assert mpp.doprint(Not(And(x, y))) == \
         '<mrow><mo>&#xAC;</mo><mrow><mo>(</mo><mrow><mi>x</mi><mo>&#x2227;</mo><mi>y</mi></mrow><mo>)</mo></mrow></mrow>'
+    assert mpp.doprint(Not(x > y, evaluate=False)) == \
+        '<mrow><mo>&#xAC;</mo><mrow><mo>(</mo><mrow><mi>x</mi><mo>></mo><mi>y</mi></mrow><mo>)</mo></mrow></mrow>'
+    from sympy.sets.contains import Contains
+    from sympy.sets.sets import Interval
+    assert mpp.doprint(Not(Contains(x, Interval(0, 1)), evaluate=False)) == \
+        '<mrow><mo>&#xAC;</mo><mrow><mo>(</mo><mrow><mi>x</mi><mo>&#x2208;</mo><mrow><mo>[</mo><mn>0</mn><mo>,</mo><mn>1</mn><mo>]</mo></mrow></mrow><mo>)</mo></mrow></mrow>'
+    assert mpp.doprint(Not(Not(x, evaluate=False), evaluate=False)) == \
+        '<mrow><mo>&#xAC;</mo><mrow><mo>&#xAC;</mo><mi>x</mi></mrow></mrow>'
 
 
 def test_root_notation_print():
@@ -1588,7 +1688,7 @@ def test_print_exp():
     assert mpp.doprint(exp(x)) == \
         '<msup><mi>&ExponentialE;</mi><mi>x</mi></msup>'
     assert mpp.doprint(exp(1) + exp(2)) == \
-        '<mrow><mi>&ExponentialE;</mi><mo>+</mo><msup><mi>&ExponentialE;</mi><mn>2</mn></msup></mrow>'
+        '<mrow><msup><mi>&ExponentialE;</mi><mn>2</mn></msup><mo>+</mo><mi>&ExponentialE;</mi></mrow>'
 
 
 def test_print_MinMax():
@@ -1959,7 +2059,7 @@ def test_mathml_SingularityFunction():
     assert mathml(SingularityFunction(x, 0, 4), printer='presentation') == \
         '<msup><mrow><mo>&#10216;</mo><mi>x</mi><mo>&#10217;</mo></mrow><mn>4</mn></msup>'
     assert mathml(SingularityFunction(x, a, n), printer='presentation') == \
-        '<msup><mrow><mo>&#10216;</mo><mrow><mrow><mo>-</mo><mi>a</mi></mrow><mo>+</mo><mi>x</mi></mrow><mo>&#10217;</mo></mrow><mi>n</mi></msup>'
+        '<msup><mrow><mo>&#10216;</mo><mrow><mi>x</mi><mo>-</mo><mi>a</mi></mrow><mo>&#10217;</mo></mrow><mi>n</mi></msup>'
     assert mathml(SingularityFunction(x, 4, -2), printer='presentation') == \
         '<msup><mrow><mo>&#10216;</mo><mrow><mi>x</mi><mo>-</mo><mn>4</mn></mrow><mo>&#10217;</mo></mrow><mn>-2</mn></msup>'
     assert mathml(SingularityFunction(x, 4, -1), printer='presentation') == \

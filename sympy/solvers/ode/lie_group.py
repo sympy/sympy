@@ -533,20 +533,20 @@ def lie_heuristic_bivariate(match, comp=False):
             # are grouped
             if pden.is_polynomial(x, y) and pden.is_Add:
                 polyy = Poly(pden, x, y).as_dict()
-            if polyy:
-                symset = xieq.free_symbols.union(etaeq.free_symbols) - {x, y}
-                soldict = solve(polyy.values(), *symset)
-                if isinstance(soldict, list):
-                    soldict = soldict[0]
-                if any(soldict.values()):
-                    xired = xieq.subs(soldict)
-                    etared = etaeq.subs(soldict)
-                    # Scaling is done by substituting one for the parameters
-                    # This can be any number except zero.
-                    dict_ = dict.fromkeys(symset, 1)
-                    inf = {eta: etared.subs(dict_).subs(y, func),
-                        xi: xired.subs(dict_).subs(y, func)}
-                    return [inf]
+                if polyy:
+                    symset = xieq.free_symbols.union(etaeq.free_symbols) - {x, y}
+                    soldict = solve(polyy.values(), *symset)
+                    if isinstance(soldict, list):
+                        soldict = soldict[0]
+                    if any(soldict.values()):
+                        xired = xieq.subs(soldict)
+                        etared = etaeq.subs(soldict)
+                        # Scaling is done by substituting one for the parameters
+                        # This can be any number except zero.
+                        dict_ = dict.fromkeys(symset, 1)
+                        inf = {eta: etared.subs(dict_).subs(y, func),
+                            xi: xired.subs(dict_).subs(y, func)}
+                        return [inf]
 
 def lie_heuristic_chi(match, comp=False):
     r"""
@@ -765,14 +765,15 @@ def lie_heuristic_abaco2_similar(match, comp=False):
         B = Wild('B', exclude=[y])
         C = Wild('C', exclude=[x, y])
         match = h.match(A + B*exp(y/C))
-        try:
-            tau = exp(-integrate(match[A]/match[C]), x)/match[B]
-        except NotImplementedError:
-            pass
-        else:
-            gx = match[A]*tau
-            return [{xi: tau, eta: gx}]
-
+        if match and match.get(C, 0) and match.get(B, 0):
+            _A = match.get(A, 0)
+            try:
+                tau = exp(-integrate(_A/match[C], x))/match[B]
+            except NotImplementedError:
+                pass
+            else:
+                gx = _A*tau
+                return [{xi: tau, eta: gx}]
     else:
         gamma = cancel(factorx/factory)
         if not gamma.has(y):
@@ -785,7 +786,7 @@ def lie_heuristic_abaco2_similar(match, comp=False):
                 else:
                     gx = -tau*gamma
                     return [{xi: tau, eta: gx}]
-
+    # Inverse check block
     factor = cancel(hinv.diff(y)/hinv.diff(y, 2))
     factorx = factor.diff(x)
     factory = factor.diff(y)
@@ -793,14 +794,16 @@ def lie_heuristic_abaco2_similar(match, comp=False):
         A = Wild('A', exclude=[y])
         B = Wild('B', exclude=[y])
         C = Wild('C', exclude=[x, y])
-        match = h.match(A + B*exp(y/C))
-        try:
-            tau = exp(-integrate(match[A]/match[C]), x)/match[B]
-        except NotImplementedError:
-            pass
-        else:
-            gx = match[A]*tau
-            return [{eta: tau.subs(x, func), xi: gx.subs(x, func)}]
+        match = hinv.match(A + B*exp(y/C))
+        if match and match.get(C, 0) and match.get(B, 0):
+            _A = match.get(A, 0)
+            try:
+                tau = exp(-integrate(_A/match[C], x))/match[B]
+            except NotImplementedError:
+                pass
+            else:
+                gx = _A*tau
+                return [{eta: tau.subs(x, func), xi: gx.subs(x, func)}]
 
     else:
         gamma = cancel(factorx/factory)
@@ -938,14 +941,14 @@ def lie_heuristic_abaco2_unique_general(match, comp=False):
                     E1*((28*Ax + 4*hx*A)*A**3 - E1*(hy*A + Ay)) - E1.diff(x)*8*A**4)
                 if not E3:
                     etaval = cancel((4*A**3*(Ax - hx*A) + E1*(hy*A - Ay))/(S(2)*A*E1))
-                    if x not in etaval:
+                    if not etaval.has_free(x):
                         try:
                             etaval = exp(integrate(etaval, y))
                         except NotImplementedError:
                             pass
                         else:
                             xival = -4*A**3*etaval/E1
-                            if y not in xival:
+                            if not xival.has_free(y):
                                 return [{xi: xival, eta: etaval.subs(y, func)}]
 
     else:
@@ -959,14 +962,14 @@ def lie_heuristic_abaco2_unique_general(match, comp=False):
                     (A*hx - 3*Ax)*E1)*E1)
                 if not E3:
                     etaval = cancel(((A*hx - Ax)*E1 - (Ay + A*hy)*D)/(S(2)*A*D))
-                    if x not in etaval:
+                    if not etaval.has_free(x):
                         try:
                             etaval = exp(integrate(etaval, y))
                         except NotImplementedError:
                             pass
                         else:
                             xival = -E1*etaval/D
-                            if y not in xival:
+                            if not xival.has_free(y):
                                 return [{xi: xival, eta: etaval.subs(y, func)}]
 
 

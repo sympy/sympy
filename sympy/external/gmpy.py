@@ -48,50 +48,45 @@ __all__ = [
     # gmpy is installed then it will be used unless the environment variable
     # SYMPY_GROUND_TYPES is set to something other than 'auto', 'gmpy', or
     # 'gmpy2'.
-    'GROUND_TYPES',
-
+    "GROUND_TYPES",
     # If HAS_GMPY is 0, no supported version of gmpy is available. Otherwise,
     # HAS_GMPY will be 2 for gmpy2 if GROUND_TYPES is 'gmpy'. It used to be
     # possible for HAS_GMPY to be 1 for gmpy but gmpy is no longer supported.
-    'HAS_GMPY',
-
+    "HAS_GMPY",
     # SYMPY_INTS is a tuple containing the base types for valid integer types.
     # This is either (int,) or (int, type(mpz(0))) depending on GROUND_TYPES.
-    'SYMPY_INTS',
-
+    "SYMPY_INTS",
     # MPQ is either gmpy.mpq or the Python equivalent from
     # sympy.external.pythonmpq
-    'MPQ',
-
+    "MPQ",
     # MPZ is either gmpy.mpz or int.
-    'MPZ',
-
-    'bit_scan1',
-    'bit_scan0',
-    'remove',
-    'factorial',
-    'sqrt',
-    'is_square',
-    'sqrtrem',
-    'gcd',
-    'lcm',
-    'gcdext',
-    'invert',
-    'fibonacci',
-    'legendre',
-    'jacobi',
-    'kronecker',
-    'iroot',
-    'is_fermat_prp',
-    'is_euler_prp',
-    'is_strong_prp',
-    'is_fibonacci_prp',
-    'is_lucas_prp',
-    'is_selfridge_prp',
-    'is_strong_lucas_prp',
-    'is_strong_selfridge_prp',
-    'is_bpsw_prp',
-    'is_strong_bpsw_prp',
+    "MPZ",
+    "bit_scan1",
+    "bit_scan0",
+    "remove",
+    "factorial",
+    "sqrt",
+    "is_square",
+    "sqrtrem",
+    "gcd",
+    "lcm",
+    "gcdext",
+    "invert",
+    "fibonacci",
+    "legendre",
+    "jacobi",
+    "kronecker",
+    "iroot",
+    "is_fermat_prp",
+    "is_euler_prp",
+    "is_strong_prp",
+    "is_fibonacci_prp",
+    "is_lucas_prp",
+    "is_selfridge_prp",
+    "is_strong_lucas_prp",
+    "is_strong_selfridge_prp",
+    "is_bpsw_prp",
+    "is_strong_bpsw_prp",
 ]
 
 
@@ -99,53 +94,63 @@ __all__ = [
 # Tested python-flint version. Future versions might work but we will only use
 # them if explicitly requested by SYMPY_GROUND_TYPES=flint.
 #
-_PYTHON_FLINT_VERSION_NEEDED = ["0.6", "0.7", "0.8", "0.9"]
+_PYTHON_FLINT_VERSION_NEEDED = ["0.9", "0.10", "0.11", "0.12"]
 
 
 def _flint_version_okay(flint_version):
-    major, minor = flint_version.split('.')[:2]
-    flint_ver = f'{major}.{minor}'
+    major, minor = flint_version.split(".")[:2]
+    flint_ver = f"{major}.{minor}"
     return flint_ver in _PYTHON_FLINT_VERSION_NEEDED
+
 
 #
 # We will only use gmpy2 >= 2.0.0
 #
-_GMPY2_MIN_VERSION = '2.0.0'
+_GMPY2_MIN_VERSION = "2.0.0"
 
 
 def _get_flint(sympy_ground_types):
-    if sympy_ground_types not in ('auto', 'flint'):
+    if sympy_ground_types not in ("auto", "flint"):
         return None
 
     try:
         import flint
+
         # Earlier versions of python-flint may not have __version__.
         from flint import __version__ as _flint_version
     except ImportError:
-        if sympy_ground_types == 'flint':
-            warn("SYMPY_GROUND_TYPES was set to flint but python-flint is not "
-                 "installed. Falling back to other ground types.")
+        if sympy_ground_types == "flint":
+            warn(
+                "SYMPY_GROUND_TYPES was set to flint but python-flint is not "
+                "installed. Falling back to other ground types."
+            )
         return None
 
     if _flint_version_okay(_flint_version):
         return flint
-    elif sympy_ground_types == 'auto':
+    elif sympy_ground_types == "auto":
         return None
     else:
-        warn(f"Using python-flint {_flint_version} because SYMPY_GROUND_TYPES "
-             f"is set to flint but this version of SymPy is only tested "
-             f"with python-flint versions {_PYTHON_FLINT_VERSION_NEEDED}.")
+        warn(
+            f"Using python-flint {_flint_version} because SYMPY_GROUND_TYPES "
+            f"is set to flint but this version of SymPy is only tested "
+            f"with python-flint versions {_PYTHON_FLINT_VERSION_NEEDED}."
+        )
         return flint
 
 
 def _get_gmpy2(sympy_ground_types):
-    if sympy_ground_types not in ('auto', 'gmpy', 'gmpy2'):
+    if sympy_ground_types not in ("auto", "gmpy", "gmpy2"):
         return None
 
-    gmpy = import_module('gmpy2', min_module_version=_GMPY2_MIN_VERSION,
-            module_version_attr='version', module_version_attr_call_args=())
+    gmpy = import_module(
+        "gmpy2",
+        min_module_version=_GMPY2_MIN_VERSION,
+        module_version_attr="version",
+        module_version_attr_call_args=(),
+    )
 
-    if sympy_ground_types != 'auto' and gmpy is None:
+    if sympy_ground_types != "auto" and gmpy is None:
         warn("gmpy2 library is not installed, switching to 'python' ground types")
 
     return gmpy
@@ -154,34 +159,36 @@ def _get_gmpy2(sympy_ground_types):
 #
 # SYMPY_GROUND_TYPES can be flint, gmpy, gmpy2, python or auto (default)
 #
-_SYMPY_GROUND_TYPES = os.environ.get('SYMPY_GROUND_TYPES', 'auto').lower()
+_SYMPY_GROUND_TYPES = os.environ.get("SYMPY_GROUND_TYPES", "auto").lower()
 
-_flint:  ModuleType | None = None
-_gmpy:  ModuleType | None = None
+_flint: ModuleType | None = None
+_gmpy: ModuleType | None = None
 
 
 #
 # First handle auto-detection of flint/gmpy2. We will prefer flint if available
 # or otherwise gmpy2 if available and then lastly the python types.
 #
-if _SYMPY_GROUND_TYPES in ('auto', 'flint'):
+if _SYMPY_GROUND_TYPES in ("auto", "flint"):
     _flint = _get_flint(_SYMPY_GROUND_TYPES)
     if _flint is not None:
-        _SYMPY_GROUND_TYPES = 'flint'
+        _SYMPY_GROUND_TYPES = "flint"
     else:
-        _SYMPY_GROUND_TYPES = 'auto'
+        _SYMPY_GROUND_TYPES = "auto"
 
-if _SYMPY_GROUND_TYPES in ('auto', 'gmpy', 'gmpy2'):
+if _SYMPY_GROUND_TYPES in ("auto", "gmpy", "gmpy2"):
     _gmpy = _get_gmpy2(_SYMPY_GROUND_TYPES)
     if _gmpy is not None:
-        _SYMPY_GROUND_TYPES = 'gmpy'
+        _SYMPY_GROUND_TYPES = "gmpy"
     else:
-        _SYMPY_GROUND_TYPES = 'python'
+        _SYMPY_GROUND_TYPES = "python"
 
-if _SYMPY_GROUND_TYPES not in ('flint', 'gmpy', 'python'):
-    warn("SYMPY_GROUND_TYPES environment variable unrecognised. "
-         "Should be 'auto', 'flint', 'gmpy', 'gmpy2' or 'python'.")
-    _SYMPY_GROUND_TYPES = 'python'
+if _SYMPY_GROUND_TYPES not in ("flint", "gmpy", "python"):
+    warn(
+        "SYMPY_GROUND_TYPES environment variable unrecognised. "
+        "Should be 'auto', 'flint', 'gmpy', 'gmpy2' or 'python'."
+    )
+    _SYMPY_GROUND_TYPES = "python"
 
 #
 # At this point _SYMPY_GROUND_TYPES is either flint, gmpy or python. The blocks
@@ -192,13 +199,9 @@ if _SYMPY_GROUND_TYPES not in ('flint', 'gmpy', 'python'):
 # In gmpy2 and flint, there are functions that take a long (or unsigned long)
 # argument. That is, it is not possible to input a value larger than that.
 #
-LONG_MAX = (1 << (8*sizeof(c_long) - 1)) - 1
+LONG_MAX = (1 << (8 * sizeof(c_long) - 1)) - 1
 
-#
-# Type checkers are confused by what SYMPY_INTS is. There may be a better type
-# hint for this like Type[Integral] or something.
-#
-SYMPY_INTS: tuple[type, ...]
+SYMPY_INTS: tuple[type[int] | type[MPZ], ...]
 GROUND_TYPES: str
 
 
@@ -209,6 +212,7 @@ if TYPE_CHECKING:
         Dummy class for type checking purposes. This will be either int,
         gmpy.mpz, or flint.fmpz depending on the ground types.
         """
+
         def __init__(self, arg: int | MPZ | str = 0, /) -> None: ...
 
         def __int__(self) -> int: ...
@@ -259,8 +263,10 @@ if TYPE_CHECKING:
         Dummy class for type checking purposes. This will be either PythonMPQ,
         gmpy.mpq, or flint.fmpq depending on the ground types.
         """
-        def __init__(self, arg1: int | MPZ | MPQ | str = 0,
-                           arg2: int | MPZ = 1, /) -> None: ...
+
+        def __init__(
+            self, arg1: int | MPZ | MPQ | str = 0, arg2: int | MPZ = 1, /
+        ) -> None: ...
 
         def __int__(self) -> int: ...
 
@@ -296,6 +302,7 @@ if TYPE_CHECKING:
 
     class NMOD:
         """Dummy class for type checking purposes: flint.nmod-like type."""
+
         def __init__(self, val: NMOD | MPZ | int = 0, mod: int = 2, /) -> None: ...
         def __int__(self) -> int: ...
         def __index__(self) -> int: ...
@@ -316,7 +323,10 @@ if TYPE_CHECKING:
 
     class FMPZ_MOD:
         """Dummy class for type checking purposes: flint.fmpz_mod-like type."""
-        def __init__(self, val: FMPZ_MOD | MPZ | int = 0, mod: MPZ | int = 2, /) -> None: ...
+
+        def __init__(
+            self, val: FMPZ_MOD | MPZ | int = 0, mod: MPZ | int = 2, /
+        ) -> None: ...
         def __int__(self) -> int: ...
         def __index__(self) -> int: ...
         def __pos__(self) -> FMPZ_MOD: ...
@@ -336,9 +346,12 @@ if TYPE_CHECKING:
 
     class FMPZ_MOD_POLY_CTX:
         """Dummy class for type checking purposes: flint.fmpz_mod_poly_ctx-like type."""
+
         def __init__(self, mod: MPZ | int, /) -> None: ...
         def modulus(self) -> MPZ: ...
-        def __call__(self, val: FMPZ_MOD_POLY | Sequence[FMPZ_MOD | MPZ | int], /) -> FMPZ_MOD_POLY: ...
+        def __call__(
+            self, val: FMPZ_MOD_POLY | Sequence[FMPZ_MOD | MPZ | int], /
+        ) -> FMPZ_MOD_POLY: ...
 
     _Tground = TypeVar("_Tground")
 
@@ -348,6 +361,7 @@ if TYPE_CHECKING:
         parts of python-flint's poly_p protocol and represents univariate
         polynomial-like objects.
         """
+
         def str(self, ascending: bool = False, var: str = "x") -> str: ...
         def __iter__(self) -> Iterator[_Tground]: ...
         def __getitem__(self, index: int, /) -> _Tground: ...
@@ -386,6 +400,7 @@ if TYPE_CHECKING:
 
     class FLINT_POLY_P(POLY_P[_Tground], Protocol[_Tground]):
         """Protocol for FLINT polynomial methods used in DUP_Flint."""
+
         def deflation(self) -> tuple[Self, int]: ...
         def gcd(self, other: Self | _Tground | int, /) -> Self: ...
         def xgcd(self, other: Self | _Tground | int, /) -> tuple[Self, Self, Self]: ...
@@ -397,12 +412,29 @@ if TYPE_CHECKING:
 
     class SERIES_P(Protocol[_Tground]):
         """Protocol for FLINT univariate power series-like types."""
+
         def repr(self) -> str: ...
         @property
         def prec(self) -> int: ...
         def __len__(self) -> int: ...
         def __getitem__(self, index: int, /) -> _Tground: ...
         def coeffs(self) -> list[_Tground]: ...
+
+    class FLINT_MAT_P(Protocol[_Tground]):
+        """Protocol for FLINT matrix methods used in DFM."""
+
+        def nrows(self) -> int: ...
+        def ncols(self) -> int: ...
+        def __getitem__(self, index: tuple[int, int], /) -> _Tground: ...
+        def __setitem__(self, index: tuple[int, int], value: _Tground, /) -> None: ...
+        def entries(self) -> list[_Tground]: ...
+        def tolist(self) -> list[list[_Tground]]: ...
+        def transpose(self) -> Self: ...
+        def __neg__(self) -> Self: ...
+        def __add__(self, other: Self, /) -> Self: ...
+        def __sub__(self, other: Self, /) -> Self: ...
+        def __mul__(self, other: Self | _Tground, /) -> Self: ...
+        def __rmul__(self, other: _Tground, /) -> Self: ...
 
     class _POLY_DUMMY(Generic[_Tground]):
         def str(self, ascending: bool = False, var: str = "x") -> str: ...
@@ -439,8 +471,11 @@ if TYPE_CHECKING:
 
     class FMPZ_POLY(_POLY_DUMMY[MPZ]):
         """Dummy class for type checking: flint.fmpz_poly-like type."""
+
         def __init__(
-            self, other: FMPZ_POLY | FMPZ_SERIES | Sequence[MPZ | int] | MPZ | int = 0, /
+            self,
+            other: FMPZ_POLY | FMPZ_SERIES | Sequence[MPZ | int] | MPZ | int = 0,
+            /,
         ) -> None: ...
         @overload
         def __call__(self, other: MPZ | int, /) -> MPZ: ...
@@ -453,9 +488,15 @@ if TYPE_CHECKING:
 
     class FMPQ_POLY(_POLY_DUMMY[MPQ]):
         """Dummy class for type checking: flint.fmpq_poly-like type."""
+
         def __init__(
             self,
-            other: FMPQ_POLY | FMPQ_SERIES | Sequence[MPQ | MPZ | int] | MPQ | MPZ | int = 0,
+            other: FMPQ_POLY
+            | FMPQ_SERIES
+            | Sequence[MPQ | MPZ | int]
+            | MPQ
+            | MPZ
+            | int = 0,
             den: MPZ | int = 1,
             /,
         ) -> None: ...
@@ -465,12 +506,18 @@ if TYPE_CHECKING:
         def __call__(self, other: FMPQ_POLY, /) -> FMPQ_POLY: ...
         @overload
         def __call__(self, other: FMPZ_POLY, /) -> FMPQ_POLY: ...
-        def __call__(self, other: MPQ | MPZ | int | FMPQ_POLY | FMPZ_POLY, /) -> MPQ | FMPQ_POLY: ...
+        def __call__(
+            self, other: MPQ | MPZ | int | FMPQ_POLY | FMPZ_POLY, /
+        ) -> MPQ | FMPQ_POLY: ...
         def sqrt(self) -> FMPQ_POLY | FMPQ_SERIES: ...
         def deflation(self) -> tuple[FMPQ_POLY, int]: ...
         def gcd(self, other: FMPQ_POLY | MPQ | MPZ | int, /) -> FMPQ_POLY: ...
-        def xgcd(self, other: FMPQ_POLY | MPQ | MPZ | int, /) -> tuple[FMPQ_POLY, FMPQ_POLY, FMPQ_POLY]: ...
-        def factor(self, *, monic: bool = False) -> tuple[MPQ, list[tuple[FMPQ_POLY, int]]]: ...
+        def xgcd(
+            self, other: FMPQ_POLY | MPQ | MPZ | int, /
+        ) -> tuple[FMPQ_POLY, FMPQ_POLY, FMPQ_POLY]: ...
+        def factor(
+            self, *, monic: bool = False
+        ) -> tuple[MPQ, list[tuple[FMPQ_POLY, int]]]: ...
         def factor_squarefree(self) -> tuple[MPQ, list[tuple[FMPQ_POLY, int]]]: ...
         def numer(self) -> FMPZ_POLY: ...
         def denom(self) -> MPZ: ...
@@ -478,51 +525,88 @@ if TYPE_CHECKING:
 
     class NMOD_POLY(_POLY_DUMMY[NMOD]):
         """Dummy class for type checking: flint.nmod_poly-like type."""
-        def __init__(self, val: NMOD_POLY | Sequence[NMOD | MPZ | int] | FMPZ_POLY | NMOD | MPZ | int = 0, mod: int = 2, /) -> None: ...
+
+        def __init__(
+            self,
+            val: NMOD_POLY
+            | Sequence[NMOD | MPZ | int]
+            | FMPZ_POLY
+            | NMOD
+            | MPZ
+            | int = 0,
+            mod: int = 2,
+            /,
+        ) -> None: ...
         @overload
         def __call__(self, other: NMOD | MPZ | int, /) -> NMOD: ...
         @overload
         def __call__(self, other: NMOD_POLY | FMPZ_POLY, /) -> NMOD_POLY: ...
-        def __call__(self, other: NMOD | MPZ | int | NMOD_POLY | FMPZ_POLY, /) -> NMOD | NMOD_POLY: ...
+        def __call__(
+            self, other: NMOD | MPZ | int | NMOD_POLY | FMPZ_POLY, /
+        ) -> NMOD | NMOD_POLY: ...
         def modulus(self) -> int: ...
         def integral(self) -> NMOD_POLY: ...
         def sqrt(self) -> NMOD_POLY: ...
-        def gcd(self, other: NMOD_POLY | FMPZ_POLY | NMOD | MPZ | int, /) -> NMOD_POLY: ...
-        def xgcd(self, other: NMOD_POLY | FMPZ_POLY | NMOD | MPZ | int, /) -> tuple[NMOD_POLY, NMOD_POLY, NMOD_POLY]: ...
+        def gcd(
+            self, other: NMOD_POLY | FMPZ_POLY | NMOD | MPZ | int, /
+        ) -> NMOD_POLY: ...
+        def xgcd(
+            self, other: NMOD_POLY | FMPZ_POLY | NMOD | MPZ | int, /
+        ) -> tuple[NMOD_POLY, NMOD_POLY, NMOD_POLY]: ...
         def factor(self) -> tuple[NMOD, list[tuple[NMOD_POLY, int]]]: ...
         def factor_squarefree(self) -> tuple[NMOD, list[tuple[NMOD_POLY, int]]]: ...
         def deflation(self) -> tuple[NMOD_POLY, int]: ...
 
     class FMPZ_MOD_POLY(_POLY_DUMMY[FMPZ_MOD]):
         """Dummy class for type checking: flint.fmpz_mod_poly-like type."""
+
         def __init__(
             self,
-            val: Sequence[FMPZ_MOD | MPZ | int] | FMPZ_MOD_POLY | FMPZ_POLY | FMPZ_MOD | MPZ | int,
+            val: Sequence[FMPZ_MOD | MPZ | int]
+            | FMPZ_MOD_POLY
+            | FMPZ_POLY
+            | FMPZ_MOD
+            | MPZ
+            | int,
             ctx: FMPZ_MOD_POLY_CTX,
-            /
+            /,
         ) -> None: ...
         @overload
         def __call__(self, other: FMPZ_MOD | MPZ | int, /) -> FMPZ_MOD: ...
         @overload
         def __call__(self, other: FMPZ_MOD_POLY | FMPZ_POLY, /) -> FMPZ_MOD_POLY: ...
-        def __call__(self, other: FMPZ_MOD | MPZ | int | FMPZ_MOD_POLY | FMPZ_POLY, /) -> FMPZ_MOD | FMPZ_MOD_POLY: ...
+        def __call__(
+            self, other: FMPZ_MOD | MPZ | int | FMPZ_MOD_POLY | FMPZ_POLY, /
+        ) -> FMPZ_MOD | FMPZ_MOD_POLY: ...
         def context(self) -> FMPZ_MOD_POLY_CTX: ...
         def modulus(self) -> MPZ: ...
         def integral(self) -> FMPZ_MOD_POLY: ...
         def sqrt(self) -> FMPZ_MOD_POLY: ...
-        def gcd(self, other: FMPZ_MOD_POLY | FMPZ_POLY | FMPZ_MOD | MPZ | int, /) -> FMPZ_MOD_POLY: ...
-        def xgcd(self, other: FMPZ_MOD_POLY | FMPZ_POLY | FMPZ_MOD | MPZ | int, /) -> tuple[FMPZ_MOD_POLY, FMPZ_MOD_POLY, FMPZ_MOD_POLY]: ...
+        def gcd(
+            self, other: FMPZ_MOD_POLY | FMPZ_POLY | FMPZ_MOD | MPZ | int, /
+        ) -> FMPZ_MOD_POLY: ...
+        def xgcd(
+            self, other: FMPZ_MOD_POLY | FMPZ_POLY | FMPZ_MOD | MPZ | int, /
+        ) -> tuple[FMPZ_MOD_POLY, FMPZ_MOD_POLY, FMPZ_MOD_POLY]: ...
         def factor(self) -> tuple[FMPZ_MOD, list[tuple[FMPZ_MOD_POLY, int]]]: ...
-        def factor_squarefree(self) -> tuple[FMPZ_MOD, list[tuple[FMPZ_MOD_POLY, int]]]: ...
+        def factor_squarefree(
+            self,
+        ) -> tuple[FMPZ_MOD, list[tuple[FMPZ_MOD_POLY, int]]]: ...
         def deflation(self) -> tuple[FMPZ_MOD_POLY, int]: ...
 
     class FMPZ_SERIES:
         """Dummy class for type checking: flint.fmpz_series-like type."""
+
         def __init__(
             self,
-            val: FMPZ_SERIES | FMPZ_POLY | Sequence[MPZ | int] | MPZ | int | None = None,
+            val: FMPZ_SERIES
+            | FMPZ_POLY
+            | Sequence[MPZ | int]
+            | MPZ
+            | int
+            | None = None,
             *,
-            prec: int | None = None
+            prec: int | None = None,
         ) -> None: ...
         @property
         def prec(self) -> int: ...
@@ -533,13 +617,21 @@ if TYPE_CHECKING:
         def coeffs(self) -> list[MPZ]: ...
         def _equal_repr(self, other: FMPZ_SERIES, /) -> bool: ...
         def __call__(self, other: FMPZ_POLY | FMPZ_SERIES, /) -> FMPZ_SERIES: ...
-        def __add__(self, other: MPZ | int | FMPZ_POLY | FMPZ_SERIES, /) -> FMPZ_SERIES: ...
+        def __add__(
+            self, other: MPZ | int | FMPZ_POLY | FMPZ_SERIES, /
+        ) -> FMPZ_SERIES: ...
         def __radd__(self, other: MPZ | int | FMPZ_POLY, /) -> FMPZ_SERIES: ...
-        def __sub__(self, other: MPZ | int | FMPZ_POLY | FMPZ_SERIES, /) -> FMPZ_SERIES: ...
+        def __sub__(
+            self, other: MPZ | int | FMPZ_POLY | FMPZ_SERIES, /
+        ) -> FMPZ_SERIES: ...
         def __rsub__(self, other: MPZ | int | FMPZ_POLY, /) -> FMPZ_SERIES: ...
-        def __mul__(self, other: MPZ | int | FMPZ_POLY | FMPZ_SERIES, /) -> FMPZ_SERIES: ...
+        def __mul__(
+            self, other: MPZ | int | FMPZ_POLY | FMPZ_SERIES, /
+        ) -> FMPZ_SERIES: ...
         def __rmul__(self, other: MPZ | int | FMPZ_POLY, /) -> FMPZ_SERIES: ...
-        def __truediv__(self, other: MPZ | int | FMPZ_POLY | FMPZ_SERIES, /) -> FMPZ_SERIES: ...
+        def __truediv__(
+            self, other: MPZ | int | FMPZ_POLY | FMPZ_SERIES, /
+        ) -> FMPZ_SERIES: ...
         def __rtruediv__(self, other: MPZ | int | FMPZ_POLY, /) -> FMPZ_SERIES: ...
         def __pow__(self, n: int, /) -> FMPZ_SERIES: ...
         def __neg__(self) -> FMPZ_SERIES: ...
@@ -548,11 +640,20 @@ if TYPE_CHECKING:
 
     class FMPQ_SERIES:
         """Dummy class for type checking: flint.fmpq_series-like type."""
+
         def __init__(
             self,
-            val: FMPQ_SERIES | FMPQ_POLY | FMPZ_SERIES | FMPZ_POLY | Sequence[MPQ | MPZ | int] | MPQ | MPZ | int | None = None,
+            val: FMPQ_SERIES
+            | FMPQ_POLY
+            | FMPZ_SERIES
+            | FMPZ_POLY
+            | Sequence[MPQ | MPZ | int]
+            | MPQ
+            | MPZ
+            | int
+            | None = None,
             *,
-            prec: int | None = None
+            prec: int | None = None,
         ) -> None: ...
         @property
         def prec(self) -> int: ...
@@ -563,14 +664,24 @@ if TYPE_CHECKING:
         def coeffs(self) -> list[MPQ]: ...
         def _equal_repr(self, other: FMPQ_SERIES, /) -> bool: ...
         def __call__(self, other: FMPQ_POLY | FMPQ_SERIES, /) -> FMPQ_SERIES: ...
-        def __add__(self, other: MPQ | MPZ | int | FMPQ_POLY | FMPQ_SERIES, /) -> FMPQ_SERIES: ...
+        def __add__(
+            self, other: MPQ | MPZ | int | FMPQ_POLY | FMPQ_SERIES, /
+        ) -> FMPQ_SERIES: ...
         def __radd__(self, other: MPQ | MPZ | int | FMPQ_POLY, /) -> FMPQ_SERIES: ...
-        def __sub__(self, other: MPQ | MPZ | int | FMPQ_POLY | FMPQ_SERIES, /) -> FMPQ_SERIES: ...
+        def __sub__(
+            self, other: MPQ | MPZ | int | FMPQ_POLY | FMPQ_SERIES, /
+        ) -> FMPQ_SERIES: ...
         def __rsub__(self, other: MPQ | MPZ | int | FMPQ_POLY, /) -> FMPQ_SERIES: ...
-        def __mul__(self, other: MPQ | MPZ | int | FMPQ_POLY | FMPQ_SERIES, /) -> FMPQ_SERIES: ...
+        def __mul__(
+            self, other: MPQ | MPZ | int | FMPQ_POLY | FMPQ_SERIES, /
+        ) -> FMPQ_SERIES: ...
         def __rmul__(self, other: MPQ | MPZ | int | FMPQ_POLY, /) -> FMPQ_SERIES: ...
-        def __truediv__(self, other: MPQ | MPZ | int | FMPQ_POLY | FMPQ_SERIES, /) -> FMPQ_SERIES: ...
-        def __rtruediv__(self, other: MPQ | MPZ | int | FMPQ_POLY, /) -> FMPQ_SERIES: ...
+        def __truediv__(
+            self, other: MPQ | MPZ | int | FMPQ_POLY | FMPQ_SERIES, /
+        ) -> FMPQ_SERIES: ...
+        def __rtruediv__(
+            self, other: MPQ | MPZ | int | FMPQ_POLY, /
+        ) -> FMPQ_SERIES: ...
         def __pow__(self, n: int, /) -> FMPQ_SERIES: ...
         def __neg__(self) -> FMPQ_SERIES: ...
         def degree(self) -> int: ...
@@ -596,12 +707,14 @@ if TYPE_CHECKING:
 
     try:
         import gmpy2 as _gmpy2
+
         gmpy = _gmpy2
     except ImportError:
         gmpy = None
 
     try:
         import flint as _flint_mod
+
         flint = _flint_mod
     except ImportError:
         flint = None
@@ -610,15 +723,20 @@ if TYPE_CHECKING:
     # flint polynomial types satisfy our POLY_P protocol.
     try:
         from flint import fmpq as _flint_fmpq
+        from flint import fmpq_mat as _flint_fmpq_mat
         from flint import fmpq_poly as _flint_fmpq_poly
         from flint import fmpq_series as _flint_fmpq_series
         from flint import fmpz as _flint_fmpz
+        from flint import fmpz_mat as _flint_fmpz_mat
         from flint import fmpz_mod as _flint_fmpz_mod
+        from flint import fmpz_mod_ctx as _flint_fmpz_mod_ctx
+        from flint import fmpz_mod_mat as _flint_fmpz_mod_mat
         from flint import fmpz_mod_poly as _flint_fmpz_mod_poly
         from flint import fmpz_mod_poly_ctx as _flint_fmpz_mod_poly_ctx
         from flint import fmpz_poly as _flint_fmpz_poly
         from flint import fmpz_series as _flint_fmpz_series
         from flint import nmod as _flint_nmod
+        from flint import nmod_mat as _flint_nmod_mat
         from flint import nmod_poly as _flint_nmod_poly
     except ImportError:
         pass
@@ -626,9 +744,17 @@ if TYPE_CHECKING:
         _fmpz_poly: POLY_P[_flint_fmpz] = _flint_fmpz_poly([1, 2])
         _fmpq_poly: POLY_P[_flint_fmpq] = _flint_fmpq_poly([1, 2])
         _nmod_poly: POLY_P[_flint_nmod] = _flint_nmod_poly(1, 2)
-        _fmpz_mod_poly: POLY_P[_flint_fmpz_mod] = _flint_fmpz_mod_poly(1, _flint_fmpz_mod_poly_ctx(2))
+        _fmpz_mod_poly: POLY_P[_flint_fmpz_mod] = _flint_fmpz_mod_poly(
+            1, _flint_fmpz_mod_poly_ctx(2)
+        )
         _fmpz_series: SERIES_P[_flint_fmpz] = _flint_fmpz_series([1, 2], prec=3)
         _fmpq_series: SERIES_P[_flint_fmpq] = _flint_fmpq_series([1, 2], prec=3)
+        _fmpz_mat: FLINT_MAT_P[_flint_fmpz] = _flint_fmpz_mat(1, 1)
+        _fmpq_mat: FLINT_MAT_P[_flint_fmpq] = _flint_fmpq_mat(1, 1)
+        _nmod_mat: FLINT_MAT_P[_flint_nmod] = _flint_nmod_mat(1, 1, 2)
+        _fmpz_mod_mat: FLINT_MAT_P[_flint_fmpz_mod] = _flint_fmpz_mod_mat(
+            1, 1, _flint_fmpz_mod_ctx(2)
+        )
 
     # Reverse-compatibility checks for SymPy dummy classes used under
     # TYPE_CHECKING in ringflint and related modules.
@@ -671,15 +797,14 @@ if TYPE_CHECKING:
     def is_strong_bpsw_prp(x: MPZ | int) -> bool: ...
 
 
-elif _SYMPY_GROUND_TYPES == 'gmpy':
-
+elif _SYMPY_GROUND_TYPES == "gmpy":
     assert _gmpy is not None
 
     flint = None
     gmpy = _gmpy
 
     HAS_GMPY = 2
-    GROUND_TYPES = 'gmpy'
+    GROUND_TYPES = "gmpy"
     SYMPY_INTS = (int, type(gmpy.mpz(0)))
     MPZ = gmpy.mpz
     MPQ = gmpy.mpq
@@ -718,18 +843,17 @@ elif _SYMPY_GROUND_TYPES == 'gmpy':
     is_bpsw_prp = gmpy.is_bpsw_prp
     is_strong_bpsw_prp = gmpy.is_strong_bpsw_prp
 
-elif _SYMPY_GROUND_TYPES == 'flint':
-
+elif _SYMPY_GROUND_TYPES == "flint":
     assert _flint is not None
 
     flint = _flint
     gmpy = None
 
     HAS_GMPY = 0
-    GROUND_TYPES = 'flint'
-    SYMPY_INTS = (int, flint.fmpz) # type: ignore
-    MPZ = flint.fmpz # type: ignore
-    MPQ = flint.fmpq # type: ignore
+    GROUND_TYPES = "flint"
+    SYMPY_INTS = (int, flint.fmpz)  # type: ignore
+    MPZ = flint.fmpz  # type: ignore
+    MPQ = flint.fmpq  # type: ignore
 
     bit_scan1 = python_bit_scan1
     bit_scan0 = python_bit_scan0
@@ -782,13 +906,12 @@ elif _SYMPY_GROUND_TYPES == 'flint':
     is_bpsw_prp = python_is_bpsw_prp
     is_strong_bpsw_prp = python_is_strong_bpsw_prp
 
-elif _SYMPY_GROUND_TYPES == 'python':
-
+elif _SYMPY_GROUND_TYPES == "python":
     flint = None
     gmpy = None
 
     HAS_GMPY = 0
-    GROUND_TYPES = 'python'
+    GROUND_TYPES = "python"
     SYMPY_INTS = (int,)
     MPZ = int
     MPQ = PythonMPQ

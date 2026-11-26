@@ -1205,7 +1205,7 @@ def test_issue_17247_expression_blowup_4():
 def test_issue_17247_expression_blowup_5():
     M = Matrix(6, 6, lambda i, j: 1 + (-1)**(i+j)*I)
     with dotprodsimp(True):
-        assert M.charpoly('x') == PurePoly(x**6 + (-6 - 6*I)*x**5 + 36*I*x**4, x, domain='EX')
+        assert M.charpoly('x') == Poly(x**6 + (-6 - 6*I)*x**5 + 36*I*x**4, x, domain='ZZ_I')
 
 
 def test_issue_17247_expression_blowup_6():
@@ -2542,16 +2542,17 @@ def test_Matrix_berkowitz_charpoly():
     A = Matrix([[-K_i - UA + K_i**2/(K_i + K_w),       K_i*K_w/(K_i + K_w)],
                 [           K_i*K_w/(K_i + K_w), -K_w + K_w**2/(K_i + K_w)]])
 
-    charpoly = A.charpoly(x)
+    charpoly = A.charpoly()
 
-    assert charpoly == \
+    assert charpoly.as_poly(x) == \
         Poly(x**2 + (K_i*UA + K_w*UA + 2*K_i*K_w)/(K_i + K_w)*x +
         K_i*K_w*UA/(K_i + K_w), x, domain='ZZ(K_i,K_w,UA)')
 
     assert type(charpoly) is PurePoly
 
     A = Matrix([[1, 3], [2, 0]])
-    assert A.charpoly() == A.charpoly(x) == PurePoly(x**2 - x - 6)
+    assert A.charpoly() == PurePoly(x**2 - x - 6)
+    assert A.charpoly(x) == A.charpoly().as_poly(x)
 
     A = Matrix([[1, 2], [x, 0]])
     p = A.charpoly(x)
@@ -2883,16 +2884,24 @@ def test_matrix_norm():
     # Test columns and symbols
     x = Symbol('x', real=True)
     v = Matrix([cos(x), sin(x)])
+    assert trigsimp(v.norm()) == 1
+    assert trigsimp(v.norm(None)) == 1
     assert trigsimp(v.norm(2)) == 1
     assert v.norm(10) == Pow(cos(x)**10 + sin(x)**10, Rational(1, 10))
 
     # Test Rows
     A = Matrix([[5, Rational(3, 2)]])
     assert A.norm() == Pow(25 + Rational(9, 4), S.Half)
+    assert A.norm(None) == Pow(25 + Rational(9, 4), S.Half)
     assert A.norm(oo) == max(A)
     assert A.norm(-oo) == min(A)
 
     # Matrix Tests
+    A = Matrix([[1, 2], [3, 4]])
+    assert A.norm() == sqrt(30)
+    assert A.norm(None) == sqrt(30)
+    assert A.norm(2) == sqrt(15 + sqrt(221))
+
     # Intuitive test
     A = Matrix([[1, 1], [1, 1]])
     assert A.norm(2) == 2
@@ -3411,6 +3420,22 @@ def test_pinv():
         comp(i.n(), j.n())
         for i, j in zip(q.subs(reps), w.subs(reps))
         )
+
+
+def test_pinv_diagonalization_repeated_eigenvalues():
+    A = eye(3) + ones(3)
+    A_pinv = A.pinv(method="ED")
+    assert A * A_pinv == eye(3)
+
+    for A in (Matrix([[1, 1, 0], [1, 1, 0], [0, 0, 0]]),
+              Matrix([[1, 1, 1, 0], [1, 1, 1, 0], [1, 1, 1, 0]])):
+        A_pinv = A.pinv(method="ED")
+        AAp = A * A_pinv
+        ApA = A_pinv * A
+        assert simplify(AAp * A) == A
+        assert simplify(ApA * A_pinv) == A_pinv
+        assert AAp.H == AAp
+        assert ApA.H == ApA
 
 
 @slow

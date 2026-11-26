@@ -60,12 +60,12 @@ def check_satisfiability(prop, _prop, factbase):
         n = len(sat_true.encoding)
         if assm not in sat_true.encoding:
             sat_true.encoding[assm] = n+1
-        sat_true.data.append([sat_true.encoding[assm]])
+        sat_true.data.append({sat_true.encoding[assm]})
 
         n = len(sat_false.encoding)
         if assm not in sat_false.encoding:
             sat_false.encoding[assm] = n+1
-        sat_false.data.append([sat_false.encoding[assm]])
+        sat_false.data.append({sat_false.encoding[assm]})
 
 
     sat_true = _preprocess(sat_true)
@@ -164,7 +164,7 @@ def _preprocess(enc_cnf):
                 new_encoding[prop] = cur_enc
                 cur_enc += 1
             new_clause.append(new_encoding[prop]*sign)
-        new_data.append(new_clause)
+        new_data.append(set(new_clause))
 
     assert len(new_encoding) >= cur_enc - 1
 

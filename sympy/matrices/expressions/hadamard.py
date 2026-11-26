@@ -1,7 +1,8 @@
 from __future__ import annotations
 from collections import Counter
+from typing import TYPE_CHECKING
 
-from sympy.core import Mul, sympify
+from sympy.core import Mul, sympify, S
 from sympy.core.add import Add
 from sympy.core.sorting import default_sort_key
 from sympy.functions.elementary.exponential import log
@@ -12,6 +13,10 @@ from sympy.strategies import (
     unpack, flatten, condition, exhaust, rm_id, sort
 )
 from sympy.utilities.exceptions import sympy_deprecation_warning
+
+
+if TYPE_CHECKING:
+    from sympy.core.expr import Expr
 
 
 def hadamard_product(*matrices):
@@ -107,7 +112,7 @@ class HadamardProduct(MatrixExpr):
             remainder = [i for i in expr.args if i not in explicit]
             expl_mat = ImmutableMatrix([
                 Mul.fromiter(i) for i in zip(*explicit)
-            ]).reshape(*self.shape)
+            ]).reshape(*explicit[0].shape)
             expr = HadamardProduct(*([expl_mat] + remainder))
 
         return canonicalize(expr)
@@ -326,7 +331,7 @@ class HadamardPower(MatrixExpr):
         a^{\circ b} = a^b
     """
 
-    def __new__(cls, base, exp):
+    def __new__(cls, base: Expr | complex, exp: Expr | complex) -> Expr: # type: ignore
         base = sympify(base)
         exp = sympify(exp)
 
@@ -339,13 +344,18 @@ class HadamardPower(MatrixExpr):
         obj = super().__new__(cls, base, exp)
         return obj
 
-    @property
-    def base(self):
-        return self._args[0]
+    if TYPE_CHECKING:
+        @property
+        def args(self) -> tuple[Expr, Expr]:
+            ...
 
     @property
-    def exp(self):
-        return self._args[1]
+    def base(self) -> Expr:
+        return self.args[0]
+
+    @property
+    def exp(self) -> Expr:
+        return self.args[1]
 
     @property
     def shape(self):
@@ -377,7 +387,9 @@ class HadamardPower(MatrixExpr):
 
     def _eval_transpose(self):
         from sympy.matrices.expressions.transpose import transpose
-        return HadamardPower(transpose(self.base), self.exp)
+        from sympy.matrices.expressions.matexpr import MatrixExpr
+        exp = transpose(self.exp) if isinstance(self.exp, MatrixExpr) else self.exp
+        return HadamardPower(transpose(self.base), exp)
 
     def _eval_derivative(self, x):
         dexp = self.exp.diff(x)
@@ -387,3 +399,24 @@ class HadamardPower(MatrixExpr):
             dexp*logbase + self.exp*dlbase,
             self
         )
+
+    def doit(self, **hints):
+        from sympy.matrices.matrixbase import MatrixBase
+        from sympy.matrices.immutable import ImmutableMatrix
+
+        if hints.get('deep', True):
+            base, exp = (arg.doit(**hints) for arg in self.args)
+        else:
+            base, exp = self.args
+
+        if isinstance(base, MatrixBase) and isinstance(exp, MatrixBase):
+            return ImmutableMatrix([a ** b for a, b in zip(base, exp)]).reshape(*base.shape)
+        if isinstance(base, MatrixBase) and not exp.is_Matrix:
+            return ImmutableMatrix([x ** exp for x in base]).reshape(*base.shape)
+        if isinstance(exp, MatrixBase) and not base.is_Matrix:
+            return ImmutableMatrix([base ** x for x in exp]).reshape(*exp.shape)
+
+        if exp == S.One:
+            return base
+
+        return HadamardPower(base, exp)

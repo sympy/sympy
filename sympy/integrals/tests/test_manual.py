@@ -1465,3 +1465,9 @@ def test_mul_pow_derivative():
     assert_is_integral_of(x**3*Derivative(f(x), (x, 4)),
                           x**3*Derivative(f(x), (x, 3)) - 3*x**2*Derivative(f(x), (x, 2)) +
                           6*x*Derivative(f(x), x) - 6*f(x))
+
+def test_manualintegrate_trig_log_hang():
+    x = Symbol('x')
+    expr = log((cos(x)/2 + 1) / (1 - cos(x)/2)) / cos(x)
+    res = manualintegrate(expr, x)
+    assert res is not None

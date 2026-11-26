@@ -5,7 +5,7 @@ import operator
 from sympy.core import Basic, sympify
 from sympy.core.add import add, Add, _could_extract_minus_sign
 from sympy.core.sorting import default_sort_key
-from sympy.functions import adjoint
+from sympy.functions import adjoint, conjugate
 from sympy.matrices.matrixbase import MatrixBase
 from sympy.matrices.expressions.transpose import transpose
 from sympy.strategies import (rm_id, unpack, flatten, sort, condition,
@@ -89,6 +89,9 @@ class MatAdd(MatrixExpr, Add):
     def _eval_adjoint(self):
         return MatAdd(*[adjoint(arg) for arg in self.args]).doit()
 
+    def _eval_conjugate(self):
+        return MatAdd(*[conjugate(arg) for arg in self.args]).doit()
+
     def _eval_trace(self):
         from .trace import trace
         return Add(*[trace(arg) for arg in self.args]).doit()
@@ -102,8 +105,7 @@ class MatAdd(MatrixExpr, Add):
         return canonicalize(MatAdd(*args))
 
     def _eval_derivative(self, x):
-        # MatAdd does not remove ZeroMatrix unless you call .doit():
-        return super()._eval_derivative(x).doit()
+        return MatAdd(*[arg.diff(x) for arg in self.args]).doit()
 
 add.register_handlerclass((Add, MatAdd), MatAdd)
 

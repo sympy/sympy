@@ -217,6 +217,7 @@ from functools import cmp_to_key, update_wrapper
 
 from sympy.core.add import Add
 from sympy.core.basic import Basic
+from sympy.core.singleton import S
 
 from sympy.core.function import AppliedUndef, UndefinedFunction, Function
 
@@ -359,7 +360,36 @@ class Printer:
         elif order == 'none':
             return list(expr.args)
         else:
-            return expr.as_ordered_terms(order=order)
+            terms = expr.as_ordered_terms(order=order)
+            if (order is None and len(terms) == 2
+                    and not any(term.is_Order for term in terms)):
+                a, b = terms
+
+                def explicit_i(term):
+                    return (term is S.ImaginaryUnit or
+                            term.is_Mul and S.ImaginaryUnit in term.args)
+
+                def negative_coeff(term):
+                    c = term.args[0] if term.is_Mul else term
+                    if c.is_Rational:
+                        return c.p < 0
+                    if c.is_Float:
+                        return bool(c._mpf_[0])
+                    return c is S.NegativeInfinity
+
+                ia, ib = explicit_i(a), explicit_i(b)
+                na, nb = negative_coeff(a), negative_coeff(b)
+                if (ia and not ib or
+                    ia == ib and (
+                        na and not nb or
+                        na and nb and a.is_Number and not b.is_Number
+                    )):
+                    terms.reverse()
+            if order is None:
+                # NaN is unordered numerically; position it by identity
+                # and keep Order terms last without examining other values.
+                terms.sort(key=lambda term: (term.is_Order, term is not S.NaN))
+            return terms
 
     def _compare_pretty(self, a, b):
         """return -1, 0, 1 if a is canonically less, equal or

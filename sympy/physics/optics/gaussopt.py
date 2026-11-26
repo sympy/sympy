@@ -584,7 +584,7 @@ class BeamParameter(Expr):
         >>> from sympy.physics.optics import BeamParameter
         >>> p = BeamParameter(530e-9, 1, w=1e-3)
         >>> p.radius
-        1 + 3.55998576005696*pi**2
+        3.55998576005696*pi**2 + 1
         """
         return self.z*(1 + (self.z_r/self.z)**2)
 
@@ -606,7 +606,7 @@ class BeamParameter(Expr):
         >>> from sympy.physics.optics import BeamParameter
         >>> p = BeamParameter(530e-9, 1, w=1e-3)
         >>> p.w
-        0.001*sqrt(0.2809/pi**2 + 1)
+        0.001*sqrt(1 + 0.2809/pi**2)
         """
         return self.w_0*sqrt(1 + (self.z/self.z_r)**2)
 
@@ -826,7 +826,7 @@ def gaussian_conj(s_in, z_r_in, f):
     >>> s_in, z_r_in, f = symbols('s_in z_r_in f')
 
     >>> gaussian_conj(s_in, z_r_in, f)[0]
-    1/(-1/(s_in + z_r_in**2/(-f + s_in)) + 1/f)
+    1/(1/f - 1/(s_in + z_r_in**2/(s_in - f)))
 
     >>> gaussian_conj(s_in, z_r_in, f)[1]
     z_r_in/(1 - s_in**2/f**2 + z_r_in**2/f**2)
@@ -877,8 +877,7 @@ def conjugate_gauss_beams(wavelen, waist_in, waist_out, **kwargs):
     f*(1 - sqrt(w_i**2/w_o**2 - pi**2*w_i**4/(f**2*l**2)))
 
     >>> factor(conjugate_gauss_beams(l, w_i, w_o, f=f)[1])
-    f*w_o**2*(w_i**2/w_o**2 - sqrt(w_i**2/w_o**2 -
-              pi**2*w_i**4/(f**2*l**2)))/w_i**2
+    f*w_o**2*(w_i**2/w_o**2 - sqrt(w_i**2/w_o**2 - pi**2*w_i**4/(f**2*l**2)))/w_i**2
 
     >>> conjugate_gauss_beams(l, w_i, w_o, f=f)[2]
     f

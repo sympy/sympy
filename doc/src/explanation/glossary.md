@@ -193,13 +193,22 @@ Dummy
 Equation
 
     An *equation* is an {term}`expression` that has an equals sign $=$.
-    Equations in SymPy are represented using the {class}`Eq
-    <sympy.core.relational.Equality>` class. Equations are **not** created
-    using the `==` operator. The `==` operator does a {term}`structural
-    equality` check between two expressions, and always returns `True` or
-    `False`. To contrast, a symbolic equation may be {term}`unevaluated`.
-    Equations are considered {term}`booleans <boolean>` since they
-    mathematically represent a predicate value that is either true or false.
+    Symbolic equality in SymPy is represented using the {class}`Eq
+    <sympy.core.relational.Equality>` class. An `Eq` is a {term}`boolean`
+    relation: it represents a predicate that is true or false, although its
+    truth value may remain symbolically {term}`unevaluated`.
+
+    SymPy currently has no separate general-purpose object whose sole purpose
+    is to store a formal equation. Consequently, some equation-oriented APIs,
+    including {func}`~.solve`, {func}`~.solveset`, and polynomial
+    construction, also accept `Eq(lhs, rhs)` as convenient syntax for the
+    formal equation `lhs - rhs = 0`. This is an API convention rather than a
+    change to the logical meaning of `Eq`, and a future dedicated equation
+    container could make the distinction explicit.
+
+    Equations are **not** created using the `==` operator. The `==`
+    operator does a {term}`structural equality` check between two
+    expressions, and always returns `True` or `False`.
 
 `_eval_*`
 

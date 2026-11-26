@@ -2,7 +2,7 @@ from __future__ import annotations
 import re
 import typing
 from itertools import product
-from typing import Any, Callable
+from typing import Any, Callable, TYPE_CHECKING, cast
 
 import sympy
 from sympy import Mul, Add, Pow, Rational, log, exp, sqrt, cos, sin, tan, asin, acos, acot, asec, acsc, sinh, cosh, tanh, asinh, \
@@ -15,6 +15,10 @@ from sympy.core.sympify import sympify, _sympify
 from sympy.functions.special.bessel import airybiprime
 from sympy.functions.special.error_functions import li
 from sympy.utilities.exceptions import sympy_deprecation_warning
+
+
+if TYPE_CHECKING:
+    from sympy.core.expr import Expr
 
 
 def mathematica(s, additional_translations=None):
@@ -1569,8 +1573,14 @@ class MathematicaParser:
         if not all(isinstance(o, str) and o.isdigit() for o in orders):
             return None
         orders = [int(o) for o in orders]
-        func = (self._node_conversions.get(fname, Function(fname))
-                if isinstance(fname, str) else recurse(fname))
+        func = cast(
+            "Callable[..., Expr]",
+            (
+                self._node_conversions.get(fname, Function(fname))
+                if isinstance(fname, str)
+                else recurse(fname)
+            ),
+        )
         if bare:
             # Nothing is applied to it, so the derivative operator itself is the
             # value: ``f'`` becomes ``Lambda(_x, Derivative(f(_x), _x))``.

@@ -396,6 +396,17 @@ def test_pinv_succeeds_with_rank_decomposition_method():
         assert AAp.H == AAp
         assert ApA.H == ApA
 
+
+def test_pinv_symbolic_vectors():
+    # Issue #30759: Matrix.pinv() on symbolic row vectors introduces artificial division-by-zero singularities
+    m_row = Matrix([[x, y]])
+    assert m_row.pinv().subs({x: 0, y: 1}) == m_row.subs({x: 0, y: 1}).pinv()
+    assert m_row.pinv().subs({x: 1, y: 0}) == m_row.subs({x: 1, y: 0}).pinv()
+
+    m_col = Matrix([[x], [y]])
+    assert m_col.pinv().subs({x: 0, y: 1}) == m_col.subs({x: 0, y: 1}).pinv()
+    assert m_col.pinv().subs({x: 1, y: 0}) == m_col.subs({x: 1, y: 0}).pinv()
+
 def test_rank_decomposition():
     a = Matrix(0, 0, [])
     c, f = a.rank_decomposition()

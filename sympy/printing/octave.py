@@ -13,7 +13,7 @@ complete source code files.
 from __future__ import annotations
 from typing import Any
 
-from sympy.core import Mul, Pow, S, Rational
+from sympy.core import Mul, S
 from sympy.core.mul import _keep_coeff
 from sympy.core.numbers import equal_valued
 from sympy.printing.codeprinter import CodePrinter
@@ -148,36 +148,12 @@ class OctaveCodePrinter(CodePrinter):
         else:
             sign = ""
 
-        a = []  # items in the numerator
-        b = []  # items that are in the denominator (if any)
-
-        pow_paren = []  # Will collect all pow with more than one base element and exp = -1
-
         if self.order not in ('old', 'none'):
             args = expr.as_ordered_factors()
         else:
-            # use make_args in case expr was something like -x -> x
             args = Mul.make_args(expr)
 
-        # Gather args for numerator/denominator
-        for item in args:
-            if (item.is_commutative and item.is_Pow and item.exp.is_Rational
-                    and item.exp.is_negative):
-                if item.exp != -1:
-                    b.append(Pow(item.base, -item.exp, evaluate=False))
-                else:
-                    if len(item.args[0].args) != 1 and isinstance(item.base, Mul):   # To avoid situations like #14160
-                        pow_paren.append(item)
-                    b.append(Pow(item.base, -item.exp))
-            elif item.is_Rational and item is not S.Infinity:
-                if item.p != 1:
-                    a.append(Rational(item.p))
-                if item.q != 1:
-                    b.append(Rational(item.q))
-            else:
-                a.append(item)
-
-        a = a or [S.One]
+        a, b, pow_paren = self._mul_factors(args, rational='split')
 
         a_str = [self.parenthesize(x, prec) for x in a]
         b_str = [self.parenthesize(x, prec) for x in b]
@@ -199,6 +175,7 @@ class OctaveCodePrinter(CodePrinter):
         if not b:
             return sign + multjoin(a, a_str)
         elif len(b) == 1:
+            b_str[0] = self._parenthesize_mul_denominator(b[0], b_str[0])
             divsym = '/' if b[0].is_number else './'
             return sign + multjoin(a, a_str) + divsym + b_str[0]
         else:

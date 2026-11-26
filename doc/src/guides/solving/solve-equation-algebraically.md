@@ -105,6 +105,50 @@ sqrt(y)
 -sqrt(y)
 ```
 
+#### Understand How `Eq` Is Interpreted
+
+An {class}`~sympy.core.relational.Equality` such as `Eq(lhs, rhs)` is a
+symbolic Boolean relation: it represents the logical statement that the two
+sides are equal. Operations on the relation itself, such as
+{func}`~.simplify`, must preserve that truth-value meaning.
+
+Some equation-oriented APIs also accept `Eq(lhs, rhs)` as convenient syntax
+for the formal equation `lhs - rhs = 0`. The interpretation therefore depends
+on the API consuming the `Eq`:
+
+| Context | Treatment of `Eq(lhs, rhs)` |
+| --- | --- |
+| `simplify(Eq(...))` and other operations on the relation itself | A logical relation; transformations must preserve its truth value. |
+| `solve(Eq(...), x)` | Equation input; it is converted to `lhs - rhs = 0` before solving. |
+| `solveset(Eq(...), x)` | Equation input while the relation depends on `x`; a relation independent of `x` is evaluated as a logical condition. |
+| `Poly(Eq(...))` and `linear_eq_to_matrix(Eq(...))` | Equation input representing `lhs - rhs = 0`. |
+| Ordered relations such as `<`, `<=`, `>`, and `>=` passed to solvers | Relations whose ordering semantics must be preserved. |
+
+This equation-oriented interpretation *does not* change the semantics of the `Equality`
+as a symbolic relation. Consider the following:
+
+```py
+>>> solve(Eq(x - y, 0), x)
+[y]
+```
+
+The equation solver has interpreted this as asking for solutions of the
+formal equation `x - y = 0`, but this does not mean that `Eq(x - y, 0)`
+and `Eq(x, y)` must have the same truth value for non-finite values:
+
+```py
+>>> from sympy import oo
+>>> Eq(oo, oo)
+True
+>>> Eq(oo - oo, 0)
+False
+```
+
+An `Eq` can evaluate to `True` or `False` when it is constructed, before
+an equation-oriented API receives it. When an API needs an unevaluated
+`Equality` as equation syntax, `Eq(..., evaluate=False)` can be used
+explicitly.
+
 ### Restrict the Domain of Solutions
 
 By default, SymPy will return solutions in the complex domain, which also

@@ -474,6 +474,11 @@ def solve_univariate_inequality(expr, gen, relational=True, domain=S.Reals, cont
     Notes
     =====
 
+    The input is treated as a relation whose truth set is being determined,
+    not merely as an equation container. Transformations that form
+    ``lhs - rhs`` internally must still preserve the semantics of the original
+    relation.
+
     Currently, we cannot solve all the inequalities due to limitations in
     :func:`sympy.solvers.solveset.solvify`. Also, the solution returned for trigonometric inequalities
     are restricted in its periodic interval.
@@ -787,6 +792,12 @@ def _solve_inequality(ie, s, linear=False):
     sense of the relationship are applied: no division by an unsigned
     value is attempted unless the relationship involves Eq or Ne and
     no division by a value not known to be nonzero is ever attempted.
+
+    Unlike equation-oriented APIs such as ``solve``, this routine operates on
+    the ``Relational`` itself. ``Eq`` and ``Ne`` therefore retain their logical
+    relational semantics rather than serving merely as containers for
+    ``lhs - rhs = 0``. Operations performed here must preserve the meaning of
+    the original relation, including at non-finite values.
 
     Examples
     ========

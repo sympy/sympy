@@ -184,8 +184,8 @@ class MatrixExpr(Expr):
         return None
 
     def _eval_conjugate(self):
-        from sympy.matrices.expressions.adjoint import Adjoint
-        return Adjoint(Transpose(self))
+        from sympy.matrices.expressions.conjugate import Conjugate
+        return Conjugate(self)
 
     def as_real_imag(self, deep=True, **hints):
         return self._eval_as_real_imag()
@@ -231,15 +231,8 @@ class MatrixExpr(Expr):
     def _eval_derivative(self, x):
         # `x` is a scalar:
         if self.has(x) or (isinstance(x, MatrixElement) and self.has(x.parent)):
-            # See if there are other methods using it:
-            eval_derivative = getattr(super(), "_eval_derivative", None)
-            if eval_derivative is not None:
-                return eval_derivative(x)
-            # Signal that the derivative could not be computed, so that
-            # ``Derivative`` remains unevaluated:
             return None
-        else:
-            return ZeroMatrix(*self.shape)
+        return ZeroMatrix(*self.shape)
 
     @classmethod
     def _check_dim(cls, dim):

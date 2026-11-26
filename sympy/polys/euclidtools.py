@@ -1717,6 +1717,9 @@ def dup_ff_lcm(f, g, K):
     x**3 + 7/2*x**2 + 3*x
 
     """
+    if not f or not g:
+        return dmp_zero(0, K)
+
     h = dup_quo(dup_mul(f, g, K),
                 dup_gcd(f, g, K), K)
 
@@ -1760,6 +1763,9 @@ def dmp_rr_lcm(f, g, u, K):
     x**3 + 2*x**2*y + x*y**2
 
     """
+    if dmp_zero_p(f, u) or dmp_zero_p(g, u):
+        return dmp_zero(u, K)
+
     fc, f = dmp_ground_primitive(f, u, K)
     gc, g = dmp_ground_primitive(g, u, K)
 
@@ -1788,6 +1794,9 @@ def dmp_ff_lcm(f, g, u, K):
     x**3 + 4*x**2*y + 4*x*y**2
 
     """
+    if dmp_zero_p(f, u) or dmp_zero_p(g, u):
+        return dmp_zero(u, K)
+
     h = dmp_quo(dmp_mul(f, g, u, K),
                 dmp_gcd(f, g, u, K), u, K)
 

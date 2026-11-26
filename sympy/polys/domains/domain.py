@@ -1034,7 +1034,7 @@ class Domain(Generic[Er]):
         return not self == other
 
     def map(self, seq: Iterable[int | Er]) -> list[Er]:
-        """Rersively apply ``self`` to all elements of ``seq``. """
+        """Recursively apply ``self`` to all elements of ``seq``. """
         result = []
 
         for elt in seq:
@@ -1064,7 +1064,7 @@ class Domain(Generic[Er]):
         else:
             return self.poly_ring(*symbols)
 
-    def poly_ring(self, *symbols: str | Expr, order: str | MonomialOrder = lex) -> PolynomialRing:
+    def poly_ring(self, *symbols: str | Expr, order: str | MonomialOrder = lex) -> PolynomialRing[Er]:
         """Returns a polynomial ring, i.e. `K[X]`. """
         from sympy.polys.domains.polynomialring import PolynomialRing
         return PolynomialRing(self, symbols, order)
@@ -1083,7 +1083,7 @@ class Domain(Generic[Er]):
         from sympy.polys.domains.powerseriesring import PowerSeriesRing
         return PowerSeriesRing(self, symbols[0], prec)
 
-    def frac_field(self, *symbols: str | Expr, order: str | MonomialOrder = lex) -> FractionField:
+    def frac_field(self, *symbols: str | Expr, order: str | MonomialOrder = lex) -> FractionField[Er]:
         """Returns a fraction field, i.e. `K(X)`. """
         from sympy.polys.domains.fractionfield import FractionField
         return FractionField(self, symbols, order)
@@ -1129,11 +1129,11 @@ class Domain(Generic[Er]):
         >>> from sympy.abc import x
         >>> f = Poly(x**2 - 2)
         >>> K = QQ.alg_field_from_poly(f)
-        >>> K.ext.minpoly == f
+        >>> K.ext.minpoly.as_poly(x).set_domain(f.domain) == f
         True
         >>> g = Poly(8*x**3 - 6*x - 1)
         >>> L = QQ.alg_field_from_poly(g, "alpha")
-        >>> L.ext.minpoly == g
+        >>> L.ext.minpoly.as_poly(x).set_domain(g.domain) == g
         True
         >>> L.to_sympy(L([1, 1, 1]))
         alpha**2 + alpha + 1

@@ -16,6 +16,19 @@ from sympy.printing.codeprinter import CodePrinter
 from sympy.printing.precedence import precedence, PRECEDENCE
 
 
+# ECMAScript 2015+ reserved words (keywords + future reserved + null/boolean literals)
+reserved_words = [
+    'break', 'case', 'catch', 'class', 'const', 'continue',
+    'debugger', 'default', 'delete', 'do', 'else', 'export',
+    'extends', 'finally', 'for', 'function', 'if', 'import',
+    'in', 'instanceof', 'let', 'new', 'return', 'static',
+    'super', 'switch', 'this', 'throw', 'try', 'typeof',
+    'var', 'void', 'while', 'with', 'yield',
+    'enum', 'await',
+    'implements', 'interface', 'package', 'private', 'protected', 'public',
+    'null', 'true', 'false',
+]
+
 # dictionary mapping SymPy function to (argument_conditions, Javascript_function).
 # Used in JavascriptCodePrinter._print_Function(self)
 known_functions = {
@@ -60,6 +73,7 @@ class JavascriptCodePrinter(CodePrinter):
         self.known_functions = dict(known_functions)
         userfuncs = settings.get('user_functions', {})
         self.known_functions.update(userfuncs)
+        self.reserved_words = set(reserved_words)
 
     def _rate_index_position(self, p):
         return p*5
@@ -112,7 +126,12 @@ class JavascriptCodePrinter(CodePrinter):
     def _print_Mod(self, expr):
         num, den = expr.args
         PREC = precedence(expr)
-        snum, sden = [self.parenthesize(arg, PREC) for arg in expr.args]
+        if den.is_Pow and den.exp.is_negative:
+            den_prec = PRECEDENCE["Pow"]
+        else:
+            den_prec = PREC
+        snum = self.parenthesize(num, PREC)
+        sden = self.parenthesize(den, den_prec)
         # % is remainder (same sign as numerator), not modulo (same sign as
         # denominator), in js. Hence, % only works as modulo if both numbers
         # have the same sign
@@ -137,6 +156,12 @@ class JavascriptCodePrinter(CodePrinter):
             offset *= dims[i]
         return "%s[%s]" % (self._print(expr.base.label), self._print(elem))
 
+    def _print_BooleanTrue(self, expr):
+        return 'true'
+
+    def _print_BooleanFalse(self, expr):
+        return 'false'
+
     def _print_Exp1(self, expr):
         return "Math.E"
 
@@ -148,6 +173,9 @@ class JavascriptCodePrinter(CodePrinter):
 
     def _print_NegativeInfinity(self, expr):
         return 'Number.NEGATIVE_INFINITY'
+
+    def _print_NaN(self, expr):
+        return 'NaN'
 
     def _print_Piecewise(self, expr):
         from sympy.codegen.ast import Assignment

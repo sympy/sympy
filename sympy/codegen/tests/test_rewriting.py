@@ -3,7 +3,7 @@ import tempfile
 from sympy.core.numbers import pi, Rational
 from sympy.core.power import Pow
 from sympy.core.singleton import S
-from sympy.core.symbol import Symbol
+from sympy.core.symbol import Symbol, symbols
 from sympy.functions.elementary.complexes import Abs
 from sympy.functions.elementary.exponential import (exp, log)
 from sympy.functions.elementary.trigonometric import (cos, sin, sinc)
@@ -235,7 +235,7 @@ def test_cosm1_apart():
 
 
 def test_powm1():
-    args = x, y = map(Symbol, "xy")
+    args = x, y = symbols("x y")
 
     expr1 = x**y - 1
     opt1 = optimize(expr1, [powm1_opt])
@@ -332,7 +332,7 @@ def test_create_expand_pow_optimization():
     assert cc(x**(-4)) == '1.0/(x*x*x*x)'
     assert cc(x**(-5)) == 'pow(x, -5)'
     assert cc(-x**4) == '-(x*x*x*x)'
-    assert cc(x**4 - x**2) == '-(x*x) + x*x*x*x'
+    assert cc(x**4 - x**2) == 'x*x*x*x - (x*x)'
     i = Symbol('i', integer=True)
     assert cc(x**i - x**2) == 'pow(x, i) - (x*x)'
     y = Symbol('y', real=True)

@@ -240,11 +240,11 @@ We would like to reduce degrees of the numerator and the denominator of a
 rational function ``f/g``. To do this we employ :func:`~.cancel` function::
 
     >>> cancel(f/g)
-     3      2       2
-    x  - 2⋅x  + √2⋅x  - 3⋅x - 2⋅√2⋅x - 3⋅√2
+     3       2      2
+    x  + √2⋅x  - 2⋅x  - 2⋅√2⋅x - 3⋅x - 3⋅√2
     ───────────────────────────────────────
-                      2
-                     x  - 2
+                     2
+                    x  - 2
 
 Unfortunately nothing interesting happened. This is because by default SymPy
 treats `\sqrt{2}` as a generator, obtaining a bivariate polynomial for the
@@ -296,7 +296,7 @@ domains, which includes:
     >>> alg = AlgebraicNumber((sqrt(5) - 1)/2, alias='alpha')
 
     >>> factor(f, extension=alg)
-    (x - α)⋅(x + α)⋅(x - 1 - α)⋅(x + α + 1)
+    (x - α)⋅(x + α)⋅(x - α - 1)⋅(x + α + 1)
 
 Factoring polynomials into linear factors
 -----------------------------------------

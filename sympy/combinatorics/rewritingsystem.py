@@ -349,7 +349,7 @@ class RewritingSystem:
         proper_prefixes = {}
 
         # compute the inverses of all the new rules added
-        all_rules = rules
+        all_rules = rules.copy()
         inverse_rules = self._compute_inverse_rules(all_rules)
         all_rules.update(inverse_rules)
 

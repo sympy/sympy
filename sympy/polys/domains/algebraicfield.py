@@ -139,7 +139,7 @@ class AlgebraicField(
     >>> K.to_sympy(xk * yk)
     17*sqrt(2) + 30
     >>> K.to_sympy(xk + yk)
-    5 + 7*sqrt(2)
+    7*sqrt(2) + 5
     >>> K.to_sympy(xk ** 2)
     24*sqrt(2) + 41
     >>> K.to_sympy(xk / yk)
@@ -158,7 +158,7 @@ class AlgebraicField(
     >>> minpoly(g, x)
     x**2 + x + 1
     >>> factor(x**3 - 1, extension=g)
-    (x - 1)*(x - exp(2*I*pi/3))*(x + 1 + exp(2*I*pi/3))
+    (x - 1)*(x - exp(2*I*pi/3))*(x + exp(2*I*pi/3) + 1)
 
     It is also possible to make an algebraic field from multiple extension
     elements.
@@ -221,7 +221,7 @@ class AlgebraicField(
     >>> K
     QQ<sqrt(5)>
     >>> K.integral_basis(fmt='sympy')
-    [1, 1/2 + sqrt(5)/2]
+    [1, sqrt(5)/2 + 1/2]
     >>> K.maximal_order()
     Submodule[[2, 0], [1, 1]]/2
 
@@ -234,7 +234,7 @@ class AlgebraicField(
     >>> K
     QQ<exp(2*I*pi/7)>
     >>> K.primes_above(11)
-    [(11, _x**3 + 5*_x**2 + 4*_x - 1), (11, _x**3 - 4*_x**2 - 5*_x - 1)]
+    [(11, _0**3 + 5*_0**2 + 4*_0 - 1), (11, _0**3 - 4*_0**2 - 5*_0 - 1)]
 
     The Galois group of the Galois closure of the field can be computed (when
     the minimal polynomial of the field is of sufficiently small degree).
@@ -516,7 +516,7 @@ class AlgebraicField(
         >>> print(B0[1])  # doctest: +SKIP
         ANP([mpq(1,2), mpq(1,2)], [mpq(1,1), mpq(0,1), mpq(-5,1)], QQ)
         >>> print(B1[1])
-        1/2 + alpha/2
+        alpha/2 + 1/2
         >>> print(B2[1])
         alpha/2 + 1/2
 

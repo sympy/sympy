@@ -622,7 +622,7 @@ class ArrayAdd(_ArrayExpr):
         tuple are merged by summing their coefficients.  Addends whose
         summed coefficient is zero are dropped.
         """
-        coeff_map: dict[tuple, Expr] = {}
+        coeff_map = {}
         for arg in args:
             coeff, arrays = _array_term_as_coeff_arrays(arg)
             if arrays in coeff_map:
@@ -1191,7 +1191,10 @@ class ArrayElementwiseApplyFunc(_ArrayExpr):
         d = Dummy("d")
         function = self.function(d)
         fdiff = function.diff(d)
-        if isinstance(fdiff, Function):
+        if isinstance(fdiff, Function) and fdiff.args == (d,):
+            # Keep the bare function class only when the derivative is the
+            # function applied to the same variable; otherwise the argument
+            # (e.g. the shift in exp(d + 1)) would be lost.
             fdiff = type(fdiff)
         else:
             fdiff = Lambda(d, fdiff)

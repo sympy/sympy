@@ -1157,7 +1157,7 @@ class Derivative(Expr):
 
         >>> e = sqrt((x + 1)**2 + x)
         >>> diff(e, (x, 5), simplify=False).count_ops()
-        136
+        139
         >>> diff(e, (x, 5)).count_ops()
         30
 
@@ -1927,14 +1927,14 @@ class Derivative(Expr):
         >>> x, h = symbols('x h')
         >>> f = Function('f')
         >>> f(x).diff(x).as_finite_difference()
-        -f(x - 1/2) + f(x + 1/2)
+        f(x + 1/2) - f(x - 1/2)
 
         The default step size and number of points are 1 and
         ``order + 1`` respectively. We can change the step size by
         passing a symbol as a parameter:
 
         >>> f(x).diff(x).as_finite_difference(h)
-        -f(-h/2 + x)/h + f(h/2 + x)/h
+        f(h/2 + x)/h - f(x - h/2)/h
 
         We can also specify the discretized values to be used in a
         sequence:
@@ -1949,7 +1949,7 @@ class Derivative(Expr):
         >>> e, sq2 = exp(1), sqrt(2)
         >>> xl = [x-h, x+h, x+e*h]
         >>> f(x).diff(x, 1).as_finite_difference(xl, x+h*sq2)  # doctest: +ELLIPSIS
-        2*h*((h + sqrt(2)*h)/(2*h) - (-sqrt(2)*h + h)/(2*h))*f(E*h + x)/...
+        2*h*((sqrt(2)*h + h)/(2*h) - (h - sqrt(2)*h)/(2*h))*f(E*h + x)/...
 
         To approximate ``Derivative`` around ``x0`` using a non-equidistant
         spacing step, the algorithm supports assignment of undefined
@@ -1957,21 +1957,21 @@ class Derivative(Expr):
 
         >>> dx = Function('dx')
         >>> f(x).diff(x).as_finite_difference(points=dx(x), x0=x-h)
-        -f(-h + x - dx(-h + x)/2)/dx(-h + x) + f(-h + x + dx(-h + x)/2)/dx(-h + x)
+        f(-h + x + dx(x - h)/2)/dx(x - h) - f(-h + x - dx(x - h)/2)/dx(x - h)
 
         Partial derivatives are also supported:
 
         >>> y = Symbol('y')
         >>> d2fdxdy=f(x,y).diff(x,y)
         >>> d2fdxdy.as_finite_difference(wrt=x)
-        -Derivative(f(x - 1/2, y), y) + Derivative(f(x + 1/2, y), y)
+        Derivative(f(x + 1/2, y), y) - Derivative(f(x - 1/2, y), y)
 
         We can apply ``as_finite_difference`` to ``Derivative`` instances in
         compound expressions using ``replace``:
 
         >>> (1 + 42**f(x).diff(x)).replace(lambda arg: arg.is_Derivative,
         ...     lambda arg: arg.as_finite_difference())
-        42**(-f(x - 1/2) + f(x + 1/2)) + 1
+        42**(f(x + 1/2) - f(x - 1/2)) + 1
 
 
         See also
@@ -2206,6 +2206,48 @@ class Lambda(Expr):
         return self.func(self.args[0], self.args[1].evalf(n=prec_to_dps(prec)))
 
 
+
+    def _subs(self, old, new, **hints):
+        from .symbol import Dummy
+        from .traversal import preorder_traversal
+
+        capture_new = hints.get('original_new', new)
+
+        if not old.free_symbols.isdisjoint(self.variables):
+            return self
+
+        if old.is_Symbol and old not in self.free_symbols:
+            return self
+
+        if not capture_new.free_symbols or not self.has(*capture_new.free_symbols):
+            return super()._subs(old, new, **hints)
+
+        # Probe where substitution actually takes place.
+        probe = Dummy('probe', commutative=new.is_commutative is not False)
+        inner_hints = {k: v for k, v in hints.items()
+                       if k != 'original_new'}
+        marked = super()._subs(old, probe, **inner_hints)
+
+        if not marked.has(probe):
+            return super()._subs(old, new, **hints)
+
+        # Give every binding a unique identity.
+        f, restore = marked._bound_dummies()
+
+        # Protect bindings whose scopes contain the replacement.
+        for node in preorder_traversal(f):
+            if not hasattr(node, 'bound_symbols') or not node.has(probe):
+                continue
+            for d in node.bound_symbols:
+                if d in restore and restore[d] in capture_new.free_symbols:
+                    v = restore[d]
+                    restore[d] = Dummy(v.name, commutative=v.is_commutative)
+
+        # Restore safe bindings before inserting the replacement.
+        return f.xreplace(restore).xreplace({probe: new})
+
+
+
 class Subs(Expr):
     """
     Represents unevaluated substitutions of an expression.
@@ -2291,6 +2333,10 @@ class Subs(Expr):
     >>> s, ss
     (Subs(x, x, 0), Subs(y, y, 0))
     """
+
+    # Ensure generated substitution symbols do not collide with existing free symbols in the expression.
+
+
     def __new__(cls, expr, variables, point, **assumptions):
         if not is_sequence(variables, Tuple):
             variables = [variables]
@@ -2341,9 +2387,9 @@ class Subs(Expr):
             # because the new symbol that would be created is _1 but _1
             # is already mapped to 0 so __0 and __1 are used for the new
             # symbols
-            if any(r in expr.free_symbols and
-                   r in variables and
-                   Symbol(pre + mystr(point[variables.index(r)])) != r
+            if any(r in expr.free_symbols and (
+                   r not in variables or
+                   s_pts[point[variables.index(r)]] != r)
                    for _, r in reps):
                 pre += "_"
                 continue
@@ -2468,8 +2514,13 @@ class Subs(Expr):
         return super().__hash__()
 
     def _hashable_content(self):
-        return (self._expr.xreplace(self.canonical_variables),
-            ) + tuple(ordered([(v, p) for v, p in
+        # Include substitution metadata to distinguish Subs objects that may otherwise have identical canonicalized expressions.
+
+        return (
+            self._expr.xreplace(self.canonical_variables),
+            len(self.variables),
+            tuple(sorted(self.point, key=default_sort_key)),
+        ) + tuple(ordered([(v, p) for v, p in
             zip(self.variables, self.point) if not self.expr.has(v)]))
 
     def _eval_subs(self, old, new):
@@ -2743,7 +2794,7 @@ def expand(e, deep=True, modulus=None, power_base=True, power_exp=True,
     >>> (x + y).expand(complex=True)
     re(x) + re(y) + I*im(x) + I*im(y)
     >>> cos(x).expand(complex=True)
-    -I*sin(re(x))*sinh(im(x)) + cos(re(x))*cosh(im(x))
+    cos(re(x))*cosh(im(x)) - I*sin(re(x))*sinh(im(x))
 
     Note that this is just a wrapper around ``as_real_imag()``.  Most objects
     that wish to redefine ``_eval_expand_complex()`` should consider
@@ -2764,7 +2815,7 @@ def expand(e, deep=True, modulus=None, power_base=True, power_exp=True,
     Do trigonometric expansions.
 
     >>> cos(x + y).expand(trig=True)
-    -sin(x)*sin(y) + cos(x)*cos(y)
+    cos(x)*cos(y) - sin(x)*sin(y)
     >>> sin(2*x).expand(trig=True)
     2*sin(x)*cos(x)
 
@@ -2971,7 +3022,7 @@ def _mexpand(expr, recursive=False):
 # These are simple wrappers around single hints.
 
 
-def expand_mul(expr, deep=True):
+def expand_mul(expr: Expr, deep: bool = True) -> Expr:
     """
     Wrapper around expand that only uses the mul hint.  See the expand
     docstring for more information.
@@ -3099,7 +3150,7 @@ def expand_complex(expr, deep=True):
     >>> from sympy import expand_complex, exp, sqrt, I
     >>> from sympy.abc import z
     >>> expand_complex(exp(z))
-    I*exp(re(z))*sin(im(z)) + exp(re(z))*cos(im(z))
+    exp(re(z))*cos(im(z)) + I*exp(re(z))*sin(im(z))
     >>> expand_complex(sqrt(I))
     sqrt(2)/2 + sqrt(2)*I/2
 
@@ -3284,7 +3335,7 @@ def count_ops(expr, visual=False):
 
     >>> eq=x*(1 + x*(2 + x*(3 + x)))
     >>> count_ops(eq.expand(), visual=True) - count_ops(eq, visual=True)
-    -MUL + 3*POW
+    3*POW - MUL
 
     The count_ops function also handles iterables:
 
@@ -3334,7 +3385,7 @@ def count_ops(expr, visual=False):
                         a = a.as_two_terms()[1]
                     else:
                         a = -a
-                n, d = fraction(a)
+                n, d = fraction(a, exact=True)
                 if n.is_Integer:
                     ops.append(DIV)
                     if n < 0:

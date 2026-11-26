@@ -1052,6 +1052,17 @@ def test_dsolve_remove_redundant_solutions():
     assert dsolve(eq) == sol
 
 
+def test_dsolve_ics_redundant_constant_solution():
+    t = symbols('t')
+    y = Function('y')(t)
+    C2 = symbols('C2')
+
+    eq = y.diff(t, 2) + 2*y.diff(t) + y
+    ics = {y.subs(t, 0): 0}
+
+    assert dsolve(eq, y, ics=ics) == Eq(y, C2*t*exp(-t))
+
+
 def test_issue_13060():
     A, B = symbols("A B", cls=Function)
     t = Symbol("t")
@@ -1094,11 +1105,11 @@ def test_issue_22604():
     assert x1sol == Eq(x1(t), (-sqrt(5) + 3 + 3*sqrt(2)*sqrt(3 - sqrt(5)))
                        *cos(sqrt(2)*t*sqrt(3 - sqrt(5))/2)/10 - sqrt(sqrt(5) + 3)
                        *(-sqrt(3 - sqrt(5)) + 2*sqrt(2))*cos(sqrt(2)*t*sqrt(sqrt(5) + 3)/2)/10)
-    assert x2sol == Eq(x2(t), (-2 + 3*sqrt(2)*sqrt(3 - sqrt(5))
+    assert x2sol.equals(Eq(x2(t), (-2 + 3*sqrt(2)*sqrt(3 - sqrt(5))
                         + 2*sqrt(5) + 3*sqrt(10)*sqrt(3 - sqrt(5)))*cos(sqrt(2)
                         *t*sqrt(3 - sqrt(5))/2)/20 + sqrt(sqrt(5) + 3)*(-2*sqrt(2) - sqrt(5)
                         *sqrt(3 - sqrt(5)) + sqrt(3 - sqrt(5)) + 2*sqrt(10))
-                        *cos(sqrt(2)*t*sqrt(sqrt(5) + 3)/2)/20)
+                        *cos(sqrt(2)*t*sqrt(sqrt(5) + 3)/2)/20))
 
 def test_issue_22462():
     for de in [

@@ -16,7 +16,7 @@ from sympy.core.power import Pow
 from sympy.core.relational import Eq, Relational
 from sympy.core.singleton import Singleton
 from sympy.core.sorting import ordered
-from sympy.core.symbol import Dummy, Symbol
+from sympy.core.symbol import Symbol
 from sympy.core.rules import Transform
 from sympy.core.logic import fuzzy_and, fuzzy_or, _torf
 from sympy.core.traversal import walk
@@ -51,7 +51,7 @@ class IdentityFunction(Lambda, metaclass=Singleton):
 
     """
 
-    _symbol = Dummy('x')
+    _symbol = Symbol('x')
 
     @property
     def signature(self):
