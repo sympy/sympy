@@ -9,7 +9,7 @@ from sympy.matrices.dense import (Matrix, eye, zeros)
 from sympy.matrices.immutable import ImmutableMatrix
 from sympy.matrices import SparseMatrix
 from sympy.matrices.immutable import \
-    ImmutableDenseMatrix, ImmutableSparseMatrix
+ImmutableDenseMatrix, ImmutableSparseMatrix
 from sympy.abc import x, y
 from sympy.testing.pytest import raises
 
@@ -135,3 +135,22 @@ def test_integrate():
     assert intIM.shape == IM.shape
     assert all(intIM[i, j] == (1 + j + 3*i)*x for i, j in
                 product(range(3), range(3)))
+
+
+def test_immutable_matrix_hash():
+    cases = [
+        [],
+        [[1]],
+        [[1, 2], [3, 4]],
+        [[1, 2, 3], [4, 5, 6]],
+    ]
+    for data in cases:
+        dense = ImmutableMatrix(data)
+        sparse = ImmutableSparseMatrix(data)
+        assert dense == sparse
+        assert hash(dense) == hash(sparse)
+        assert len({dense, sparse}) == 1
+    a = ImmutableMatrix([[1, 2], [3, 4]])
+    b = ImmutableMatrix([[5, 6], [7, 8]])
+    assert a != b
+    assert len({a, b}) == 2
