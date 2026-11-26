@@ -1696,3 +1696,19 @@ def test_issue_23952():
     expr = Sum(abs(k1 - k2)*p**k1 *(1 - q)**(n - k2),
         (k1, 0, n), (k2, 0, n))
     assert expr.subs(p,0).subs(q,1).subs(n, 3).doit() == 3
+
+
+def test_eval_sum_hyper_neg_inf():
+    assert Sum(1/k, (k, -oo, -1)).doit() == -oo
+    assert Sum(S.Half**k, (k, -oo, 0)).doit() == oo
+    assert Sum(1/(3**k*k**2), (k, -oo, -1)).doit() == oo
+    assert Sum(1/k**2, (k, -oo, 4)).doit() == Sum(1/k**2, (k, -oo, 4))
+    assert Sum(1/k**2, (k, 5, -oo)).doit() == Sum(1/k**2, (k, 5, -oo))
+    assert Sum(1/k**2, (k, -oo, -1)).doit() == pi**2/6
+    assert Sum(1/k, (k, -oo, 1)).doit() == Sum(1/k, (k, -oo, 1))
+    assert Sum(S(2)**k, (k, -oo, 0)).doit() == 2
+    a = Symbol('a')
+    assert Sum(a**k, (k, -oo, 0)).doit() == Piecewise(
+        (1/(1 - 1/a), 1/Abs(a) < 1),
+        (Sum(a**k, (k, -oo, 0)), True),
+    )
