@@ -365,7 +365,13 @@ class DomainMatrix(Generic[Er]):
         return DomainMatrix(domain_rows, (nrows, ncols), domain)
 
     @classmethod
-    def from_list_sympy(cls, nrows, ncols, rows, **kwargs):
+    def from_list_sympy(
+        cls,
+        nrows: int,
+        ncols: int,
+        rows: Sequence[Sequence[Expr | complex]],
+        **kwargs: Any,
+    ) -> DomainMatrix[Any]:
         r"""
         Convert a list of lists of Expr into a DomainMatrix using construct_domain
 
@@ -1324,7 +1330,7 @@ class DomainMatrix(Generic[Er]):
         """
         return self.shape[0] == self.shape[1]
 
-    def rank(self):
+    def rank(self) -> int:
         rref, pivots = self.rref()
         return len(pivots)
 
@@ -2225,7 +2231,9 @@ class DomainMatrix(Generic[Er]):
         M_primitive = self.from_flat_nz(prims, data, K)
         return content, M_primitive
 
-    def rref(self, *, method="auto"):
+    def rref(
+        self, *, method: str = "auto"
+    ) -> tuple[DomainMatrix[Any], tuple[int, ...]]:
         r"""
         Returns reduced-row echelon form (RREF) and list of pivots.
 
