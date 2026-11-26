@@ -807,21 +807,12 @@ def preprocess_roots(poly: Poly) -> tuple[Expr, Poly]:
             reverse: bool = False
 
             if strip[0] < strip[-1]:
-                # Dude, are you saying that strip is ALWAYS sorted?
-                # Are the elements ALWAYS non-negative?
                 strip = strip[::-1]
                 reverse = True
 
             ratio: int | None = None
 
             for a, b in zip(base, strip):
-                #   a   b
-                #   0   0   continue
-                #   T   0   ratio = 0; break
-                #   0   T   ratio = None; break
-                #   I   I   ratio = 1; iterate
-                #   T   M   ratio = b / a; iterate. M is a Multiple of T.
-                #   T   R   ratio = b // a or 0?????; break. What do you want here? R is a Remainder.
                 if not a and not b:
                     continue
                 if not a or not b or b % a != 0:
