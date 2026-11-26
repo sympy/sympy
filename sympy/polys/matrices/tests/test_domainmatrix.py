@@ -688,6 +688,48 @@ def test_DomainMatrix_cancel_denom_elementwise():
     raises(ZeroDivisionError, lambda: A.cancel_denom_elementwise(ZZ(0)))
 
 
+def test_DomainMatrix_cancel_denom_elementwise_zeros():
+    A = DM([[2, 0, 6]], ZZ)
+    numers, denoms = A.cancel_denom_elementwise(ZZ(6))
+    assert numers == DM([[1, 0, 1]], ZZ)
+    assert denoms == DM([[3, 1, 1]], ZZ)
+
+    for shape in [(2, 3), (0, 0), (0, 3), (2, 0)]:
+        A = DomainMatrix.zeros(shape, ZZ)
+        for B in [A, A.to_dense()]:
+            N, D = B.cancel_denom_elementwise(ZZ(6))
+            assert N.shape == D.shape == shape
+            assert N.is_zero_matrix
+            assert type(N.rep) is type(D.rep) is type(B.rep)
+            if B.rep.fmt == 'sparse':
+                assert D.is_zero_matrix
+            else:
+                assert D == DomainMatrix.ones(shape, ZZ)
+
+
+def test_DomainMatrix_cancel_denom_elementwise_sparse():
+    shape = (10**6, 10**6)
+    A = DomainMatrix({0: {0: ZZ(2), 2: ZZ(6)}}, shape, ZZ)
+    numers, denoms = A.cancel_denom_elementwise(ZZ(6))
+    assert numers.to_dod() == {0: {0: ZZ.one, 2: ZZ.one}}
+    assert denoms.to_dod() == {0: {0: ZZ(3)}}
+    assert numers.shape == denoms.shape == shape
+    assert numers.rep.fmt == denoms.rep.fmt == 'sparse'
+
+    assert A.cancel_denom_elementwise(ZZ.one) == (
+        A, DomainMatrix.zeros(shape, ZZ),
+    )
+
+    for denom in [ZZ.one, ZZ(6), ZZ(-6)]:
+        numers, denoms = A.cancel_denom_elementwise(denom)
+        F = numers.to_field()
+        for ij, d in denoms.to_field().iter_items():
+            F[ij] = F[ij].element / d
+        assert F == A.to_field() / denom
+
+    raises(ZeroDivisionError, lambda: A.cancel_denom_elementwise(ZZ.zero))
+
+
 def test_DomainMatrix_content_primitive():
     A = DM([[2, 4], [6, 8]], ZZ)
     A_primitive = DM([[1, 2], [3, 4]], ZZ)

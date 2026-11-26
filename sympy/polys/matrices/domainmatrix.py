@@ -2108,7 +2108,9 @@ class DomainMatrix(Generic[Er]):
         """
         Cancel factors between the elements of a matrix and a denominator.
 
-        Returns a matrix of numerators and matrix of denominators.
+        Returns a matrix of numerators and matrix of denominators. For a
+        sparse input matrix, only denominators different from one are stored:
+        a zero entry in the returned denominator matrix represents one.
 
         Requires ``gcd`` in the ground domain.
 
@@ -2137,6 +2139,24 @@ class DomainMatrix(Generic[Er]):
         >>> numers.to_Matrix().multiply_elementwise(denoms_inverted) == M_frac
         True
 
+        With a sparse matrix, the denominator matrix uses implicit ones:
+
+        >>> M = DM([[2, 0, 6]], ZZ).to_sparse()
+        >>> numers, denoms = M.cancel_denom_elementwise(ZZ(6))
+        >>> numers
+        DomainMatrix({0: {0: 1, 2: 1}}, (1, 3), ZZ)
+        >>> denoms
+        DomainMatrix({0: {0: 3}}, (1, 3), ZZ)
+
+        To reconstruct the fractions, divide only at positions with stored
+        denominators, leaving the remaining numerators unchanged:
+
+        >>> F = numers.to_field()
+        >>> for ij, d in denoms.to_field().iter_items():
+        ...     F[ij] = F[ij].element / d
+        >>> F == M.to_field() / ZZ(6)
+        True
+
         Use :meth:`cancel_denom` to cancel factors between the matrix and the
         denominator while preserving the form of a matrix with a scalar
         denominator.
@@ -2151,20 +2171,27 @@ class DomainMatrix(Generic[Er]):
 
         if K.is_zero(denom):
             raise ZeroDivisionError("denominator is zero")
-        elif K.is_one(denom):
-            M_numers = M.copy()
-            M_denoms = M.ones(M.shape, M.domain)
-            return (M_numers, M_denoms)
 
-        elements, data = M.to_flat_nz()
+        rep = type(M.rep)
+        sparse = M.rep.fmt == "sparse"
+        if sparse:
+            denoms = rep.zeros(M.shape, K)
+        else:
+            denoms = rep.ones(M.shape, K)
 
-        cofactors = [K.cofactors(numer, denom) for numer in elements]
-        gcds, numers, denoms = zip(*cofactors)
+        if K.is_one(denom):
+            return M.copy(), M.from_rep(denoms)
 
-        M_numers = M.from_flat_nz(list(numers), data, K)
-        M_denoms = M.from_flat_nz(list(denoms), data, K)
+        numers = rep.zeros(M.shape, K)
+        for (i, j), numer in M.iter_items():
+            if K.is_zero(numer):
+                continue
+            _, n, d = K.cofactors(numer, denom)
+            numers.setitem(i, j, n)
+            if not K.is_one(d):
+                denoms.setitem(i, j, d)
 
-        return (M_numers, M_denoms)
+        return M.from_rep(numers), M.from_rep(denoms)
 
     def content(self) -> Er:
         """
