@@ -8,6 +8,7 @@ from sympy.concrete.summations import (Sum, summation)
 from sympy.core.add import Add
 from sympy.core.containers import (Dict, Tuple)
 from sympy.core.expr import UnevaluatedExpr, Expr
+from sympy.core.equation import Equation
 from sympy.core.function import (Derivative, Function, Lambda, Subs, WildFunction)
 from sympy.core.mod import Mod
 from sympy.core.mul import Mul
@@ -129,6 +130,12 @@ def test_Dict():
 def test_Dummy():
     assert str(d) == "_d"
     assert str(d + x) == "_d + x"
+
+
+def test_Equation():
+    a, b, c = symbols('a b c')
+    tsteqn = Equation(a, b / c)
+    assert str(tsteqn) == 'Eqn(a, b/c)'
 
 
 def test_EulerGamma():
