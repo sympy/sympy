@@ -824,3 +824,22 @@ def test_issue_18473():
     assert exp(x*log(sin(1/x)**2)).as_leading_term(x) == AccumBounds(0, 1)
     assert log(tan(1/x)**2).as_leading_term(x) == AccumBounds(-oo, oo)
     assert exp(2*x*(log(tan(1/x)**2))).as_leading_term(x) == AccumBounds(0, oo)
+
+
+def test_exp_derivative_n_times_polynomial():
+    a, b, c = symbols('a b c')
+    assert exp(x**2 + 1).diff(x, 0) == exp(x**2 + 1)
+    assert exp(y).diff(x, 3) == 0
+    assert exp(a*x + b).diff(x, 5) == a**5 * exp(a*x + b)
+
+    f_quad = exp(x**2 + 1)
+    assert (f_quad.diff(x, 4) - (16*x**4 + 48*x**2 + 12)*f_quad).expand() == 0
+
+    f_cubic = exp(a*x**3 + b*x + c)
+    ref = f_cubic
+    for _ in range(4):
+        ref = ref._eval_derivative(x)
+    assert (f_cubic.diff(x, 4) - ref).expand() == 0
+
+    d50 = f_quad.diff(x, 50)
+    assert d50.has(exp(x**2 + 1))

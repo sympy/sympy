@@ -144,6 +144,34 @@ class ExpBase(DefinedFunction):
             return Product(self.func(arg.function), *arg.limits)
         return self.func(arg)
 
+    def _eval_derivative_n_times(self, s, n):
+        from math import comb
+        from sympy.core.numbers import Integer
+        from sympy.core.symbol import Symbol
+        from sympy.polys.polyerrors import PolificationFailed
+        from sympy.polys.polytools import Poly
+
+        if isinstance(s, Symbol) and isinstance(n, (int, Integer)) and n >= 0 and self.exp.is_polynomial(s):
+            n_int = int(n)
+            if n_int == 0:
+                return self
+            try:
+                F = Poly(self.exp, s)
+            except PolificationFailed:
+                return super()._eval_derivative_n_times(s, n)
+            m = min(n_int, F.degree())
+            if m < 1:
+                return S.Zero
+            derivatives = [F.diff((s, j)) for j in range(1, m + 1)]
+            P = [F.one]
+            for k in range(1, n_int + 1):
+                q = F.zero
+                for j in range(1, min(m, k) + 1):
+                    q += comb(k - 1, j - 1) * derivatives[j - 1] * P[k - j]
+                P.append(q)
+            return P[-1].as_expr() * self
+        return super()._eval_derivative_n_times(s, n)
+
 
 class exp_polar(ExpBase):
     r"""
