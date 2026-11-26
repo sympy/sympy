@@ -403,11 +403,24 @@ class HadamardPower(MatrixExpr):
     def doit(self, **hints):
         from sympy.matrices.matrixbase import MatrixBase
         from sympy.matrices.immutable import ImmutableMatrix
+        from sympy.matrices.expressions.special import Identity, OneMatrix, ZeroMatrix
 
         if hints.get('deep', True):
             base, exp = (arg.doit(**hints) for arg in self.args)
         else:
             base, exp = self.args
+
+                # Special matrix identity and absorption cases
+        if exp == S.Zero or isinstance(exp, ZeroMatrix) or getattr(exp, 'is_ZeroMatrix', False):
+            return OneMatrix(*self.shape)
+        if exp == S.One or isinstance(exp, OneMatrix):
+            return base
+        if isinstance(base, OneMatrix):
+            return OneMatrix(*self.shape)
+        if (isinstance(base, ZeroMatrix) or getattr(base, 'is_ZeroMatrix', False)) and (exp.is_positive or (exp.is_Number and exp > 0)):
+            return ZeroMatrix(*self.shape)
+        if isinstance(base, Identity) and (exp.is_positive or (exp.is_Number and exp > 0)):
+            return base
 
         if isinstance(base, MatrixBase) and isinstance(exp, MatrixBase):
             return ImmutableMatrix([a ** b for a, b in zip(base, exp)]).reshape(*base.shape)
@@ -416,7 +429,7 @@ class HadamardPower(MatrixExpr):
         if isinstance(exp, MatrixBase) and not base.is_Matrix:
             return ImmutableMatrix([base ** x for x in exp]).reshape(*exp.shape)
 
-        if exp == S.One:
-            return base
+        if base != self.base or exp != self.exp:
+            return HadamardPower(base, exp)
 
-        return HadamardPower(base, exp)
+        return self

@@ -173,3 +173,11 @@ def test_hadamard_power_doit():
 
     # deep=True recursive doit evaluation
     assert HadamardPower(HadamardPower(A, 2), 2).doit() == Matrix([[1, 16], [81, 256]])
+
+    # Special matrix identities and zero/one exponents
+    assert HadamardPower(X, 0).doit() == OneMatrix(2, 2)
+    assert HadamardPower(X, ZeroMatrix(2, 2)).doit() == OneMatrix(2, 2)
+    assert HadamardPower(X, OneMatrix(2, 2)).doit() == X
+    assert HadamardPower(OneMatrix(2, 2), X).doit() == OneMatrix(2, 2)
+    assert HadamardPower(ZeroMatrix(2, 2), 2).doit() == ZeroMatrix(2, 2)
+    assert HadamardPower(Identity(2), 2).doit() == Identity(2)
