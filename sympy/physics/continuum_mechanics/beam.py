@@ -1119,8 +1119,9 @@ class Beam:
                     shear_values.append(final_shear)
                     intervals.append(Interval(singularity[i-1], s))
 
-        shear_values = list(map(abs, shear_values))
-        maximum_shear = max(shear_values)
+        max_negative_shear = min(shear_values)
+        max_positive_shear = max(shear_values)
+        maximum_shear = max(abs(max_negative_shear), abs(max_positive_shear))
         point = intervals[shear_values.index(maximum_shear)]
         return (point, maximum_shear)
 
@@ -1233,8 +1234,9 @@ class Beam:
                     moment_values.append(final_moment)
                     intervals.append(Interval(singularity[i-1], s))
 
-        moment_values = list(map(abs, moment_values))
-        maximum_moment = max(moment_values)
+        max_negative_moment = min(moment_values)
+        max_positive_moment = max(moment_values)
+        maximum_moment = max(abs(max_negative_moment), abs(max_positive_moment))
         point = intervals[moment_values.index(maximum_moment)]
         return (point, maximum_moment)
 
