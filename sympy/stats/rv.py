@@ -1796,3 +1796,6 @@ def sample_stochastic_process(process):
     if not isinstance(process, StochasticProcess):
         raise ValueError("Process must be an instance of Stochastic Process")
     return process.sample()
+
+def rv(name, dist, args):
+    return dist(name, *args)
