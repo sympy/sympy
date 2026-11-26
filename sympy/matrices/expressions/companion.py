@@ -44,7 +44,7 @@ class CompanionMatrix(MatrixExpr):
         return size, size
 
 
-    def _entry(self, i, j):
+    def _entry(self, i, j, **kwargs):
         if j == self.cols - 1:
             return -self.args[0].all_coeffs()[-1 - i]
         elif i == j + 1:
