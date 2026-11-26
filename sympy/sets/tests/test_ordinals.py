@@ -76,3 +76,7 @@ def test_ordinal():
 def test_ordinal_canonical():
     assert raises(ValueError, lambda: Ordinal(OmegaPower(0, 3), OmegaPower(0, 2)))
     assert raises(ValueError, lambda: Ordinal(OmegaPower(0, 1), OmegaPower(1, 1)))
+
+def test_31288_f10():
+    if omega == 1 + omega:
+        assert hash(omega) == hash(1 + omega)
