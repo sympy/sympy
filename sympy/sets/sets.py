@@ -1016,7 +1016,7 @@ ProductSet(iterable) is deprecated. Use ProductSet(*iterable) instead.
         If self.is_iterable returns True (both constituent sets are iterable),
         then return the Cartesian Product. Otherwise, raise TypeError.
         """
-        return iproduct(*self.sets)
+        return (Tuple(*item) for item in iproduct(*self.sets))
 
     @property
     def is_empty(self):
@@ -2417,7 +2417,7 @@ class DisjointUnion(Set):
             for i, s in enumerate(self.sets):
                 iters.append(iproduct(s, {Integer(i)}))
 
-            return iter(roundrobin(*iters))
+            return (Tuple(*item) for item in roundrobin(*iters))
         else:
             raise ValueError("'%s' is not iterable." % self)
 
