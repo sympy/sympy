@@ -2719,7 +2719,7 @@ def is_abundant(n):
 
     """
     n = as_int(n)
-    if is_perfect(n):
+    if n < 1 or is_perfect(n):
         return False
     return n % 6 == 0 or bool(abundance(n) > 0)
 

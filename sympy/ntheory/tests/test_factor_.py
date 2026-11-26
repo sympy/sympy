@@ -636,6 +636,10 @@ def test_is_abundant():
     assert is_abundant(18) is True
     assert is_abundant(21) is False
     assert is_abundant(945) is True
+    # abundant numbers are positive
+    assert is_abundant(0) is False
+    assert is_abundant(-12) is False
+    assert is_abundant(-20) is False
 
 
 def test_is_deficient():
