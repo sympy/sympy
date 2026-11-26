@@ -62,6 +62,7 @@ from .rref import _dm_rref, _dm_rref_den
 
 if TYPE_CHECKING:
     from typing import Any, Iterator, Sequence, Callable, Mapping, TypeGuard
+    from sympy.polys.densebasic import dup
     from sympy.polys.matrices._typing import FlatNzData
     from sympy.core.expr import Expr
     from sympy.matrices.dense import MutableDenseMatrix
@@ -3185,7 +3186,7 @@ class DomainMatrix(Generic[Er]):
 
         return f, detA
 
-    def eval_poly(self, p):
+    def eval_poly(self, p: dup[Er]) -> DomainMatrix[Er]:
         """
         Evaluate polynomial function of a matrix $p(A)$.
 
@@ -3225,7 +3226,7 @@ class DomainMatrix(Generic[Er]):
 
         return p_A
 
-    def eval_poly_mul(self, p, B):
+    def eval_poly_mul(self, p: dup[Er], B: DomainMatrix[Er]) -> DomainMatrix[Er]:
         r"""
         Evaluate polynomial matrix product $p(A) \times B$.
 
