@@ -130,4 +130,64 @@ def test_rgs():
 def test_ordered_partition_9608():
     a = Partition([1, 2, 3], [4])
     b = Partition([1, 2], [3, 4])
-    assert list(ordered([a,b], Set._infimum_key))
+    assert list(ordered([a, b], Set._infimum_key))
+
+
+def test_integer_partition_dominance():
+    p1 = IntegerPartition([4, 1, 1])
+    p2 = IntegerPartition([3, 2, 1])
+    p3 = IntegerPartition([3, 3])
+    p4 = IntegerPartition([2, 2, 2])
+
+    # Basic dominance relations for n=6
+    assert p1.dominates(p2) is True
+    assert p2.is_dominated_by(p1) is True
+    assert p2.dominates(p1) is False
+    assert p1.is_dominated_by(p2) is False
+
+    assert p3.dominates(p4) is True
+    assert p4.dominates(p3) is False
+
+    # Incomparable partitions for n=6
+    assert p1.dominates(p3) is False
+    assert p3.dominates(p1) is False
+    assert p1.is_dominated_by(p3) is False
+    assert p3.is_dominated_by(p1) is False
+
+    # Top [n] dominates all, bottom [1^n] is dominated by all
+    top = IntegerPartition([6])
+    bottom = IntegerPartition([1, 1, 1, 1, 1, 1])
+    for p in [p1, p2, p3, p4, top, bottom]:
+        assert top.dominates(p) is True
+        assert p.is_dominated_by(top) is True
+        assert p.dominates(bottom) is True
+        assert bottom.is_dominated_by(p) is True
+
+    # Reflexivity
+    assert p1.dominates(p1) is True
+    assert p1.is_dominated_by(p1) is True
+
+    # Coercion with list / tuple / dict
+    assert p1.dominates([3, 2, 1]) is True
+    assert p1.dominates((3, 2, 1)) is True
+    assert p1.dominates({3: 1, 2: 1, 1: 1}) is True
+    assert p2.is_dominated_by([4, 1, 1]) is True
+
+    # Different integer partitions are incomparable
+    p_diff = IntegerPartition([5])
+    assert p1.dominates(p_diff) is False
+    assert p_diff.dominates(p1) is False
+    assert p1.is_dominated_by(p_diff) is False
+
+    # Conjugation Duality Theorem: lambda >= mu <=> mu' >= lambda'
+    for n in range(1, 8):
+        parts = [IntegerPartition(p) for p in partitions(n)]
+        for a in parts:
+            for b in parts:
+                ca = IntegerPartition(a.conjugate)
+                cb = IntegerPartition(b.conjugate)
+                assert a.dominates(b) == cb.dominates(ca)
+                assert a.is_dominated_by(b) == b.dominates(a)
+                # Antisymmetry
+                if a.dominates(b) and b.dominates(a):
+                    assert a.partition == b.partition
