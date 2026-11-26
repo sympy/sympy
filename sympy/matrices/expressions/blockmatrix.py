@@ -10,7 +10,7 @@ from sympy.utilities.misc import filldedent
 
 from sympy.matrices import Matrix, ShapeError
 from sympy.matrices.exceptions import NonInvertibleMatrixError
-from sympy.matrices.expressions.determinant import det, Determinant
+from sympy.matrices.expressions.determinant import det
 from sympy.matrices.expressions.inverse import Inverse
 from sympy.matrices.expressions.matadd import MatAdd
 from sympy.matrices.expressions.matexpr import MatrixExpr, MatrixElement
@@ -207,11 +207,16 @@ class BlockMatrix(MatrixExpr):
         if self.blockshape == (2, 2):
             [[A, B],
              [C, D]] = self.blocks.tolist()
+            if A.is_square and D.is_square and (
+                isinstance(B, ZeroMatrix) or getattr(B, 'is_zero_matrix', False) or
+                isinstance(C, ZeroMatrix) or getattr(C, 'is_zero_matrix', False)
+            ):
+                return det(A)*det(D)
             if ask(Q.invertible(A)):
                 return det(A)*det(D - C*A.I*B)
             elif ask(Q.invertible(D)):
                 return det(D)*det(A - B*D.I*C)
-        return Determinant(self)
+        return None
 
     def _eval_as_real_imag(self):
         real_matrices = [re(matrix) for matrix in self.blocks]

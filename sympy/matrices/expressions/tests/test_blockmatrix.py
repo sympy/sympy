@@ -6,7 +6,7 @@ from sympy.matrices.expressions.blockmatrix import (
     BlockMatrix, bc_dist, bc_matadd, bc_transpose, bc_inverse,
     blockcut, reblock_2x2, deblock)
 from sympy.matrices.expressions import (
-    MatrixSymbol, Identity, trace, det, ZeroMatrix, OneMatrix)
+    MatrixSymbol, Identity, trace, det, Determinant, ZeroMatrix, OneMatrix)
 from sympy.matrices.expressions.inverse import Inverse
 from sympy.matrices.expressions.matpow import MatPow
 from sympy.matrices.expressions.transpose import Transpose
@@ -141,8 +141,40 @@ def test_BlockMatrix_Determinant():
         assert det(X) == det(A) * det(X.schur('A'))
 
     assert isinstance(det(X), Expr)
+    assert det(X) == Determinant(X)
     assert det(BlockMatrix([A])) == det(A)
     assert det(BlockMatrix([ZeroMatrix(n, n)])) == 0
+
+
+def test_BlockMatrix_triangular_Determinant():
+    A = MatrixSymbol('A', n, n)
+    D = MatrixSymbol('D', m, m)
+    C_low = MatrixSymbol('C', m, n)
+    C_up = MatrixSymbol('C', n, m)
+
+    M_lower = BlockMatrix([[A, ZeroMatrix(n, m)], [C_low, D]])
+    assert det(M_lower) == det(A)*det(D)
+
+    M_upper = BlockMatrix([[A, C_up], [ZeroMatrix(m, n), D]])
+    assert det(M_upper) == det(A)*det(D)
+
+    A2 = MatrixSymbol('A2', 2, 2)
+    D2 = MatrixSymbol('D2', 3, 3)
+    C2_low = MatrixSymbol('C2', 3, 2)
+    C2_up = MatrixSymbol('C2', 2, 3)
+    assert det(BlockMatrix([[A2, zeros(2, 3)], [C2_low, D2]])) == det(A2)*det(D2)
+    assert det(BlockMatrix([[A2, C2_up], [zeros(3, 2), D2]])) == det(A2)*det(D2)
+
+    B = MatrixSymbol('B', n, m)
+    M_dense = BlockMatrix([[A, B], [C_low, D]])
+    assert det(M_dense) == Determinant(M_dense)
+    assert M_dense._eval_determinant() is None
+
+    A_ns = MatrixSymbol('A_ns', n, m)
+    D_ns = MatrixSymbol('D_ns', m, n)
+    C_ns = MatrixSymbol('C_ns', m, m)
+    M_ns = BlockMatrix([[A_ns, ZeroMatrix(n, n)], [C_ns, D_ns]])
+    assert det(M_ns) == Determinant(M_ns)
 
 def test_squareBlockMatrix():
     A = MatrixSymbol('A', n, n)
