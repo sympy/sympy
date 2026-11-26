@@ -310,13 +310,16 @@ def mrv(e, x):
             from sympy.functions.elementary.complexes import Abs
             return mrv(e.rewrite(Abs), x)
         l = [mrv(a, x) for a in e.args]
-        l2 = [s for (s, _) in l if s != SubsSet()]
-        if len(l2) != 1:
-            # e.g. something like BesselJ(x, x)
-            raise NotImplementedError("MRV set computation for functions in"
-                                      " several variables not implemented.")
-        s, ss = l2[0], SubsSet()
-        args = [ss.do_subs(x[1]) for x in l]
+        s = SubsSet()
+        args = []
+        for s2, arg in l:
+            args.append(arg)
+            if s2:
+                if s:
+                    s, exps = mrv_max1(s, s2, e.func(*args), x)
+                    args = list(exps.args)
+                else:
+                    s = s2
         return s, e.func(*args)
     elif e.is_Derivative:
         raise NotImplementedError("MRV set computation for derivatives"
