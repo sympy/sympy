@@ -110,18 +110,18 @@ class PowerSet(Set):
     def __len__(self) -> int:
         return 2 ** len(self.arg)
 
-    def __iter__(self) -> Iterator[Set]:
-        found = [S.EmptySet]
-        yield S.EmptySet
+   def __iter__(self):
+    from sympy.sets.sets import FiniteSet
 
-        for x in self.arg:
-            temp = []
-            x = FiniteSet(x)
-            for y in found:
-                new = x + y
-                yield new
-                temp.append(new)
-            found.extend(temp)
+    if not isinstance(self.arg, FiniteSet):
+        raise TypeError("PowerSet is defined only for FiniteSet")
+
+    elements = tuple(self.arg)  #
+    n = len(elements)
+
+    for mask in range(1 << n):
+        subset = [elements[i] for i in range(n) if (mask >> i) & 1]
+        yield FiniteSet(*subset)
 
     @property
     def kind(self):
