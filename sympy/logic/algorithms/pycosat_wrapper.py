@@ -19,7 +19,7 @@ def pycosat_satisfiable(expr, all_models=False):
         if all_models:
             return iter([])
         return False
-    
+
     if not all_models:
         r = pycosat.solve(expr.data)
         result = (r != "UNSAT")
