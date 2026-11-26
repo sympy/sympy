@@ -65,6 +65,7 @@ from sympy.functions.special.gamma_functions import gamma
 from sympy.functions.special.hyper import hyper, meijerg
 from sympy.functions.special.singularity_functions import SingularityFunction
 from .integrals import Integral
+from .bosefermi import bose_fermi_definite
 from sympy.logic.boolalg import And, Or, BooleanAtom, Not, BooleanFunction
 from sympy.polys import cancel, factor
 from sympy.utilities.iterables import multiset_partitions
@@ -1970,6 +1971,11 @@ def _meijerint_definite_2(f, x):
 
     if f == 0:
         return S.Zero, True
+
+    bose_fermi = bose_fermi_definite(f, x)
+    if bose_fermi is not None:
+        _debug('Recognised a Bose-Fermi integral')
+        return bose_fermi
 
     for g, explanation in _guess_expansion(f, x):
         _debug('Trying', explanation)
