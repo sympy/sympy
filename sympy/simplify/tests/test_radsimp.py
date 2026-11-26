@@ -179,6 +179,15 @@ def test_radsimp_issue_3214():
     assert radsimp(b) == -I*(c + I*p - sqrt(c**2 - p**2))**2/(2*c*p)
 
 
+def test_radsimp_issue_25323():
+    for e in [1/(I + sqrt(2) + sqrt(6) + sqrt(10) + sqrt(7)),
+              1/(sqrt(-2) + sqrt(2) + sqrt(6) + sqrt(10) + sqrt(7)),
+              1/(sqrt(-3) + sqrt(-5) + sqrt(2) + sqrt(7) + sqrt(11))]:
+        assert radsimp(e, max_terms=5) == e
+    e = 1/(1 + I + sqrt(2) + sqrt(3) + sqrt(5))
+    assert radsimp(e, max_terms=4) == e
+
+
 def test_collect_1():
     """Collect with respect to Symbol"""
     x, y, z, n = symbols('x,y,z,n')
