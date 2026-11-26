@@ -1963,7 +1963,7 @@ class UniversalSet(Set, metaclass=Singleton):
         return S.EmptySet
 
     def _symmetric_difference(self, other):
-        return other
+        return Complement(self, other)
 
     @property
     def _measure(self):
