@@ -1097,6 +1097,29 @@ class PolylogRule(AtomicRule):
         return polylog(self.b + 1, self.a * self.variable)
 
 
+class PolylogLogLinearRule(AtomicRule):
+
+    __slots__ = ("a", "b", "c", "d")
+
+    a: Expr
+    b: Expr
+    c: Expr
+    d: Expr
+
+    def __init__(self, integrand: Expr, variable: Symbol, a: Expr, b: Expr, c: Expr, d: Expr) -> None:
+        super().__init__(integrand, variable)
+        self.a = a
+        self.b = b
+        self.c = c
+        self.d = d
+
+    def eval(self) -> Expr:
+        a, b, c, d, x = self.a, self.b, self.c, self.d, self.variable
+        B = b*c - a*d
+        w = c*x + d
+        return (log(w)*log(1 + a*w/B) + polylog(2, -a*w/B))/a
+
+
 class UpperGammaRule(AtomicRule):
 
     __slots__ = ("a", "e")
@@ -3138,6 +3161,35 @@ def trig_poly_mul_rule(integral: IntegralInfo):
     return _add_degenerate_step(generic_cond, generic_step, degenerate_step)
 
 
+def polylog_log_linear_rule(integral: IntegralInfo):
+    """
+    Integrate log(c*x + d) / (a*x + b) with b != 0.
+    """
+    integrand, symbol = integral
+    num, den = integrand.as_numer_denom()
+    if not (num.is_Function and isinstance(num, log)):
+        return None
+    arg = num.args[0]
+    if not (arg.is_polynomial(symbol) and degree(arg, symbol) == 1):
+        return None
+    if not (den.is_polynomial(symbol) and degree(den, symbol) == 1):
+        return None
+
+    c, d = Poly(arg, symbol).all_coeffs()
+    a, b = Poly(den, symbol).all_coeffs()
+
+    if b == 0 or b.is_zero is True:
+        return None
+
+    # If b*c - a*d == 0, the integrand is an elementary substitution case (log(u)/u)
+    # handled by substitution_rule.
+    B = b*c - a*d
+    if B == 0 or B.is_zero is True:
+        return None
+
+    return PolylogLogLinearRule(integrand, symbol, a, b, c, d)
+
+
 def trig_product_to_sum_rule(integral: IntegralInfo):
     """
     Rewrite a product of two sin/cos factors with different arguments using the
@@ -3955,6 +4007,7 @@ class IntegrationSolver:
                 exp: w(exp_rule),
                 Add: w(add_rule),
                 Mul: do_one(null_safe(w(mul_rule)),
+                            null_safe(w(polylog_log_linear_rule)),
                             null_safe(w(trig_powers_products_rule)),
                             null_safe(w(heaviside_rule)), null_safe(w(quadratic_denom_rule)),
                             null_safe(w(sqrt_quadratic_rule)),
