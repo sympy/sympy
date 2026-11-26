@@ -508,7 +508,12 @@ class Mul(Expr, AssocOp):
                     return _gather(c_powers)
                 seen.add(b)
 
-            return c_powers
+            new_c_powers = []
+            for b, e in c_powers:
+                coeff, term = e.as_coeff_Mul()
+                new_c_powers.append((b, term if coeff == 1 else coeff*term))
+
+            return new_c_powers
 
         # in c_powers
         c_powers = _gather_if_needed(c_powers)
