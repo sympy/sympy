@@ -467,6 +467,17 @@ class RustCodePrinter(CodePrinter):
         float_suffix = self.type_mappings[self.type_aliases[real]]
         return '%d_%s/%d.0' % (p, float_suffix, q)
 
+    def _has_explicit_cast(self, expr):
+        if isinstance(expr, TypeCast):
+            return getattr(expr, 'explicit', False)
+        if expr.is_Mul or expr.is_Add:
+            contains_floats = any(arg.is_real and not arg.is_integer for arg in expr.args)
+            if contains_floats:
+                return any(self._has_explicit_cast(self._cast_to_float(arg)) for arg in expr.args if arg != -1)
+        if expr.args:
+            return any(self._has_explicit_cast(arg) for arg in expr.args)
+        return False
+
     def _print_Relational(self, expr):
         if (expr.lhs.is_integer and not expr.rhs.is_integer) or (expr.rhs.is_integer and not expr.lhs.is_integer):
             lhs = self._cast_to_float(expr.lhs)
@@ -477,6 +488,8 @@ class RustCodePrinter(CodePrinter):
         lhs_code = self._print(lhs)
         rhs_code = self._print(rhs)
         op = expr.rel_op
+        if op == "<" and self._has_explicit_cast(lhs):
+            lhs_code = "({})".format(lhs_code)
         return "{} {} {}".format(lhs_code, op, rhs_code)
 
     def _print_Indexed(self, expr):
