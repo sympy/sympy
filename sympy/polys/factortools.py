@@ -1495,6 +1495,8 @@ def dup_factor_list(f, K0):
 
         if K.is_ZZ:
             coeff, factors = dup_zz_factor(f, K)
+        elif K.is_GaussianRing:
+            coeff, factors = dup_zz_i_factor(f, K)
         elif K.is_Poly:
             f, u = dmp_inject(f, 0, K)
 
@@ -1516,11 +1518,19 @@ def dup_factor_list(f, K0):
 
             if K0_inexact:
                 for i, (f, k) in enumerate(factors):
-                    max_norm = dup_max_norm(f, K0)
-                    f = dup_exquo_ground(f, max_norm, K0)
-                    f = dup_convert(f, K0, K0_inexact)
+                    if K0.is_GaussianField:
+                        # Gaussian factors are primitive over ZZ_I, so their
+                        # leading coefficient is a unit already and there is
+                        # no norm to divide out. A Gaussian rational has no
+                        # absolute value in its own domain, so the max_norm
+                        # step below cannot be used here.
+                        f = dup_convert(f, K0, K0_inexact)
+                    else:
+                        max_norm = dup_max_norm(f, K0)
+                        f = dup_exquo_ground(f, max_norm, K0)
+                        f = dup_convert(f, K0, K0_inexact)
+                        coeff = K0.mul(coeff, K0.pow(max_norm, k))
                     factors[i] = (f, k)
-                    coeff = K0.mul(coeff, K0.pow(max_norm, k))
 
                 coeff = K0_inexact.convert(coeff, K0)
                 K0 = K0_inexact

@@ -178,6 +178,12 @@ def _sort_factors(factors, **args):
             return factor.sort_key()
         elif isinstance(factor, list):
             return [order_key(f) for f in factor]
+        elif hasattr(factor, 'real') and hasattr(factor, 'imag'):
+            # Complex coefficients (e.g. over CC) do not support ordering, so
+            # order them by their real part and then by their imaginary part.
+            # For real coefficients this keeps the order of the values
+            # themselves, since the imaginary part is zero.
+            return (factor.real, factor.imag)
         else:
             return factor
 
