@@ -400,41 +400,22 @@ class EncodedCNF:
     """
     def __init__(self, data=None, encoding=None):
         self.data = []
-        self.encoding = dict(encoding) if encoding is not None else {}
-        self._symbols = list(self.encoding.keys())
-        if data:
+        self._clause_set = set()
+        self.encoding = {}
+        self._symbols = []
+        if data is not None:
             for clause in data:
                 self.add_clause(clause)
-
-    def add_clause(self, clause):
-        """Normalize and add a single clause of nonzero signed integer literals."""
-        if self.data == [set()]:
-            return
-
-        normalized = set()
-        for lit in clause:
-            if not isinstance(lit, int) or isinstance(lit, bool) or lit == 0:
-                raise ValueError(f"Invalid CNF literal {lit!r}: expected nonzero int.")
-            if -lit in normalized:
-                # Tautology (x or ~x) is always satisfied; drop the clause
-                return
-            normalized.add(lit)
-
-        if not normalized:
-            # An empty clause makes the entire CNF unsatisfiable (False)
-            self.data = [set()]
-            return
-
-        if normalized not in self.data:
-            self.data.append(normalized)
+        if encoding is not None:
+            self.encoding = dict(encoding)
+            self._symbols = list(encoding.keys())
 
     def from_cnf(self, cnf):
-        self._symbols = list(cnf.all_predicates())
-        # Filter out Boolean constants if present in all_predicates()
-        self._symbols = [s for s in self._symbols if s not in (S.true, S.false)]
+        self._symbols = [s for s in cnf.all_predicates() if s not in (S.true, S.false)]
         n = len(self._symbols)
         self.encoding = dict(zip(self._symbols, range(1, n + 1)))
         self.data = []
+        self._clause_set = set()
         self.add_from_cnf(cnf)
 
     @property
@@ -446,8 +427,11 @@ class EncodedCNF:
         return range(1, len(self._symbols) + 1)
 
     def copy(self):
-        new_cnf = EncodedCNF(encoding=self.encoding)
-        new_cnf.data = [set(clause) for clause in self.data]
+        new_cnf = EncodedCNF()
+        new_cnf.data = [set(c) for c in self.data]
+        new_cnf._clause_set = set(self._clause_set)
+        new_cnf.encoding = dict(self.encoding)
+        new_cnf._symbols = list(self._symbols)
         return new_cnf
 
     def add_prop(self, prop):
@@ -480,18 +464,47 @@ class EncodedCNF:
             return value
 
     def encode(self, clause):
-        """
-        Encode a ``CNF`` clause into a set of nonzero integers.
-        Returns ``None`` if the clause is tautologically True (e.g., contains ``S.true``).
-        Returns ``set()`` if the clause is unsatisfiable (e.g., all literals are ``S.false``).
-        """
-        encoded = set()
+        encoded_clause = set()
         for arg in clause:
             if arg.lit == S.true:
-                # (True | ...) is always True -> omit clause
-                return None
-            if arg.lit == S.false:
-                # (False | x) is equivalent to (x); skip False literal
+                if not arg.is_Not:
+                    return None
                 continue
-            encoded.add(self.encode_arg(arg))
-        return encoded
+            if arg.lit == S.false:
+                if arg.is_Not:
+                    return None
+                continue
+            lit = self.encode_arg(arg)
+            if -lit in encoded_clause:
+                return None
+            encoded_clause.add(lit)
+        return encoded_clause
+
+    def add_clause(self, clause):
+        """Normalize and add a single clause of nonzero signed integer literals."""
+        if self.data == [set()]:
+            return
+
+        normalized = set()
+        for lit in clause:
+            if type(lit) is not int:
+                if not isinstance(lit, int) or isinstance(lit, bool):
+                    raise ValueError(f"Invalid CNF literal {lit!r}: expected nonzero int.")
+                lit = int(lit)
+            if lit == 0:
+                raise ValueError(f"Invalid CNF literal {lit!r}: expected nonzero int.")
+            if -lit in normalized:
+                # Tautology (x or ~x) is always satisfied; drop the clause
+                return
+            normalized.add(lit)
+
+        if not normalized:
+            # An empty clause makes the entire CNF unsatisfiable (False)
+            self.data = [set()]
+            self._clause_set = {frozenset()}
+            return
+
+        fs = frozenset(normalized)
+        if fs not in self._clause_set:
+            self._clause_set.add(fs)
+            self.data.append(normalized)
