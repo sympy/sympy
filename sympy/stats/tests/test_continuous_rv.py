@@ -379,6 +379,18 @@ def test_arcsin():
                             (1, True))
     assert pspace(X).domain.set == Interval(a, b)
 
+    t = Symbol('t')
+    assert moment_generating_function(X)(t) == exp(t*(a + b)/2)*besseli(0, t*(b - a)/2)
+    assert characteristic_function(X)(t) == exp(I*t*(a + b)/2)*besselj(0, t*(b - a)/2)
+    assert simplify(variance(X) - (b - a)**2/8) == 0
+
+    X = Arcsin('x', 0, 1)
+    assert E(X) == S.Half
+    assert variance(X) == Rational(1, 8)
+    assert E(X**3) == Rational(5, 16)
+    assert skewness(X) == 0
+    assert kurtosis(X) == Rational(3, 2)
+
 def test_benini():
     alpha = Symbol("alpha", positive=True)
     beta = Symbol("beta", positive=True)

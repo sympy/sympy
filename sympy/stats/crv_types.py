@@ -261,6 +261,14 @@ class ArcsinDistribution(SingleContinuousDistribution):
             (2*asin(sqrt((x - a)/(b - a)))/pi, x <= b),
             (S.One, True))
 
+    def _characteristic_function(self, t):
+        a, b = self.a, self.b
+        return exp(I*t*(a + b)/2)*besselj(0, t*(b - a)/2)
+
+    def _moment_generating_function(self, t):
+        a, b = self.a, self.b
+        return exp(t*(a + b)/2)*besseli(0, t*(b - a)/2)
+
 
 def Arcsin(name, a=0, b=1):
     r"""
