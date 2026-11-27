@@ -3466,6 +3466,16 @@ def test_sympy__matrices__expressions__factorizations__SofSVD():
     from sympy.matrices.expressions.factorizations import SofSVD
     assert _test_args(SofSVD(X))
 
+
+def test_sympy__matrices__expressions__factorizations__JordanVectors():
+    from sympy.matrices.expressions.factorizations import JordanVectors
+    assert _test_args(JordanVectors(X))
+
+
+def test_sympy__matrices__expressions__factorizations__JordanBlocks():
+    from sympy.matrices.expressions.factorizations import JordanBlocks
+    assert _test_args(JordanBlocks(X))
+
 @SKIP("abstract class")
 def test_sympy__matrices__expressions__factorizations__Factorization():
     pass

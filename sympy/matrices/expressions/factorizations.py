@@ -61,3 +61,34 @@ def eig(expr):
 
 def svd(expr):
     return UofSVD(expr), SofSVD(expr), VofSVD(expr)
+
+
+class JordanVectors(Factorization):
+    @property
+    def predicates(self):
+        return (Q.invertible,)
+
+
+class JordanBlocks(Factorization):
+    @property
+    def predicates(self):
+        return (Q.upper_triangular,)
+
+
+def jordan(expr):
+    """Jordan decomposition of a matrix expression.
+
+    Returns JordanVectors(expr), JordanBlocks(expr).
+    """
+    return JordanVectors(expr), JordanBlocks(expr)
+
+
+def JordanForm(expr):
+    """Construct symbolic similarity transform representing the Jordan normal form.
+
+    Returns P * J * P**(-1) where P = JordanVectors(expr) and J = JordanBlocks(expr).
+    """
+    from sympy.matrices.expressions.inverse import Inverse
+    from sympy.matrices.expressions.matmul import MatMul
+    P, J = jordan(expr)
+    return MatMul(P, J, Inverse(P))
