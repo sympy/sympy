@@ -365,6 +365,19 @@ def test_meijerg_eval():
     assert (expr - pi/exp(1)).n(chop=True) == 0
 
 
+def test_meijerg_evalf_non_evaluable_argument():
+    from sympy.core.numbers import zoo
+    m_zoo = meijerg([], [], [0], [], zoo)
+    assert m_zoo.evalf() == m_zoo
+    assert m_zoo.is_finite is None
+    assert m_zoo.is_zero is None
+    assert m_zoo.is_positive is None
+
+    m_sym = meijerg([], [], [0], [], x)
+    assert m_sym.evalf() == m_sym
+    assert m_sym.is_finite is None
+
+
 def test_limits():
     k, x = symbols('k, x')
     assert hyper((1,), (Rational(4, 3), Rational(5, 3)), k**2).series(k) == \
