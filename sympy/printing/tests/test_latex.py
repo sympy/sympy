@@ -3384,9 +3384,9 @@ def test_Str():
 
 def test_latex_escape():
     assert latex_escape(r"~^\&%$#_{}") == "".join([
-        r'\textasciitilde',
-        r'\textasciicircum',
-        r'\textbackslash',
+        r'\textasciitilde{}',
+        r'\textasciicircum{}',
+        r'\textbackslash{}',
         r'\&',
         r'\%',
         r'\$',
@@ -3395,6 +3395,16 @@ def test_latex_escape():
         r'\{',
         r'\}',
     ])
+
+def test_latex_escape_command_boundaries():
+    for text, escaped in [
+        (r'a\b', r'a\textbackslash{}b'),
+        ('a~b', r'a\textasciitilde{}b'),
+        ('a^b', r'a\textasciicircum{}b'),
+    ]:
+        assert latex_escape(text) == escaped
+        assert latex(text) == r'\mathtt{\text{%s}}' % escaped
+
 
 def test_emptyPrinter():
     class MyObject:
