@@ -1,11 +1,11 @@
 from __future__ import annotations
 from .accumulationbounds import AccumBounds, AccumulationBounds # noqa: F401
 from .singularities import singularities
-from sympy.core import Pow, S
+from sympy.core import Expr, Pow, S
 from sympy.core.function import diff, expand_mul, Function
 from sympy.core.kind import NumberKind
 from sympy.core.mod import Mod
-from sympy.core.numbers import equal_valued
+from sympy.core.numbers import Float, equal_valued
 from sympy.core.relational import Relational
 from sympy.core.symbol import Symbol, Dummy
 from sympy.core.sympify import _sympify
@@ -18,7 +18,7 @@ from sympy.functions.elementary.trigonometric import (
     asin, acos, acot, atan, asec, acsc)
 from sympy.functions.elementary.hyperbolic import (sinh, cosh, tanh, coth,
     sech, csch, asinh, acosh, atanh, acoth, asech, acsch)
-from sympy.polys.polytools import degree, lcm_list
+from sympy.polys.polytools import cancel, degree, lcm_list
 from sympy.sets.sets import (Interval, Intersection, FiniteSet, Union,
                              Complement)
 from sympy.sets.fancysets import ImageSet
@@ -511,6 +511,15 @@ def periodicity(f, symbol, check=False):
     if isinstance(f, Relational):
         f = f.lhs - f.rhs
 
+    if isinstance(f, Expr):
+        if symbol not in f.free_symbols:
+            return S.Zero
+        if f.is_algebraic_expr(symbol):
+            if _has_counterexample_to_constancy(f, symbol):
+                return None
+            if symbol not in cancel(f).free_symbols:
+                return S.Zero
+
     f = f.simplify()
 
     if symbol not in f.free_symbols:
@@ -614,6 +623,21 @@ def periodicity(f, symbol, check=False):
         return period
 
     return None
+
+
+def _has_counterexample_to_constancy(expr, symbol):
+    if expr.free_symbols != {symbol} or expr.has(Float):
+        return False
+    first_valid_function_value = None
+    for sample_point in (S.Zero, S.One, S.NegativeOne):
+        function_value = expr.xreplace({symbol: sample_point})
+        if function_value.is_finite is not True:
+            continue
+        if first_valid_function_value is None:
+            first_valid_function_value = function_value
+        elif (function_value - first_valid_function_value).is_zero is False:
+            return True
+    return False
 
 
 def _periodicity(args, symbol):
