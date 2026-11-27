@@ -216,10 +216,14 @@ github https://github.com/<your-github-username>/sympy.git (push)
 
 You may want to take advantage of using virtual environments to isolate your development version of SymPy from any system wide installed versions, e.g. from `apt-get install python-sympy`.
 
-If you use `conda`, you can use it to create a virtual environment:
+If you use `conda`, create a virtual environment with Python and pip, then
+install SymPy's development dependency group from the repository root:
 
 ```bash
-$ conda create -n sympy-dev -c conda-forge --file requirements-dev.txt
+conda create -n sympy-dev -c conda-forge python pip
+conda activate sympy-dev
+python -m pip install --upgrade pip
+python -m pip install --group dev-tools
 ```
 
 If you prefer to use `pip` and `venv`, you can use something like
@@ -227,7 +231,8 @@ If you prefer to use `pip` and `venv`, you can use something like
 ```bash
 python -m venv .venv
 source .venv/bin/activate
-pip install -r requirements-dev.txt
+python -m pip install --upgrade pip
+python -m pip install --group dev-tools
 ```
 
 You can add any other packages to this command that you might find useful for
@@ -235,7 +240,7 @@ your contribution, such as the [optional dependencies](../dependencies.md).
 
 You now have a environment that you can use for testing your development copy of SymPy.
 
-Now activate the environment:
+For subsequent sessions, activate the conda environment with:
 
 ```bash
 $ conda activate sympy-dev

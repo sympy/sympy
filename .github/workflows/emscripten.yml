@@ -89,8 +89,8 @@ jobs:
           source .venv-pyodide/bin/activate
           pip install ./sympy-checkout
 
-          # Install dependencies. Exclude ruff, since Pyodide cannot install it.
-          grep -vx 'ruff' sympy-checkout/requirements-dev.txt | pip install -r /dev/stdin
+          # The ruff environment marker excludes it on Emscripten.
+          pip install --group sympy-checkout/pyproject.toml:dev-tools
           pip install matplotlib numpy scipy
 
           # Trigger the test suite, excluding slow and tooslow tests. The test

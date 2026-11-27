@@ -34,7 +34,7 @@ jobs:
           python-version: '3.14'
       - run: python -m pip install --upgrade pip setuptools
 
-      - run: pip install -r requirements-dev.txt
+      - run: pip install --group dev-tools
       - run: pip install .
       - name: Basic code quality tests
         run: bin/test quality
@@ -74,7 +74,7 @@ jobs:
         with:
           python-version: '3.14'
       - run: python -m pip install --upgrade pip
-      - run: pip install -r requirements-dev.txt
+      - run: pip install --group dev-tools
 
       - name: Run mypy on the sympy package
         run: mypy sympy
@@ -92,7 +92,7 @@ jobs:
         with:
           python-version: '3.14'
       - run: python -m pip install --upgrade pip
-      - run: pip install mpmath mypy hypothesis python-flint
+      - run: pip install --group test-typing-flint
 
       - name: Run mypy on the sympy package with python-flint installed
         run: mypy sympy
@@ -112,7 +112,7 @@ jobs:
         with:
           python-version: '3.14'
       - run: python -m pip install --upgrade pip
-      - run: pip install -r requirements-dev.txt
+      - run: pip install --group dev-tools
 
       - name: Run sphinx-lint on the sympy documentation
         run: sphinx-lint doc/
@@ -132,7 +132,7 @@ jobs:
         with:
           python-version: '3.14'
       - run: python -m pip install --upgrade pip
-      - run: pip install -r requirements-dev.txt
+      - run: pip install --group dev-tools
       - run: bin/mailmap_check.py
 
   # -------------------- Doctests latest Python -------------------- #
@@ -150,7 +150,7 @@ jobs:
         with:
           python-version: '3.14'
       - run: python -m pip install --upgrade pip
-      - run: pip install -r requirements-dev.txt
+      - run: pip install --group dev-tools
       - run: pip install .
       - run: bin/doctest --force-colors
 
@@ -171,7 +171,7 @@ jobs:
         with:
           python-version: '3.14'
       - run: python -m pip install --upgrade pip
-      - run: pip install -r requirements-dev.txt
+      - run: pip install --group dev-tools
       - run: pip install .
       - run: pytest -n auto --timeout 10 --durations=50 --durations-min=5
 
@@ -197,23 +197,15 @@ jobs:
         with:
           python-version: ${{ matrix.python-version }}
 
-      - run: pip install -r requirements-dev.txt
+      - run: python -m pip install --upgrade pip wheel setuptools
+      - run: pip install --group dev-tools
 
       # Install the non-Python dependencies
       - run: sudo apt-get update
       - run: sudo apt-get install antlr4 clang
-      - run: python -m pip install --upgrade pip wheel setuptools
 
-      # dependencies to install in all Python versions:
-      - run: |
-          pip install numpy numexpr matplotlib bpython ipython cython   \
-                      wurlitzer autowrap lxml lark z3-solver pycosat    \
-                      jax jaxlib libclang scipy                         \
-                      'antlr4-python3-runtime==4.11.*'                  \
-                      symengine                                         \
-                      numba llvmlite pymc                               \
-                      gmpy2                                             \
-                      uncertainties
+      # Optional packages enable tests otherwise skipped.
+      - run: pip install --group test-optional
 
       - run: pip install .
 
@@ -250,7 +242,7 @@ jobs:
                           scipy             \
                           #
 
-      - run: pip install -r requirements-dev.txt
+      - run: pip install --group dev-tools
       - run: pip install .
       - run: pytest -Werror -n auto
 
@@ -269,8 +261,8 @@ jobs:
         with:
           python-version: '3.13'
       - run: python -m pip install --upgrade pip
-      - run: pip install -r requirements-dev.txt
-      - run: pip install python-flint
+      - run: pip install --group dev-tools
+      - run: pip install --group test-flint
       - run: pip install .
       - run: pytest -n auto
 
@@ -289,8 +281,8 @@ jobs:
         with:
           python-version: '3.14'
       - run: python -m pip install --upgrade pip
-      - run: pip install -r requirements-dev.txt
-      - run: pip install python-flint gmpy2
+      - run: pip install --group dev-tools
+      - run: pip install --group test-flint-gmpy2
       - run: pip install .
       - run: pytest -n auto
 
@@ -310,8 +302,8 @@ jobs:
           # tensorflow not yet available for 3.14
           python-version: '3.13'
       - run: python -m pip install --upgrade pip
-      - run: pip install -r requirements-dev.txt
-      - run: pip install numpy scipy tensorflow
+      - run: pip install --group dev-tools
+      - run: pip install --group test-tensorflow
       - run: pip install .
       # Test modules that can use tensorflow
       - run: bin/test_tensorflow.py
@@ -331,8 +323,9 @@ jobs:
         with:
           python-version: '3.14'
       - run: python -m pip install --upgrade pip
-      - run: pip install -r requirements-dev.txt
-      - run: pip install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cpu
+      - run: pip install --group dev-tools
+      # Keep PyTorch's CPU-specific package index in this workflow.
+      - run: pip install --group test-pytorch --index-url https://download.pytorch.org/whl/cpu
       - run: pip install .
       # Test modules that can use pytorch
       - run: bin/test_pytorch.py
@@ -352,8 +345,8 @@ jobs:
         with:
           python-version: '3.14'
       - run: python -m pip install --upgrade pip
-      - run: pip install -r requirements-dev.txt
-      - run: pip install numpy symengine
+      - run: pip install --group dev-tools
+      - run: pip install --group test-symengine
       - run: pip install .
       # Test modules that can use tensorflow
       - run: bin/test_symengine.py
@@ -376,7 +369,7 @@ jobs:
         with:
           python-version: '3.13'
       - run: python -m pip install --upgrade pip
-      - run: pip install -r requirements-dev.txt
+      - run: pip install --group dev-tools
       - run: pip install .
       - run: pytest -m slow --timeout 595 -n auto -v --durations=0
 
@@ -405,15 +398,8 @@ jobs:
           python-version: ${{ matrix.python-version }}
           allow-prereleases: true
       - run: python -m pip install --upgrade pip
-      - env:
-          MATRIX_PYTHON_VERSION: ${{ matrix.python-version }}
-        run: |
-          if [[ "$MATRIX_PYTHON_VERSION" == pypy-* ]]; then
-            # mypy's librt dependency isn't available on PyPy, so exclude it
-            grep -vx 'mypy' requirements-dev.txt | pip install -r /dev/stdin
-          else
-            pip install -r requirements-dev.txt
-          fi
+      # The mypy environment marker excludes it on PyPy.
+      - run: pip install --group dev-tools
       - run: pip install .
       - run: pytest -n auto
 
@@ -464,7 +450,7 @@ jobs:
           python-version: '3.14'
       - run: python -m pip install --upgrade pip
       - run: pip install git+https://github.com/mpmath/mpmath.git@master
-      - run: pip install -r requirements-dev.txt
+      - run: pip install --group dev-tools
       - run: pip install .
       - run: pytest -n auto
 
@@ -483,7 +469,8 @@ jobs:
         with:
           python-version: '3.14'
       - run: doc/aptinstall.sh
-      - run: pip install -r doc/requirements.txt
+      - run: python -m pip install --upgrade pip
+      - run: pip install --group docs
       - run: pip install .
       - run: bin/test_sphinx.sh
 
@@ -575,7 +562,8 @@ jobs:
       - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
         with:
           python-version: '3.14'
-      - run: pip install asv virtualenv packaging
+      - run: python -m pip install --upgrade pip
+      - run: pip install --group benchmark
       - run: git submodule add https://github.com/sympy/sympy_benchmarks.git
 
       - run: git remote add upstream https://github.com/sympy/sympy.git
