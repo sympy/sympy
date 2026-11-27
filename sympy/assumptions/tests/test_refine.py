@@ -359,3 +359,41 @@ def test_Heaviside():
     assert refine(Heaviside(x, 1), Q.zero(x)) == 1
     assert refine(Heaviside(x, 1), Q.positive(x)) == 1
     assert refine(Heaviside(x, 1), Q.negative(x)) == 0
+
+
+
+def test_refine_Pow_no_longer_Pow():
+
+    n = Symbol('n')
+    x = Symbol('x')
+    y = Symbol('y')
+
+    # Result becomes I (ImaginaryUnit)
+    assert refine((-1)**(2*n + S.Half), Q.integer(n)) == I
+
+    # Result becomes -I (Mul)
+    assert refine((-1)**(n/2 - S.Half), Q.zero(n)) == -I
+
+    # Result becomes 1 (One)
+    assert refine(
+        (-1)**(2*n + x),
+        Q.integer(n) & Q.even(x)
+    ) == S.One
+
+    # Result becomes -1 (NegativeOne)
+    assert refine(
+        (-1)**(x + y),
+        Q.odd(x) & Q.even(y)
+    ) == S.NegativeOne
+
+    # Expression remains Pow after partial simplification
+    assert refine(
+        (-1)**(2*n + x + y),
+        Q.integer(n)
+    ) == (-1)**(x + y)
+
+    # Expression remains unchanged Pow
+    assert refine(
+        (-1)**(x + y),
+        True
+    ) == (-1)**(x + y)
