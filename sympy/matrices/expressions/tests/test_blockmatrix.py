@@ -183,6 +183,7 @@ def test_BlockMatrix_Determinant():
         [MatrixSymbol('A_ns', 2, 1), MatrixSymbol('B_ns', 2, 2)],
         [ZeroMatrix(1, 1), MatrixSymbol('D_ns', 1, 2)]
     ])
+    assert BM_nonsq._eval_determinant() is None
     assert isinstance(det(BM_nonsq), Determinant)
 
 def test_squareBlockMatrix():

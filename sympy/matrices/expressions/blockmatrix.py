@@ -210,12 +210,9 @@ class BlockMatrix(MatrixExpr):
             or all(self.blocks[i, i].is_square for i in range(self.blockshape[0]))
         ):
             def _is_zero(block):
-                return (
-                    getattr(block, 'is_ZeroMatrix', False)
-                    or getattr(block, 'is_zero_matrix', False)
-                    or getattr(block, 'is_zero', False)
-                    or block == 0
-                )
+                if isinstance(block, MatrixExpr):
+                    return block.is_ZeroMatrix or isinstance(block, ZeroMatrix)
+                return getattr(block, 'is_zero_matrix', False) or block == 0
 
             n = self.blockshape[0]
             is_upper = all(
@@ -236,7 +233,8 @@ class BlockMatrix(MatrixExpr):
                 return det(A)*det(D - C*A.I*B)
             elif ask(Q.invertible(D)):
                 return det(D)*det(A - B*D.I*C)
-        return Determinant(self)
+
+        return None
 
     def _eval_as_real_imag(self):
         real_matrices = [re(matrix) for matrix in self.blocks]
