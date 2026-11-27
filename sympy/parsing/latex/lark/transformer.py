@@ -1,6 +1,5 @@
 from __future__ import annotations
 import re
-from copy import copy
 
 import sympy
 from sympy.external import import_module
@@ -70,24 +69,28 @@ class TransformToSymPyExpr(Transformer):
         <https://lark-parser.readthedocs.io/en/latest/visitors.html#lark.visitors.Transformer>`_.
 
         Note that the option must be set to ``True`` for the default parser to work.
+
+    evaluate : bool, optional
+        Whether the expressions that are built are evaluated. See
+        :py:func:`~.parse_latex_lark`.
+
+    locals : dict, optional
+        The commands to read as the objects given here. See
+        :py:func:`~.parse_latex_lark`.
     """
 
     SYMBOL = sympy.Symbol
     DIGIT = sympy.core.numbers.Integer
 
-    locals: dict = {}
-
-    def with_locals(self, locals):
-        """Returns a copy of the transformer that reads the commands in ``locals``
-        as the objects given there. See :py:func:`~.parse_latex_lark`."""
-        for command in locals:
+    def __init__(self, visit_tokens=True, evaluate=True, locals=None):
+        super().__init__(visit_tokens)
+        self.evaluate = evaluate
+        self.locals = {} if locals is None else locals
+        for command in self.locals:
             if not (command in self._constants or command in self._trigonometric_functions
                     or command in self._exponential_functions
                     or re.fullmatch(r"\\operatorname\{[a-zA-Z]+\}", command)):
                 raise ValueError("The reading of %s cannot be overridden." % command)
-        transformer = copy(self)
-        transformer.locals = dict(locals)
-        return transformer
 
     _constants = {"\\pi": sympy.pi, "\\mathrm{e}": sympy.E, "\\infty": sympy.oo,
                   "\\imaginaryunit": sympy.I}
@@ -224,29 +227,30 @@ class TransformToSymPyExpr(Transformer):
         return tokens[1]
 
     def eq(self, tokens):
-        return sympy.Eq(tokens[0], tokens[2])
+        return sympy.Eq(tokens[0], tokens[2], evaluate=self.evaluate)
 
     def ne(self, tokens):
-        return sympy.Ne(tokens[0], tokens[2])
+        return sympy.Ne(tokens[0], tokens[2], evaluate=self.evaluate)
 
     def lt(self, tokens):
-        return sympy.Lt(tokens[0], tokens[2])
+        return sympy.Lt(tokens[0], tokens[2], evaluate=self.evaluate)
 
     def lte(self, tokens):
-        return sympy.Le(tokens[0], tokens[2])
+        return sympy.Le(tokens[0], tokens[2], evaluate=self.evaluate)
 
     def gt(self, tokens):
-        return sympy.Gt(tokens[0], tokens[2])
+        return sympy.Gt(tokens[0], tokens[2], evaluate=self.evaluate)
 
     def gte(self, tokens):
-        return sympy.Ge(tokens[0], tokens[2])
+        return sympy.Ge(tokens[0], tokens[2], evaluate=self.evaluate)
 
     _relations = {"EQUAL": sympy.Eq, "NOT_EQUAL": sympy.Ne, "LT": sympy.Lt,
                   "LTE": sympy.Le, "GT": sympy.Gt, "GTE": sympy.Ge}
 
     def relation_chain(self, tokens):
-        return sympy.And(*[self._relations[tokens[i].type](tokens[i - 1], tokens[i + 1])
-                           for i in range(1, len(tokens), 2)])
+        return sympy.And(*[self._relations[tokens[i].type](tokens[i - 1], tokens[i + 1],
+                                                           evaluate=self.evaluate)
+                           for i in range(1, len(tokens), 2)], evaluate=self.evaluate)
 
     _number_sets = {"N": sympy.S.Naturals, "Z": sympy.S.Integers, "Q": sympy.S.Rationals,
                     "R": sympy.S.Reals, "C": sympy.S.Complexes}
@@ -258,8 +262,10 @@ class TransformToSymPyExpr(Transformer):
         return self._number_sets[name]
 
     def membership(self, tokens):
-        contains = sympy.Contains(tokens[0], tokens[2])
-        return sympy.Not(contains) if tokens[1].type == "CMD_NOTIN" else contains
+        contains = sympy.Contains(tokens[0], tokens[2], evaluate=self.evaluate)
+        if tokens[1].type == "CMD_NOTIN":
+            return sympy.Not(contains, evaluate=self.evaluate)
+        return contains
 
     def add(self, tokens):
         if len(tokens) == 2: # +a
@@ -271,19 +277,19 @@ class TransformToSymPyExpr(Transformer):
             if self._obj_is_sympy_Matrix(lh) or self._obj_is_sympy_Matrix(rh):
                 return sympy.MatAdd(lh, rh)
 
-            return sympy.Add(lh, rh)
+            return sympy.Add(lh, rh, evaluate=self.evaluate)
 
     def sub(self, tokens):
         if len(tokens) == 2: # -a
             x = tokens[1]
 
             if isinstance(x, _FactorsAfterArgument):
-                return _FactorsAfterArgument(-x.argument, x.factors)
+                return _FactorsAfterArgument(self._negate(x.argument), x.factors)
 
             if self._obj_is_sympy_Matrix(x):
                 return sympy.MatMul(-1, x)
 
-            return -x
+            return self._negate(x)
         if len(tokens) == 3: # a - b
             lh = tokens[0]
             rh = tokens[2]
@@ -291,7 +297,13 @@ class TransformToSymPyExpr(Transformer):
             if self._obj_is_sympy_Matrix(lh) or self._obj_is_sympy_Matrix(rh):
                 return sympy.MatAdd(lh, sympy.MatMul(-1, rh))
 
-            return sympy.Add(lh, -rh)
+            return sympy.Add(lh, self._negate(rh), evaluate=self.evaluate)
+
+    def _negate(self, x):
+        # a negative number is written as such, rather than as -1 times a number
+        if isinstance(x, sympy.Number) and x.is_positive:
+            return -x
+        return sympy.Mul(-1, x, evaluate=self.evaluate)
 
     def unary_sign(self, tokens):
         return self.sub(tokens) if tokens[0].type == "SUB" else tokens[1]
@@ -303,7 +315,7 @@ class TransformToSymPyExpr(Transformer):
         if self._obj_is_sympy_Matrix(lh) or self._obj_is_sympy_Matrix(rh):
             return sympy.MatMul(lh, rh)
 
-        return sympy.Mul(lh, rh)
+        return sympy.Mul(lh, rh, evaluate=self.evaluate)
 
     def div(self, tokens):
         return self._handle_division(tokens[0], tokens[2])
@@ -323,12 +335,17 @@ class TransformToSymPyExpr(Transformer):
     def factors_after_argument(self, tokens):
         return _FactorsAfterArgument(tokens[0], tokens[1])
 
-    def _apply(self, function, argument):
-        # ``function`` applied to the argument of a function command, and multiplied by
-        # the factors that follow it when the argument is read as the first factor alone
-        if isinstance(argument, _FactorsAfterArgument):
-            return self._multiply(function(argument.argument), argument.factors)
-        return function(argument)
+    def _apply(self, f, arg, exp=None):
+        # Returns (f(arg))**exp, passing ``evaluate`` to f and to the power. Every
+        # function read from a command is called here, so that it gets ``evaluate``.
+        # In the reading of ``\sin x y`` as ``sin(x)*y``, ``arg`` holds ``x`` and the
+        # factors ``y`` after it, and the result is f(x)**exp*y.
+        if isinstance(arg, _FactorsAfterArgument):
+            return self._multiply(self._apply(f, arg.argument, exp), arg.factors)
+        result = f(arg, evaluate=self.evaluate)
+        if exp is not None:
+            result = sympy.Pow(result, exp, evaluate=self.evaluate)
+        return result
 
     def superscript(self, tokens):
         def isprime(x):
@@ -359,7 +376,7 @@ class TransformToSymPyExpr(Transformer):
             if sup == sympy.Symbol("T"):
                 return sympy.Transpose(base)
             if sup == sympy.Symbol("H"):
-                return sympy.adjoint(base)
+                return sympy.Adjoint(base)
             if isprime(sup):
                 sup = sup.value
                 if len(sup) % 2 == 0:
@@ -372,27 +389,23 @@ class TransformToSymPyExpr(Transformer):
                 return sympy.Transpose(base)
             if isstar(sup):
                 sup = sup.value
-                # need .doit() in order to be consistent with
-                # sympy.adjoint() which returns the evaluated adjoint
-                # of a matrix
                 if len(sup) % 2 == 0:
-                    return base.doit()
-                return sympy.adjoint(base)
+                    return base
+                return sympy.Adjoint(base)
             if iscmdstar(sup):
                 sup = sup.value
-                # need .doit() for same reason as above
                 if (len(sup)/len(r"\ast")) % 2 == 0:
-                    return base.doit()
-                return sympy.adjoint(base)
+                    return base
+                return sympy.Adjoint(base)
 
         if isprime(sup) or iscmdprime(sup) or isstar(sup) or iscmdstar(sup):
             raise LaTeXParsingError(f"{base} with superscript {sup} is not understood.")
 
-        return sympy.Pow(base, sup)
+        return sympy.Pow(base, sup, evaluate=self.evaluate)
 
     def degree(self, args):
         base = args[0]
-        return base * (sympy.pi / 180)
+        return self._multiply(base, sympy.pi / 180)
 
     def matrix_prime(self, tokens):
         base = tokens[0]
@@ -408,7 +421,8 @@ class TransformToSymPyExpr(Transformer):
 
     def power_with_subscript(self, tokens):
         subscript = tokens[3][1:].strip("{}").replace(" ", "")
-        return sympy.Pow(sympy.Symbol("%s_{%s}" % (tokens[0].name, subscript)), tokens[2])
+        return sympy.Pow(sympy.Symbol("%s_{%s}" % (tokens[0].name, subscript)), tokens[2],
+                         evaluate=self.evaluate)
 
     def symbol_prime(self, tokens):
         base = tokens[0]
@@ -434,7 +448,7 @@ class TransformToSymPyExpr(Transformer):
         return self._handle_division(numerator, self._multiply(d, power_of_variable))
 
     def binomial(self, tokens):
-        return sympy.binomial(tokens[1], tokens[2])
+        return sympy.binomial(tokens[1], tokens[2], evaluate=self.evaluate)
 
     def normal_integral(self, tokens):
         underscore_index = None
@@ -517,7 +531,7 @@ class TransformToSymPyExpr(Transformer):
         denominator = tokens[2]
 
         # We pass the integrand, along with information about the variable of integration, upw
-        return sympy.Mul(numerator, sympy.Pow(denominator, -1)), variable
+        return self._handle_division(numerator, denominator), variable
 
     def integral_with_special_fraction(self, tokens):
         underscore_index = None
@@ -653,16 +667,16 @@ class TransformToSymPyExpr(Transformer):
             return filter(remove_tokens, tokens)
 
     def function_applied(self, tokens):
-        return sympy.Function(tokens[0])(*tokens[2])
+        return sympy.Function(tokens[0])(*tokens[2], evaluate=self.evaluate)
 
     def inverse_function_applied(self, tokens):
-        return sympy.Function("%s^{-1}" % tokens[0])(*tokens[-2])
+        return sympy.Function("%s^{-1}" % tokens[0])(*tokens[-2], evaluate=self.evaluate)
 
     def min(self, tokens):
-        return sympy.Min(*tokens[2])
+        return sympy.Min(*tokens[2], evaluate=self.evaluate)
 
     def max(self, tokens):
-        return sympy.Max(*tokens[2])
+        return sympy.Max(*tokens[2], evaluate=self.evaluate)
 
     def bra(self, tokens):
         from sympy.physics.quantum import Bra
@@ -697,7 +711,7 @@ class TransformToSymPyExpr(Transformer):
     # TODO: ANTLR refers to ISO 80000-2:2019. should we keep base 10 or base 2 for \lg?
     _exponential_functions = {
         "\\exp": sympy.exp, "\\ln": sympy.log, "\\log": sympy.log,
-        "\\lg": lambda argument: sympy.log(argument, 10),
+        "\\lg": lambda argument, evaluate: sympy.log(argument, 10, evaluate=evaluate),
     }
 
     def _function(self, command):
@@ -716,7 +730,7 @@ class TransformToSymPyExpr(Transformer):
         exponent = tokens[2]
         if exponent == -1 and function in self._inverse_trigonometric_functions:
             return self._apply(self._inverse_trigonometric_functions[function], tokens[-1])
-        return self._apply(lambda argument: sympy.Pow(function(argument), exponent), tokens[-1])
+        return self._apply(function, tokens[-1], exponent)
 
     _named_functions = {
         "exp": sympy.exp, "ln": sympy.log, "log": sympy.log, "min": sympy.Min, "max": sympy.Max,
@@ -751,47 +765,47 @@ class TransformToSymPyExpr(Transformer):
             exponent = tokens[2]
             if exponent == -1 and function in self._inverse_trigonometric_functions:
                 return self._apply(self._inverse_trigonometric_functions[function], tokens[3])
-            return self._apply(lambda argument: sympy.Pow(function(argument), exponent), tokens[3])
+            return self._apply(function, tokens[3], exponent)
         if not (function in (sympy.Min, sympy.Max) or "\\operatorname{%s}" % name in self.locals
                 or isinstance(function, sympy.core.function.UndefinedFunction)):
             raise LaTeXParsingError("\\operatorname{%s} takes one argument." % name)
-        return function(*tokens[2:-1:2])
+        return function(*tokens[2:-1:2], evaluate=self.evaluate)
 
     def abs(self, tokens):
-        return sympy.Abs(tokens[1])
+        return sympy.Abs(tokens[1], evaluate=self.evaluate)
 
     def floor(self, tokens):
-        return sympy.floor(tokens[1])
+        return sympy.floor(tokens[1], evaluate=self.evaluate)
 
     def ceil(self, tokens):
-        return sympy.ceiling(tokens[1])
+        return sympy.ceiling(tokens[1], evaluate=self.evaluate)
 
     def factorial(self, tokens):
-        return sympy.factorial(tokens[0])
+        return sympy.factorial(tokens[0], evaluate=self.evaluate)
 
     def conjugate(self, tokens):
-        return sympy.conjugate(tokens[1])
+        return sympy.conjugate(tokens[1], evaluate=self.evaluate)
 
     def square_root(self, tokens):
         if len(tokens) == 2:
             # then there was no square bracket argument
-            return sympy.sqrt(tokens[1])
+            return sympy.sqrt(tokens[1], evaluate=self.evaluate)
         elif len(tokens) == 3:
             # then there _was_ a square bracket argument
-            return sympy.root(tokens[2], tokens[1])
+            return sympy.root(tokens[2], tokens[1], evaluate=self.evaluate)
 
     def exponential(self, tokens):
         return self._apply(self._function(tokens[0]), tokens[1])
 
     def function_power(self, tokens):
-        function = self._function(tokens[0])
-        return self._apply(lambda argument: sympy.Pow(function(argument), tokens[2]), tokens[3])
+        return self._apply(self._function(tokens[0]), tokens[3], tokens[2])
 
     def log(self, tokens):
         function = self._function(tokens[0])
         # only \log takes a base
         if "_" in tokens:
-            return self._apply(lambda argument: function(argument, tokens[2]), tokens[3])
+            return self._apply(lambda argument, evaluate: function(argument, tokens[2], evaluate=evaluate),
+                               tokens[3])
         return self._apply(function, tokens[1])
 
     def _extract_differential_symbol(self, s: str):
@@ -817,18 +831,18 @@ class TransformToSymPyExpr(Transformer):
             return self._apply(self._determinant, tokens[1])
 
         if len(tokens) == 3: # | A |
-            return self.matrix(tokens).det()
+            return sympy.Determinant(self.matrix(tokens))
 
-    def _determinant(self, matrix):
+    def _determinant(self, matrix, evaluate=True):
         if not self._obj_is_sympy_Matrix(matrix):
             raise LaTeXParsingError("Cannot take determinant of non-matrix.")
 
-        return matrix.det()
+        return sympy.Determinant(matrix)
 
     def trace(self, tokens):
         return self._apply(self._trace, tokens[1])
 
-    def _trace(self, matrix):
+    def _trace(self, matrix, evaluate=True):
         if not self._obj_is_sympy_Matrix(matrix):
             raise LaTeXParsingError("Cannot take trace of non-matrix.")
 
@@ -837,7 +851,7 @@ class TransformToSymPyExpr(Transformer):
     def adjugate(self, tokens):
         return self._apply(self._adjugate, tokens[1])
 
-    def _adjugate(self, matrix):
+    def _adjugate(self, matrix, evaluate=True):
         if not self._obj_is_sympy_Matrix(matrix):
             raise LaTeXParsingError("Cannot take adjugate of non-matrix.")
 
@@ -858,6 +872,9 @@ class TransformToSymPyExpr(Transformer):
                                     "multiplying by the inverse instead.")
 
         if self._obj_is_sympy_Matrix(numerator):
-            return sympy.MatMul(numerator, sympy.Pow(denominator, -1))
+            return sympy.MatMul(numerator, sympy.Pow(denominator, -1, evaluate=self.evaluate))
 
-        return sympy.Mul(numerator, sympy.Pow(denominator, -1))
+        inverse = sympy.Pow(denominator, -1, evaluate=self.evaluate)
+        if numerator == 1:
+            return inverse
+        return sympy.Mul(numerator, inverse, evaluate=self.evaluate)
