@@ -455,6 +455,8 @@ def test_minisat22_satisfiable():
 
 
 def test_minisat22_minimal_satisfiable():
+    if import_module("pysat") is None:
+        skip("PySAT is not installed")
     A, B, C = symbols('A,B,C')
     minisat22_satisfiable = lambda expr, minimal=True: satisfiable(expr, algorithm="minisat22", minimal=True)
     assert minisat22_satisfiable( A & ~A ) is False
