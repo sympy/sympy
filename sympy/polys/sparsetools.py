@@ -11,7 +11,6 @@ from itertools import combinations
 from typing import TYPE_CHECKING, Mapping, Sequence, TypeVar
 
 from sympy.core.intfunc import igcd
-from sympy.ntheory.multinomial import multinomial_coefficients
 from sympy.polys.monomials import MonomialOps, monom
 from sympy.polys.orderings import lex, MonomialOrder
 from sympy.polys.polyerrors import ExactQuotientFailed
@@ -960,6 +959,8 @@ def smp_pow_generic(d: smp[Er], exp: int, domain: Domain[Er], n: int) -> smp[Er]
 
 
 def smp_pow_multinomial(d: smp[Er], exp: int, domain: Domain[Er], n: int) -> smp[Er]:
+    from sympy.ntheory.multinomial import multinomial_coefficients
+
     # Raise a sparse polynomial to a power by multinomial expansion.
     if exp == 0:
         if not d:
