@@ -1961,6 +1961,17 @@ def test_is_constant():
     assert (x*meter).is_constant() is False
 
 
+def test_equals_with_order():
+    assert (x + O(x**3)).equals(x + O(x**3))
+    assert (x**2*(1 + I) + O(x**3)).equals(
+        x**2 + I*x**2 + O(x**3))
+    assert (x + O(x**3)).equals(x + x**2 + O(x**3)) is False
+    assert (x + O(x**3)).equals(x + O(x**4)) is False
+    assert (x + O(x**3)).equals(x) is False
+    assert (x + O(x**3)).equals(x + O(x**3) + 1) is False
+    assert O(x**3).equals(S.Zero) is False
+
+
 def test_equals():
     assert (-3 - sqrt(5) + (-sqrt(10)/2 - sqrt(2)/2)**2).equals(0)
     assert (x**2 - 1).equals((x + 1)*(x - 1))

@@ -814,6 +814,17 @@ class Expr(Basic, EvalfMixin):
         if self == other:
             return True
 
+        # Compare series remainders separately. Substituting a numerical
+        # value for an Order variable is not valid, and can raise TypeError
+        # during the ordinary equality checks below.
+        order = self.getO()
+        other_order = other.getO()
+        if order is not None or other_order is not None:
+            if order != other_order:
+                return False
+            return self.removeO().equals(
+                other.removeO(), failing_expression=failing_expression)
+
         # they aren't the same so see if we can make the difference 0;
         # don't worry about doing simplification steps one at a time
         # because if the expression ever goes to 0 then the subsequent
