@@ -249,6 +249,53 @@ def test_BlockMatrix_2x2_inverse_numeric():
     assert block_collapse(K.inv()).as_explicit() == K.as_explicit().inv()
 
 
+def test_BlockMatrix_block_triangular_inverse():
+    # https://github.com/sympy/sympy/issues/31366
+    from sympy.assumptions.assume import assuming
+    from sympy.assumptions.ask import Q
+    from sympy.simplify import simplify
+    from sympy.assumptions.refine import refine
+    n, m = symbols('n m')
+    X = MatrixSymbol('X', n, n)
+    Y = MatrixSymbol('Y', m, m)
+    Z = MatrixSymbol('Z', n, m)
+
+    B_up = BlockMatrix([[X, Z], [ZeroMatrix(m, n), Y]])
+    B_lo = BlockMatrix([[X, ZeroMatrix(n, m)], [Z.T, Y]])
+
+    # invertibility unknown: stays unevaluated
+    assert isinstance(B_up.inverse(), Inverse)
+    assert isinstance(B_lo.inverse(), Inverse)
+
+    with assuming(Q.invertible(X), Q.invertible(Y)):
+        assert refine(B_up.inverse()) == BlockMatrix([
+            [X.I, -X.I * Z * Y.I],
+            [ZeroMatrix(m, n), Y.I]])
+        assert refine(B_lo.inverse()) == BlockMatrix([
+            [X.I, ZeroMatrix(n, m)],
+            [-Y.I * Z.T * X.I, Y.I]])
+
+    # non-square diagonal blocks: stays unevaluated
+    A = MatrixSymbol('A', n, m)
+    D = MatrixSymbol('D', m, n)
+    B = MatrixSymbol('B', n, n)
+    NS = BlockMatrix([[A, B], [ZeroMatrix(m, m), D]])
+    assert isinstance(NS.inverse(), Inverse)
+
+    # numeric verification against dense inverse
+    M1 = Matrix([[2, 0], [0, 3]])
+    M2 = Matrix([[1, 1], [0, 1]])
+    M3 = Matrix([[5, 6], [7, 8]])
+    K_up = BlockMatrix([[M1, M3], [ZeroMatrix(2, 2), M2]])
+    K_lo = BlockMatrix([[M1, ZeroMatrix(2, 2)], [M3, M2]])
+    assert K_up.inverse().as_explicit() == K_up.as_explicit().inv()
+    assert K_lo.inverse().as_explicit() == K_lo.as_explicit().inv()
+    assert simplify(
+        (K_up * K_up.inverse()).as_explicit()) == Matrix.eye(4)
+    assert simplify(
+        (K_lo * K_lo.inverse()).as_explicit()) == Matrix.eye(4)
+
+
 @slow
 def test_BlockMatrix_3x3_symbolic():
     # Only test one of these, instead of all permutations, because it's slow

@@ -213,6 +213,24 @@ class BlockMatrix(MatrixExpr):
                 return det(D)*det(A - B*D.I*C)
         return Determinant(self)
 
+    def _eval_inverse(self, expand='ignored'):
+        if self.blockshape == (2, 2):
+            [[A, B],
+             [C, D]] = self.blocks.tolist()
+            if A.shape[0] != A.shape[1] or D.shape[0] != D.shape[1]:
+                return Inverse(self)
+            if not (ask(Q.invertible(A)) and ask(Q.invertible(D))):
+                return Inverse(self)
+            if C.is_ZeroMatrix:
+                # Block upper triangular
+                return BlockMatrix([[A.I, -A.I*B*D.I],
+                                    [ZeroMatrix(D.shape[0], A.shape[1]), D.I]])
+            if B.is_ZeroMatrix:
+                # Block lower triangular
+                return BlockMatrix([[A.I, ZeroMatrix(A.shape[0], D.shape[1])],
+                                    [-D.I*C*A.I, D.I]])
+        return Inverse(self)
+
     def _eval_as_real_imag(self):
         real_matrices = [re(matrix) for matrix in self.blocks]
         real_matrices = Matrix(self.blockshape[0], self.blockshape[1], real_matrices)
