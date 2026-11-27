@@ -3222,7 +3222,7 @@ def test_solve_exponential():
 # logarithmic tests
 def test_logarithmic():
     assert solveset_real(log(x - 3) + log(x + 3), x) == FiniteSet(
-        -sqrt(10), sqrt(10))
+        sqrt(10))
     assert solveset_real(log(x + 1) - log(2*x - 1), x) == FiniteSet(2)
     assert solveset_real(log(x + 3) + log(1 + 3/x) - 3, x) == FiniteSet(
         -3 + sqrt(-12 + exp(3))*exp(Rational(3, 2))/2 + exp(3)/2,
@@ -3230,12 +3230,12 @@ def test_logarithmic():
 
     eq = z - log(x) + log(y/(x*(-1 + y**2/x**2)))
     assert solveset_real(eq, x) == \
-        Intersection(S.Reals, FiniteSet(-sqrt(y**2 - y*exp(z)),
+        Intersection(Interval.open(0, oo), FiniteSet(-sqrt(y**2 - y*exp(z)),
             sqrt(y**2 - y*exp(z)))) - \
         Intersection(S.Reals, FiniteSet(-sqrt(y**2), sqrt(y**2)))
     assert solveset_real(
-        log(3*x) - log(-x + 1) - log(4*x + 1), x) == FiniteSet(Rational(-1, 2), S.Half)
-    assert solveset(log(x**y) - y*log(x), x, S.Reals) == S.Reals
+        log(3*x) - log(-x + 1) - log(4*x + 1), x) == FiniteSet(S.Half)
+    assert solveset(log(x**y) - y*log(x), x, S.Reals) == Interval.open(0, oo)
 
 @XFAIL
 def test_uselogcombine_2():
@@ -3264,9 +3264,23 @@ def test_is_logarithmic():
 
 def test_solve_logarithm():
     y = Symbol('y')
-    assert _solve_logarithm(log(x**y) - y*log(x), 0, x, S.Reals) == S.Reals
+    assert _solve_logarithm(log(x**y) - y*log(x), 0, x, S.Reals) == \
+        Interval.open(0, oo)
     y = Symbol('y', positive=True)
     assert _solve_logarithm(log(x)*log(y), 0, x, S.Reals) == FiniteSet(1)
+    # issue 31254: logcombine(force=True) must not introduce spurious roots
+    xr = Symbol('x', real=True)
+    assert solveset(2*log(xr) - log(xr**2), xr, domain=S.Reals) == \
+        Interval.open(0, oo)
+    assert solveset_real(log(x + 2) + log(2*x - 1), x) == \
+        FiniteSet(sqrt(33)/4 - Rational(3, 4))
+    assert solveset_real(log(-x), x) == FiniteSet(-1)
+
+
+def test_solve_logarithm_domain_restricted():
+    # roots that leave the domain of every logarithm are excluded
+    assert _solve_logarithm(log(x - 3) + log(x + 3), 0, x, S.Reals) == \
+        FiniteSet(sqrt(10))
 
 # end of logarithmic tests
 

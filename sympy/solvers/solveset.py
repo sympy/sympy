@@ -1977,7 +1977,7 @@ def _solve_logarithm(lhs, rhs, symbol, domain):
     >>> x = symbols('x')
     >>> f = log(x - 3) + log(x + 3)
     >>> solve_log(f, 0, x, S.Reals)
-    {-sqrt(10), sqrt(10)}
+    {sqrt(10)}
 
     * Proof of correctness
 
@@ -2020,7 +2020,27 @@ def _solve_logarithm(lhs, rhs, symbol, domain):
     new_lhs = logcombine(lhs, force=True)
     new_f = new_lhs - rhs
 
-    return _solveset(new_f, symbol, domain)
+    result = _solveset(new_f, symbol, domain)
+
+    if domain.is_subset(S.Reals):
+        # ``logcombine(force=True)`` assumes positive arguments, so the
+        # combined equation is only equivalent to the original one where
+        # every logarithm is real-valued; restrict the result accordingly.
+        from .inequalities import solve_univariate_inequality
+        for expr in (lhs, rhs):
+            if not isinstance(expr, Expr):
+                continue
+            for arg in (l.args[0] for l in expr.atoms(log)):
+                if not arg.has(symbol):
+                    continue
+                try:
+                    positivity = solve_univariate_inequality(
+                        arg > 0, symbol, relational=False, domain=domain)
+                except NotImplementedError:
+                    continue
+                result = Intersection(result, positivity)
+
+    return result
 
 
 def _is_logarithmic(f, symbol):
