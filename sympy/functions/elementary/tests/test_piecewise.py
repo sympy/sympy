@@ -853,6 +853,72 @@ def test_piecewise_as_leading_term():
     assert p7.as_leading_term(x) == x
     assert p8.as_leading_term(x) == 1/x
 
+def test_piecewise_as_leading_term_direction():
+    x = Symbol('x', real=True)
+    a = Symbol('a', real=True)
+
+    f = Piecewise((x**2, x > 0), (x, True))
+    assert f.as_leading_term(x, cdir=1) == x**2
+    assert f.as_leading_term(x, cdir=-1) == x
+
+    f = Piecewise((x**2, x**2 < x), (x**3, True))
+    assert f.as_leading_term(x, cdir=1) == x**2
+    assert f.as_leading_term(x, cdir=-1) == x**3
+
+    f = Piecewise((x**2, Eq(x, 0)), (x**3, True))
+    assert f.as_leading_term(x, cdir=1) == x**3
+    assert f.as_leading_term(x, cdir=-1) == x**3
+
+    f = Piecewise((x**2, x > 1), (x, True))
+    assert f.as_leading_term(x, cdir=1) == x
+    assert f.as_leading_term(x, cdir=-1) == x
+
+    f = Piecewise((x**2, And(x > 0, x < 1)), (x**3, True))
+    assert f.as_leading_term(x, cdir=1) == x**2
+    assert f.as_leading_term(x, cdir=-1) == x**3
+
+    f = Piecewise((x**2, log(x) < 0), (x**3, True))
+    assert f.as_leading_term(x, cdir=1) == x**2
+
+    f = Piecewise((x**2, a*x > 0), (x**3, True))
+    raises(NotImplementedError, lambda: f.as_leading_term(x, cdir=1))
+
+
+def test_piecewise_as_leading_term_real_condition():
+    x = Symbol('x')
+    f = Piecewise((x**2, Eq(im(x), 0)), (x, True))
+    assert f.as_leading_term(x, cdir=1) == x**2
+    assert f.as_leading_term(x, cdir=-1) == x**2
+
+    f = Piecewise((x**2, Eq(re(x), 0)), (x, True))
+    assert f.as_leading_term(x, cdir=1) == x
+    assert f.as_leading_term(x, cdir=-1) == x
+    assert f.as_leading_term(x, cdir=I) == x**2
+    assert f.as_leading_term(x, cdir=-I) == x**2
+
+def test_piecewise_as_leading_term_boolean_conditions():
+    x = Symbol('x')
+
+    f = Piecewise((1, Contains(x, Interval(-1, 1), evaluate=False)), (2, True))
+    assert f.as_leading_term(x) == 1
+
+    f = Piecewise((1, Contains(x, Interval(0, 1), evaluate=False)), (2, True))
+    assert f.as_leading_term(x, cdir=1) == 1
+    assert f.as_leading_term(x, cdir=-1) == 2
+
+    f = Piecewise((x**2, (x > 1) & (exp(-1/x) > 1)), (x, True))
+    assert f.as_leading_term(x) == x
+
+    f = Piecewise((x**2, (x > 0) | (x < -1)), (x, True))
+    assert f.as_leading_term(x, cdir=1) == x**2
+
+    f = Piecewise((x**2, (x > 0) & ((x < 1) | (x < -1))), (x, True))
+    assert f.as_leading_term(x, cdir=1) == x**2
+
+    a = Symbol('a', real=True)
+    f = Piecewise((x**2, x > a), (x, True))
+    raises(NotImplementedError, lambda: f.as_leading_term(x))
+
 
 def test_piecewise_complex():
     p1 = Piecewise((2, x < 0), (1, 0 <= x))
