@@ -204,6 +204,31 @@ class BlockMatrix(MatrixExpr):
     def _eval_determinant(self):
         if self.blockshape == (1, 1):
             return det(self.blocks[0, 0])
+
+        if self.blockshape[0] == self.blockshape[1] and (
+            self.is_structurally_symmetric
+            or all(self.blocks[i, i].is_square for i in range(self.blockshape[0]))
+        ):
+            def _is_zero(block):
+                return (
+                    getattr(block, 'is_ZeroMatrix', False)
+                    or getattr(block, 'is_zero_matrix', False)
+                    or getattr(block, 'is_zero', False)
+                    or block == 0
+                )
+
+            n = self.blockshape[0]
+            is_upper = all(
+                _is_zero(self.blocks[i, j])
+                for i in range(n) for j in range(i)
+            )
+            is_lower = all(
+                _is_zero(self.blocks[i, j])
+                for i in range(n) for j in range(i + 1, n)
+            )
+            if is_upper or is_lower:
+                return Mul(*[det(self.blocks[i, i]) for i in range(n)])
+
         if self.blockshape == (2, 2):
             [[A, B],
              [C, D]] = self.blocks.tolist()
