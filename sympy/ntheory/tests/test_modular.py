@@ -17,6 +17,16 @@ def test_crt():
 
     assert crt([656, 350], [811, 133], symmetric=True) == (-56917, 114800)
 
+    # crt and crt2 raise ValueError if m and v have different lengths
+    raises(ValueError, lambda: crt([2, 3], [1]))
+    raises(ValueError, lambda: crt([2, 3], [1], check=False))
+    raises(ValueError, lambda: crt([2], [1, 2]))
+    raises(ValueError, lambda: crt([2], [1, 2], check=False))
+    raises(ValueError, lambda: crt(iter([2, 3]), iter([1])))
+    mm, e, s = crt1([2, 3])
+    raises(ValueError, lambda: crt2([2, 3], [1], mm, e, s))
+    raises(ValueError, lambda: crt2([2], [1, 2], mm, e, s))
+
 
 def test_crt_noncoprime_and_edge_cases():
     # Issue #31177: non-coprime moduli where gf_crt satisfies all congruences
