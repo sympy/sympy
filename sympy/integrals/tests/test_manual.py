@@ -1,6 +1,6 @@
 from __future__ import annotations
 from sympy.core.function import (Derivative, Function, diff, expand)
-from sympy.core.numbers import (I, Rational, pi)
+from sympy.core.numbers import (E, I, Rational, pi)
 from sympy.core.relational import Ne, Eq
 from sympy.core.singleton import S
 from sympy.core.symbol import (Dummy, Symbol, symbols)
@@ -1471,3 +1471,10 @@ def test_manualintegrate_trig_log_hang():
     expr = log((cos(x)/2 + 1) / (1 - cos(x)/2)) / cos(x)
     res = manualintegrate(expr, x)
     assert res is not None
+
+
+def test_issue_31029():
+    f = 1 / (x * sqrt(1 - log(x)**2))
+    assert manualintegrate(f, x) == asin(log(x))
+    assert integrate(f, (x, 1, E)) == pi/2
+

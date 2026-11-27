@@ -1306,9 +1306,8 @@ def find_substitutions(integrand, symbol, u_var):
             if term.exp.is_Integer:
                 r.extend([term.base**d for d in primefactors(term.exp)
                     if 1 < d < abs(term.args[1])])
-                if term.base.is_Add:
-                    r.extend([t for t in possible_subterms(term.base)
-                        if t.is_Pow])
+            if term.base.is_Add:
+                r.extend(possible_subterms(term.base))
             return r
         elif isinstance(term, Add):
             r = []
