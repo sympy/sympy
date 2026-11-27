@@ -404,14 +404,20 @@ class RustCodePrinter(CodePrinter):
             return self._print_not_supported(expr)
 
     def _print_Mul(self, expr):
-        contains_floats = any(arg.is_real and not arg.is_integer for arg in expr.args)
+        contains_floats = any(
+            (arg.is_real and not arg.is_integer)
+            or isinstance(arg, (float_floor, float_ceiling))
+            for arg in expr.args)
         if contains_floats:
             expr = reduce(operator.mul,(self._cast_to_float(arg) if arg != -1 else arg for arg in expr.args))
 
         return super()._print_Mul(expr)
 
     def _print_Add(self, expr, order=None):
-        contains_floats = any(arg.is_real and not arg.is_integer for arg in expr.args)
+        contains_floats = any(
+            (arg.is_real and not arg.is_integer)
+            or isinstance(arg, (float_floor, float_ceiling))
+            for arg in expr.args)
         if contains_floats:
             expr = reduce(operator.add, (self._cast_to_float(arg) for arg in expr.args))
 
