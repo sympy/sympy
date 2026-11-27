@@ -3826,7 +3826,7 @@ class IntegrationSolver:
         self.branch = branch
         self.options = options
         # Subproblems on the current recursion path, to break cyclic integrals.
-        self._active: set[Expr] = set()
+        self._active: set[tuple[Expr, frozenset[tuple[str, bool]]]] = set()
         # Uses of each "u" by integration by parts, to avoid infinite repetition.
         self._parts_u_count: dict[Expr, int] = defaultdict(int)
         # Rules already computed for a subproblem, keyed the same way as
@@ -3839,7 +3839,7 @@ class IntegrationSolver:
         # reached elsewhere with more budget left. Lives only as long as
         # this solver, i.e. one top-level integral_steps() call, so it can
         # never leak stale steps into an unrelated integration request.
-        self._solved: dict[Expr, Rule] = {}
+        self._solved: dict[tuple[Expr, frozenset[tuple[str, bool]]], Rule] = {}
         # Whether the subproblem currently being solved (or any of its
         # descendants) has bottomed out on the max_depth budget.
         self._starved = False
@@ -3851,7 +3851,8 @@ class IntegrationSolver:
         This replaces the recursive calls to ``integral_steps`` that the
         rules used to perform themselves.
         """
-        cachekey = integrand.xreplace({symbol: _cache_dummy})
+        assumptions = frozenset(getattr(symbol, "assumptions0", {}).items())
+        cachekey = (integrand.xreplace({symbol: _cache_dummy}), assumptions)
         if cachekey in self._solved:
             # A cached result is always budget-independent (see below), so
             # it can be served regardless of how much budget is left here.
