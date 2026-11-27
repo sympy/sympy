@@ -10,7 +10,7 @@ from sympy.utilities.misc import filldedent
 
 from sympy.matrices import Matrix, ShapeError
 from sympy.matrices.exceptions import NonInvertibleMatrixError
-from sympy.matrices.expressions.determinant import det, Determinant
+from sympy.matrices.expressions.determinant import det
 from sympy.matrices.expressions.inverse import Inverse
 from sympy.matrices.expressions.matadd import MatAdd
 from sympy.matrices.expressions.matexpr import MatrixExpr, MatrixElement
@@ -204,6 +204,28 @@ class BlockMatrix(MatrixExpr):
     def _eval_determinant(self):
         if self.blockshape == (1, 1):
             return det(self.blocks[0, 0])
+
+        if self.blockshape[0] == self.blockshape[1] and (
+            self.is_structurally_symmetric
+            or all(self.blocks[i, i].is_square for i in range(self.blockshape[0]))
+        ):
+            def _is_zero(block):
+                if isinstance(block, MatrixExpr):
+                    return block.is_ZeroMatrix or isinstance(block, ZeroMatrix)
+                return getattr(block, 'is_zero_matrix', False) or block == 0
+
+            n = self.blockshape[0]
+            is_upper = all(
+                _is_zero(self.blocks[i, j])
+                for i in range(n) for j in range(i)
+            )
+            is_lower = all(
+                _is_zero(self.blocks[i, j])
+                for i in range(n) for j in range(i + 1, n)
+            )
+            if is_upper or is_lower:
+                return Mul(*[det(self.blocks[i, i]) for i in range(n)])
+
         if self.blockshape == (2, 2):
             [[A, B],
              [C, D]] = self.blocks.tolist()
@@ -211,7 +233,8 @@ class BlockMatrix(MatrixExpr):
                 return det(A)*det(D - C*A.I*B)
             elif ask(Q.invertible(D)):
                 return det(D)*det(A - B*D.I*C)
-        return Determinant(self)
+
+        return None
 
     def _eval_as_real_imag(self):
         real_matrices = [re(matrix) for matrix in self.blocks]

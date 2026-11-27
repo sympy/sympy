@@ -6,7 +6,7 @@ from sympy.matrices.expressions.blockmatrix import (
     BlockMatrix, bc_dist, bc_matadd, bc_transpose, bc_inverse,
     blockcut, reblock_2x2, deblock)
 from sympy.matrices.expressions import (
-    MatrixSymbol, Identity, trace, det, ZeroMatrix, OneMatrix)
+    MatrixSymbol, Identity, trace, det, ZeroMatrix, OneMatrix, Determinant)
 from sympy.matrices.expressions.inverse import Inverse
 from sympy.matrices.expressions.matpow import MatPow
 from sympy.matrices.expressions.transpose import Transpose
@@ -143,6 +143,48 @@ def test_BlockMatrix_Determinant():
     assert isinstance(det(X), Expr)
     assert det(BlockMatrix([A])) == det(A)
     assert det(BlockMatrix([ZeroMatrix(n, n)])) == 0
+
+    # Block triangular matrices (gh-31355)
+    X_upper = BlockMatrix([[A, B], [ZeroMatrix(3, 3), D]])
+    assert det(X_upper) == det(A) * det(D)
+
+    X_lower = BlockMatrix([[A, ZeroMatrix(3, 3)], [C, D]])
+    assert det(X_lower) == det(A) * det(D)
+
+    A2 = MatrixSymbol('A2', 2, 2)
+    D3 = MatrixSymbol('D3', 3, 3)
+    B23 = MatrixSymbol('B23', 2, 3)
+    X_diff = BlockMatrix([[A2, B23], [ZeroMatrix(3, 2), D3]])
+    assert det(X_diff) == det(A2) * det(D3)
+
+    E, F = MatrixSymbol('E', 3, 3), MatrixSymbol('F', 3, 3)
+    X3_upper = BlockMatrix([
+        [A, B, C],
+        [ZeroMatrix(3, 3), D, E],
+        [ZeroMatrix(3, 3), ZeroMatrix(3, 3), F]
+    ])
+    assert det(X3_upper) == det(A) * det(D) * det(F)
+
+    X3_lower = BlockMatrix([
+        [A, ZeroMatrix(3, 3), ZeroMatrix(3, 3)],
+        [B, D, ZeroMatrix(3, 3)],
+        [C, E, F]
+    ])
+    assert det(X3_lower) == det(A) * det(D) * det(F)
+
+    M_A = Matrix([[1, 2], [3, 4]])
+    M_D = Matrix([[5, 1], [2, 3]])
+    M_B = Matrix([[1, 0], [0, 1]])
+    BM = BlockMatrix([[M_A, M_B], [ZeroMatrix(2, 2), M_D]])
+    assert det(BM) == BM.as_explicit().det() == det(M_A) * det(M_D)
+
+    # Non-square diagonal blocks should not be evaluated as product of diagonals
+    BM_nonsq = BlockMatrix([
+        [MatrixSymbol('A_ns', 2, 1), MatrixSymbol('B_ns', 2, 2)],
+        [ZeroMatrix(1, 1), MatrixSymbol('D_ns', 1, 2)]
+    ])
+    assert BM_nonsq._eval_determinant() is None
+    assert isinstance(det(BM_nonsq), Determinant)
 
 def test_squareBlockMatrix():
     A = MatrixSymbol('A', n, n)
