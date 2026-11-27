@@ -198,10 +198,10 @@ def refine_Pow(expr, assumptions):
                 if new_coeff != coeff or len(terms) < initial_number_of_terms:
                     terms.add(new_coeff)
                     expr = expr.base**(Add(*terms))
-                
+
                 if not expr.is_Pow:
                     return expr
-                
+
                 # Handle (-1)**((-1)**n/2 + m/2)
                 e2 = 2*expr.exp
                 if ask(Q.even(e2), assumptions):
