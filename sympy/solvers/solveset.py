@@ -18,7 +18,7 @@ from sympy.core.function import (Lambda, expand_complex, AppliedUndef,
                                 expand_log, _mexpand, expand_trig,
                                 nfloat, expand_power_exp)
 from sympy.core.mod import Mod
-from sympy.core.numbers import I, Number, Rational, oo
+from sympy.core.numbers import Float, I, Number, Rational, oo
 from sympy.core.intfunc import integer_log
 from sympy.core.relational import Eq, Ne, Relational
 from sympy.core.sorting import default_sort_key, ordered
@@ -1977,7 +1977,7 @@ def _solve_logarithm(lhs, rhs, symbol, domain):
     >>> x = symbols('x')
     >>> f = log(x - 3) + log(x + 3)
     >>> solve_log(f, 0, x, S.Reals)
-    {-sqrt(10), sqrt(10)}
+    {sqrt(10)}
 
     * Proof of correctness
 
@@ -2015,12 +2015,23 @@ def _solve_logarithm(lhs, rhs, symbol, domain):
     .. math:: \log((x - 3)(x + 3))
 
     This equation contains one logarithm and can be solved by rewriting
-    to exponents.
+    to exponents. The combination can change principal values, so exact
+    finite candidates in a real domain are checked against the original equation.
     """
     new_lhs = logcombine(lhs, force=True)
     new_f = new_lhs - rhs
 
-    return _solveset(new_f, symbol, domain)
+    result = _solveset(new_f, symbol, domain)
+    original = lhs - rhs
+    if (isinstance(result, FiniteSet) and domain.is_subset(S.Reals)
+            and not original.has(Float)):
+        # Forced log combination can change the principal value. Retain
+        # candidates whose original residual cannot be proved nonzero.
+        result = FiniteSet(*(
+            root for root in result
+            if root.has(Float) or original.subs(symbol, root).is_zero is not False
+        ))
+    return result
 
 
 def _is_logarithmic(f, symbol):

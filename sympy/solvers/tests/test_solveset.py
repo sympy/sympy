@@ -5,7 +5,7 @@ from sympy.calculus.util import stationary_points
 from sympy.core.containers import Tuple
 from sympy.core.function import (Function, Lambda, nfloat, diff)
 from sympy.core.mod import Mod
-from sympy.core.numbers import (E, I, Rational, oo, pi, Integer, all_close)
+from sympy.core.numbers import (E, I, Rational, oo, pi, Float, Integer, all_close)
 from sympy.core.relational import (Eq, Gt, Ne, Ge)
 from sympy.core.singleton import S
 from sympy.core.sorting import ordered
@@ -3220,9 +3220,23 @@ def test_solve_exponential():
 
 
 # logarithmic tests
+def test_logarithmic_principal_values():
+    eq = log(x) + log(x - 1) - log(2)
+    assert solveset_real(eq, x) == FiniteSet(2)
+
+    # At x = -2 the imaginary parts of the two logarithms cancel.
+    eq = log(x) - log(2*x + 3) - log(2)
+    assert solveset_real(eq, x) == FiniteSet(-2)
+
+    # An approximate root can have a small nonzero residual from rounding.
+    offset = Float('0.1')
+    roots = solveset_real(log(x) + log(x - 1) - offset, x)
+    expected = (1 + sqrt(1 + 4*exp(offset)))/2
+    assert any(abs(root - expected) < 1e-12 for root in roots)
+
+
 def test_logarithmic():
-    assert solveset_real(log(x - 3) + log(x + 3), x) == FiniteSet(
-        -sqrt(10), sqrt(10))
+    assert solveset_real(log(x - 3) + log(x + 3), x) == FiniteSet(sqrt(10))
     assert solveset_real(log(x + 1) - log(2*x - 1), x) == FiniteSet(2)
     assert solveset_real(log(x + 3) + log(1 + 3/x) - 3, x) == FiniteSet(
         -3 + sqrt(-12 + exp(3))*exp(Rational(3, 2))/2 + exp(3)/2,
