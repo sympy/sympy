@@ -20,7 +20,7 @@ from sympy.polys.polyfuncs import symmetrize, viete
 from sympy.polys.polyroots import (
     roots_linear, roots_quadratic, roots_binomial,
     preprocess_roots, roots)
-from sympy.polys.polytools import Poly, factor
+from sympy.polys.polytools import Poly, cancel, factor
 from sympy.polys.rationaltools import together
 from sympy.polys.rootisolation import (
     dup_isolate_complex_roots_sqf,
@@ -1213,7 +1213,7 @@ class RootSum(Expr):
     def new(cls, poly, func, auto=True):
         """Construct new ``RootSum`` instance. """
         if not func.expr.has(*func.variables):
-            return func.expr
+            return poly.degree()*func.expr
 
         rational = cls._is_func_rational(poly, func)
 
@@ -1328,6 +1328,29 @@ class RootSum(Expr):
             return Add(*[self.fun(r) for r in _roots])
 
     def _eval_derivative(self, x):
-        var, expr = self.fun.args
-        func = Lambda(var, expr.diff(x))
+        var, expr = self.fun.variables[0], self.fun.expr
+        gen = self.poly.gen
+        poly_expr = self.poly.as_expr()
+        dp_dx = S.Zero if x == gen else poly_expr.diff(x)
+        df_dx = S.Zero if x == var else expr.diff(x)
+        if dp_dx != 0:
+            if self.poly.degree() == 0:
+                return S.Zero
+            domain = self.poly.domain
+            if (not domain.is_Exact or domain.is_EX
+                    or domain.is_EXRAW or not self.poly.is_sqf):
+                return None
+            dp_dgen = poly_expr.diff(gen)
+            if dp_dgen == 0:
+                return None
+            ratio = cancel(dp_dx/dp_dgen)
+            if x == var or (var != gen and var in ratio.free_symbols):
+                new_var = Dummy(var.name)
+                expr = expr.xreplace({var: new_var})
+                var = new_var
+                df_dx = expr.diff(x)
+            dexpr = df_dx - expr.diff(var)*ratio.subs(gen, var)
+        else:
+            dexpr = df_dx
+        func = Lambda(var, dexpr)
         return self.new(self.poly, func, self.auto)
