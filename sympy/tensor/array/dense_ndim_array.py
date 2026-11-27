@@ -210,6 +210,8 @@ class MutableDenseNDimArray(DenseNDimArray, MutableNDimArray):
         [[1, 0], [0, 1]]
 
         """
+        if isinstance(index, slice):
+            index = self._check_index_for_getitem(index)
         if isinstance(index, tuple) and any(isinstance(i, slice) for i in index):
             value, eindices, slice_offsets = self._get_slice_data_for_array_assignment(index, value)
             for i in eindices:
