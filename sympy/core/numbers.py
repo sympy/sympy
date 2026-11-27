@@ -413,9 +413,12 @@ class Number(AtomicExpr):
         else:
             rat = self/other
         if other.is_finite:
-            w = int(rat) if rat >= 0 else int(rat) - 1
+            if isinstance(rat, Rational):
+                w = rat.p // rat.q
+            else:
+                w = int(math.floor(rat))
             r = self - other*w
-            if r == Float(other):
+            if r == other or r == Float(other):
                 w += 1
                 r = 0
             if isinstance(self, Float) or isinstance(other, Float):

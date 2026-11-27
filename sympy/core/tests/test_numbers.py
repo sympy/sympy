@@ -196,6 +196,12 @@ def test_divmod():
     assert divmod(-3, S(2)) == (-2, 1)
     assert divmod(S(-3), S(2)) == (-2, 1)
     assert divmod(S(-3), 2) == (-2, 1)
+    assert divmod(Rational(-2, 3), Rational(1, 3)) == Tuple(-2, 0)
+    assert divmod(Rational(-5, 2), Rational(1, 2)) == Tuple(-5, 0)
+    assert divmod(Rational(-7, 2), Rational(2, 3)) == Tuple(-6, Rational(1, 2))
+    assert Integer(-7) // Rational(1, 8) == Integer(-56)
+    assert divmod(Float(-1), Rational(1, 10)) == Tuple(-10, 0.0)
+    assert divmod(Float(-1), Float(0.1)) == Tuple(-10, 0.0)
 
     assert divmod(oo, 1) == (S.NaN, S.NaN)
     assert divmod(S.NaN, 1) == (S.NaN, S.NaN)
