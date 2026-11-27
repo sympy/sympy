@@ -1,4 +1,5 @@
 from __future__ import annotations
+from typing import TYPE_CHECKING
 from sympy.core import Add, Mul, Pow, S
 from sympy.core.basic import Basic
 from sympy.core.expr import Expr
@@ -185,6 +186,11 @@ class AccumulationBounds(Expr):
     is_extended_real = True
     is_number = False
 
+    if TYPE_CHECKING:
+        @property
+        def args(self) -> tuple[Expr, Expr]:
+            ...
+
     def __new__(cls, min, max) -> Expr: # type: ignore
 
         min = _sympify(min)
@@ -216,7 +222,7 @@ class AccumulationBounds(Expr):
             return True
 
     @property
-    def min(self):
+    def min(self) -> Expr:
         """
         Returns the minimum possible value attained by AccumulationBounds
         object.
@@ -232,7 +238,7 @@ class AccumulationBounds(Expr):
         return self.args[0]
 
     @property
-    def max(self):
+    def max(self) -> Expr:
         """
         Returns the maximum possible value attained by AccumulationBounds
         object.

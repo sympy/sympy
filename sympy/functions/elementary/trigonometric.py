@@ -1,7 +1,7 @@
 from __future__ import annotations
 from sympy.core.add import Add
 from sympy.core.cache import cacheit
-from sympy.core.function import DefinedFunction, ArgumentIndexError, PoleError, expand_mul
+from sympy.core.function import DefinedFunction, ExprFunction1Arg, ArgumentIndexError, PoleError, expand_mul
 from sympy.core.logic import fuzzy_not, fuzzy_or, FuzzyBool, fuzzy_and
 from sympy.core.mod import Mod
 from sympy.core.numbers import Rational, pi, Integer, Float, equal_valued
@@ -47,13 +47,8 @@ def _imaginary_unit_as_coefficient(arg):
 ###############################################################################
 
 
-class TrigonometricFunction(DefinedFunction):
+class TrigonometricFunction(ExprFunction1Arg):
     """Base class for trigonometric functions. """
-
-    if TYPE_CHECKING:
-        @property
-        def args(self) -> tuple[Expr]:
-            ...
 
     unbranched = True
     _singularities = (S.ComplexInfinity,)
@@ -318,7 +313,7 @@ class sin(TrigonometricFunction):
             raise ArgumentIndexError(self, argindex)
 
     @classmethod
-    def eval(cls, arg):
+    def eval(cls, arg: Expr) -> Expr | None:
         from sympy.calculus.accumulationbounds import AccumBounds
         from sympy.sets.setexpr import SetExpr
         if arg.is_Number:
@@ -340,20 +335,21 @@ class sin(TrigonometricFunction):
                 min = min - d*2*pi
             if max is not S.Infinity:
                 max = max - d*2*pi
-            if AccumBounds(min, max).intersection(FiniteSet(pi/2, pi*Rational(5, 2))) \
-                    is not S.EmptySet and \
-                    AccumBounds(min, max).intersection(FiniteSet(pi*Rational(3, 2),
-                        pi*Rational(7, 2))) is not S.EmptySet:
-                return AccumBounds(-1, 1)
-            elif AccumBounds(min, max).intersection(FiniteSet(pi/2, pi*Rational(5, 2))) \
-                    is not S.EmptySet:
-                return AccumBounds(Min(sin(min), sin(max)), 1)
-            elif AccumBounds(min, max).intersection(FiniteSet(pi*Rational(3, 2), pi*Rational(8, 2))) \
+            shifted = AccumBounds(min, max)
+            if isinstance(shifted, AccumBounds):
+                if shifted.intersection(FiniteSet(pi/2, pi*Rational(5, 2))) \
+                        is not S.EmptySet and \
+                        shifted.intersection(FiniteSet(pi*Rational(3, 2),
+                            pi*Rational(7, 2))) is not S.EmptySet:
+                    return AccumBounds(-1, 1)
+                elif shifted.intersection(FiniteSet(pi/2, pi*Rational(5, 2))) \
                         is not S.EmptySet:
-                return AccumBounds(-1, Max(sin(min), sin(max)))
-            else:
-                return AccumBounds(Min(sin(min), sin(max)),
-                                Max(sin(min), sin(max)))
+                    return AccumBounds(Min(sin(min), sin(max)), 1)
+                elif shifted.intersection(FiniteSet(pi*Rational(3, 2), pi*Rational(8, 2))) \
+                            is not S.EmptySet:
+                    return AccumBounds(-1, Max(sin(min), sin(max)))
+            return AccumBounds(Min(sin(min), sin(max)),
+                               Max(sin(min), sin(max)))
         elif isinstance(arg, SetExpr):
             return arg._eval_func(cls)
 
@@ -433,6 +429,8 @@ class sin(TrigonometricFunction):
         if isinstance(arg, asec):
             x = arg.args[0]
             return sqrt(1 - 1/x**2)
+
+        return None
 
     @staticmethod
     @cacheit
@@ -649,7 +647,7 @@ class cos(TrigonometricFunction):
             raise ArgumentIndexError(self, argindex)
 
     @classmethod
-    def eval(cls, arg):
+    def eval(cls, arg: Expr) -> Expr | None:
         from sympy.functions.special.polynomials import chebyshevt
         from sympy.calculus.accumulationbounds import AccumBounds
         from sympy.sets.setexpr import SetExpr
@@ -708,7 +706,7 @@ class cos(TrigonometricFunction):
             # Some other exact values like cos(k pi/240) can be
             # calculated using a partial-fraction decomposition
             # by calling cos( X ).rewrite(sqrt)
-            if pi_coeff.is_Rational:
+            if isinstance(pi_coeff, Rational):
                 q = pi_coeff.q
                 p = pi_coeff.p % (2*q)
                 if p > q:
@@ -787,6 +785,8 @@ class cos(TrigonometricFunction):
         if isinstance(arg, asec):
             x = arg.args[0]
             return 1/x
+
+        return None
 
     @staticmethod
     @cacheit
@@ -1036,7 +1036,7 @@ class tan(TrigonometricFunction):
         return atan
 
     @classmethod
-    def eval(cls, arg):
+    def eval(cls, arg: Expr) -> Expr | None:
         from sympy.calculus.accumulationbounds import AccumBounds
         if arg.is_Number:
             if arg is S.NaN:
@@ -1057,7 +1057,8 @@ class tan(TrigonometricFunction):
             if max is not S.Infinity:
                 max = max - d*pi
             from sympy.sets.sets import FiniteSet
-            if AccumBounds(min, max).intersection(FiniteSet(pi/2, pi*Rational(3, 2))):
+            shifted = AccumBounds(min, max)
+            if isinstance(shifted, AccumBounds) and shifted.intersection(FiniteSet(pi/2, pi*Rational(3, 2))):
                 return AccumBounds(S.NegativeInfinity, S.Infinity)
             else:
                 return AccumBounds(tan(min), tan(max))
@@ -1081,7 +1082,7 @@ class tan(TrigonometricFunction):
                     return cls(narg)
                 return None
 
-            if pi_coeff.is_Rational:
+            if isinstance(pi_coeff, Rational):
                 q = pi_coeff.q
                 p = pi_coeff.p % q
                 # ensure simplified results are returned for n*pi/5, n*pi/10
@@ -1092,7 +1093,7 @@ class tan(TrigonometricFunction):
                     4: sqrt(5 + 2*sqrt(5))
                     }
                 if q in (5, 10):
-                    n = 10*p/q
+                    n = 10*p//q
                     if n > 5:
                         n = 10 - n
                         return -table10[n]
@@ -1164,6 +1165,8 @@ class tan(TrigonometricFunction):
         if isinstance(arg, asec):
             x = arg.args[0]
             return sqrt(1 - 1/x**2)*x
+
+        return None
 
     @staticmethod
     @cacheit
@@ -1386,7 +1389,7 @@ class cot(TrigonometricFunction):
         return acot
 
     @classmethod
-    def eval(cls, arg):
+    def eval(cls, arg: Expr) -> Expr | None:
         from sympy.calculus.accumulationbounds import AccumBounds
         if arg.is_Number:
             if arg is S.NaN:
@@ -1421,7 +1424,7 @@ class cot(TrigonometricFunction):
                     return cls(narg)
                 return None
 
-            if pi_coeff.is_Rational:
+            if isinstance(pi_coeff, Rational):
                 if pi_coeff.q in (5, 10):
                     return tan(pi/2 - arg)
                 if pi_coeff.q > 2 and not pi_coeff.q % 2:
@@ -1489,6 +1492,8 @@ class cot(TrigonometricFunction):
         if isinstance(arg, asec):
             x = arg.args[0]
             return 1/(sqrt(1 - 1/x**2)*x)
+
+        return None
 
     @staticmethod
     @cacheit
@@ -1667,7 +1672,7 @@ class ReciprocalTrigonometricFunction(TrigonometricFunction):
     _is_odd: FuzzyBool = None
 
     @classmethod
-    def eval(cls, arg):
+    def eval(cls, arg: Expr) -> Expr | None:
         if arg.could_extract_minus_sign():
             if cls._is_even:
                 return cls(-arg)
@@ -1677,7 +1682,7 @@ class ReciprocalTrigonometricFunction(TrigonometricFunction):
         pi_coeff = _pi_coeff(arg)
         if (pi_coeff is not None
             and not (2*pi_coeff).is_integer
-            and pi_coeff.is_Rational):
+            and isinstance(pi_coeff, Rational)):
                 q = pi_coeff.q
                 p = pi_coeff.p % (2*q)
                 if p > q:
@@ -1690,7 +1695,7 @@ class ReciprocalTrigonometricFunction(TrigonometricFunction):
                     elif cls._is_even:
                         return -cls(narg)
 
-        if hasattr(arg, 'inverse') and arg.inverse() == cls:
+        if isinstance(arg, (asec, acsc)) and arg.inverse() == cls:
             return arg.args[0]
 
         t = cls._reciprocal_of.eval(arg)
@@ -2029,7 +2034,7 @@ class csc(ReciprocalTrigonometricFunction):
         return self.func(x0) if x0.is_finite else self
 
 
-class sinc(DefinedFunction):
+class sinc(ExprFunction1Arg):
     r"""
     Represents an unnormalized sinc function:
 
@@ -2098,7 +2103,7 @@ class sinc(DefinedFunction):
             raise ArgumentIndexError(self, argindex)
 
     @classmethod
-    def eval(cls, arg):
+    def eval(cls, arg: Expr) -> Expr | None:
         if arg.is_zero:
             return S.One
         if arg.is_Number:
@@ -2120,6 +2125,8 @@ class sinc(DefinedFunction):
                     return S.Zero
             elif (2*pi_coeff).is_integer:
                 return S.NegativeOne**(pi_coeff - S.Half)/arg
+
+        return None
 
     def _eval_nseries(self, x, n, logx, cdir=0):
         arg = self.args[0]
@@ -2234,7 +2241,7 @@ class InverseTrigonometricFunction(DefinedFunction):
         }
 
 
-class asin(InverseTrigonometricFunction):
+class asin(ExprFunction1Arg, InverseTrigonometricFunction):
     r"""
     The inverse sine function.
 
@@ -2308,7 +2315,7 @@ class asin(InverseTrigonometricFunction):
         return self._eval_is_extended_real() and self.args[0].is_negative
 
     @classmethod
-    def eval(cls, arg):
+    def eval(cls, arg: Expr) -> Expr | None:
         if arg.is_Number:
             if arg is S.NaN:
                 return S.NaN
@@ -2361,6 +2368,8 @@ class asin(InverseTrigonometricFunction):
             ang = arg.args[0]
             if ang.is_comparable:
                 return pi/2 - acos(arg)
+
+        return None
 
     @staticmethod
     @cacheit
@@ -2477,7 +2486,7 @@ class asin(InverseTrigonometricFunction):
         return sin
 
 
-class acos(InverseTrigonometricFunction):
+class acos(ExprFunction1Arg, InverseTrigonometricFunction):
     r"""
     The inverse cosine function.
 
@@ -2546,7 +2555,7 @@ class acos(InverseTrigonometricFunction):
             return s.is_rational
 
     @classmethod
-    def eval(cls, arg):
+    def eval(cls, arg: Expr) -> Expr | None:
         if arg.is_Number:
             if arg is S.NaN:
                 return S.NaN
@@ -2599,6 +2608,8 @@ class acos(InverseTrigonometricFunction):
                 if minus:
                     return pi/2 + asin(narg)
                 return pi/2 - asin(narg)
+
+        return None
 
     @staticmethod
     @cacheit
@@ -2728,7 +2739,7 @@ class acos(InverseTrigonometricFunction):
             return r
 
 
-class atan(InverseTrigonometricFunction):
+class atan(ExprFunction1Arg, InverseTrigonometricFunction):
     r"""
     The inverse tangent function.
 
@@ -2767,8 +2778,6 @@ class atan(InverseTrigonometricFunction):
 
     """
 
-    args: tuple[Expr]
-
     _singularities = (S.ImaginaryUnit, -S.ImaginaryUnit)
 
     def fdiff(self, argindex=1):
@@ -2798,7 +2807,7 @@ class atan(InverseTrigonometricFunction):
         return self.args[0].is_extended_real
 
     @classmethod
-    def eval(cls, arg):
+    def eval(cls, arg: Expr) -> Expr | None:
         if arg.is_Number:
             if arg is S.NaN:
                 return S.NaN
@@ -2814,7 +2823,7 @@ class atan(InverseTrigonometricFunction):
                 return -pi/4
 
         if arg is S.ComplexInfinity:
-            return
+            return None
 
         if arg.could_extract_minus_sign():
             return -cls(-arg)
@@ -2848,6 +2857,8 @@ class atan(InverseTrigonometricFunction):
                 if ang > pi/2: # restrict to [-pi/2,pi/2]
                     ang -= pi
                 return ang
+
+        return None
 
     @staticmethod
     @cacheit
@@ -2940,7 +2951,7 @@ class atan(InverseTrigonometricFunction):
         return sqrt(arg**2)/arg*(pi/2 - acsc(sqrt(1 + arg**2)))
 
 
-class acot(InverseTrigonometricFunction):
+class acot(ExprFunction1Arg, InverseTrigonometricFunction):
     r"""
     The inverse cotangent function.
 
@@ -3019,7 +3030,7 @@ class acot(InverseTrigonometricFunction):
         return self.args[0].is_extended_real
 
     @classmethod
-    def eval(cls, arg):
+    def eval(cls, arg: Expr) -> Expr | None:
         if arg.is_Number:
             if arg is S.NaN:
                 return S.NaN
@@ -3069,6 +3080,8 @@ class acot(InverseTrigonometricFunction):
                 if ang > pi/2: # restrict to (-pi/2,pi/2]
                     ang -= pi
                 return ang
+
+        return None
 
     @staticmethod
     @cacheit
@@ -3166,7 +3179,7 @@ class acot(InverseTrigonometricFunction):
         return arg*sqrt(1/arg**2)*(pi/2 - acsc(sqrt((1 + arg**2)/arg**2)))
 
 
-class asec(InverseTrigonometricFunction):
+class asec(ExprFunction1Arg, InverseTrigonometricFunction):
     r"""
     The inverse secant function.
 
@@ -3237,7 +3250,7 @@ class asec(InverseTrigonometricFunction):
     """
 
     @classmethod
-    def eval(cls, arg):
+    def eval(cls, arg: Expr) -> Expr | None:
         if arg.is_zero:
             return S.ComplexInfinity
         if arg.is_Number:
@@ -3284,6 +3297,8 @@ class asec(InverseTrigonometricFunction):
                 if minus:
                     return pi/2 + acsc(narg)
                 return pi/2 - acsc(narg)
+
+        return None
 
     def fdiff(self, argindex=1):
         if argindex == 1:
@@ -3407,7 +3422,7 @@ class asec(InverseTrigonometricFunction):
         return pi/2 - acsc(arg)
 
 
-class acsc(InverseTrigonometricFunction):
+class acsc(ExprFunction1Arg, InverseTrigonometricFunction):
     r"""
     The inverse cosecant function.
 
@@ -3461,7 +3476,7 @@ class acsc(InverseTrigonometricFunction):
     """
 
     @classmethod
-    def eval(cls, arg):
+    def eval(cls, arg: Expr) -> Expr | None:
         if arg.is_zero:
             return S.ComplexInfinity
         if arg.is_Number:
@@ -3504,6 +3519,8 @@ class acsc(InverseTrigonometricFunction):
             ang = arg.args[0]
             if ang.is_comparable:
                 return pi/2 - asec(arg)
+
+        return None
 
     def fdiff(self, argindex=1):
         if argindex == 1:
@@ -3731,6 +3748,11 @@ class atan2(InverseTrigonometricFunction):
     .. [3] https://functions.wolfram.com/ElementaryFunctions/ArcTan2
 
     """
+
+    if TYPE_CHECKING:
+        @property
+        def args(self) -> tuple[Expr, Expr]:
+            ...
 
     @classmethod
     def eval(cls, y, x):

@@ -3,7 +3,7 @@ from math import prod
 
 from sympy.core import Add, S, Dummy, expand_func
 from sympy.core.expr import Expr
-from sympy.core.function import DefinedFunction, ArgumentIndexError, PoleError
+from sympy.core.function import DefinedFunction, ExprFunction1Arg, ArgumentIndexError, PoleError
 from sympy.core.logic import fuzzy_and, fuzzy_not
 from sympy.core.numbers import Rational, pi, oo, I
 from sympy.core.power import Pow
@@ -31,7 +31,7 @@ def intlike(n):
 ############################ COMPLETE GAMMA FUNCTION ##########################
 ###############################################################################
 
-class gamma(DefinedFunction):
+class gamma(ExprFunction1Arg):
     r"""
     The gamma function
 
@@ -118,7 +118,7 @@ class gamma(DefinedFunction):
             raise ArgumentIndexError(self, argindex)
 
     @classmethod
-    def eval(cls, arg):
+    def eval(cls, arg: Expr) -> Expr | None:
         if arg.is_Number:
             if arg is S.NaN:
                 return S.NaN
@@ -129,10 +129,11 @@ class gamma(DefinedFunction):
                     return factorial(arg - 1)
                 else:
                     return S.ComplexInfinity
-            elif arg.is_Rational:
+            elif isinstance(arg, Rational):
                 if arg.q == 2:
                     n = abs(arg.p) // arg.q
 
+                    coeff: Expr
                     if arg.is_positive:
                         k, coeff = n, S.One
                     else:
@@ -149,6 +150,8 @@ class gamma(DefinedFunction):
                         return coeff*sqrt(pi) / 2**n
                     else:
                         return 2**n*sqrt(pi) / coeff
+
+        return None
 
     def _eval_expand_func(self, **hints):
         arg = self.args[0]
@@ -865,7 +868,7 @@ class polygamma(DefinedFunction):
         return Expr._from_mpmath(res, prec)
 
 
-class loggamma(DefinedFunction):
+class loggamma(ExprFunction1Arg):
     r"""
     The ``loggamma`` function implements the logarithm of the
     gamma function (i.e., $\log\Gamma(x)$).
@@ -976,7 +979,7 @@ class loggamma(DefinedFunction):
 
     """
     @classmethod
-    def eval(cls, z):
+    def eval(cls, z: Expr) -> Expr | None:
         if z.is_integer:
             if z.is_nonpositive:
                 return oo
@@ -994,6 +997,8 @@ class loggamma(DefinedFunction):
             return S.ComplexInfinity
         if z is S.NaN:
             return S.NaN
+
+        return None
 
     def _eval_expand_func(self, **hints):
         from sympy.concrete.summations import Sum
@@ -1060,7 +1065,7 @@ class loggamma(DefinedFunction):
             raise ArgumentIndexError(self, argindex)
 
 
-class digamma(DefinedFunction):
+class digamma(ExprFunction1Arg):
     r"""
     The ``digamma`` function is the first derivative of the ``loggamma``
     function
@@ -1135,7 +1140,7 @@ class digamma(DefinedFunction):
         return as_polygamma._eval_aseries(n, args0, x, logx)
 
     @classmethod
-    def eval(cls, z):
+    def eval(cls, z: Expr) -> Expr | None:
         return polygamma(0, z)
 
     def _eval_expand_func(self, **hints):
@@ -1154,7 +1159,7 @@ class digamma(DefinedFunction):
 
 
 
-class trigamma(DefinedFunction):
+class trigamma(ExprFunction1Arg):
     r"""
     The ``trigamma`` function is the second derivative of the ``loggamma``
     function
@@ -1229,7 +1234,7 @@ class trigamma(DefinedFunction):
         return as_polygamma._eval_aseries(n, args0, x, logx)
 
     @classmethod
-    def eval(cls, z):
+    def eval(cls, z: Expr) -> Expr | None:
         return polygamma(1, z)
 
     def _eval_expand_func(self, **hints):

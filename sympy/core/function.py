@@ -32,7 +32,7 @@ There are three types of functions implemented in SymPy:
 
 from __future__ import annotations
 
-from typing import Any
+from typing import Any, TYPE_CHECKING, Literal, overload
 from collections.abc import Iterable
 import copyreg
 
@@ -66,6 +66,9 @@ from sympy.external.mpmath import (prec_to_dps, mpf, mpc, mp, workprec, diff as
 
 import inspect
 from collections import Counter
+
+if TYPE_CHECKING:
+    from typing_extensions import Self
 
 def _coeff_isneg(a):
     """Return True if the leading Number is negative.
@@ -872,6 +875,35 @@ class DefinedFunction(Function):
     @cacheit
     def __new__(cls, *args, **options) -> Expr:  # type: ignore
         return cls._new_(*args, **options)
+
+
+class ExprFunction1Arg(DefinedFunction):
+    """Base class for functions of one scalar expression returning an expression."""
+
+    nargs = 1
+
+    if TYPE_CHECKING:
+        @overload
+        def __new__(
+            cls, arg: Expr | complex, *, evaluate: Literal[False]
+        ) -> Self: ...
+        @overload
+        def __new__( # type: ignore[misc]
+            cls, arg: Expr | complex, *, evaluate: bool = True
+        ) -> Expr: ...
+
+        def __new__( # type: ignore[misc]
+            cls, arg: Expr | complex, *, evaluate: bool = True
+        ) -> Expr:
+            ...
+
+        @property
+        def args(self) -> tuple[Expr]:
+            ...
+
+        @classmethod
+        def eval(cls, arg: Expr) -> Expr | None:
+            ...
 
 
 class AppliedUndef(Function):

@@ -16,7 +16,7 @@ from sympy.core import S, Symbol, Add, Dummy
 from sympy.core.cache import cacheit
 from sympy.core.containers import Dict
 from sympy.core.expr import Expr
-from sympy.core.function import ArgumentIndexError, DefinedFunction, expand_mul
+from sympy.core.function import ArgumentIndexError, DefinedFunction, ExprFunction1Arg, expand_mul
 from sympy.core.logic import fuzzy_not
 from sympy.core.mul import Mul
 from sympy.core.numbers import E, I, pi, oo, Rational, Integer
@@ -284,7 +284,7 @@ class fibonacci(DefinedFunction):
 #----------------------------------------------------------------------------#
 
 
-class lucas(DefinedFunction):
+class lucas(ExprFunction1Arg):
     """
     Lucas numbers
 
@@ -317,12 +317,14 @@ class lucas(DefinedFunction):
     """
 
     @classmethod
-    def eval(cls, n):
+    def eval(cls, n: Expr) -> Expr | None:
         if n is S.Infinity:
             return S.Infinity
 
         if n.is_Integer:
             return fibonacci(n + 1) + fibonacci(n - 1)
+
+        return None
 
     def _eval_rewrite_as_sqrt(self, n, **kwargs):
         from sympy.functions.elementary.miscellaneous import sqrt
@@ -1253,7 +1255,7 @@ class euler(DefinedFunction):
 #----------------------------------------------------------------------------#
 
 
-class catalan(DefinedFunction):
+class catalan(ExprFunction1Arg):
     r"""
     Catalan numbers
 
@@ -1334,7 +1336,7 @@ class catalan(DefinedFunction):
     """
 
     @classmethod
-    def eval(cls, n):
+    def eval(cls, n: Expr) -> Expr | None:
         from sympy.functions.special.gamma_functions import gamma
         if (n.is_Integer and n.is_nonnegative) or \
            (n.is_noninteger and n.is_negative):
@@ -1345,6 +1347,8 @@ class catalan(DefinedFunction):
                 return S.Zero
             if (n + 1).is_zero:
                 return Rational(-1, 2)
+
+        return None
 
     def fdiff(self, argindex=1):
         from sympy.functions.elementary.exponential import log
@@ -1539,7 +1543,7 @@ class genocchi(DefinedFunction):
 #----------------------------------------------------------------------------#
 
 
-class andre(DefinedFunction):
+class andre(ExprFunction1Arg):
     r"""
     Andre numbers / Andre function
 
@@ -1598,7 +1602,7 @@ class andre(DefinedFunction):
     """
 
     @classmethod
-    def eval(cls, n):
+    def eval(cls, n: Expr) -> Expr | None:
         if n is S.NaN:
             return S.NaN
         elif n is S.Infinity:
@@ -1616,6 +1620,8 @@ class andre(DefinedFunction):
                 from sympy.functions.special.zeta_functions import zeta
                 m = -n-1
                 return I**m * Rational(1-2**m, 4**m) * zeta(-n)
+
+        return None
 
     def _eval_rewrite_as_zeta(self, s, **kwargs):
         from sympy.functions.elementary.trigonometric import cos
@@ -1654,7 +1660,7 @@ class andre(DefinedFunction):
 #                                                                            #
 #----------------------------------------------------------------------------#
 
-class partition(DefinedFunction):
+class partition(ExprFunction1Arg):
     r"""
     Partition numbers
 
@@ -1690,15 +1696,17 @@ class partition(DefinedFunction):
     is_nonnegative = True
 
     @classmethod
-    def eval(cls, n):
+    def eval(cls, n: Expr) -> Expr | None:
         if n.is_integer is False:
             raise TypeError("n should be an integer")
         if n.is_negative is True:
             return S.Zero
         if n.is_zero is True or n is S.One:
             return S.One
-        if n.is_Integer is True:
+        if isinstance(n, Integer):
             return S(_partition(as_int(n)))
+
+        return None
 
     def _eval_is_positive(self):
         if self.args[0].is_nonnegative is True:
@@ -2009,7 +2017,7 @@ class kronecker_symbol(DefinedFunction):
             return S(kronecker(as_int(a), as_int(n)))
 
 
-class mobius(DefinedFunction):
+class mobius(ExprFunction1Arg):
     """
     Mobius function maps natural number to {-1, 0, 1}
 
@@ -2058,7 +2066,7 @@ class mobius(DefinedFunction):
     is_prime = False
 
     @classmethod
-    def eval(cls, n):
+    def eval(cls, n: Expr) -> Expr | None:
         if n.is_integer is False:
             raise TypeError("n should be an integer")
         if n.is_positive is False:
@@ -2067,7 +2075,7 @@ class mobius(DefinedFunction):
             return S.NegativeOne
         if n is S.One:
             return S.One
-        result = None
+        result: Expr | None = None
         for m, e in (_.as_base_exp() for _ in Mul.make_args(n)):
             if m.is_integer is True and m.is_positive is True and \
                e.is_integer is True and e.is_positive is True:
@@ -2085,11 +2093,11 @@ class mobius(DefinedFunction):
                         else:
                             result *= s
             else:
-                return
+                return None
         return result
 
 
-class primenu(DefinedFunction):
+class primenu(ExprFunction1Arg):
     r"""
     Calculate the number of distinct prime factors for a positive integer n.
 
@@ -2128,7 +2136,7 @@ class primenu(DefinedFunction):
     is_nonnegative = True
 
     @classmethod
-    def eval(cls, n):
+    def eval(cls, n: Expr) -> Expr | None:
         if n.is_integer is False:
             raise TypeError("n should be an integer")
         if n.is_positive is False:
@@ -2140,8 +2148,10 @@ class primenu(DefinedFunction):
         if n.is_Integer is True:
             return S(len(factorint(n)))
 
+        return None
 
-class primeomega(DefinedFunction):
+
+class primeomega(ExprFunction1Arg):
     r"""
     Calculate the number of prime factors counting multiplicities for a
     positive integer n.
@@ -2181,7 +2191,7 @@ class primeomega(DefinedFunction):
     is_nonnegative = True
 
     @classmethod
-    def eval(cls, n):
+    def eval(cls, n: Expr) -> Expr | None:
         if n.is_integer is False:
             raise TypeError("n should be an integer")
         if n.is_positive is False:
@@ -2192,6 +2202,8 @@ class primeomega(DefinedFunction):
             return S.Zero
         if n.is_Integer is True:
             return S(sum(factorint(n).values()))
+
+        return None
 
 
 class totient(DefinedFunction):
@@ -2302,7 +2314,7 @@ class reduced_totient(DefinedFunction):
             return S(lcm(t, *((p-1)*p**(k-1) for p, k in factorint(n).items())))
 
 
-class primepi(DefinedFunction):
+class primepi(ExprFunction1Arg):
     r""" Represents the prime counting function pi(n) = the number
     of prime numbers less than or equal to n.
 
@@ -2342,7 +2354,7 @@ class primepi(DefinedFunction):
     is_nonnegative = True
 
     @classmethod
-    def eval(cls, n):
+    def eval(cls, n: Expr) -> Expr | None:
         if n is S.Infinity:
             return S.Infinity
         if n is S.NegativeInfinity:
@@ -2352,10 +2364,10 @@ class primepi(DefinedFunction):
         if is_lt(n, S(2)) is True:
             return S.Zero
         try:
-            n = int(n)
+            n_int = int(n)
         except TypeError:
-            return
-        return S(_primepi(n))
+            return None
+        return S(_primepi(n_int))
 
 
 #######################################################################

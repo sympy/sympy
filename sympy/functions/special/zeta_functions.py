@@ -1,9 +1,10 @@
 """ Riemann zeta and related function. """
 from __future__ import annotations
+from typing import TYPE_CHECKING
 
 from sympy.core.add import Add
 from sympy.core.cache import cacheit
-from sympy.core.function import ArgumentIndexError, expand_mul, DefinedFunction
+from sympy.core.function import ArgumentIndexError, expand_mul, DefinedFunction, ExprFunction1Arg
 from sympy.core.logic import fuzzy_not
 from sympy.core.numbers import pi, I, Integer
 from sympy.core.relational import Eq
@@ -17,6 +18,9 @@ from sympy.functions.elementary.integers import ceiling, floor
 from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.functions.elementary.piecewise import Piecewise
 from sympy.polys.polytools import Poly
+
+if TYPE_CHECKING:
+    from sympy.core.expr import Expr
 
 ###############################################################################
 ###################### LERCH TRANSCENDENT #####################################
@@ -663,7 +667,7 @@ class dirichlet_eta(DefinedFunction):
             return self.rewrite(zeta)._eval_evalf(prec)
 
 
-class riemann_xi(DefinedFunction):
+class riemann_xi(ExprFunction1Arg):
     r"""
     Riemann Xi function.
 
@@ -688,7 +692,7 @@ class riemann_xi(DefinedFunction):
 
 
     @classmethod
-    def eval(cls, s):
+    def eval(cls, s: Expr) -> Expr | None:
         from sympy.functions.special.gamma_functions import gamma
         z = zeta(s)
         if s in (S.Zero, S.One):
@@ -696,6 +700,8 @@ class riemann_xi(DefinedFunction):
 
         if not isinstance(z, zeta):
             return s*(s - 1)*gamma(s/2)*z/(2*pi**(s/2))
+
+        return None
 
     def _eval_rewrite_as_zeta(self, s, **kwargs):
         from sympy.functions.special.gamma_functions import gamma

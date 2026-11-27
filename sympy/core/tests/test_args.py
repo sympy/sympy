@@ -13,7 +13,7 @@ import pytest
 
 from sympy.assumptions.ask import Q
 from sympy.core.basic import Basic
-from sympy.core.function import (Function, Lambda)
+from sympy.core.function import (ExprFunction1Arg, Function, Lambda)
 from sympy.core.numbers import (Rational, oo, pi)
 from sympy.core.relational import Eq
 from sympy.core.singleton import S
@@ -697,6 +697,10 @@ def test_sympy__core__function__DefinedFunction():
 def test_sympy__core__function__Derivative():
     from sympy.core.function import Derivative
     assert _test_args(Derivative(2, x, y, 3))
+
+
+def test_sympy__core__function__ExprFunction1Arg():
+    assert _test_args(ExprFunction1Arg(x))
 
 
 @SKIP("abstract class")
