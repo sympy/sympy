@@ -3637,13 +3637,15 @@ class QuadraticUDistribution(SingleContinuousDistribution):
 
     def _moment_generating_function(self, t):
         a, b = self.a, self.b
-        return -3 * (exp(a*t) * (4  + (a**2 + 2*a*(-2 + b) + b**2) * t) \
-        - exp(b*t) * (4 + (-4*b + (a + b)**2) * t)) / ((a-b)**3 * t**2)
+        d = a - b
+        return 3*(exp(a*t) * (t**2*d**2 - 4*t*d + 8) \
+        - exp(b*t) * (t**2*d**2 + 4*t*d + 8)) / (d**3 * t**3)
 
     def _characteristic_function(self, t):
         a, b = self.a, self.b
-        return -3*I*(exp(I*a*t*exp(I*b*t)) * (4*I - (-4*b + (a+b)**2)*t)) \
-                / ((a-b)**3 * t**2)
+        d = a - b
+        return 3*I*(exp(I*a*t) * (8 - t**2*d**2 - 4*I*t*d) \
+                - exp(I*b*t) * (8 - t**2*d**2 + 4*I*t*d)) / (d**3 * t**3)
 
 
 def QuadraticU(name, a, b):
