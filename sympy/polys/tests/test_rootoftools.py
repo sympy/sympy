@@ -490,6 +490,13 @@ def test_RootSum___new__():
         RootSum(x**3 + x + 1, Lambda(x, tan(x/a)))
 
 
+def test_RootSum_new():
+    f = Poly(x**3 + x + 1, x)
+    assert RootSum.new(f, Lambda(x, 1)) == 3
+    assert RootSum.new(f, Lambda(x, 2)) == 6
+    assert RootSum.new(f, Lambda(x, a)) == 3*a
+
+
 def test_RootSum_free_symbols():
     assert RootSum(x**3 + x + 3, Lambda(r, exp(r))).free_symbols == set()
     assert RootSum(x**3 + x + 3, Lambda(r, exp(a*r))).free_symbols == {a}
