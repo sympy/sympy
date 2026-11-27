@@ -204,14 +204,22 @@ class BlockMatrix(MatrixExpr):
     def _eval_determinant(self):
         if self.blockshape == (1, 1):
             return det(self.blocks[0, 0])
+        if self.blockshape[0] == self.blockshape[1]:
+            n = self.blockshape[0]
+            if all(self.blocks[i, i].rows == self.blocks[i, i].cols for i in range(n)):
+                is_upper = all(
+                    self.blocks[i, j].is_ZeroMatrix
+                    for i in range(n) for j in range(i)
+                )
+                is_lower = all(
+                    self.blocks[i, j].is_ZeroMatrix
+                    for i in range(n) for j in range(i + 1, n)
+                )
+                if is_upper or is_lower:
+                    return Mul(*[det(self.blocks[i, i]) for i in range(n)])
         if self.blockshape == (2, 2):
             [[A, B],
              [C, D]] = self.blocks.tolist()
-            if A.is_square and D.is_square and (
-                isinstance(B, ZeroMatrix) or getattr(B, 'is_zero_matrix', False) or
-                isinstance(C, ZeroMatrix) or getattr(C, 'is_zero_matrix', False)
-            ):
-                return det(A)*det(D)
             if ask(Q.invertible(A)):
                 return det(A)*det(D - C*A.I*B)
             elif ask(Q.invertible(D)):
