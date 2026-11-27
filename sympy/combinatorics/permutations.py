@@ -2164,10 +2164,7 @@ class Permutation(Atom):
 
         min, descents, ascents, inversions
         """
-        a = self.array_form
-        if not a:
-            return 0
-        return max(_a for i, _a in enumerate(a) if _a != i)
+        return max((_a for i, _a in enumerate(self.array_form) if _a != i), default=0)
 
     def min(self) -> int:
         """
@@ -2186,10 +2183,7 @@ class Permutation(Atom):
 
         max, descents, ascents, inversions
         """
-        a = self.array_form
-        if not a:
-            return 0
-        return min(_a for i, _a in enumerate(a) if _a != i)
+        return min((_a for i, _a in enumerate(self.array_form) if _a != i), default=0)
 
     def inversions(self):
         """
