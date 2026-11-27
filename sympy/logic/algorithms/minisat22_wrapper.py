@@ -18,7 +18,7 @@ def minisat22_satisfiable(expr, all_models=False, minimal=False):
 
     if set() in expr.data:
         if all_models:
-            return iter([])
+            return (f for f in [False])
         return False
 
     r = Minisat22(expr.data)
