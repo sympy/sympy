@@ -2351,6 +2351,14 @@ def test_issue_28803_jointrandonsymbol_recursion():
     # Should not raise RecursionError
     lambdify(a, z * a)
 
+def test_lambdify_unsupported_NameError_issue_9339():
+    from sympy.core.function import Derivative
+    from sympy.functions.elementary.trigonometric import sin
+    t = symbols('t')
+
+    # Derivative
+    f1 = Derivative(sin(t), t)
+    raises(NameError, lambda: lambdify(t, f1, "sympy"))
 
 def test_frac_math():
     f = lambdify(x, [2*frac(x), -frac(x), frac(x)**2], 'math')
