@@ -773,8 +773,13 @@ def _is_function_class_equation(func_class, f, symbol):
 
 def _solve_as_rational(f, symbol, domain):
     """ solve rational functions"""
+    original_f = f
     f = together(_mexpand(f, recursive=True), deep=True)
     g, h = fraction(f)
+    if g.is_zero:
+        excluded = Union(*[_solveset(d, symbol, domain)
+                           for d in denoms(original_f, symbol)])
+        return domain - excluded
     if not h.has(symbol):
         try:
             return _solve_as_poly(g, symbol, domain)
@@ -1024,6 +1029,8 @@ def _solve_as_poly(f, symbol, domain=S.Complexes):
     Solve the equation using polynomial techniques if it already is a
     polynomial equation or, with a change of variables, can be made so.
     """
+    if f.is_zero:
+        return domain
     result = None
     if f.is_polynomial(symbol):
         solns = roots(f, symbol, cubics=True, quartics=True,
