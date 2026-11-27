@@ -8,6 +8,7 @@ from sympy.core.sympify import sympify
 from sympy.functions.elementary.integers import ceiling
 from sympy.functions.elementary.miscellaneous import Max, Min
 from sympy.functions.elementary.complexes import sign
+from sympy.assumptions.ask import ask, Q
 
 if TYPE_CHECKING:
     from sympy.core.expr import Expr
@@ -154,3 +155,10 @@ class MatrixSlice(MatrixExpr):
     @property
     def on_diag(self):
         return self.rowslice == self.colslice
+
+    def _eval_transpose(self):
+        if getattr(self.parent, 'is_symmetric', False) or ask(Q.symmetric(self.parent)):
+            parent = self.parent
+        else:
+            parent = self.parent.T
+        return MatrixSlice(parent, self.colslice, self.rowslice)
