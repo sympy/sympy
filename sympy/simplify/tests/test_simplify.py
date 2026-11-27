@@ -371,6 +371,8 @@ def test_hypersimp():
 
     assert hypersimp(2**(a*n + 1), n) == 2**a
     assert hypersimp(gamma(a*(n + 1) - n*(a - 1)), n) == a + n
+    assert hypersimp(exp(a*n), n) == exp(a)
+    assert hypersimp(n*exp(-n)/factorial(n), n) == exp(-1)/n
 
 
 @slow

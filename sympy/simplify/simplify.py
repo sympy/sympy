@@ -344,7 +344,7 @@ def hypersimp(f, k):
         if not g.is_rational_function(k):
             # Normalize exponents of powers that depend on k.
             g = g.replace(
-                lambda h: h.is_Pow and h.exp.has(k),
+                lambda h: (h.is_Pow or isinstance(h, exp)) and h.exp.has(k),
                 lambda h: Pow(h.base, expand_mul(h.exp)))
     if g.is_rational_function(k):
         return simplify(g, ratio=S.Infinity)
