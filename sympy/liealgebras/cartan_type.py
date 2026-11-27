@@ -238,27 +238,33 @@ def _positive_root_coefficients(cartan_matrix: Matrix) -> list[tuple[int, ...]]:
     queue = list(simple_roots)
 
     mat_int: list[list[int]] = [
-        [int(cartan_matrix[r, c]) for c in range(cols)] # type: ignore
+        [int(cartan_matrix[r, c]) for c in range(cols)]  # type: ignore
         for r in range(rows)
     ]
 
+    add_root = positive_roots.add
+    append_queue = queue.append
+    pop_queue = queue.pop
+
     while queue:
-        beta = queue.pop()
+        beta = pop_queue()
 
-        # reflect beta
+        pairings = [0] * rows
+        for j, b in enumerate(beta):
+            if b:
+                row_j = mat_int[j]
+                for i in range(rows):
+                    pairings[i] += b * row_j[i]
+
         for i in range(rows):
-            pairing = int(sum(beta[j] * mat_int[j][i] for j in range(rows)))
+            new_val = beta[i] - pairings[i]
+            if new_val >= 0:
+                new_beta = beta[:i] + (new_val,) + beta[i + 1 :]
+                if new_beta not in positive_roots:
+                    add_root(new_beta)
+                    append_queue(new_beta)
 
-            new_beta_list = list(beta)
-            new_beta_list[i] -= pairing
-            new_beta = tuple(new_beta_list)
-
-            if new_beta not in positive_roots and all(c >= 0 for c in new_beta):
-                positive_roots.add(new_beta)
-                queue.append(new_beta)
-
-    # sort by height, and antilex within height
-    return sorted(positive_roots, key=lambda beta: (-sum(beta), beta),reverse=True)
+    return sorted(positive_roots, key=lambda b: (-sum(b), b), reverse=True)
 
 def _highest_root_coefficients(cartan_matrix: Matrix) -> tuple[int, ...]:
     positive_root_coeffs = _positive_root_coefficients(cartan_matrix)
