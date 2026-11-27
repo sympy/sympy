@@ -34,7 +34,7 @@ from sympy.utilities.iterables import (iproduct, sift, roundrobin, iterable,
 from sympy.utilities.misc import func_name, filldedent
 
 if TYPE_CHECKING:
-    from collections.abc import Mapping, Iterable
+    from collections.abc import Mapping, Iterable, Iterator
     from sympy.core.basic import Tbasic
     from sympy.core.expr import Texpr
 
@@ -95,6 +95,9 @@ class Set(Basic, EvalfMixin):
     if TYPE_CHECKING:
 
         def __new__(cls, *args: Basic | complex) -> Set:
+            ...
+
+        def __iter__(self) -> Iterator[Basic]:
             ...
 
         @overload # type: ignore

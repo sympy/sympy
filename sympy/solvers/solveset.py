@@ -70,6 +70,12 @@ from sympy.calculus.util import periodicity, continuous_domain, function_range
 
 from types import GeneratorType
 
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from sympy import Basic
+    from sympy.logic.boolalg import Boolean
+
 
 def _masked(f, *atoms):
     """Return ``f``, with all objects given by ``atoms`` replaced with
@@ -604,7 +610,13 @@ def _invert_abs(f, g_ys, symbol):
         parg = _invert_real(f, pos, symbol)
         narg = _invert_real(-f, pos, symbol)
         if parg[0] != narg[0]:
-            raise NotImplementedError
+            message = (f"I inverted `{f = }` and `-f` over the nonnegative"
+                f" part of `{g_ys = }`, and I got different expressions in"
+                f" `{symbol = }`: `{parg[0] = }` and `{narg[0] = }`. I can"
+                " combine the two branches of `Abs` only if I get the same"
+                " expression from both.")
+            raise NotImplementedError(filldedent('''
+                %s''' % message))
         return parg[0], Union(narg[1], parg[1])
 
     # check conditions: all these must be true. If any are unknown
@@ -2388,7 +2400,8 @@ def _transolve(f, symbol, domain):
     return result
 
 
-def solveset(f, symbol=None, domain=S.Complexes):
+def solveset(f: Expr | Boolean | complex,
+             symbol: Expr | None = None, domain: Set = S.Complexes) -> Set:
     r"""Solves a given inequality or equation with set as output
 
     Parameters
@@ -2490,7 +2503,8 @@ def solveset(f, symbol=None, domain=S.Complexes):
 
     """
     f = sympify(f)
-    symbol = sympify(symbol)
+    if symbol is not None:
+        symbol = sympify(symbol)
 
     if f is S.true:
         return domain
@@ -2507,7 +2521,7 @@ def solveset(f, symbol=None, domain=S.Complexes):
     if not isinstance(domain, Set):
         raise ValueError("%s is not a valid domain" %(domain))
 
-    free_symbols = f.free_symbols
+    free_symbols: tuple[Basic, ...] = tuple(f.free_symbols)
 
     if f.has(Piecewise):
         f = piecewise_fold(f)
@@ -2523,16 +2537,18 @@ def solveset(f, symbol=None, domain=S.Complexes):
                 relationship between value and 0 is unknown: %s''' % b))
 
     if symbol is None:
-        if len(free_symbols) == 1:
-            symbol = free_symbols.pop()
-        elif free_symbols:
+        # After 2027, remove `and isinstance(free_symbols[0], Symbol)` if the dynamic typing is ready.
+        if len(free_symbols) == 1 and isinstance(free_symbols[0], Symbol):
+            symbol = free_symbols[0]
+        else:
             raise ValueError(filldedent('''
                 The independent variable must be specified for a
                 multivariate equation.'''))
     elif not isinstance(symbol, Symbol):
-        f, s, swap = recast_to_symbols([f], [symbol])
+        # new identifiers due to mypy `error: Value of type "Expr | Boolean" is not indexable`
+        list_f, list_symbol, swap = recast_to_symbols([f], [symbol])
         # the xreplace will be needed if a ConditionSet is returned
-        return solveset(f[0], s[0], domain).xreplace(swap)
+        return solveset(list_f[0], list_symbol[0], domain).xreplace(swap)
 
     # solveset should ignore assumptions on symbols
     newsym = None
@@ -2560,22 +2576,24 @@ def solveset(f, symbol=None, domain=S.Complexes):
     # can look better if the 2nd condition is x <= 0. Since
     # the solution is a set, duplication of results is not
     # an issue, e.g. {y, -y} when y is 0 will be {0}
-    f, mask = _masked(f, Abs)
-    f = f.rewrite(Piecewise) # everything that's not an Abs
+    f_masked, mask = _masked(f, Abs)
+    f_masked = f_masked.rewrite(Piecewise) # everything that's not an Abs
     for d, e in mask:
         # everything *in* an Abs
         e = e.func(e.args[0].rewrite(Piecewise))
-        f = f.xreplace({d: e})
-    f = piecewise_fold(f)
+        f_masked = f_masked.xreplace({d: e})
+    f_masked = piecewise_fold(f_masked)
 
-    return _solveset(f, symbol, domain, _check=True)
+    return _solveset(f_masked, symbol, domain, _check=True)
 
 
-def solveset_real(f, symbol):
+def solveset_real(f: Expr | Boolean | complex,
+                  symbol: Expr) -> Set:
     return solveset(f, symbol, S.Reals)
 
 
-def solveset_complex(f, symbol):
+def solveset_complex(f: Expr | Boolean | complex,
+                     symbol: Expr) -> Set:
     return solveset(f, symbol, S.Complexes)
 
 
@@ -3392,7 +3410,7 @@ def substitution(system, symbols, result=[{}], known_symbols=[],
         if isinstance(sol, Union):
             sol_args = sol.args
             sol = S.EmptySet
-            # We need in sequence so append finteset elements
+            # We need in sequence so append FiniteSet elements
             # and then imageset or other.
             for sol_arg2 in sol_args:
                 if isinstance(sol_arg2, FiniteSet):

@@ -40,7 +40,7 @@ if TYPE_CHECKING:
         Reals as _Reals,
         Complexes as _Complexes,
     )
-    from sympy.sets.sets import UniversalSet as _UniversalSet
+    from sympy.sets.sets import EmptySet as _EmptySet, UniversalSet as _UniversalSet
 
     from .basic import Basic
     from .expr import Expr
@@ -146,6 +146,7 @@ class SingletonRegistry(Registry):
     false: _BooleanFalse
 
     Complexes: _Complexes
+    EmptySet: _EmptySet
     Integers: _Integers
     Naturals: _Naturals
     Naturals0: _Naturals0
@@ -162,6 +163,8 @@ class SingletonRegistry(Registry):
     def __call__(self, a: Expr | complex, *, strict: bool = False) -> Expr: ...
     @overload
     def __call__(self, a: Tbasic, *, strict: bool = False) -> Tbasic: ...
+    @overload
+    def __call__(self, a: Tbasic | complex, *, strict: bool = False) -> Tbasic | Expr: ...
     @overload
     def __call__(self, a: Any, *, strict: bool = False) -> Basic: ...
 
