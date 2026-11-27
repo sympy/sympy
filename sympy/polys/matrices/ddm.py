@@ -1028,12 +1028,11 @@ class DDM(list[list[Er]], Generic[Er]):
         LU = self.copy()
         perm = list(range(rows))
         rank = 0
+        denominator = K.one
 
-        for j in range(min(rows, cols)):
-            # Skip columns where all entries are zero
-            if all(LU[i][j] == K.zero for i in range(rows)):
-                continue
-
+        for j in range(cols):
+            if rank == rows:
+                break
             # Find the first non-zero pivot in the current column
             pivot_row = -1
             for i in range(rank, rows):
@@ -1054,14 +1053,13 @@ class DDM(list[list[Er]], Generic[Er]):
             pivot = LU[rank][j]
             for i in range(rank + 1, rows):
                 multiplier = LU[i][j]
-                # Denominator is previous pivot or 1
-                denominator = LU[rank - 1][rank - 1] if rank > 0 else K.one
                 for k in range(j + 1, cols):
                     LU[i][k] = K.exquo(
                         pivot * LU[i][k] - LU[rank][k] * multiplier, denominator
                     )
                 # Keep the multiplier for L matrix
                 LU[i][j] = multiplier
+            denominator = pivot
             rank += 1
 
         return LU, perm
