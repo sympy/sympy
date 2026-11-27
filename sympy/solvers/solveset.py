@@ -1544,6 +1544,42 @@ def _invert_modular(modterm, rhs, n, symbol):
         return modterm, rhs
     a, m = modterm.args
 
+    if m.is_Integer and m >= 1 and rhs.is_Rational and 0 <= rhs < m:
+        constant, term = a.as_independent(symbol, as_Add=True)
+        coefficient, power = term.as_independent(symbol, as_Add=False)
+        if (constant.is_Rational and coefficient.is_Rational and coefficient
+                and power.is_Pow and power.base.is_Integer and power.base > 1
+                and (power.exp - symbol).is_Integer
+                and (constant or coefficient != 1 or not rhs.is_Integer or m == 1)):
+            base, exponent = power.args
+            base = int(base)
+            while number_gcd(coefficient.q, base) > 1:
+                coefficient *= base
+                exponent -= 1
+            target = rhs - constant
+            denominator = number_lcm(coefficient.q, target.q)
+            coefficient = int(coefficient*denominator)
+            target = int(target*denominator)
+            modulus = int(m*denominator)
+            # Once base no longer divides coefficient, an integer value
+            # requires a nonnegative exponent.
+            while coefficient % base == 0:
+                coefficient //= base
+                exponent += 1
+            common = number_gcd(coefficient, modulus)
+            if target % common:
+                return symbol, S.EmptySet
+            modulus //= common
+            if modulus == 1:
+                return exponent, S.Naturals0
+            target = Mod((target // common)*
+                invert(coefficient // common, modulus), modulus)
+            reduced = Mod(Pow(base, exponent, evaluate=False), modulus, evaluate=False)
+            f_x, g_n = _invert_modular(reduced, target, n, symbol)
+            if f_x == reduced and g_n == target:
+                return modterm, rhs
+            return f_x, g_n
+
     if rhs.is_integer is False:
         return symbol, S.EmptySet
 
@@ -1595,7 +1631,7 @@ def _invert_modular(modterm, rhs, n, symbol):
             # The modular-power sequence has a finite preperiod followed by
             # a cycle, even when base and modulus are not coprime. For small
             # cycles we can solve it without discrete logarithms.
-            if m > 1 and abs(base) > 1 and expo == symbol:
+            if m > 1 and abs(base) > 1 and (expo - symbol).is_Integer:
                 modulus, target = int(m), int(rhs)
                 b = int(base) % modulus
                 step = lambda residue: b*residue % modulus
@@ -1605,8 +1641,8 @@ def _invert_modular(modterm, rhs, n, symbol):
                     for exponent in range(start + period):
                         if residue == target:
                             if exponent < start:
-                                return symbol, FiniteSet(exponent)
-                            return symbol, ImageSet(
+                                return expo, FiniteSet(exponent)
+                            return expo, ImageSet(
                                 Lambda(n, period*n + exponent), S.Naturals0)
                         residue = step(residue)
                     return symbol, S.EmptySet
@@ -1709,7 +1745,7 @@ def _solve_modular(f, symbol, domain):
         # checks if coefficient of modterm is negative in main equation.
         rhs *= -S.One
 
-    if not domain.is_subset(S.Integers):
+    if domain.intersect(S.Integers) != domain:
         return unsolved_result
 
     if rhs.has(symbol):
@@ -1723,7 +1759,13 @@ def _solve_modular(f, symbol, domain):
     if f_x == modterm and g_n == rhs:
         return unsolved_result
 
-    if f_x == symbol:
+    if (f_x - symbol).is_Integer:
+        if f_x != symbol:
+            if isinstance(g_n, ImageSet):
+                g_n = ImageSet(Lambda(n, g_n.lamda(n) - (f_x - symbol)),
+                    g_n.base_set)
+            else:
+                g_n = imageset(Lambda(n, n - (f_x - symbol)), g_n)
         if domain is not S.Integers:
             return domain.intersect(g_n)
         return g_n
