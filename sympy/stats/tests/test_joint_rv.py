@@ -96,6 +96,21 @@ def test_Normal():
 
     assert density_X_at_obs == expected_density
 
+def test_issue_31256():
+    X = MultivariateNormal(
+        'X',
+        [0, 0, 0],
+        Matrix([
+            [1, 0, 0],
+            [0, 1, 0],
+            [0, 0, 4]
+        ])
+    )
+
+    assert marginal_distribution(X, X[2])(0) == \
+        sqrt(2)/(4*sqrt(pi))
+
+
 
 def test_MultivariateTDist():
     t1 = MultivariateT('T', [0, 0], [[1, 0], [0, 1]], 2)

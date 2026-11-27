@@ -185,7 +185,7 @@ class MultivariateNormalDistribution(JointDistribution):
         sym = ImmutableMatrix([Indexed(sym, i) for i in indices])
         _mu, _sigma = self.mu, self.sigma
         k = self.mu.shape[0]
-        for i in range(k):
+        for i in reversed(range(k)):
             if i not in indices:
                 _mu = _mu.row_del(i)
                 _sigma = _sigma.col_del(i)
