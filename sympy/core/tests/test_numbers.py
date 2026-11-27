@@ -362,6 +362,9 @@ def test_Rational_new():
     assert Rational(pi.evalf(100)).evalf(100) == pi.evalf(100)
     raises(TypeError, lambda: Rational('3**3'))
     raises(TypeError, lambda: Rational('1/2 + 2/3'))
+    raises(ValueError, lambda: Rational(float('nan')))
+    raises(OverflowError, lambda: Rational(float('inf')))
+    raises(OverflowError, lambda: Rational(float('-inf')))
 
     # handle fractions.Fraction instances
     try:

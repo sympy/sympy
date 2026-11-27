@@ -233,7 +233,11 @@ def seterr(divide=False):
 
 
 def _as_integer_ratio(p):
-    neg_pow, man, expt, _ = getattr(p, '_mpf_', _mpf(p)._mpf_)
+    neg_pow, man, expt, bc = getattr(p, '_mpf_', _mpf(p)._mpf_)
+    if bc < 0:
+        if bc == -1:
+            raise ValueError("cannot convert NaN to integer ratio")
+        raise OverflowError("cannot convert Infinity to integer ratio")
     p = [1, -1][neg_pow % 2]*man
     if expt < 0:
         q = 2**-expt
