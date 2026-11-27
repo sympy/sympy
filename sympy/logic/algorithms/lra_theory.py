@@ -309,7 +309,8 @@ class LRASolver():
             terms = Add.make_args(vars)
             for term in terms:
                 term, _ = _sep_const_coeff(term)
-                assert len(term.free_symbols) > 0
+                if not term.free_symbols:
+                    raise UnhandledInput(f"Could not separate constant terms from {prop}")
                 if term not in var_to_lra_var:
                     var_to_lra_var[term] = LRAVariable(term)
                     nonbasic.append(term)
