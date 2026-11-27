@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 from sympy.core import S, Dummy, symbols
-from sympy.polys import Poly, parallel_poly_from_expr, factor
+from sympy.polys import Poly, parallel_poly_from_expr, factor, cancel
 from sympy.utilities.iterables import is_sequence
 
 
@@ -211,11 +211,23 @@ def gosper_sum(f, k):
     if indefinite:
         result = f*g
     else:
-        result = (f*(g + 1)).subs(k, b) - (f*g).subs(k, a)
+        upper, lower = f*(g + 1), f*g
+        # The Gosper certificate can have a pole at an endpoint where
+        # the summand vanishes. Cancel the removable factor *before*
+        # substituting, otherwise that endpoint contribution is lost.
+        if getattr(f, 'is_rational_function', None) and f.is_rational_function(k):
+            at_b = f.subs(k, b)
+            at_a = f.subs(k, a)
+            # The zero can itself be hidden in an unexpanded polynomial.
+            if at_b.is_zero or (at_b.is_zero is None and at_b.expand().is_zero):
+                upper = cancel(upper)
+            if at_a.is_zero or (at_a.is_zero is None and at_a.expand().is_zero):
+                lower = cancel(lower)
+        result = upper.subs(k, b) - lower.subs(k, a)
 
         if result is S.NaN:
             try:
-                result = (f*(g + 1)).limit(k, b) - (f*g).limit(k, a)
+                result = upper.limit(k, b) - lower.limit(k, a)
             except NotImplementedError:
                 result = None
 
