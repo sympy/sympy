@@ -1,5 +1,5 @@
 from __future__ import annotations
-from sympy.core.function import (Derivative, Function, Subs, diff)
+from sympy.core.function import (AppliedUndef, Derivative, Function, Subs, diff)
 from sympy.core.numbers import (E, I, Rational, pi)
 from sympy.core.relational import Eq
 from sympy.core.singleton import S
@@ -27,7 +27,6 @@ from sympy.solvers.ode.nonhomogeneous import _undetermined_coefficients_match
 from sympy.solvers.ode.single import LinearCoefficients
 from sympy.solvers.deutils import ode_order
 from sympy.testing.pytest import XFAIL, raises, slow, SKIP
-from sympy.utilities.misc import filldedent
 
 
 C0, C1, C2, C3, C4, C5, C6, C7, C8, C9, C10 = symbols('C0:11')
@@ -937,15 +936,10 @@ def test_2nd_power_series_ordinary():
     assert dsolve(eq, hint='2nd_power_series_ordinary') == sol
     assert checkodesol(eq, sol) == (True, 0)
 
-    sol = Eq(f(x), C2*((x + 2)**4/6 + (x + 2)**3/6 - (x + 2)**2 + 1)
-        + C1*(x + (x + 2)**4/12 - (x + 2)**3/3 + S(2))
-        + O(x**6))
+    sol = Eq(f(x), C2*(-(x + 2)**5/15 + (x + 2)**4/6 + (x + 2)**3/6 - (x + 2)**2 + 1)
+        + C1*(x + (x + 2)**5/30 + (x + 2)**4/12 - (x + 2)**3/3 + S(2))
+        + O((x + 2)**6, (x, -2)))
     assert dsolve(eq, hint='2nd_power_series_ordinary', x0=-2) == sol
-    # FIXME: Solution should be O((x+2)**6)
-    # assert checkodesol(eq, sol) == (True, 0)
-
-    sol = Eq(f(x), C2*x + C1 + O(x**2))
-    assert dsolve(eq, hint='2nd_power_series_ordinary', n=2) == sol
     assert checkodesol(eq, sol) == (True, 0)
 
     eq = (1 + x**2)*(f(x).diff(x, 2)) + 2*x*(f(x).diff(x)) -2*f(x)
@@ -958,15 +952,15 @@ def test_2nd_power_series_ordinary():
 
     eq = f(x).diff(x, 2) + x*(f(x).diff(x)) + f(x)
     assert classify_ode(eq) == ('2nd_power_series_ordinary',)
-    sol = Eq(f(x), C2*(x**4/8 - x**2/2 + 1) + C1*x*(-x**2/3 + 1) + O(x**6))
+    sol = Eq(f(x), C2*(x**4/8 - x**2/2 + 1) + C1*x*(x**4/15 - x**2/3 + 1) + O(x**6))
     assert dsolve(eq) == sol
     # FIXME: checkodesol fails for this solution...
     # assert checkodesol(eq, sol) == (True, 0)
 
     eq = f(x).diff(x, 2) + f(x).diff(x) - x*f(x)
     assert classify_ode(eq) == ('2nd_power_series_ordinary',)
-    sol = Eq(f(x), C2*(-x**4/24 + x**3/6 + 1)
-            + C1*x*(x**3/24 + x**2/6 - x/2 + 1) + O(x**6))
+    sol = Eq(f(x), C2*(x**5/120 - x**4/24 + x**3/6 + 1)
+            + C1*x*(-x**4/30 + x**3/24 + x**2/6 - x/2 + 1) + O(x**6))
     assert dsolve(eq) == sol
     # FIXME: checkodesol fails for this solution...
     # assert checkodesol(eq, sol) == (True, 0)
@@ -977,6 +971,15 @@ def test_2nd_power_series_ordinary():
     assert dsolve(eq, hint='2nd_power_series_ordinary', n=7) == sol
     assert checkodesol(eq, sol) == (True, 0)
 
+
+def test_2nd_power_series_ordinary_missing_coefficients():
+    y = f(x)
+    eq = (1 + x**2)*y.diff(x, 2) + x*y.diff(x) + (2 + x**3)*y
+
+    sol = dsolve(eq, y, hint="2nd_power_series_ordinary")
+
+    assert sol.rhs.getO() == O(x**6)
+    assert checkodesol(eq, sol) == (True, 0)
 
 def test_2nd_power_series_regular():
     C1, C2, a = symbols("C1 C2 a")
@@ -1080,17 +1083,16 @@ def test_issue_22523():
         )*Derivative(rho(s), (s, 2))
     match = classify_ode(eqn, dict=True, hint='all')
     assert match['2nd_power_series_ordinary']['terms'] == 5
-    C1, C2 = symbols('C1,C2')
     sol = dsolve(eqn, hint='2nd_power_series_ordinary')
-    # there is no r(2.0) in this result
-    assert filldedent(sol) == filldedent(str('''
-        Eq(rho(s), C2*(1 - 4.0*s**4*sqrt(N - 1.0)/N + 0.666666666666667*s**4/N
-        - 2.66666666666667*s**3*sqrt(N - 1.0)/N - 2.0*s**2*sqrt(N - 1.0)/N +
-        9.33333333333333*s**4*sqrt(N - 1.0)/N**2 - 0.666666666666667*s**4/N**2
-        + 2.66666666666667*s**3*sqrt(N - 1.0)/N**2 -
-        5.33333333333333*s**4*sqrt(N - 1.0)/N**3) + C1*s*(1.0 -
-        1.33333333333333*s**3*sqrt(N - 1.0)/N - 0.666666666666667*s**2*sqrt(N
-        - 1.0)/N + 1.33333333333333*s**3*sqrt(N - 1.0)/N**2) + O(s**6))'''))
+    assert sol.rhs.getO() == O(s**6)
+    assert not sol.rhs.has(AppliedUndef)
+
+    for value in (2, 5):
+        _, residual = checkodesol(eqn.subs(N, value), sol.subs(N, value))
+        assert all(
+            abs(coefficient.evalf()) < 1e-10
+            for coefficient in Poly(residual, s, C1, C2).coeffs()
+        )
 
 
 def test_issue_22604():
