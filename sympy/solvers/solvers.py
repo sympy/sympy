@@ -352,6 +352,8 @@ def checksol(f, symbol, sol=None, **flags):
         if numerical and val.is_number:
             if val is S.NaN:
                 return False
+            if not val.has(Float, LambertW) and val.is_zero is False:
+                return False
             val_n = val.n(18).n(12, chop=True)
             if val_n is S.NaN:
                 return False
