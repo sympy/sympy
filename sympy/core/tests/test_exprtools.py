@@ -7,7 +7,7 @@ from sympy.core.basic import Basic
 from sympy.core.containers import (Dict, Tuple)
 from sympy.core.function import Function
 from sympy.core.mul import Mul
-from sympy.core.numbers import (I, Rational, oo)
+from sympy.core.numbers import (Float, I, Rational, oo, pi)
 from sympy.core.power import Pow
 from sympy.core.singleton import S
 from sympy.core.symbol import (Dummy, Symbol, symbols)
@@ -20,7 +20,8 @@ from sympy.series.order import O
 from sympy.sets.sets import Interval
 from sympy.simplify.radsimp import collect
 from sympy.simplify.simplify import simplify
-from sympy.core.exprtools import (_decompose_exprs, decompose_power, Factors,
+from sympy.core.exprtools import (_decompose_exprs, _is_expanded_term,
+                                  decompose_power, Factors,
                                   Term, _gcd_terms, gcd_terms, factor_terms,
                                   factor_nc, _mask_nc, _monotonic_sign)
 from sympy.core.mul import _keep_coeff as _keep_coeff
@@ -44,6 +45,30 @@ def test__decompose_exprs():
 
     raises(NonCommutativeExpression, lambda:
         _decompose_exprs((A*B,)))
+
+
+def test__is_expanded_term():
+    p, q = symbols('p q', positive=True)
+    f = Function('f')
+
+    for e in (S(3), 3*x**2*y, -x/2, y*z**3/x**2, I*x, pi*x, 1.5*x, sqrt(2)*z,
+            sin(x)**2*z, log(x)*y, f(x)**2, exp(x)*y, x**y, 2**x, sin(x + y),
+            exp(2*x)*y, cos(x*y)*z, f(x*y + 1), 2**(x*y), S.Half**(I*pi)):
+        assert _is_expanded_term(e) is True
+
+    for e in (x*(y + 1), (x + y)**3, (x + 1)/y, exp(x + y), 2**(x + 1),
+            f((x + 1)**2), log(p*q), (p*q)**z, exp(x*(y + 1)), S.NaN,
+            Mul(x, x, evaluate=False), Mul(x, x**2, evaluate=False),
+            Mul(y, x, evaluate=False), Mul(x, 2, evaluate=False),
+            Mul(1, x, evaluate=False), Mul(0, x, evaluate=False),
+            Mul(Rational(3, 7), Float(0.1), x, evaluate=False),
+            Mul(sqrt(2), sqrt(3), x, evaluate=False), S.Half**(I*pi)*x,
+            Mul(Pow(x, 1, evaluate=False), y, evaluate=False)):
+        assert _is_expanded_term(e) is False
+
+    e = 3*x**2*y - x/2 + sqrt(2)*z + I + sin(x)**2
+    assert _decompose_exprs([e], expanded=True) == _decompose_exprs([e])
+    assert _decompose_exprs([e + x*(y + 1)], expanded=True) is None
 
 
 def test_decompose_power():
