@@ -47,3 +47,16 @@ def test_as_explicit():
         ImmutableDenseMatrix([[0, -c0], [1, -c1]])
     assert CompanionMatrix(Poly([1, c2, c1, c0], x)).as_explicit() == \
         ImmutableDenseMatrix([[0, 0, -c0], [1, 0, -c1], [0, 1, -c2]])
+
+
+def test_entry_kwargs():
+    # Issue #30900 (item E1-15): _entry should accept kwargs like expand or dummy_generator
+    c0, c1 = symbols('c0:2')
+    x = Symbol('x')
+    A = CompanionMatrix(Poly([1, c1, c0], x))
+    assert A.T[0, 0] == 0
+    assert A.T[1, 0] == -c0
+    assert A.T[0, 1] == 1
+    assert A.T[1, 1] == -c1
+    assert A.T.as_explicit() == ImmutableDenseMatrix([[0, 1], [-c0, -c1]])
+    assert (A * A)[0, 0] == 0
