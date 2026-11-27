@@ -3044,8 +3044,15 @@ class MatrixBase(Printable):
         """Returns a new matrix with entry-wise absolute values."""
         return self._eval_Abs()
 
+    @overload
+    def __add__(self, other: Self) -> Self: ...
+    @overload
+    def __add__(self, other: MatrixBase) -> MatrixBase: ... # type: ignore
+    @overload
+    def __add__(self, other: MatrixExpr) -> MatrixExpr: ...
+
     @call_highest_priority('__radd__')
-    def __add__(self: Tmat, other: Tmat) -> Tmat:
+    def __add__(self, other: MatrixBase | MatrixExpr) -> MatrixBase | MatrixExpr:
         """Return self + other, raising ShapeError if shapes do not match."""
 
         other_mat, _ = _coerce_operand(self, other)
@@ -3067,14 +3074,21 @@ class MatrixBase(Printable):
     def __truediv__(self, other):
         return self * (self.one / other)
 
+    @overload
+    def __matmul__(self, other: Self) -> Self: ...
+    @overload
+    def __matmul__(self, other: MatrixBase) -> MatrixBase: ... # type: ignore
+    @overload
+    def __matmul__(self, other: MatrixExpr) -> MatrixExpr: ...
+
     @call_highest_priority('__rmatmul__')
-    def __matmul__(self, other):
-        self, other, T = _unify_with_other(self, other)
+    def __matmul__(self, other: MatrixBase | MatrixExpr) -> MatrixBase | MatrixExpr:
+        self, other_mat, T = _unify_with_other(self, other)
 
         if T != "is_matrix":
             return NotImplemented
 
-        return self.__mul__(other)
+        return self.__mul__(other_mat)
 
     def __mod__(self, other) -> Self:
         return self.applyfunc(lambda x: x % other)
@@ -3084,10 +3098,12 @@ class MatrixBase(Printable):
     @overload
     def __mul__(self, other: MatrixBase) -> MatrixBase: ... # type: ignore
     @overload
+    def __mul__(self, other: MatrixExpr) -> MatrixExpr: ... # type: ignore[overload-overlap]
+    @overload
     def __mul__(self, other: SExpr) -> Self: ...
 
     @call_highest_priority('__rmul__')
-    def __mul__(self, other: MatrixBase | SExpr) -> MatrixBase | Self:
+    def __mul__(self, other: MatrixBase | MatrixExpr | SExpr) -> MatrixBase | MatrixExpr | Self:
         """Return self*other where other is either a scalar or a matrix
         of compatible dimensions.
 
@@ -3294,26 +3310,44 @@ class MatrixBase(Printable):
         from sympy.matrices.expressions import MatPow
         return MatPow(a, exp)
 
+    @overload
+    def __radd__(self, other: Self) -> Self: ...
+    @overload
+    def __radd__(self, other: MatrixBase) -> MatrixBase: ... # type: ignore
+    @overload
+    def __radd__(self, other: MatrixExpr) -> MatrixExpr: ...
+
     @call_highest_priority('__add__')
-    def __radd__(self, other: MatrixBase) -> MatrixBase:
+    def __radd__(self, other: MatrixBase | MatrixExpr) -> MatrixBase | MatrixExpr: # type: ignore[misc]
         return self.__add__(other)
 
+    @overload
+    def __rmatmul__(self, other: Self) -> Self: ...
+    @overload
+    def __rmatmul__(self, other: MatrixBase) -> MatrixBase: ... # type: ignore
+    @overload
+    def __rmatmul__(self, other: MatrixExpr) -> MatrixExpr: ...
+
     @call_highest_priority('__matmul__')
-    def __rmatmul__(self, other: MatrixBase) -> MatrixBase:
-        self, other, T = _unify_with_other(self, other)
+    def __rmatmul__(self, other: MatrixBase | MatrixExpr) -> MatrixBase | MatrixExpr: # type: ignore[misc]
+        self, other_mat, T = _unify_with_other(self, other)
 
         if T != "is_matrix":
             return NotImplemented
 
-        return self.__rmul__(other)
+        return self.__rmul__(other_mat)
 
     @overload
-    def __rmul__(self, other: MatrixBase) -> MatrixBase: ...
+    def __rmul__(self, other: Self) -> Self: ...
+    @overload
+    def __rmul__(self, other: MatrixBase) -> MatrixBase: ... # type: ignore
+    @overload
+    def __rmul__(self, other: MatrixExpr) -> MatrixExpr: ... # type: ignore[overload-overlap]
     @overload
     def __rmul__(self, other: SExpr) -> Self: ...
 
     @call_highest_priority('__mul__')
-    def __rmul__(self, other: MatrixBase | SExpr) -> MatrixBase | Self:
+    def __rmul__(self, other: MatrixBase | MatrixExpr | SExpr) -> MatrixBase | MatrixExpr | Self: # type: ignore[misc]
         return self.rmultiply(other)
 
     @overload
@@ -3356,14 +3390,26 @@ class MatrixBase(Printable):
         else:
             return NotImplemented
 
-    # XXX: No idea why mypy complains about this but type: ignore seems to be
-    # needed here...
+    @overload
+    def __rsub__(self, a: Self) -> Self: ...
+    @overload
+    def __rsub__(self, a: MatrixBase) -> MatrixBase: ... # type: ignore
+    @overload
+    def __rsub__(self, a: MatrixExpr) -> MatrixExpr: ...
+
     @call_highest_priority('__sub__')
-    def __rsub__(self, a: MatrixBase) -> MatrixBase: # type: ignore
+    def __rsub__(self, a: MatrixBase | MatrixExpr) -> MatrixBase | MatrixExpr: # type: ignore
         return (-self) + a
 
+    @overload
+    def __sub__(self, a: Self) -> Self: ...
+    @overload
+    def __sub__(self, a: MatrixBase) -> MatrixBase: ... # type: ignore
+    @overload
+    def __sub__(self, a: MatrixExpr) -> MatrixExpr: ...
+
     @call_highest_priority('__rsub__')
-    def __sub__(self: Tmat, a: Tmat) -> Tmat:
+    def __sub__(self, a: MatrixBase | MatrixExpr) -> MatrixBase | MatrixExpr:
         return self + (-a)
 
     def _eval_det_bareiss(self, iszerofunc=_is_zero_after_expand_mul) -> Expr:
