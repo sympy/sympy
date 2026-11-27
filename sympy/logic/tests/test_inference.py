@@ -480,6 +480,7 @@ def test_minisat22_minimal_satisfiable():
     assert not first_solution <= second_solution
     assert not second_solution <= third_solution
     assert not first_solution <= third_solution
+    raises(StopIteration, lambda: next(g))
 
 def test_satisfiable():
     A, B, C = symbols('A,B,C')
