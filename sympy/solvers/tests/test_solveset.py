@@ -48,7 +48,8 @@ from sympy.solvers.solveset import (
     nonlinsolve, solvify,
     _is_finite_with_finite_vars, _transolve, _is_exponential,
     _solve_exponential, _is_logarithmic, _is_lambert,
-    _solve_logarithm, _term_factors, _is_modular, NonlinearError)
+    _solve_logarithm, _term_factors, _is_modular, NonlinearError,
+    _solve_trig2)
 
 from sympy.abc import (a, b, c, d, e, f, g, h, i, j, k, l, m, n, q, r,
     t, w, x, y, z)
@@ -3820,6 +3821,23 @@ def test_solveset_symbol_independent_relational_after_expansion():
     relation = (x + 1)**2 - x*(x + 2)
     assert solveset(relation > 0, x, S.Reals) == S.Reals
     assert solveset(relation < 0, x, S.Reals) is S.EmptySet
+
+
+def test_issue_17358():
+    # _solve_trig2 solved the polynomial in ``y`` and inverted tan in the
+    # reals no matter which domain was requested, so equations whose
+    # solutions are not real were reported as having no solutions at all.
+    assert _solve_trig2(sin(x) - 2, x, S.Reals) is S.EmptySet
+
+    n = Dummy('n')
+    assert dumeq(_solve_trig2(sin(x) - 2, x, S.Complexes), Union(
+        ImageSet(Lambda(n, 2*n*pi + 2*atan(S.Half - sqrt(3)*I/2)), S.Integers),
+        ImageSet(Lambda(n, 2*n*pi + 2*atan(S.Half + sqrt(3)*I/2)), S.Integers)))
+
+    # the real solution sets are not affected
+    assert dumeq(_solve_trig2(sin(x) - S.Half, x, S.Reals), Union(
+        ImageSet(Lambda(n, 2*n*pi + pi/6), S.Integers),
+        ImageSet(Lambda(n, 2*n*pi + 5*pi/6), S.Integers)))
 
 
 def test_issue_26077():
