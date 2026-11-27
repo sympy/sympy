@@ -908,6 +908,8 @@ def test_loglogistic():
     assert E(X) == pi*a/(b*sin(pi/b))
     X = LogLogistic('x', 1, 2)
     assert median(X) == FiniteSet(1)
+    X = LogLogistic('x', 1, 3)
+    assert E(X) != E(X**2)
 
 def test_logitnormal():
     mu = Symbol('mu', real=True)

@@ -2632,8 +2632,10 @@ class LogLogisticDistribution(SingleContinuousDistribution):
         return a*((p/(1 - p))**(1/b))
 
     def expectation(self, expr, var, **kwargs):
-        a, b = self.args
-        return Piecewise((S.NaN, b <= 1), (pi*a/(b*sin(pi/b)), True))
+        if expr == var:  # closed-form is only valid for E(X)
+            a, b = self.args
+            return Piecewise((S.NaN, b <= 1), (pi*a/(b*sin(pi/b)), True))
+        return SingleContinuousDistribution.expectation(self, expr, var, **kwargs)
 
 def LogLogistic(name, alpha, beta):
     r"""
