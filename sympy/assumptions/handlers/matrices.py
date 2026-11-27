@@ -11,7 +11,7 @@ from sympy.assumptions.handlers import test_closed_group
 from sympy.matrices import MatrixBase
 from sympy.matrices.expressions import (Adjoint, BlockMatrix, BlockDiagMatrix, Conjugate,
     Determinant, DiagMatrix, DiagonalMatrix, HadamardProduct, Identity, Inverse,
-    MatAdd, MatMul, MatPow, MatrixExpr, MatrixSlice, MatrixSymbol, OneMatrix,
+    KroneckerProduct, MatAdd, MatMul, MatPow, MatrixExpr, MatrixSlice, MatrixSymbol, OneMatrix,
     Trace, Transpose, ZeroMatrix)
 from sympy.matrices.expressions.blockmatrix import reblock_2x2
 from sympy.matrices.expressions.factorizations import Factorization
@@ -105,6 +105,10 @@ def _(expr, assumptions):
 @SymmetricPredicate.register(Identity)
 def _(expr, assumptions):
     return True
+
+@SymmetricPredicate.register(KroneckerProduct)
+def _(expr, assumptions):
+    return fuzzy_and(_ask_recursive(Q.symmetric(arg), assumptions) for arg in expr.args)
 
 
 # InvertiblePredicate
@@ -208,6 +212,10 @@ def _(expr, assumptions):
         return None
     return fuzzy_and([_ask_recursive(Q.invertible(a), assumptions) for a in expr.diag])
 
+@InvertiblePredicate.register(KroneckerProduct)
+def _(expr, assumptions):
+    return fuzzy_and(_ask_recursive(Q.invertible(arg), assumptions) for arg in expr.args)
+
 
 # OrthogonalPredicate
 
@@ -267,6 +275,10 @@ def _(expr, assumptions):
 def _(expr, assumptions):
     return _Factorization(Q.orthogonal, expr, assumptions)
 
+@OrthogonalPredicate.register(KroneckerProduct)
+def _(expr, assumptions):
+    return fuzzy_and(_ask_recursive(Q.orthogonal(arg), assumptions) for arg in expr.args)
+
 
 # UnitaryPredicate
 
@@ -320,6 +332,10 @@ def _(expr, assumptions):
 def _(expr, assumptions):
     return _Factorization(Q.unitary, expr, assumptions)
 
+@UnitaryPredicate.register(KroneckerProduct)
+def _(expr, assumptions):
+    return fuzzy_and(_ask_recursive(Q.unitary(arg), assumptions) for arg in expr.args)
+
 
 # FullRankPredicate
 
@@ -357,6 +373,10 @@ def _(expr, assumptions):
 def _(expr, assumptions):
     if _ask_recursive(Q.orthogonal(expr.parent), assumptions):
         return True
+
+@FullRankPredicate.register(KroneckerProduct)
+def _(expr, assumptions):
+    return fuzzy_and(_ask_recursive(Q.fullrank(arg), assumptions) for arg in expr.args)
 
 
 # PositiveDefinitePredicate
@@ -414,6 +434,10 @@ def _(expr, assumptions):
         return None
     else:
         return _ask_recursive(Q.positive_definite(expr.parent), assumptions)
+
+@PositiveDefinitePredicate.register(KroneckerProduct)
+def _(expr, assumptions):
+    return fuzzy_and(_ask_recursive(Q.positive_definite(arg), assumptions) for arg in expr.args)
 
 
 # UpperTriangularPredicate
@@ -474,6 +498,10 @@ def _(expr, assumptions):
 def _(expr, assumptions):
     return _Factorization(Q.upper_triangular, expr, assumptions)
 
+@UpperTriangularPredicate.register(KroneckerProduct)
+def _(expr, assumptions):
+    return fuzzy_and(_ask_recursive(Q.upper_triangular(arg), assumptions) for arg in expr.args)
+
 # LowerTriangularPredicate
 
 @LowerTriangularPredicate.register(MatMul)
@@ -531,6 +559,10 @@ def _(expr, assumptions):
 @LowerTriangularPredicate.register(Factorization)
 def _(expr, assumptions):
     return _Factorization(Q.lower_triangular, expr, assumptions)
+
+@LowerTriangularPredicate.register(KroneckerProduct)
+def _(expr, assumptions):
+    return fuzzy_and(_ask_recursive(Q.lower_triangular(arg), assumptions) for arg in expr.args)
 
 
 # DiagonalPredicate
@@ -596,6 +628,10 @@ def _(expr, assumptions):
 def _(expr, assumptions):
     return _Factorization(Q.diagonal, expr, assumptions)
 
+@DiagonalPredicate.register(KroneckerProduct)
+def _(expr, assumptions):
+    return fuzzy_and(_ask_recursive(Q.diagonal(arg), assumptions) for arg in expr.args)
+
 
 # IntegerElementsPredicate
 
@@ -615,7 +651,7 @@ def MatMul_elements(matrix_predicate, scalar_predicate, expr, assumptions):
         test_closed_group(Basic(*matrices), assumptions, matrix_predicate)])
 
 
-@IntegerElementsPredicate.register_many(Determinant, HadamardProduct, MatAdd,
+@IntegerElementsPredicate.register_many(Determinant, HadamardProduct, KroneckerProduct, MatAdd,
     Trace, Transpose)
 def _(expr, assumptions):
     return test_closed_group(expr, assumptions, Q.integer_elements)
@@ -655,7 +691,7 @@ def _(expr, assumptions):
 # RealElementsPredicate
 
 @RealElementsPredicate.register_many(Determinant, Factorization, HadamardProduct,
-    MatAdd, Trace, Transpose)
+    KroneckerProduct, MatAdd, Trace, Transpose)
 def _(expr, assumptions):
     return test_closed_group(expr, assumptions, Q.real_elements)
 
@@ -692,7 +728,7 @@ def _(expr, assumptions):
 # ComplexElementsPredicate
 
 @ComplexElementsPredicate.register_many(Determinant, Factorization, HadamardProduct,
-    Inverse, MatAdd, Trace, Transpose)
+    Inverse, KroneckerProduct, MatAdd, Trace, Transpose)
 def _(expr, assumptions):
     return test_closed_group(expr, assumptions, Q.complex_elements)
 
