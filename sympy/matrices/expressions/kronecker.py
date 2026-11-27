@@ -297,7 +297,12 @@ def extract_commutative(kron):
     for arg in kron.args:
         c, nc = arg.args_cnc()
         c_part.extend(c)
-        nc_part.append(Mul._from_args(nc))
+        if len(nc) == 1:
+            nc_part.append(nc[0])
+        elif len(nc) > 1:
+            nc_part.append(MatMul(*nc))
+        else:
+            nc_part.append(Mul._from_args(nc))
 
     c_part = Mul(*c_part)
     if c_part != 1:
@@ -517,7 +522,7 @@ def kronecker_mat_add(expr):
     if not nonkrons:
         return MatAdd(*krons)
     else:
-        return MatAdd(*krons) + nonkrons
+        return MatAdd(*krons, *nonkrons)
 
 
 def kronecker_mat_mul(expr):
@@ -527,7 +532,7 @@ def kronecker_mat_mul(expr):
     i = 0
     while i < len(matrices) - 1:
         A, B = matrices[i:i+2]
-        if isinstance(A, KroneckerProduct) and isinstance(B, KroneckerProduct):
+        if isinstance(A, KroneckerProduct) and isinstance(B, KroneckerProduct) and A.has_matching_shape(B):
             matrices[i] = A._kronecker_mul(B)
             matrices.pop(i+1)
         else:
