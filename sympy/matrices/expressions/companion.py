@@ -55,3 +55,14 @@ class CompanionMatrix(MatrixExpr):
     def as_explicit(self):
         from sympy.matrices.immutable import ImmutableDenseMatrix
         return ImmutableDenseMatrix.companion(self.args[0])
+
+
+    def _eval_trace(self):
+        poly = self.args[0]
+        return -poly.nth(poly.degree() - 1)
+
+
+    def _eval_determinant(self):
+        poly = self.args[0]
+        coeff = poly.nth(0)
+        return -coeff if poly.degree() % 2 else coeff
