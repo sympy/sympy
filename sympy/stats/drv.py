@@ -2,7 +2,7 @@ from __future__ import annotations
 from sympy.concrete.summations import (Sum, summation)
 from sympy.core.basic import Basic
 from sympy.core.cache import cacheit
-from sympy.core.function import Lambda
+from sympy.core.function import Lambda, PoleError
 from sympy.core.numbers import I
 from sympy.core.relational import (Eq, Ne)
 from sympy.core.singleton import S
@@ -167,7 +167,8 @@ class SingleDiscreteDistribution(DiscreteDistribution, NamedArgsMixin):
 
                 return result
 
-            except PolynomialError:
+            except (PolynomialError, NotImplementedError, PoleError):
+                # An MGF may not have a Taylor series at zero.
                 return summation(expr * self.pdf(var),
                                  (var, self.set.inf, self.set.sup), **kwargs)
 
