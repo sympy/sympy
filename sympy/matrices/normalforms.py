@@ -10,6 +10,7 @@ from sympy.polys.matrices.normalforms import (
         smith_normal_decomp as _snd,
         invariant_factors as _invf,
         hermite_normal_form as _hnf,
+        hermite_normal_decomp as _hnd
     )
 
 
@@ -155,3 +156,21 @@ def hermite_normal_form(A, *, D=None, check_rank=False):
     if D is not None and not ZZ.of_type(D):
         D = ZZ(int(D))
     return _hnf(A._rep, D=D, check_rank=check_rank).to_Matrix()
+
+def hermite_normal_decomp(A):
+    r"""
+    Compute the Hermite Normal Form decomposition of matrix *A* over
+    :ref:`ZZ`, returning ``(H, U)`` such that ``A * U == H``.
+
+    Examples
+    ========
+
+    >>> from sympy import Matrix
+    >>> from sympy.matrices.normalforms import hermite_normal_decomp
+    >>> m = Matrix([[12, 6, 4], [3, 9, 6], [2, 16, 14]])
+    >>> H, U = hermite_normal_decomp(m)
+    >>> m * U == H
+    True
+    """
+    H,U = _hnd(A._rep)
+    return H.to_Matrix() , U.to_Matrix()

@@ -10,6 +10,7 @@ from sympy.polys.matrices.normalforms import (
     is_smith_normal_form,
     hermite_normal_form,
     _hermite_normal_form,
+    hermite_normal_decomp,
     _hermite_normal_form_modulo_D
 )
 from sympy.polys.domains import ZZ, QQ
@@ -161,3 +162,26 @@ def test_hermite_normal():
     raises(DMDomainError, lambda: hermite_normal_form(m))
     raises(DMDomainError, lambda: _hermite_normal_form(m))
     raises(DMDomainError, lambda: _hermite_normal_form_modulo_D(m, ZZ(1)))
+
+    m = DomainMatrix([[ZZ(12), ZZ(6), ZZ(4)],
+                  [ZZ(3), ZZ(9), ZZ(6)],
+                  [ZZ(2), ZZ(16), ZZ(14)]], (3, 3), ZZ)
+    H, U = hermite_normal_decomp(m)
+    assert m * U == H
+    assert H == hermite_normal_form(m)
+    assert U.det() in (ZZ(-1), ZZ(1))
+
+    m = DomainMatrix([[ZZ(2), ZZ(7), ZZ(17), ZZ(29), ZZ(41)],
+                    [ZZ(3), ZZ(11), ZZ(19), ZZ(31), ZZ(43)],
+                    [ZZ(5), ZZ(13), ZZ(23), ZZ(37), ZZ(47)]], (3, 5), ZZ)
+    H, U = hermite_normal_decomp(m)
+    assert m * U == H
+    assert H == hermite_normal_form(m)
+
+    m = DomainMatrix([[ZZ(2), ZZ(7)], [ZZ(0), ZZ(0)], [ZZ(0), ZZ(0)]], (3, 2), ZZ)
+    H, U = hermite_normal_decomp(m)
+    assert m * U == H
+    assert H == hermite_normal_form(m)
+
+    m_qq = DomainMatrix([[QQ(1), QQ(2)], [QQ(3), QQ(4)]], (2, 2), QQ)
+    raises(DMDomainError, lambda: hermite_normal_decomp(m_qq))

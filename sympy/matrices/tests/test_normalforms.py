@@ -9,6 +9,7 @@ from sympy.matrices.normalforms import (
     smith_normal_form,
     smith_normal_decomp,
     hermite_normal_form,
+    hermite_normal_decomp,
     is_smith_normal_form,
 )
 from sympy.polys.domains import ZZ, QQ
@@ -77,6 +78,22 @@ def test_hermite_normal():
     m = Matrix([[2, 7], [0, 0], [0, 0]])
     hnf = Matrix([[1], [0], [0]])
     assert hermite_normal_form(m) == hnf
+
+    m = Matrix([[12, 6, 4], [3, 9, 6], [2, 16, 14]])
+    H, U = hermite_normal_decomp(m)
+    assert m * U == H
+    assert H == hermite_normal_form(m)
+    assert U.det() in (-1, 1)
+
+    m = Matrix([[2, 7, 17, 29, 41], [3, 11, 19, 31, 43], [5, 13, 23, 37, 47]])
+    H, U = hermite_normal_decomp(m)
+    assert m * U == H
+    assert H == hermite_normal_form(m)
+
+    m = Matrix([[2, 7], [0, 0], [0, 0]])
+    H, U = hermite_normal_decomp(m)
+    assert m * U == H
+    assert H == hermite_normal_form(m)
 
 
 def test_issue_23410():
