@@ -52,6 +52,7 @@ from sympy.polys.polyutils import (
     _dict_reorder,
     _dict_from_expr,
     _parallel_dict_from_expr,
+    _factor_order_key,
 )
 from sympy.polys.rationaltools import together
 from sympy.polys.rootisolation import dup_isolate_real_roots_list
@@ -6720,6 +6721,8 @@ def sqf_part(f, *gens, **args):
 def _poly_sort_key(poly):
     """Sort a list of polys."""
     rep = poly.rep.to_list()
+    if poly.domain.is_FiniteField:
+        rep = _factor_order_key(rep)
     return (len(rep), len(poly.gens), str(poly.domain), rep)
 
 
@@ -6728,13 +6731,12 @@ def _sorted_factors(factors, method):
     if method == 'sqf':
         def key(obj):
             poly, exp = obj
-            rep = poly.rep.to_list()
-            return (default_sort_key(exp), len(rep), len(poly.gens), str(poly.domain), rep)
+            return (default_sort_key(exp), *_poly_sort_key(poly))
     else:
         def key(obj):
             poly, exp = obj
-            rep = poly.rep.to_list()
-            return (len(rep), len(poly.gens), default_sort_key(exp), str(poly.domain), rep)
+            length, ngens, domain, rep = _poly_sort_key(poly)
+            return (length, ngens, default_sort_key(exp), domain, rep)
 
     return sorted(factors, key=key)
 

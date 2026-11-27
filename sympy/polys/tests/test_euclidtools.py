@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 from sympy.polys.rings import ring
-from sympy.polys.domains import ZZ, QQ, RR
+from sympy.polys.domains import FF, ZZ, QQ, RR
 
 from sympy.polys.specialpolys import (
     f_polys,
@@ -14,6 +14,11 @@ f_0, f_1, f_2, f_3, f_4, f_5, f_6 = f_polys()
 
 def test_dup_gcdex():
     R, x = ring("x", QQ)
+
+    assert R.dup_half_gcdex(0, 0) == (0, 0)
+    assert R.dup_gcdex(0, 0) == (0, 0, 0)
+    assert R.dup_gcdex(2*x, 0) == (QQ(1, 2), 0, x)
+    assert R.dup_gcdex(0, 2*x) == (0, QQ(1, 2), x)
 
     f = x**4 - 2*x**3 - 6*x**2 + 12*x + 15
     g = x**3 + x**2 - 4*x - 4
@@ -199,6 +204,9 @@ def test_dmp_subresultants():
     assert R.dmp_zz_collins_resultant(f, g) == r
     assert R.dmp_qq_collins_resultant(f, g) == r
 
+    c = sum(y**i for i in range(21))
+    assert R.dmp_zz_collins_resultant(x + c, x**4 + 1) == (c**4 + 1).drop(x)
+
     R, x, y, z, u, v = ring("x,y,z,u,v", ZZ)
 
     f = 6*x**2 - 3*x*y - 2*x*z + y*z
@@ -242,6 +250,11 @@ def test_dup_discriminant():
     assert R.dup_discriminant(x**4 + 2*x**3 + 6*x**2 - 22*x + 13) == 0
     assert R.dup_discriminant(12*x**7 + 15*x**4 + 30*x**3 + x**2 + 1) == -220289699947514112
 
+    R, x = ring("x", FF(3))
+    assert R.dup_discriminant(2*x**3 + x**2 + 2*x + 1) == R.domain(2)
+    assert R.dup_discriminant(2*x**3 + x + 1) == R.domain.one
+    assert R.dup_discriminant(x**3 + 1) == R.domain.zero
+
 
 def test_dmp_discriminant():
     R, x = ring("x", ZZ)
@@ -260,6 +273,11 @@ def test_dmp_discriminant():
 
     assert R.dmp_discriminant(x**2*y + 2*y) == (-8*y**2).drop(x)
     assert R.dmp_discriminant(x*y**2 + 2*x) == 1
+
+    f = (y + 1)*x**3 + x**2 + y*x + 1
+    R3 = R.clone(domain=FF(3))
+    y3, = R3.drop(0).gens
+    assert R3.dmp_discriminant(f.set_ring(R3)) == -y3**4 - y3**3 + y3**2 - 1
 
     R, x, y, z = ring("x,y,z", ZZ)
     assert R.dmp_discriminant(x*y + z) == 1
@@ -601,6 +619,9 @@ def test_dup_lcm():
 
 def test_dmp_lcm():
     R, x, y = ring("x,y", ZZ)
+
+    assert R.dmp_lcm(-x - y, x) == x*(x + y)
+    assert R.dmp_lcm(x, -x - y) == x*(x + y)
 
     assert R.dmp_lcm(2, 6) == 6
     assert R.dmp_lcm(x, y) == x*y

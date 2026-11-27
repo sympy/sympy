@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from sympy.core.numbers import Float, I
 from sympy.external.gmpy import SYMPY_INTS
-from sympy.external.mpmath import MPContext
+from sympy.external.mpmath import MPContext, from_rational, fzero, round_nearest
 from sympy.polys.domains.characteristiczero import CharacteristicZero
 from sympy.polys.domains.field import Field
 from sympy.polys.domains.gaussiandomains import QQ_I
@@ -93,7 +93,7 @@ class ComplexField(Field, CharacteristicZero, SimpleDomain, ConjugateDomain):
         return isinstance(other, ComplexField) and self.precision == other.precision
 
     def __hash__(self):
-        return hash((self.__class__.__name__, self._dtype, self.precision))
+        return hash((ComplexField, self.precision))
 
     def to_sympy(self, element):
         """Convert ``element`` to SymPy number. """
@@ -119,13 +119,12 @@ class ComplexField(Field, CharacteristicZero, SimpleDomain, ConjugateDomain):
         return self.dtype(element)
 
     def from_QQ(self, element, base):
-        return self.dtype(int(element.numerator)) / int(element.denominator)
+        real = from_rational(int(element.numerator), int(element.denominator),
+                             self.precision, round_nearest)
+        return self._context.make_mpc((real, fzero))
 
-    def from_QQ_python(self, element, base):
-        return self.dtype(element.numerator) / element.denominator
-
-    def from_QQ_gmpy(self, element, base):
-        return self.dtype(int(element.numerator)) / int(element.denominator)
+    from_QQ_python = from_QQ
+    from_QQ_gmpy = from_QQ
 
     def from_GaussianIntegerRing(self, element, base):
         return self.dtype(int(element.x), int(element.y))

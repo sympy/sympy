@@ -158,6 +158,8 @@ class RationalField(Field[MPQ], CharacteristicZero, SimpleDomain, ConjugateDomai
         if a.y == 0:
             return MPQ(a.x)
 
+    from_GaussianIntegerRing = from_GaussianRationalField
+
     def from_RealField(K1, a, K0):
         """Convert a mpmath ``mpf`` object to ``dtype``. """
         return MPQ(*map(int, K0.to_rational(a)))

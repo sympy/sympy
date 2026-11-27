@@ -82,6 +82,8 @@ class FractionField(Field, CompositeDomain):
         """Convert a Python ``Fraction`` object to ``dtype``. """
         return K1(K1.dom.convert(a, K0))
 
+    from_QQ = from_QQ_python
+
     def from_ZZ_gmpy(K1, a, K0):
         """Convert a GMPY ``mpz`` object to ``dtype``. """
         return K1(K1.dom.convert(a, K0))

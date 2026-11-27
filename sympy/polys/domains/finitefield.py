@@ -253,7 +253,7 @@ class FiniteField(Field, SimpleDomain):
         return 'GF(%s)' % self.mod
 
     def __hash__(self):
-        return hash((self.__class__.__name__, self.dtype, self.mod, self.dom))
+        return hash((FiniteField, self.mod, self.dom))
 
     def __eq__(self, other):
         """Returns ``True`` if two domains are equivalent. """
@@ -347,8 +347,15 @@ class FiniteField(Field, SimpleDomain):
         if q == 1:
             return K1.dtype(K1.dom.dtype(p))
 
+    def is_unit(self, a):
+        if self.is_Field:
+            return bool(a)
+        return self.dom.gcd(self.dom(int(a)), self.mod) == self.dom.one
+
     def is_square(self, a):
         """Returns True if ``a`` is a quadratic residue modulo p. """
+        if not self.is_Field:
+            return self.exsqrt(a) is not None
         # a is not a square <=> x**2-a is irreducible
         poly = [int(x) for x in [self.one, self.zero, -a]]
         return not gf_irred_p_rabin(poly, self.mod, self.dom)
@@ -363,6 +370,10 @@ class FiniteField(Field, SimpleDomain):
         # x**2-a is not square-free if a=0 or the field is characteristic 2
         if self.mod == 2 or a == 0:
             return a
+        if not self.is_Field:
+            from sympy.ntheory.residue_ntheory import sqrt_mod
+            root = sqrt_mod(int(a), int(self.mod))
+            return self(root) if root is not None else None
         # Otherwise, use square-free factorization routine to factorize x**2-a
         poly = [int(x) for x in [self.one, self.zero, -a]]
         for factor in gf_zassenhaus(poly, self.mod, self.dom):

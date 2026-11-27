@@ -9,7 +9,7 @@ from sympy.core.singleton import S
 from sympy.external.gmpy import GROUND_TYPES
 from sympy.testing.pytest import raises
 
-from sympy import oo, zoo ,nan
+from sympy import ImmutableMatrix, nan, oo, zoo
 from sympy.polys.domains import QQ, ZZ, EXRAW
 from sympy.polys.matrices.sdm import SDM
 from sympy.polys.matrices.ddm import DDM
@@ -25,6 +25,10 @@ def test_SDM():
 
     raises(DMBadInputError, lambda: SDM({5:{1:ZZ(0)}}, (2, 2), ZZ))
     raises(DMBadInputError, lambda: SDM({0:{5:ZZ(0)}}, (2, 2), ZZ))
+
+    block = ImmutableMatrix(0, 2, [])
+    A = SDM({0: {0: block, 1: S.Zero}}, (1, 2), EXRAW)
+    assert dict(A) == {0: {0: block}}
 
 
 def test_DDM_str():

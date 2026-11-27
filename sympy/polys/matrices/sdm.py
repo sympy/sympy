@@ -106,6 +106,17 @@ class SDM(dict[int, dict[int, Er]], Generic[Er]):
         if not all(0 <= c < n for row in self.values() for c in row):
             raise DMBadInputError("Column out of range")
 
+        zero = domain.zero
+        empty_rows = []
+        for i, row in self.items():
+            if any(value == zero for value in row.values()):
+                row = {j: value for j, value in row.items() if value != zero}
+                self[i] = row
+            if not row:
+                empty_rows.append(i)
+        for i in empty_rows:
+            del self[i]
+
     def getitem(self, i: int, j: int) -> Er:
         try:
             return self[i][j]
@@ -251,7 +262,7 @@ class SDM(dict[int, dict[int, Er]], Generic[Er]):
         >>> A = SDM(elemsdict, (2, 2), QQ)
         >>> B = A.copy()
         >>> B
-        {0: {1: 2}, 1: {}}
+        {0: {1: 2}}
 
         """
         Ac = {i: Ai.copy() for i, Ai in A.items()}
@@ -806,7 +817,7 @@ class SDM(dict[int, dict[int, Er]], Generic[Er]):
         >>> from sympy import QQ_I
         >>> A = SDM({0:{1:QQ_I(2, -3)}, 1:{}}, (2, 2), QQ_I)
         >>> A.conjugate()
-        {0: {1: (2 + 3*I)}, 1: {}}
+        {0: {1: (2 + 3*I)}}
         """
         dom = M.domain
         if not dom.is_ConjugateDomain:

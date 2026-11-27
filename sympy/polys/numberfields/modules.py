@@ -189,7 +189,7 @@ from sympy.polys.domains.finitefield import FF
 from sympy.polys.domains.rationalfield import QQ
 from sympy.polys.domains.integerring import ZZ
 from sympy.polys.matrices.domainmatrix import DomainMatrix
-from sympy.polys.matrices.exceptions import DMBadInputError
+from sympy.polys.matrices.exceptions import DMNonInvertibleMatrixError
 from sympy.polys.matrices.normalforms import hermite_normal_form
 from sympy.polys.polyerrors import CoercionFailed, UnificationFailed
 from sympy.polys.polyutils import IntegerPowerable
@@ -1042,7 +1042,7 @@ class Submodule(Module, IntegerPowerable):
                 b = elt.QQ_col
                 x = A._solve(b)[0].transpose()
                 x = x.convert_to(ZZ)
-            except DMBadInputError:
+            except DMNonInvertibleMatrixError:
                 raise ClosureFailure('Element outside QQ-span of this basis.')
             except CoercionFailed:
                 raise ClosureFailure('Element in QQ-span but not ZZ-span of this basis.')
@@ -2104,7 +2104,7 @@ def find_min_poly(alpha, domain, x=None, powers=None):
         ak_col = ak.column(domain=domain)
         try:
             X = powers_matrix._solve(ak_col)[0]
-        except DMBadInputError:
+        except DMNonInvertibleMatrixError:
             # This means alpha^k still isn't in the domain-span of the lower powers.
             powers_matrix = powers_matrix.hstack(ak_col)
             ak *= alpha

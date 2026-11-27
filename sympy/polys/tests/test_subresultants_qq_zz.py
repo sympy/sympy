@@ -76,12 +76,14 @@ def test_res_q():
     x = Symbol('x')
 
     assert res_q(3, 5, x) == 1
+    assert res_q(x**2 + 1, 0, x) == res_q(0, x**2 + 1, x) == res_q(0, 0, x) == 0
 
 def test_res_z():
     x = Symbol('x')
 
     assert res_z(3, 5, x) == 1
     assert res(3, 5, x) == res_q(3, 5, x) == res_z(3, 5, x)
+    assert res_z(x**2 + 1, 0, x) == res_z(0, x**2 + 1, x) == res_z(0, 0, x) == 0
 
 def test_bezout():
     x = Symbol('x')
@@ -302,6 +304,8 @@ def test_modified_subresultants_amv():
 
 def test_subresultants_rem():
     x = Symbol('x')
+
+    assert subresultants_rem(x, x**3 + x + 1, x) == [x**3 + x + 1, x, -1]
 
     p = x**8 + x**6 - 3*x**4 - 3*x**3 + 8*x**2 + 2*x - 5
     q = 3*x**6 + 5*x**4 - 4*x**2 - 9*x + 21

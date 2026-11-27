@@ -435,9 +435,9 @@ class MacaulayResultant():
                 temp.append(bool(total_degree(m, v) >= self.degrees[i]))
             divisible.append(temp)
         reduced = [i for i, r in enumerate(divisible)
-                   if sum(r) < self.n - 1]
+                   if sum(r) == 1]
         non_reduced = [i for i, r in enumerate(divisible)
-                       if sum(r) >= self.n -1]
+                       if sum(r) > 1]
 
         return reduced, non_reduced
 
@@ -447,9 +447,8 @@ class MacaulayResultant():
         =======
 
         macaulay_submatrix: Matrix
-            The Macaulay denominator matrix. Columns that are non reduced are kept.
-            The row which contains one of the a_{i}s is dropped. a_{i}s
-            are the coefficients of x_i ^ {d_i}.
+            The Macaulay denominator matrix. Keep the rows and columns
+            that correspond to non-reduced monomials.
         """
         reduced, non_reduced = self.get_reduced_nonreduced()
 
@@ -457,18 +456,14 @@ class MacaulayResultant():
         if reduced == []:
             return diag([1])
 
-        # reduced != []
-        reduction_set = [v ** self.degrees[i] for i, v
-                         in enumerate(self.variables)]
-
-        ais = [self.polynomials[i].coeff(reduction_set[i])
-               for i in range(self.n)]
-
-        reduced_matrix = matrix[:, reduced]
+        non_reduced_monomials = {self.monomial_set[i] for i in non_reduced}
         keep = []
-        for row in range(reduced_matrix.rows):
-            check = [ai in reduced_matrix[row, :] for ai in ais]
-            if True not in check:
-                keep.append(row)
+        row = 0
+        for i, multipliers in enumerate(self.get_row_coefficients()):
+            pure_power = self.variables[i]**self.degrees[i]
+            for multiplier in multipliers:
+                if pure_power * multiplier in non_reduced_monomials:
+                    keep.append(row)
+                row += 1
 
         return matrix[keep, non_reduced]

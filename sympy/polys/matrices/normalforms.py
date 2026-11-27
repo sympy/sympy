@@ -223,9 +223,12 @@ def _smith_normal_decomp(m, domain, shape, full):
         return DomainMatrix(m, shape=(len(m), len(m[0])), domain=domain)
 
     if m[0][0] != zero:
-        c = domain.canonical_unit(m[0][0])
         if domain.is_Field:
             c = 1 / m[0][0]
+        elif domain.is_PolynomialRing:
+            c = one.quo_ground(m[0][0].LC)
+        else:
+            c = domain.canonical_unit(m[0][0])
         if c != domain.one:
             m[0][0] *= c
             if full:

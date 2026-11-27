@@ -20,7 +20,7 @@ from sympy.polys.densearith import (
     dup_exquo_ground,
     dmp_quo_ground,
     dmp_exquo_ground,
-    dup_max_norm, dmp_max_norm)
+    dup_max_norm, dmp_max_norm, dmp_l1_norm)
 from sympy.polys.densebasic import (
     dup, dmp, _dup, _dmp,
     dup_strip, dmp_raise,
@@ -77,6 +77,9 @@ def dup_half_gcdex(f: dup[Ef], g: dup[Ef], K: Field[Ef]) -> tuple[dup[Ef], dup[E
     if not K.is_Field:
         raise DomainError("Cannot compute half extended GCD over %s" % K)
 
+    if not f and not g:
+        return [], []
+
     a: dup[Ef]
     b: dup[Ef]
 
@@ -130,6 +133,9 @@ def dup_gcdex(f: dup[Ef], g: dup[Ef], K: Field[Ef]) -> tuple[dup[Ef], dup[Ef], d
 
     """
     s, h = dup_half_gcdex(f, g, K)
+
+    if not g:
+        return s, [], h
 
     F = dup_sub_mul(h, s, f, K)
     t = dup_quo(F, g, K)
@@ -704,13 +710,19 @@ def dmp_zz_collins_resultant(f, g, u, K):
     if n < 0 or m < 0:
         return dmp_zero(u - 1, K)
 
-    A = dmp_max_norm(f, u, K)
-    B = dmp_max_norm(g, u, K)
+    v = u - 1
+
+    if u:
+        # Each Sylvester determinant term multiplies m coefficients of f
+        # and n of g. The l1 norm bounds their polynomial products.
+        A = max(dmp_l1_norm(c, v, K) for c in f)
+        B = max(dmp_l1_norm(c, v, K) for c in g)
+    else:
+        A = dup_max_norm(_dup(f), K)
+        B = dup_max_norm(_dup(g), K)
 
     a = dmp_ground_LC(f, u, K)
     b = dmp_ground_LC(g, u, K)
-
-    v = u - 1
 
     B = K(2)*K.factorial(K(n + m))*A**m*B**n
     r, p, P = dmp_zero(v, K), K.one, K.one
@@ -853,7 +865,14 @@ def dup_discriminant(f, K):
         s = (-1)**((d*(d - 1)) // 2)
         c = dup_LC(f, K)
 
-        r = dup_resultant(f, dup_diff(f, 1, K), K)
+        fp = dup_diff(f, 1, K)
+        if not fp:
+            return K.zero
+
+        r = dup_resultant(f, fp, K)
+        drop = d - 1 - dup_degree(fp)
+        if drop:
+            r *= c**drop
 
         return K.quo(r, c*K(s))
 
@@ -883,7 +902,14 @@ def dmp_discriminant(f, u, K):
         s = (-1)**((d*(d - 1)) // 2)
         c = dmp_LC(f, K)
 
-        r = dmp_resultant(f, dmp_diff(f, 1, u, K), u, K)
+        fp = dmp_diff(f, 1, u, K)
+        if dmp_zero_p(fp, u):
+            return dmp_zero(v, K)
+
+        r = dmp_resultant(f, fp, u, K)
+        drop = d - 1 - dmp_degree(fp, u)
+        if drop:
+            r = dmp_mul(r, dmp_pow(c, drop, v, K), v, K)
         c = dmp_mul_ground(c, K(s), v, K)
 
         return dmp_quo(r, c, v, K)
@@ -1774,7 +1800,8 @@ def dmp_rr_lcm(f, g, u, K):
     h = dmp_quo(dmp_mul(f, g, u, K),
                 dmp_gcd(f, g, u, K), u, K)
 
-    return dmp_mul_ground(h, c, u, K)
+    unit = K.canonical_unit(dmp_ground_LC(h, u, K))
+    return dmp_mul_ground(h, c*unit, u, K)
 
 
 def dmp_ff_lcm(f, g, u, K):

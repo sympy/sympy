@@ -4,6 +4,7 @@ from functools import cached_property
 from sympy.polys.domains.ring import Ring
 from sympy.polys.domains.compositedomain import CompositeDomain
 from sympy.polys.domains.domain import Er, Domain
+from sympy.polys.polyerrors import NotReversible
 from sympy.polys.series.ring import (
     power_series_ring,
     PowerSeriesElement,
@@ -69,6 +70,8 @@ class SeriesRingProto(Protocol[Er]):
     def domain_new(self, arg: Er | int) -> Er: ...
 
     def ring_new(self, arg: Expr | Er | int) -> PowerSeriesElement[Er]: ...
+
+    def inverse(self, s: PowerSeriesElement[Er]) -> PowerSeriesElement[Er]: ...
 
 
 class PowerSeriesRing(Ring[PowerSeriesElement[Er]], CompositeDomain):
@@ -137,10 +140,17 @@ class PowerSeriesRing(Ring[PowerSeriesElement[Er]], CompositeDomain):
 
     def is_unit(self, a: PowerSeriesElement[Er]) -> bool:
         """Returns ``True`` if ``constant coefficient`` of series is a unit of ``self``"""
-        if not a.is_ground:
-            return False
         K = self.domain
         return K.is_unit(a.constant_coefficient())
+
+    def revert(self, a: PowerSeriesElement[Er]) -> PowerSeriesElement[Er]:
+        if not self.is_unit(a):
+            raise NotReversible("only units are reversible in a ring")
+        return self.ring.inverse(a)
+
+    def from_PowerSeriesRing(self, a, base):
+        if self == base:
+            return a
 
     def canonical_unit(self, a: PowerSeriesElement[Er]) -> PowerSeriesElement[Er]:
         u = self.domain.canonical_unit(a.constant_coefficient())

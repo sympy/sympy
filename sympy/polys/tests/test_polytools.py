@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import pickle
+from warnings import catch_warnings, simplefilter
 
 from sympy.polys.polytools import (
     Poly, PurePoly, poly,
@@ -1060,6 +1061,11 @@ def test_Poly_slice():
     g = Poly(x**3 + 1)
 
     assert g.slice(0, 3) == Poly(1, x)
+
+    f = Poly(x**3*y + x*y**2 + 5*x**2 + 7, x, y)
+    assert f.slice(x, 0, 2) == Poly(x*y**2 + 7, x, y)
+    assert f.slice(y, 1, 2) == Poly(x**3*y, x, y)
+    assert f.slice(y, 3, 4) == Poly(0, x, y)
 
 
 def test_Poly_coeffs():
@@ -2731,6 +2737,9 @@ def test_factor():
     assert factor_list(f) == (1, [(u, 1), (v, 2), (w, 1)])
     assert factor_list(f, x) == (1, [(u, 1), (v, 2), (w, 1)])
     assert factor_list(f, (x,)) == (1, [(u, 1), (v, 2), (w, 1)])
+    with catch_warnings():
+        simplefilter("error", SymPyDeprecationWarning)
+        assert factor_list(x**2 + 1, modulus=5) == (1, [(x + 2, 1), (x - 2, 1)])
     assert factor_list(F) == (1, [(U, 1), (V, 2), (W, 1)])
     assert factor_list(f, polys=True) == (1, [(U, 1), (V, 2), (W, 1)])
     assert factor_list(F, polys=False) == (1, [(u, 1), (v, 2), (w, 1)])
@@ -3458,6 +3467,8 @@ def test_cancel():
     assert cancel(0) == 0
     assert cancel(7) == 7
     assert cancel(x) == x
+    f = (x - 1000)/(x - 39979541902686728755502667193825395189197200)
+    assert cancel(f) == f
 
     assert cancel(oo) is oo
 

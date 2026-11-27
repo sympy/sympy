@@ -44,7 +44,7 @@ from sympy.polys.polyerrors import (
 )
 
 from sympy.polys.specialpolys import f_polys, Symbol, Poly
-from sympy.polys.domains import FF, ZZ, QQ, CC
+from sympy.polys.domains import FF, ZZ, QQ, RR, CC
 
 from sympy.testing.pytest import raises
 
@@ -220,6 +220,8 @@ def test_dup_quo_ground():
     assert dup_quo_ground(f, ZZ(2), ZZ) == dup_normal([3, 1, 4], ZZ)
 
     assert dup_quo_ground(f, ZZ(3), ZZ) == dup_normal([2, 0, 2], ZZ)
+    assert dup_quo_ground(ZZ.map([1, 5]), ZZ(2), ZZ) == [ZZ(2)]
+    assert dup_quo_ground(ZZ.map([1, 1]), ZZ(2), ZZ) == []
 
     f = dup_normal([6, 2, 8], QQ)
 
@@ -257,8 +259,9 @@ def test_dmp_quo_ground():
     assert dmp_quo_ground(
         f, ZZ(2), 1, ZZ) == dmp_normal([[3], [1], [4]], 1, ZZ)
 
-    assert dmp_normal(dmp_quo_ground(
-        f, ZZ(3), 1, ZZ), 1, ZZ) == dmp_normal([[2], [], [2]], 1, ZZ)
+    assert dmp_quo_ground(f, ZZ(3), 1, ZZ) == [[2], [], [2]]
+    assert dmp_quo_ground([[1, 0], [1, 5]], ZZ(2), 1, ZZ) == [[2]]
+    assert dmp_quo_ground([[1, 0], [1]], ZZ(2), 1, ZZ) == [[]]
 
 
 def test_dmp_exquo_ground():
@@ -277,6 +280,7 @@ def test_dup_lshift():
 def test_dup_rshift():
     assert dup_rshift([], 3, ZZ) == []
     assert dup_rshift([1, 0, 0, 0], 3, ZZ) == [1]
+    assert dup_rshift([1, 0, 1], 0, ZZ) == [1, 0, 1]
 
 
 def test_dup_abs():
@@ -906,6 +910,15 @@ def test_dmp_pdiv():
     raises(ExactQuotientFailed, lambda: dmp_pexquo(f, g, 1, ZZ))
 
 
+    f = [RR.map([0.1, 0.7, 0.3]), [RR.one]]
+    g = [RR.map([1.3, 1, 0.1]), [RR.one]]
+    q, r = dmp_pdiv(f, g, 1, RR)
+    assert q == [f[0]]
+    assert r == dmp_prem(f, g, 1, RR)
+    assert len(r) == 1 and len(r[0]) == 3
+    assert all(RR.almosteq(a, b) for a, b in zip(r[0], RR.map([1.2, 0.3, -0.2])))
+
+
 def test_dup_rr_div():
     raises(ZeroDivisionError, lambda: dup_rr_div([1, 2, 3], [], ZZ))
 
@@ -997,6 +1010,12 @@ def test_dmp_ff_div():
     r = [[QQ(2, 1), QQ(0, 1), QQ(0, 1)]]
 
     assert dmp_ff_div(f, g, 1, QQ) == (q, r)
+
+
+    f = [[RR(0.1)], [RR.one, RR.zero]]
+    g = [[RR(1.9)]]
+    q = [[RR(0.1) / RR(1.9)], [RR.one / RR(1.9), RR.zero]]
+    assert dmp_ff_div(f, g, 1, RR) == (q, [[]])
 
 
 def test_dup_div():

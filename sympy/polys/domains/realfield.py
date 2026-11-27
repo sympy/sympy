@@ -3,7 +3,7 @@ from __future__ import annotations
 
 
 from sympy.external.gmpy import SYMPY_INTS, MPQ
-from sympy.external.mpmath import to_rational as _mpmath_to_rational, MPContext
+from sympy.external.mpmath import to_rational as _mpmath_to_rational, MPContext, from_rational, round_nearest
 from sympy.core.numbers import Float
 from sympy.polys.domains.field import Field
 from sympy.polys.domains.simpledomain import SimpleDomain
@@ -130,7 +130,7 @@ class RealField(Field, CharacteristicZero, SimpleDomain, ConjugateDomain):
         return isinstance(other, RealField) and self.precision == other.precision
 
     def __hash__(self):
-        return hash((self.__class__.__name__, self._dtype, self.precision))
+        return hash((RealField, self.precision))
 
     def to_sympy(self, element):
         """Convert ``element`` to SymPy number. """
@@ -154,18 +154,21 @@ class RealField(Field, CharacteristicZero, SimpleDomain, ConjugateDomain):
     def from_ZZ_gmpy(self, element, base):
         return self.dtype(int(element))
 
-    # XXX: We need to convert the denominators to int here because mpmath does
-    # not recognise mpz. Ideally mpmath would handle this and if it changed to
-    # do so then the calls to int here could be removed.
-
     def from_QQ(self, element, base):
-        return self.dtype(element.numerator) / int(element.denominator)
+        value = from_rational(int(element.numerator), int(element.denominator),
+                              self.precision, round_nearest)
+        return self._context.make_mpf(value)
 
-    def from_QQ_python(self, element, base):
-        return self.dtype(element.numerator) / int(element.denominator)
+    from_QQ_python = from_QQ
+    from_QQ_gmpy = from_QQ
 
-    def from_QQ_gmpy(self, element, base):
-        return self.dtype(int(element.numerator)) / int(element.denominator)
+    def from_GaussianIntegerRing(self, element, base):
+        if not element.y:
+            return self.from_ZZ(element.x, base.dom)
+
+    def from_GaussianRationalField(self, element, base):
+        if not element.y:
+            return self.from_QQ(element.x, base.dom)
 
     def from_AlgebraicField(self, element, base):
         return self.from_sympy(base.to_sympy(element).evalf(self.dps))

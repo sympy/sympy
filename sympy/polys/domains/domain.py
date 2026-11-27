@@ -566,7 +566,7 @@ class Domain(Generic[Er]):
         else:
             method = "from_" + base.__class__.__name__
 
-        _convert = getattr(self, method)
+        _convert = getattr(self, method, None)
 
         if _convert is not None:
             result = _convert(element, base)
@@ -979,7 +979,8 @@ class Domain(Generic[Er]):
                     return K0
                 else:
                     return K1
-            elif K1.is_GaussianRing or K1.is_GaussianField:
+            elif (K1.is_GaussianRing or K1.is_GaussianField
+                  or K1.is_AlgebraicField and K1.ext.root.is_real is not True):
                 from sympy.polys.domains.complexfield import ComplexField
                 return ComplexField(prec=K0.precision)
             else:
@@ -993,7 +994,8 @@ class Domain(Generic[Er]):
             if K1.is_GaussianField:
                 K1 = K1.as_AlgebraicField()
             if K1.is_AlgebraicField:
-                return K0.__class__(K0.dom.unify(K1.dom), *_unify_gens(K0.orig_ext, K1.orig_ext))
+                ground = K0.dom.unify(K1.dom)
+                return ground.algebraic_field(*_unify_gens(K0.orig_ext, K1.orig_ext))
             else:
                 return K0
 

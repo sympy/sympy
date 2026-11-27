@@ -173,6 +173,14 @@ def test_decomp_7():
     assert prod(Pi**Pi.e for Pi in P) == p*ZK
 
 
+def test_decomp_two_elt_rep_at_index_prime():
+    for expr, degrees in ((x**2 - 68, [1, 1]), (x**3 + 3*x - 8, [1, 2])):
+        K = QQ.alg_field_from_poly(Poly(expr, x))
+        P = K.primes_above(2)
+        assert sorted((Pi.e, Pi.f) for Pi in P) == [(1, f) for f in degrees]
+        assert prod(Pi**Pi.e for Pi in P) == 2*K.maximal_order()
+
+
 def test_decomp_8():
     # This time we consider various cubics, and try factoring all primes
     # dividing the index.

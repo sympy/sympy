@@ -329,7 +329,7 @@ def dup_quo_ground(f: dup[Er], c: Er, K: Domain[Er]) -> dup[Er]:
     if not f:
         return f
 
-    return [ K.quo(cf, c) for cf in f ]
+    return dup_strip([K.quo(cf, c) for cf in f], K)
 
 
 def dmp_quo_ground(
@@ -357,7 +357,7 @@ def dmp_quo_ground(
 
     v = u - 1
 
-    return [ dmp_quo_ground(cf, c, v, K) for cf in f ]
+    return dmp_strip([dmp_quo_ground(cf, c, v, K) for cf in f], u, K)
 
 
 def dup_exquo_ground(f: dup[Er], c: Er, K: Domain[Er]) -> dup[Er]:
@@ -440,7 +440,7 @@ def dup_rshift(f: dup[Er], n: int, K: Domain[Er]) -> dup[Er]:
     x**2 + 1
 
     """
-    return f[:-n]
+    return f[:-n] if n else f[:]
 
 
 def dup_abs(f: dup[Eabs], K: Domain[Eabs]) -> dup[Eabs]:
@@ -1372,6 +1372,9 @@ def dmp_pdiv(f: dmp[Er], g: dmp[Er], u: int, K: Domain[Er]) -> tuple[dmp[Er], dm
         r = dmp_sub(R, G, u, K)
 
         _dr, dr = dr, dmp_degree(r, u)
+        if dr == _dr and not K.is_Exact:
+            r = dmp_strip(r[1:], u, K)
+            dr = dmp_degree(r, u)
 
         if dr < dg:
             break
@@ -1426,6 +1429,9 @@ def dmp_prem(f: dmp[Er], g: dmp[Er], u: int, K: Domain[Er]) -> dmp[Er]:
         r = dmp_sub(R, G, u, K)
 
         _dr, dr = dr, dmp_degree(r, u)
+        if dr == _dr and not K.is_Exact:
+            r = dmp_strip(r[1:], u, K)
+            dr = dmp_degree(r, u)
 
         if dr < dg:
             break
@@ -1702,6 +1708,9 @@ def dmp_ff_div(
         r = dmp_sub(r, h, u, K)
 
         _dr, dr = dr, dmp_degree(r, u)
+        if dr == _dr and not K.is_Exact:
+            r = dmp_strip(r[1:], u, K)
+            dr = dmp_degree(r, u)
 
         if dr < dg:
             break

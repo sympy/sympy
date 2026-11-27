@@ -2,7 +2,7 @@ from __future__ import annotations
 from sympy.external.gmpy import GROUND_TYPES
 
 from sympy import Integer, Rational, S, sqrt, Matrix, symbols
-from sympy import FF, ZZ, QQ, QQ_I, EXRAW
+from sympy import FF, ZZ, QQ, QQ_I, EX, EXRAW
 
 from sympy.polys.matrices.domainmatrix import DomainMatrix, DomainScalar, DM
 from sympy.polys.matrices.exceptions import (
@@ -159,6 +159,10 @@ def test_DomainMatrix_from_dict_sympy():
     assert A.domain == QQ
 
     fds = DomainMatrix.from_dict_sympy
+    A = fds(2, 2, {0: {0: S.Zero, 1: S.One}, 1: {0: S.One}})
+    assert A.to_dod() == {0: {1: ZZ.one}, 1: {0: ZZ.one}}
+    assert A.rank() == 2
+    assert A.nullspace().shape == (0, 2)
     raises(DMBadInputError, lambda: fds(2, 2, {3: {0: Rational(1, 2)}}))
     raises(DMBadInputError, lambda: fds(2, 2, {0: {3: Rational(1, 2)}}))
 
@@ -659,6 +663,14 @@ def test_DomainMatrix_clear_denoms_rowwise():
     assert A == den_Z.to_field().inv() * Anum_Q
 
 
+    x = symbols('x')
+    K = QQ.frac_field(x)
+    A = DM([[1/x, 1], [0, 0]], K)
+    den, num = A.clear_denoms_rowwise()
+    assert den.domain == K.get_ring()
+    assert den.convert_to(K) * A == num
+
+
 def test_DomainMatrix_cancel_denom():
     A = DM([[2, 4], [6, 8]], ZZ)
     assert A.cancel_denom(ZZ(1)) == (DM([[2, 4], [6, 8]], ZZ), ZZ(1))
@@ -811,6 +823,9 @@ def test_DomainMatrix_solve():
 
     bz = DomainMatrix([[ZZ(1)], [ZZ(1)]], (2, 1), ZZ)
     raises(DMNotAField, lambda: A._solve(bz))
+
+    inconsistent = DM([[1], [1]], QQ)
+    raises(DMNonInvertibleMatrixError, lambda: A._solve(inconsistent))
 
 
 def test_DomainMatrix_inv():
@@ -1023,6 +1038,15 @@ def test_DomainMatrix_adj_det():
     adjA = DomainMatrix([[ZZ(4), ZZ(-2)], [ZZ(-3), ZZ(1)]], (2, 2), ZZ)
     assert A.adj_det() == (adjA, ZZ(-2))
 
+    x = symbols('x')
+    for K in (ZZ[x], QQ.frac_field(x), EX):
+        A = DM([[0, 1], [1, 0]], K)
+        b = DM([[1], [0]], K)
+        assert A.adj_det() == (-A, -K.one)
+        assert A.eval_poly(A.charpoly()).is_zero_matrix
+        assert A.inv_den(method='charpoly') == (-A, -K.one)
+        assert A.solve_den(b, method='charpoly') == (DM([[0], [-1]], K), -K.one)
+
 
 def test_DomainMatrix_lu():
     A = DomainMatrix([], (0, 0), QQ)
@@ -1090,6 +1114,11 @@ def test_DomainMatrix_lu_solve():
     b = DomainMatrix([[QQ(1)], [QQ(2)]], (2, 1), QQ)
     x = DomainMatrix([[QQ(0)], [QQ(1, 2)]], (2, 1), QQ)
     assert A.lu_solve(b) == x
+    assert A.lu_solve(b.to_sparse()) == x
+    assert A.to_sparse().lu_solve(b) == x.to_sparse()
+    zero = DomainMatrix.zeros((2, 1), QQ)
+    assert A.lu_solve(zero) == zero.to_dense()
+    raises(DMDomainError, lambda: A.lu_solve(b.convert_to(ZZ)))
 
     # Example with swaps
     A = DomainMatrix([[QQ(0), QQ(2)], [QQ(3), QQ(4)]], (2, 2), QQ)
@@ -1337,6 +1366,12 @@ def test_DomainMatrix_applyfunc():
     A = DomainMatrix([[ZZ(1), ZZ(2)]], (1, 2), ZZ)
     B = DomainMatrix([[ZZ(2), ZZ(4)]], (1, 2), ZZ)
     assert A.applyfunc(lambda x: 2*x) == B
+    A = DM([[1, 2], [2, 1]], QQ).to_sparse()
+    B = A.applyfunc(lambda x: x - 1)
+    assert B.to_dod() == {0: {1: QQ.one}, 1: {0: QQ.one}}
+    assert B.rref() == (DomainMatrix.eye(2, QQ), (0, 1))
+    A = DomainMatrix({0: {0: QQ.zero, 1: QQ.one}, 1: {}}, (2, 2), QQ)
+    assert A.to_dod() == {0: {1: QQ.one}}
 
 
 def test_DomainMatrix_scalarmul():

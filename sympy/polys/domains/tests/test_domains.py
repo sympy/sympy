@@ -17,6 +17,7 @@ from sympy.polys.domains import (ZZ, QQ, RR, CC, FF, GF, EX, EXRAW, ZZ_gmpy,
 from sympy.polys.domains.algebraicfield import AlgebraicField
 from sympy.polys.domains.gaussiandomains import ZZ_I, QQ_I
 from sympy.polys.domains.polynomialring import PolynomialRing
+from sympy.polys.domains.complexfield import ComplexField
 from sympy.polys.domains.realfield import RealField
 
 from sympy.polys.numberfields.subfield import field_isomorphism
@@ -30,6 +31,7 @@ from sympy.polys.polyerrors import (
     UnificationFailed,
     GeneratorsError,
     CoercionFailed,
+    NotReversible,
     NotInvertible,
     DomainError)
 
@@ -291,6 +293,11 @@ def test_Domain_unify_algebraic():
     sqrt57 = QQ.algebraic_field(sqrt(5), sqrt(7))
 
     assert sqrt5.unify(sqrt7) == sqrt57
+
+    complex_alg = QQ.algebraic_field(S.ImaginaryUnit)
+    assert RR.unify(complex_alg) == complex_alg.unify(RR) == CC
+    assert complex_alg.unify(RealField(prec=80)[x]) == ComplexField(prec=80)[x]
+    assert RR.unify(sqrt5) == RR
 
     assert sqrt5.unify(sqrt5[x, y]) == sqrt5[x, y]
     assert sqrt5[x, y].unify(sqrt5) == sqrt5[x, y]
@@ -667,6 +674,23 @@ def test_Domain_is_unit():
     assert QQx.is_unit(QQx(x)) is False
     assert QQxf.is_unit(QQxf(x)) is True
 
+    Z9 = GF(9)
+    assert Z9.is_unit(Z9(2))
+    assert not Z9.is_unit(Z9(3))
+    assert not Z9.is_unit(Z9.zero)
+
+
+def test_PowerSeriesRing_units():
+    for K in (ZZ, QQ):
+        R = K._power_series_ring(x, prec=6)
+        a = R.one + R.gen
+        expected = R.from_sympy(sum((-x)**k for k in range(6)))
+        assert R.is_unit(a)
+        assert R.revert(a).removeO() == expected
+        assert R.convert(R.one, R) == R.one
+        assert not R.is_unit(R.gen)
+        raises(NotReversible, lambda: R.revert(R.gen))
+
 
 def test_Domain_convert():
 
@@ -720,6 +744,18 @@ def test_Domain_convert():
     assert QQ_I.convert_from(CC(0.5, 0.75), CC) == QQ_I(QQ(1, 2), QQ(3, 4))
     assert CC.convert_from(QQ_I(QQ(1, 2), QQ(3, 4)), QQ_I) == CC(0.5, 0.75)
 
+    assert QQ.convert(ZZ_I(2)) == QQ(2)
+    assert RR.convert(ZZ_I(2)) == RR(2)
+    assert RR.convert(QQ_I(QQ(3, 2))) == RR(1.5)
+    assert ZZ.convert(QQ_I(2)) == ZZ(2)
+    assert ZZ_I(1, 1) not in QQ
+    assert QQ_I(QQ(3, 2)) not in ZZ
+    assert QQ_I(1, 1) not in RR
+    raises(CoercionFailed, lambda: GF(5).convert(ZZ_I(2)))
+
+    old_field = QQ.old_frac_field(x)
+    assert old_field.convert(QQ(1, 2), QQ) == old_field.from_sympy(Rational(1, 2))
+
     K1 = QQ.frac_field(x)
     K2 = ZZ.frac_field(x)
     K3 = QQ[x]
@@ -732,6 +768,11 @@ def test_Domain_convert():
 
 
 def test_EX_convert():
+    Rx = ZZ[x]
+    for K in (EX, EXRAW):
+        assert Rx.convert(K.from_sympy(x + 1), K) == Rx(x + 1)
+        raises(CoercionFailed, lambda: Rx.convert(K.from_sympy(x/2), K))
+    assert EX(1/x) not in Rx
 
     elements = [
         (ZZ, ZZ(3)),
@@ -797,6 +838,8 @@ def test_drop():
     assert ZZ.drop(x) == ZZ
     assert ZZ[x].drop(x) == ZZ
     assert ZZ[x, y].drop(x) == ZZ[y]
+    assert ZZ_I[x, y].drop(x) == ZZ_I[y]
+    assert QQ_I[x].drop(x) == QQ_I
     assert ZZ.frac_field(x).drop(x) == ZZ
     assert ZZ.frac_field(x, y).drop(x) == ZZ.frac_field(y)
     assert ZZ[x][y].drop(y) == ZZ[x]
@@ -807,6 +850,9 @@ def test_drop():
     K = FiniteExtension(Poly(x**2-1, x, domain=ZZ))
     assert Ky.drop(y) == K
     raises(GeneratorsError, lambda: Ky.drop(x))
+
+    K = FiniteExtension(Poly(x**2 - 2, x, domain=QQ))
+    assert K.unify(ZZ_I) == FiniteExtension(Poly(x**2 - 2, x, domain=QQ_I))
 
 
 def test_Domain_map():
@@ -833,6 +879,12 @@ def test_Domain___eq__():
     assert (QQ.frac_field(x, y) == ZZ.frac_field(x, y)) is False
 
     assert RealField()[x] == RR[x]
+
+    for K, L in ((RR, RealField()), (CC, ComplexField()),
+                 (GF(5), GF(5)), (GF(5), GF(5, symmetric=False))):
+        assert K == L
+        assert {K: 1}[L] == 1
+        assert len({Poly(x + 1, x, domain=domain) for domain in (K, L)}) == 1
 
 
 def test_Domain__algebraic_field():
@@ -884,6 +936,18 @@ def test_Domain_cyclotomic_field():
     assert field_isomorphism(E.ext, K.ext) is not None
     assert E.dom == QQ
     assert E.zeta_order == 12
+
+    C4 = QQ.cyclotomic_field(4)
+    assert C4.convert(C4.unit, C4) == C4.unit
+    assert QQ.convert(C4.one, C4) == QQ.one
+    assert CC.convert(C4.one, C4) == CC.one
+    assert Poly(x + 1, x, domain=C4).set_domain(EX) == Poly(x + 1, x, domain=EX)
+    A = QQ.algebraic_field(sqrt(2))
+    for L in (A, F):
+        M = C4.unify(L)
+        assert M == L.unify(C4)
+        assert M.convert(C4.unit, C4)**2 == -M.one
+        assert M.convert(L.unit, L) == M.from_sympy(L.ext.as_expr())
 
 
 def test_PolynomialRing_from_FractionField():
@@ -1119,6 +1183,13 @@ def test_CC_double():
     assert CC(1e-40j).imag > 1e-50
 
 
+def test_inexact_rational_conversion():
+    q = QQ(2**54 + 1, 3)
+    for K in (RR, CC):
+        assert K.convert(q, QQ) == K(6004799503160662)
+        assert K.convert(-q, QQ) == K(-6004799503160662)
+
+
 def test_gaussian_domains():
     I = S.ImaginaryUnit
     a, b, c, d = [ZZ_I.convert(x) for x in (5, 2 + I, 3 - I, 5 - 5*I)]
@@ -1126,6 +1197,12 @@ def test_gaussian_domains():
     assert ZZ_I.gcd(a, c) == b
     assert ZZ_I.lcm(a, b) == a
     assert ZZ_I.lcm(a, c) == d
+    assert ZZ_I.lcm(ZZ_I.zero, ZZ_I.zero) == ZZ_I.zero
+    assert ZZ_I.lcm(a, ZZ_I.zero) == ZZ_I.zero
+    for unit in ZZ_I.units:
+        assert ZZ_I.is_unit(unit)
+        assert unit*ZZ_I.revert(unit) == ZZ_I.one
+    raises(NotReversible, lambda: ZZ_I.revert(ZZ_I(1, 1)))
     assert ZZ_I(3, 4) != QQ_I(3, 4)  # XXX is this right or should QQ->ZZ if possible?
     assert ZZ_I(3, 0) != 3           # and should this go to Integer?
     assert QQ_I(S(3)/4, 0) != S(3)/4 # and this to Rational?
@@ -1439,6 +1516,15 @@ def test_exsqrt():
     assert F7.exsqrt(F7(3)) is None
     assert F7.is_square(F7(0)) is True
     assert F7.exsqrt(F7(0)) == F7(0)
+
+    for modulus in (8, 9, 15):
+        K = GF(modulus)
+        for a in map(K, range(modulus)):
+            root = K.exsqrt(a)
+            assert K.is_square(a) == (root is not None)
+            assert (root is not None) == any(K(i)**2 == a for i in range(modulus))
+            if root is not None:
+                assert root**2 == a
 
 
 def test_Domain_conjugate():

@@ -62,6 +62,7 @@ from .rref import _dm_rref, _dm_rref_den
 
 if TYPE_CHECKING:
     from typing import Any, Iterator, Sequence, Callable, Mapping, TypeGuard
+    from sympy.polys.densebasic import dup
     from sympy.polys.matrices._typing import FlatNzData
     from sympy.core.expr import Expr
     from sympy.matrices.dense import MutableDenseMatrix
@@ -1971,7 +1972,7 @@ class DomainMatrix(Generic[Er]):
         K0 = self.domain
         K1 = K0.get_ring() if K0.has_assoc_Ring else K0
 
-        diagonals = [K0.one] * self.shape[0]
+        diagonals = [K1.one] * self.shape[0]
         dod_num = {}
         for i, rowi in dod.items():
             indices, elems = zip(*rowi.items())
@@ -3185,7 +3186,7 @@ class DomainMatrix(Generic[Er]):
 
         return f, detA
 
-    def eval_poly(self, p):
+    def eval_poly(self, p: dup[Er]) -> DomainMatrix[Er]:
         """
         Evaluate polynomial function of a matrix $p(A)$.
 
@@ -3215,19 +3216,17 @@ class DomainMatrix(Generic[Er]):
 
         if not p:
             return self.zeros(self.shape, self.domain)
-        elif len(p) == 1:
-            return p[0] * self.eye(self.shape, self.domain)
 
         # Evaluate p(A) using Horner's method:
         # XXX: Use Paterson-Stockmeyer method?
         I = A.eye(A.shape, A.domain)
-        p_A = p[0] * I
+        p_A = I.rmul(p[0])
         for pi in p[1:]:
-            p_A = A * p_A + pi * I
+            p_A = A * p_A + I.rmul(pi)
 
         return p_A
 
-    def eval_poly_mul(self, p, B):
+    def eval_poly_mul(self, p: dup[Er], B: DomainMatrix[Er]) -> DomainMatrix[Er]:
         r"""
         Evaluate polynomial matrix product $p(A) \times B$.
 
@@ -3293,10 +3292,10 @@ class DomainMatrix(Generic[Er]):
         if not p:
             return B.zeros(B.shape, B.domain, fmt=B.rep.fmt)
 
-        p_A_B = p[0] * B
+        p_A_B = B.rmul(p[0])
 
         for p_i in p[1:]:
-            p_A_B = A * p_A_B + p_i * B
+            p_A_B = A * p_A_B + B.rmul(p_i)
 
         return p_A_B
 
@@ -3456,7 +3455,12 @@ class DomainMatrix(Generic[Er]):
             raise DMShapeError("Shape")
         if not self.domain.is_Field:
             raise DMNotAField("Not a field")
-        sol = self.rep.lu_solve(rhs.rep)
+        if self.domain != rhs.domain:
+            raise DMDomainError("Matrices must have the same domain")
+        rhs_rep = rhs.rep
+        if type(self.rep) is not type(rhs_rep):
+            rhs_rep = type(self.rep).from_dod(rhs.to_dod(), rhs.shape, rhs.domain)
+        sol = self.rep.lu_solve(rhs_rep)
         return self.from_rep(sol)
 
     def fflu(self):
@@ -3539,6 +3543,8 @@ class DomainMatrix(Generic[Er]):
             raise DMNotAField("Not a field")
         Aaug = A.hstack(b)
         Arref, pivots = Aaug.rref()
+        if pivots and pivots[-1] >= A.shape[1]:
+            raise DMNonInvertibleMatrixError("Inconsistent system.")
         particular = Arref.from_rep(Arref.rep.particular())
         nullspace_rep, nonpivots = Arref[:, :-1].rep.nullspace()
         nullspace = Arref.from_rep(nullspace_rep)

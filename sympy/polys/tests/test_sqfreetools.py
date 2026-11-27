@@ -89,6 +89,16 @@ def test_dup_sqf():
 
 
 def test_dmp_sqf():
+    R, x = ring("x", FF(3))
+    assert R.dmp_sqf_p(x**3 + 1) is False
+    assert R.dmp_sqf_p(x**3 + x + 1) is True
+
+    R, x, y = ring("x,y", FF(3))
+    assert R.dmp_sqf_p(x**3 + y**3) is False
+    assert R.dmp_sqf_p(x*(x**3 + y**3)) is False
+    assert R.dmp_sqf_p(x**3 + y) is True
+    assert R.dmp_sqf_p((x**3 + y)*(x + y**3)) is True
+
     R, x, y = ring("x,y", ZZ)
     assert R.dmp_sqf_part(0) == 0
     assert R.dmp_sqf_p(0) is True

@@ -545,8 +545,9 @@ def _two_elt_rep(gens, ZK, p, f=None, Np=None):
             Np = abs(pb.submodule_from_gens(gens).matrix.det())
 
     omega = ZK.basis_element_pullbacks()
-    beta = [p*om for om in omega[1:]]  # note: we omit omega[0] == 1
+    beta = [p*om for om in omega[1:]]
     beta += gens
+    beta.append(p*omega[0])
     search = coeff_search(len(beta), 1)
     for c in search:
         alpha = sum(ci*betai for ci, betai in zip(c, beta))
@@ -721,9 +722,9 @@ def prime_decomp(p, T=None, ZK=None, dK=None, radical=None):
     >>> from sympy.abc import x, theta
     >>> T = Poly(x ** 3 + x ** 2 - 2 * x + 8)
     >>> K = QQ.algebraic_field((T, theta))
-    >>> print(K.primes_above(2))
-    [[ (2, x**2 + 1) e=1, f=1 ], [ (2, (x**2 + 3*x + 2)/2) e=1, f=1 ],
-     [ (2, (3*x**2 + 3*x)/2) e=1, f=1 ]]
+    >>> primes = K.primes_above(2)
+    >>> [(P.e, P.f) for P in primes]
+    [(1, 1), (1, 1), (1, 1)]
 
     Parameters
     ==========

@@ -108,7 +108,10 @@ class PolynomialRing(
 
     def from_sympy(self, a: Expr) -> PolyElement[Er]:
         """Convert SymPy's expression to `dtype`. """
-        return self.ring.from_expr(a)
+        try:
+            return self.ring.from_expr(a)
+        except ValueError as exc:
+            raise CoercionFailed(str(exc)) from exc
 
     def from_ZZ(K1, a, K0):
         """Convert a Python `int` object to `dtype`. """
