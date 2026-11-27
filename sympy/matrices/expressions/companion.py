@@ -52,6 +52,21 @@ class CompanionMatrix(MatrixExpr):
         return S.Zero
 
 
+    def _eval_trace(self):
+        # For a monic polynomial p(x) = x**n + a_(n-1)*x**(n-1) + ... + a_0,
+        # the companion matrix has trace -a_(n-1) (the negative of the
+        # coefficient of x**(n-1)). The polynomial is guaranteed monic and of
+        # degree >= 1 by __new__, so all_coeffs()[1] always exists.
+        return -self.args[0].all_coeffs()[1]
+
+
+    def _eval_determinant(self):
+        # det(C(p)) = (-1)**n * a_0 for a monic degree-n polynomial p, where
+        # a_0 is the constant term (the last entry of all_coeffs()).
+        poly = self.args[0]
+        return (-1)**poly.degree() * poly.all_coeffs()[-1]
+
+
     def as_explicit(self):
         from sympy.matrices.immutable import ImmutableDenseMatrix
         return ImmutableDenseMatrix.companion(self.args[0])
