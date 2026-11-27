@@ -79,6 +79,7 @@ from sympy.functions.special.hyper import (hyper, HyperRep_atanh,
 from sympy.matrices import Matrix, eye, zeros
 from sympy.polys import apart, poly, Poly
 from sympy.series import residue
+from sympy.series.limits import Limit
 from sympy.simplify.powsimp import powdenest
 from sympy.utilities.iterables import sift
 
@@ -1971,6 +1972,8 @@ def _hyperexpand(func, z, ops0=[], z0=Dummy('z0'), premult=1, prem=0,
     from sympy.simplify.simplify import simplify
 
     z = polarify(z, subs=False)
+    convergent_at_one = (z == exp_polar(0) and
+                        hyper(func.ap, func.bq, 1).convergence_statement is S.true)
     if rewrite == 'default':
         rewrite = 'nonrepsmall'
 
@@ -1984,7 +1987,23 @@ def _hyperexpand(func, z, ops0=[], z0=Dummy('z0'), premult=1, prem=0,
         if premult == 1:
             C = C.applyfunc(make_simp(z0))
         r = reduce(lambda s,m: s+m[0]*m[1], zip(C, f.B.subs(f.z, z0)), S.Zero)*premult
-        res = r.subs(z0, z)
+        # Polar substitution can cancel divergent terms before their finite
+        # remainder is evaluated. A convergent series has its radial limit.
+        rr = r.rewrite('nonrepsmall') if convergent_at_one else r
+        if convergent_at_one and rr.subs(z0, 1).has(nan, zoo, oo, -oo):
+            finite, singular = [], []
+            for term in Add.make_args(rr):
+                value = term.subs(z0, 1)
+                if value.is_finite is True:
+                    finite.append(value)
+                else:
+                    singular.append(term)
+            singular_limit = Add(*singular).limit(z0, 1, dir='-')
+            if singular_limit.has(Limit, nan, zoo, oo, -oo):
+                return None
+            res = Add(*finite) + singular_limit
+        else:
+            res = r.subs(z0, z)
         if rewrite:
             res = res.rewrite(rewrite)
         return res
@@ -2031,7 +2050,10 @@ def _hyperexpand(func, z, ops0=[], z0=Dummy('z0'), premult=1, prem=0,
     # Try special expansions early.
     if unpolarify(z) in [1, -1] and (len(func.ap), len(func.bq)) == (2, 1):
         f = build_hypergeometric_formula(func)
-        r = carryout_plan(f, ops).replace(hyper, hyperexpand_special)
+        r = carryout_plan(f, ops)
+        if r is None:
+            return None
+        r = r.replace(hyper, hyperexpand_special)
         if not r.has(hyper):
             return r + p
 
@@ -2054,7 +2076,10 @@ def _hyperexpand(func, z, ops0=[], z0=Dummy('z0'), premult=1, prem=0,
     ops += devise_plan(func, formula.func, z0)
 
     # Now carry out the plan.
-    r = carryout_plan(formula, ops) + p
+    r = carryout_plan(formula, ops)
+    if r is None:
+        return None
+    r += p
 
     return powdenest(r, polar=True).replace(hyper, hyperexpand_special)
 
@@ -2301,6 +2326,8 @@ def _meijergexpand(func, z0, allow_hyper=False, rewrite='default',
                 premult = (t/k)**bh
                 hyp = _hyperexpand(Hyper_Function(nap, nbq), harg, ops,
                                    t, premult, bh, rewrite=None)
+                if hyp is None:
+                    return S.Zero, False
                 res += fac * hyp
             else:
                 b_ = pbm[m][0]
@@ -2348,6 +2375,8 @@ def _meijergexpand(func, z0, allow_hyper=False, rewrite='default',
 
                 hyp = _hyperexpand(Hyper_Function(nap, nbq), harg, ops,
                                    t, premult, au, rewrite=None)
+                if hyp is None:
+                    return S.Zero, False
 
                 C = S.NegativeOne**(lu)/factorial(lu)
                 for i in range(u):
