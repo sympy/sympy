@@ -1462,6 +1462,15 @@ def test_SymmetricDifference():
     assert Interval(0, 4) ^ Interval(2, 5) == Union(Interval(0, 4) - \
             Interval(2, 5), Interval(2, 5) - Interval(0, 4))
 
+    U = S.UniversalSet
+    I = Interval(0, 1)
+    assert SymmetricDifference(I, U) == Complement(U, I)
+    assert SymmetricDifference(U, I) == Complement(U, I)
+    assert I ^ U == Complement(U, I)
+    assert SymmetricDifference(FiniteSet(1), U).contains(5) is S.true
+    assert SymmetricDifference(U, U) == S.EmptySet
+    assert SymmetricDifference(S.EmptySet, U) == U
+
 
 def test_issue_9536():
     from sympy.functions.elementary.exponential import log
