@@ -1766,6 +1766,7 @@ def test_negative():
 def test_nonzero():
     assert _ask_recursive(Q.nonzero(x)) is None
     assert _ask_recursive(Q.nonzero(x), Q.real(x)) is None
+    assert _ask_recursive(Q.nonzero(I)) is True
     assert _ask_recursive(Q.nonzero(x), Q.positive(x)) is True
     assert _ask_recursive(Q.nonzero(x), Q.negative(x)) is True
     assert ask(Q.nonzero(x), Q.negative(x) | Q.positive(x)) is True
@@ -1784,17 +1785,17 @@ def test_nonzero():
     # https://github.com/sympy/sympy/pull/29225
     assert _ask_recursive(Q.nonzero(Pow(x, y), Q.nonzero(x))) is None
     assert _ask_recursive(Q.nonzero(Pow(x, y)), Q.positive(x) & Q.real(y)) is True
-    assert _ask_recursive(Q.nonzero(Pow(5, 2*I*n*pi)), Q.integer(n)) is False
+    assert _ask_recursive(Q.nonzero(Pow(5, 2*I*n*pi)), Q.integer(n)) is True
     assert _ask_recursive(Q.nonzero(Pow(0, x)), Q.positive(x)) is False
     assert _ask_recursive(Q.nonzero(Pow(5, I*n), Q.integer(n))) is None
-    assert _ask_recursive(Q.nonzero(Pow(-1, x)), Q.real(x)) is None
+    assert _ask_recursive(Q.nonzero(Pow(-1, x)), Q.real(x)) is True
     assert _ask_recursive(Q.nonzero(Pow(x, x)), Q.zero(x)) is True
     assert _ask_recursive(Q.nonzero(Pow(I, x)), Q.zero(x)) is True
 
     assert _ask_recursive(Q.nonzero(Abs(x))) is None
     assert _ask_recursive(Q.nonzero(Abs(x)), Q.nonzero(x)) is True
 
-    assert _ask_recursive(Q.nonzero(log(exp(2*I)))) is False
+    assert _ask_recursive(Q.nonzero(log(exp(2*I)))) is True
     # although this could be False, it is representative of expressions
     # that don't evaluate to a zero with precision
     assert _ask_recursive(Q.nonzero(cos(1)**2 + sin(1)**2 - 1)) is None
@@ -1985,7 +1986,8 @@ def test_positive():
 
     #exponential
     assert _ask_recursive(Q.positive(exp(x)), Q.real(x)) is True
-    assert _ask_recursive(Q.positive(x**y), Q.nonzero(x) & Q.even(y)) is True
+    assert _ask_recursive(Q.positive(x**y),
+        Q.real(x) & Q.nonzero(x) & Q.even(y)) is True
     assert _ask_recursive(~Q.negative(exp(x)), Q.real(x)) is True
     assert _ask_recursive(Q.positive(x + exp(x)), Q.real(x)) is None
     assert _ask_recursive(Q.positive(exp(x)), Q.imaginary(x)) is None
@@ -2038,7 +2040,7 @@ def test_nonnegative():
 def test_real_basic():
     assert _ask_recursive(Q.real(x)) is None
     assert _ask_recursive(Q.real(x), Q.real(x)) is True
-    assert _ask_recursive(Q.real(x), Q.nonzero(x)) is True
+    assert _ask_recursive(Q.real(x), Q.nonzero(x)) is None
     assert _ask_recursive(Q.real(x), Q.positive(x)) is True
     assert _ask_recursive(Q.real(x), Q.negative(x)) is True
     assert _ask_recursive(Q.real(x), Q.integer(x)) is True
