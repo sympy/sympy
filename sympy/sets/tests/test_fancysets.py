@@ -282,6 +282,14 @@ def test_Range_set():
     raises(IndexError, lambda: Range(10)[-11])
     assert Range(3, oo, 2)[2] == 7
     assert Range(3, -oo, -2)[2] == -1
+    # non-integer indices should raise ValueError (gh-31337)
+    raises(ValueError, lambda: Range(10)[1.5])
+    raises(ValueError, lambda: Range(10)[Rational(3, 2)])
+    raises(ValueError, lambda: Range(0, 10, 2)[Rational(3, 2)])
+    raises(ValueError, lambda: Range(10)[0.0])
+    raises(ValueError, lambda: Range(10)['a'])
+    raises(ValueError, lambda: Range(10)[True])
+    raises(ValueError, lambda: Range(10)[Symbol('x')])
     raises(ValueError, lambda: Range(2, -oo, -2)[2:2:0])
     assert Range(2, -oo, -2)[2:2:2] == empty
     assert Range(2, -oo, -2)[:2:2] == Range(2, -2, -4)
@@ -441,6 +449,9 @@ def test_Range_symbolic():
     assert ir.inf == i
     raises(ValueError, lambda: ir2.sup)
     # getitem
+    n = Symbol('n', integer=True, nonnegative=True)
+    assert Range(3, oo, 2)[n] == 2*n + 3
+    assert Range(n + 1)[n] == n
     raises(ValueError, lambda: xr[0])
     raises(ValueError, lambda: sr[0])
     raises(ValueError, lambda: sr[-1])
