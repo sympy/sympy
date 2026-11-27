@@ -1,11 +1,12 @@
 from __future__ import annotations
+from sympy.core.numbers import oo
 from sympy.core.singleton import S
 from sympy.core.sympify import sympify
 from sympy.functions.elementary.miscellaneous import Min, Max
 from sympy.sets.sets import (EmptySet, FiniteSet, Intersection,
     Interval, ProductSet, Set, Union, UniversalSet)
 from sympy.sets.fancysets import (ComplexRegion, Naturals, Naturals0,
-    Integers, Rationals, Reals)
+    Integers, Rationals, Reals, Range)
 from sympy.multipledispatch import Dispatcher
 
 
@@ -141,6 +142,76 @@ def _(a, b):
     if any(b.contains(x) == True for x in a):
         return {
             FiniteSet(*[x for x in a if b.contains(x) != True]), b}
+    return None
+
+@union_sets.register(Range, Range)
+def _(a, b):
+    if a.is_empty:
+        return b
+    if b.is_empty:
+        return a
+    if a == b:
+        return a
+    if a.is_subset(b):
+        return b
+    if b.is_subset(a):
+        return a
+    if a.start is -oo and a.stop is oo and a.step == 1:
+        return a
+    if b.start is -oo and b.stop is oo and b.step == 1:
+        return b
+    if not all(all(v.is_number for v in r.args) for r in [a, b]):
+        return None
+
+    if a.step < 0:
+        a = a.reversed
+    if b.step < 0:
+        b = b.reversed
+
+    # Two singletons always form a 2-element Range
+    if a.size == 1 and b.size == 1:
+        diff = abs(b[0] - a[0])
+        if diff > 0:
+            mn, mx = Min(a[0], b[0]), Max(a[0], b[0])
+            return Range(mn, mx + diff, diff)
+
+    # A singleton extending an existing range
+    if a.size == 1 and b.size > 1:
+        x = a[0]
+        st = b.step
+        if x == b.inf - st:
+            new_start = -oo if x is -oo else x
+            return Range(new_start, b.stop, st)
+        if x == b.sup + st:
+            new_stop = oo if x is oo else x + st
+            return Range(b.start, new_stop, st)
+
+    if b.size == 1 and a.size > 1:
+        x = b[0]
+        st = a.step
+        if x == a.inf - st:
+            new_start = -oo if x is -oo else x
+            return Range(new_start, a.stop, st)
+        if x == a.sup + st:
+            new_stop = oo if x is oo else x + st
+            return Range(a.start, new_stop, st)
+
+    if a.step == b.step:
+        st = a.step
+        elem_a = a.start if a.start.is_finite else a.sup
+        elem_b = b.start if b.start.is_finite else b.sup
+        if (elem_b - elem_a) % st != 0:
+            return None
+
+        if a.inf > b.inf:
+            a, b = b, a
+        if b.inf <= a.sup + st:
+            new_inf = a.inf
+            new_sup = Max(a.sup, b.sup)
+            new_start = -oo if new_inf is -oo else new_inf
+            new_stop = oo if new_sup is oo else new_sup + st
+            return Range(new_start, new_stop, st)
+
     return None
 
 @union_sets.register(Set, Set)

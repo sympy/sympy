@@ -321,6 +321,57 @@ def test_union_iter():
     assert list(u) == [0, 0, 0, 1, 1, 1, 2, 2, 2, 3, 3, 4]
 
 
+def test_range_union():
+    # Empty range unions
+    assert Union(Range(0), Range(5)) == Range(5)
+    assert Union(Range(5), Range(0)) == Range(5)
+
+    # Identical ranges
+    assert Union(Range(5), Range(5)) == Range(5)
+
+    # Overlapping finite ranges with step 1
+    assert Union(Range(0, 5), Range(3, 8)) == Range(0, 8)
+    assert list(Union(Range(0, 5), Range(3, 8))) == list(range(8))
+
+    # Contiguous finite ranges with step 1
+    assert Union(Range(0, 3), Range(3, 8)) == Range(0, 8)
+
+    # Non-overlapping finite ranges with step 1
+    assert Union(Range(0, 3), Range(5, 8)) == Union(Range(0, 3), Range(5, 8), evaluate=False)
+
+    # Subset finite ranges
+    assert Union(Range(3), Range(5)) == Range(5)
+    assert Union(Range(2, 6, 2), Range(0, 10, 2)) == Range(0, 10, 2)
+
+    # Overlapping ranges with step > 1
+    assert Union(Range(0, 8, 2), Range(4, 12, 2)) == Range(0, 12, 2)
+    assert Union(Range(0, 6, 2), Range(6, 12, 2)) == Range(0, 12, 2)
+
+    # Step > 1 with gap
+    assert Union(Range(0, 6, 2), Range(8, 12, 2)) == Union(Range(0, 6, 2), Range(8, 12, 2), evaluate=False)
+
+    # Step > 1 misaligned modulo step
+    assert Union(Range(0, 10, 2), Range(1, 11, 2)) == Union(Range(0, 10, 2), Range(1, 11, 2), evaluate=False)
+
+    # Singletons
+    assert Union(Range(0, 1), Range(1, 3, 2)) == Range(0, 2, 1)
+    assert Union(Range(0, 1), Range(2, 8, 2)) == Range(0, 8, 2)
+    assert Union(Range(8, 9), Range(2, 8, 2)) == Range(2, 10, 2)
+    assert Union(Range(10, 11), Range(2, 8, 2)) == Union(Range(10, 11), Range(2, 8, 2), evaluate=False)
+
+    # Negative step ranges
+    assert Union(Range(5, 0, -1), Range(3, 8)) == Range(1, 8)
+    assert Union(Range(10, 0, -2), Range(6, -4, -2)) == Range(-2, 12, 2)
+
+    # Infinite ranges
+    assert Union(Range(0, oo), Range(-5, oo)) == Range(-5, oo)
+    assert Union(Range(0, oo, 2), Range(10, oo, 2)) == Range(0, oo, 2)
+    assert Union(Range(-oo, 0), Range(0, oo)) == Range(-oo, oo)
+    assert Union(Range(0, oo, 1), Range(-1, -oo, -1)) == Range(-oo, oo, 1)
+    assert Union(Range(0, oo, 2), Range(-oo, oo)) == Range(-oo, oo)
+    assert Union(Range(0, oo, 2), Range(0, oo, 3)) == Union(Range(0, oo, 2), Range(0, oo, 3), evaluate=False)
+
+
 def test_union_is_empty():
     assert (Interval(x, y) + FiniteSet(1)).is_empty == False
     assert (Interval(x, y) + Interval(-x, y)).is_empty is None
