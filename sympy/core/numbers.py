@@ -1744,7 +1744,7 @@ class Rational(Number):
     def gcd(self, other):
         if isinstance(other, Rational):
             if other == S.Zero:
-                return other
+                return abs(self)
             return Rational(
                 igcd(self.p, other.p),
                 ilcm(self.q, other.q))
@@ -1753,8 +1753,10 @@ class Rational(Number):
     @_sympifyit('other', NotImplemented)
     def lcm(self, other):
         if isinstance(other, Rational):
+            if not self or not other:
+                return S.Zero
             return Rational(
-                self.p // igcd(self.p, other.p) * other.p,
+                abs(self.p // igcd(self.p, other.p) * other.p),
                 igcd(self.q, other.q))
         return Number.lcm(self, other)
 
