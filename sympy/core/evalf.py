@@ -1396,12 +1396,100 @@ def hypsum(expr: Expr, n: Symbol, start: int, prec: int) -> mpf:
 
 
 def evalf_prod(expr: 'Product', prec: int, options: OPT_DICT) -> TMP_RES:
-    if all((l[1] - l[2]).is_Integer for l in expr.limits):
-        result = evalf(expr.doit(), prec=prec, options=options)
-    else:
+    def _eval_int(x):
+        try:
+            return as_int(x, strict=False)
+        except (ValueError, TypeError):
+            pass
+        res = evalf(x, prec, options)
+        if res[1] is None:
+            if res[0] is None or res[0] == fzero:
+                return 0
+            if res[0] not in (finf, fninf, fnan):
+                val = to_int(res[0])
+                if from_int(val) == res[0]:
+                    return val
+        return None
+
+    def eval_dif_as_int(a, b):
+        ia = _eval_int(a)
+        ib = _eval_int(b)
+        if ia is not None and ib is not None:
+            return ib - ia
+        try:
+            res_b = evalf(b, prec, options)
+            res_a = evalf(a, prec, options)
+            r_b = res_b[0] if res_b[0] is not None else fzero
+            r_a = res_a[0] if res_a[0] is not None else fzero
+            if (res_b[1] is None and res_a[1] is None and
+                    r_b not in (finf, fninf, fnan) and
+                    r_a not in (finf, fninf, fnan)):
+                dif_mpf = mpf_add(r_b, mpf_neg(r_a), prec)
+                val = to_int(dif_mpf)
+                if from_int(val) == dif_mpf:
+                    return val
+        except (ValueError, TypeError, ArithmeticError):
+            pass
+        return None
+
+    def rec(func, limits, opts, ctx):
+        if not limits:
+            t = evalf(func, prec + 10, opts)
+            if t is S.ComplexInfinity:
+                return t
+            return quad_to_mpmath(t, ctx)
+        var, a, b = limits[0]
+        dif = eval_dif_as_int(a, b)
+        if dif is None or abs(dif) > 1000:
+            raise NotImplementedError
+        if dif == -1:
+            return ctx.mpf(1)
+        elif dif < -1:
+            denom = ctx.mpf(1)
+            for k in range(1, -dif):
+                val = b + k
+                new_opts = dict(opts)
+                new_opts["subs"] = {**opts.get("subs", {}), var: val}
+                term = rec(func, limits[1:], new_opts, ctx)
+                if term is S.ComplexInfinity:
+                    return S.Zero
+                denom *= term
+            if not denom:
+                return S.ComplexInfinity
+            return 1 / denom
+        else:
+            prod = ctx.mpf(1)
+            for k in range(dif + 1):
+                val = a + k
+                new_opts = dict(opts)
+                new_opts["subs"] = {**opts.get("subs", {}), var: val}
+                term = rec(func, limits[1:], new_opts, ctx)
+                if term is S.ComplexInfinity:
+                    return S.ComplexInfinity
+                prod *= term
+            return prod
+
+    try:
+        with local_workprec(prec + 10) as ctx:
+            result = rec(expr.function, expr.limits, options, ctx)
+            if result is S.ComplexInfinity:
+                return S.ComplexInfinity
+            if isinstance(result, ctx.mpc):
+                re = result.real._mpf_
+                im = result.imag._mpf_
+                if not re:
+                    re = None
+                if not im:
+                    im = None
+                return re, im, prec, prec
+            else:
+                re = result._mpf_
+                if not result:
+                    return None, None, prec, None
+                return re, None, prec, None
+    except NotImplementedError:
         from sympy.concrete.summations import Sum
-        result = evalf(expr.rewrite(Sum), prec=prec, options=options)
-    return result
+        return evalf(expr.rewrite(Sum), prec=prec, options=options)
 
 
 def evalf_sum(expr: 'Sum', prec: int, options: OPT_DICT) -> TMP_RES:

@@ -414,6 +414,23 @@ def test_evalf_product():
     assert Product(n, (n, 1, 10)).evalf() == 3628800.
     assert comp(Product(1 - S.Half**2/n**2, (n, 1, oo)).n(5), 0.63662)
     assert Product(n, (n, -1, 3)).evalf() == 0
+    assert Product(n, (n, 1, -1)).evalf() == zoo
+
+    # integer difference with rational bounds
+    assert Product(n, (n, S.Half, Rational(5, 2))).evalf() == 1.875
+
+    # multiple limits and complex terms
+    i, j = Symbol('i', integer=True), Symbol('j', integer=True)
+    assert Product(i*j, (i, 1, 3), (j, 1, 2)).evalf() == 288.
+    assert Product(n + I, (n, 1, 2)).evalf() == 1. + 3.*I
+
+    # issue 30925: integer bounds under evaluate(False)
+    with evaluate(False):
+        assert Product(n, (n, 1, 4)).evalf() == 24.
+        assert Product(n, (n, 1, 0)).evalf() == 1.
+        assert Product(n + 5, (n, 1, -1)).evalf() == 0.2
+        assert Product(x*n, (n, 1, 3)).evalf(subs={x: 2}) == 48.
+        assert Product(i*j, (i, 1, 3), (j, 1, 2)).evalf() == 288.
 
 
 def test_evalf_py_methods():
