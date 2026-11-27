@@ -212,6 +212,14 @@ def test_residue():
     assert nthroot_mod(Dummy(odd=True), 3, 2) == 1
     assert nthroot_mod(29, 31, 74) == 45
     assert nthroot_mod(1801, 11, 2663) == 44
+    assert nthroot_mod(4, 2, 12) == 2
+    assert nthroot_mod(4, 2, 12, True) == [2, 4, 8, 10]
+    assert nthroot_mod(3, 2, 12) is None
+    assert nthroot_mod(3, 2, 12, True) == []
+    assert nthroot_mod(4, 2, 1) == 0
+    assert nthroot_mod(4, 2, 1, True) == [0]
+    assert sqrt_mod(4, 12) == 4
+    assert sqrt_mod(4, 12, True) == [2, 4, 8, 10]
     for a, q, p in [(51922, 2, 203017), (43, 3, 109), (1801, 11, 2663),
           (26118163, 1303, 33333347), (1499, 7, 2663), (595, 6, 2663),
           (1714, 12, 2663), (28477, 9, 33343)]:
