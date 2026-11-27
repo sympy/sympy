@@ -620,23 +620,10 @@ def test_solve_sqrt_3():
     R = Symbol('R')
     eq = sqrt(2)*R*sqrt(1/(R + 1)) + (R + 1)*(sqrt(2)*sqrt(1/(R + 1)) - 1)
     sol = solveset_complex(eq, R)
-    fset = [Rational(5, 3) + 4*sqrt(10)*cos(atan(3*sqrt(111)/251)/3)/3,
-            -sqrt(10)*cos(atan(3*sqrt(111)/251)/3)/3 +
-            40*re(1/((Rational(-1, 2) - sqrt(3)*I/2)*(Rational(251, 27) + sqrt(111)*I/9)**Rational(1, 3)))/9 +
-            sqrt(30)*sin(atan(3*sqrt(111)/251)/3)/3 + Rational(5, 3) +
-            I*(-sqrt(30)*cos(atan(3*sqrt(111)/251)/3)/3 -
-               sqrt(10)*sin(atan(3*sqrt(111)/251)/3)/3 +
-               40*im(1/((Rational(-1, 2) - sqrt(3)*I/2)*(Rational(251, 27) + sqrt(111)*I/9)**Rational(1, 3)))/9)]
-    cset = [40*re(1/((Rational(-1, 2) + sqrt(3)*I/2)*(Rational(251, 27) + sqrt(111)*I/9)**Rational(1, 3)))/9 -
-            sqrt(10)*cos(atan(3*sqrt(111)/251)/3)/3 - sqrt(30)*sin(atan(3*sqrt(111)/251)/3)/3 +
-            Rational(5, 3) +
-            I*(40*im(1/((Rational(-1, 2) + sqrt(3)*I/2)*(Rational(251, 27) + sqrt(111)*I/9)**Rational(1, 3)))/9 -
-               sqrt(10)*sin(atan(3*sqrt(111)/251)/3)/3 +
-               sqrt(30)*cos(atan(3*sqrt(111)/251)/3)/3)]
-
-    fs = FiniteSet(*fset)
-    cs = ConditionSet(R, Eq(eq, 0), FiniteSet(*cset))
-    assert sol == (fs - {-1}) | (cs - {-1})
+    assert sol == FiniteSet(
+        Rational(5, 3) + 4*sqrt(10)*cos(atan(3*sqrt(111)/251)/3)/3,
+        Rational(5, 3) - 2*sqrt(10)*cos(atan(3*sqrt(111)/251)/3)/3
+        + 2*sqrt(30)*sin(atan(3*sqrt(111)/251)/3)/3)
 
     # the number of real roots will depend on the value of m: for m=1 there are 4
     # and for m=-1 there are none.
@@ -1007,14 +994,16 @@ def test_solve_trig():
 
     # This is the only remaining solveset test that actually ends up being solved
     # by _solve_trig2(). All others are handled by the improved _solve_trig1.
-    assert dumeq(solveset_real(2*cos(x)*cos(2*x) - 1, x),
-          Union(ImageSet(Lambda(n, 2*n*pi + 2*atan(sqrt(-2*2**Rational(1, 3)*(67 +
-                  9*sqrt(57))**Rational(2, 3) + 8*2**Rational(2, 3) + 11*(67 +
-                  9*sqrt(57))**Rational(1, 3))/(3*(67 + 9*sqrt(57))**Rational(1, 6)))), S.Integers),
-                  ImageSet(Lambda(n, 2*n*pi - 2*atan(sqrt(-2*2**Rational(1, 3)*(67 +
-                  9*sqrt(57))**Rational(2, 3) + 8*2**Rational(2, 3) + 11*(67 +
-                  9*sqrt(57))**Rational(1, 3))/(3*(67 + 9*sqrt(57))**Rational(1, 6))) +
-                  2*pi), S.Integers)))
+    res = solveset_real(2*cos(x)*cos(2*x) - 1, x)
+    assert res.dummy_eq(Union(
+        ImageSet(Lambda(n, 2*n*pi + 2*atan(sqrt(
+            2*2**Rational(1, 3)*(9*sqrt(57) - 67)**Rational(1, 3) -
+            2*2**Rational(1, 3)*(9*sqrt(57) + 67)**Rational(1, 3) +
+            11)/3)), S.Integers),
+        ImageSet(Lambda(n, 2*n*pi + 2*pi - 2*atan(sqrt(
+            2*2**Rational(1, 3)*(9*sqrt(57) - 67)**Rational(1, 3) -
+            2*2**Rational(1, 3)*(9*sqrt(57) + 67)**Rational(1, 3) +
+            11)/3)), S.Integers)))
 
     # issue #16870
     assert dumeq(simplify(solveset(sin(x/180*pi) - S.Half, x, S.Reals)), Union(
@@ -2330,7 +2319,21 @@ def test_issue_14642():
             atan(S(172)/49)/2)/2 + S(43)/2))/3)/6 - 4*im(1/((-S(1)/2 + sqrt(3)*I/2)*
             (S(43)/2 + 27*I + sqrt(-256 + (43 + 54*I)**2)/2)**(S(1)/3)))/3))
 
-    assert solveset(n1, x) == res
+    solution = solveset(n1, x)
+    assert len(solution) == len(res) == 3
+    numerical_solution = sorted(
+        (root.evalf(30) for root in solution),
+        key=lambda root: (float(re(root)), float(im(root))),
+    )
+    numerical_expected = sorted(
+        (root.evalf(30) for root in res),
+        key=lambda root: (float(re(root)), float(im(root))),
+    )
+    assert all(
+        float(abs((actual - expected).evalf(30)).evalf(30)
+              .as_real_imag()[0]) < 1e-25
+        for actual, expected in zip(numerical_solution, numerical_expected)
+    )
 
 
 def test_issue_13961():
@@ -2622,10 +2625,15 @@ def test_substitution_redundant():
     assert substitution([x**2 - y**2, z - 1], [x, z]) == \
            {(-y, 1), (y, 1), (-sqrt(y**2), 1), (sqrt(y**2), 1)}
 
-    # the system below has three solutions. Two of the solutions
-    # returned by substitution are redundant.
+    # the system below has three solutions
     res = substitution([x - y, y**3 - 3*y**2 + 1], [x, y])
-    assert len(res) == 5
+    assert res == {
+        (2*cos(pi/9) + 1, 2*cos(pi/9) + 1),
+        (-sqrt(3)*sin(pi/9) - cos(pi/9) + 1,
+         -sqrt(3)*sin(pi/9) - cos(pi/9) + 1),
+        (sqrt(3)*sin(pi/9) - cos(pi/9) + 1,
+         sqrt(3)*sin(pi/9) - cos(pi/9) + 1),
+    }
 
 
 def test_issue_5132_substitution():
@@ -2782,9 +2790,9 @@ def test_issue_9953():
 
 
 def test_issue_9913():
-    assert solveset(2*x + 1/(x - 10)**2, x, S.Reals) == \
-        FiniteSet(-(3*sqrt(24081)/4 + Rational(4027, 4))**Rational(1, 3)/3 - 100/
-                (3*(3*sqrt(24081)/4 + Rational(4027, 4))**Rational(1, 3)) + Rational(20, 3))
+    assert solveset(2*x + 1/(x - 10)**2, x, S.Reals) == FiniteSet(
+        Rational(20, 3) - (sqrt(24081)/36 + Rational(4027, 108))**Rational(1, 3) -
+        (Rational(4027, 108) - sqrt(24081)/36)**Rational(1, 3))
 
 
 def test_issue_10397():

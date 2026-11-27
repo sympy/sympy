@@ -2,7 +2,7 @@ from __future__ import annotations
 from sympy.assumptions.ask import (Q, ask)
 from sympy.core.add import Add
 from sympy.core.containers import Tuple
-from sympy.core.function import (Derivative, Function, diff)
+from sympy.core.function import (Derivative, Function, diff, expand_complex)
 from sympy.core.mod import Mod
 from sympy.core.mul import Mul
 from sympy.core import (GoldenRatio, TribonacciConstant)
@@ -1279,9 +1279,9 @@ def test_unrad1():
     assert check(unrad(eq),
         ((5*x - 4)*(3125*x**3 + 37100*x**2 + 100800*x - 82944), []))
     ans = S('''
-        [4/5, -1484/375 + 172564/(140625*(114*sqrt(12657)/78125 +
-        12459439/52734375)**(1/3)) +
-        4*(114*sqrt(12657)/78125 + 12459439/52734375)**(1/3)]''')
+        [4/5, 4*(12459439/52734375 - 114*sqrt(12657)/78125)**(1/3) +
+        4*(114*sqrt(12657)/78125 + 12459439/52734375)**(1/3) -
+        1484/375]''')
     assert solve(eq) == ans
     # duplicate radical handling
     assert check(unrad(sqrt(x + root(x + 1, 3)) - root(x + 1, 3) - 2),
@@ -1375,8 +1375,8 @@ def test_unrad1():
     else:
         assert None  # no answer was found
     assert solve(sqrt(x + 1) + root(x, 3) - 2) == S('''
-        [(-11/(9*(47/54 + sqrt(93)/6)**(1/3)) + 1/3 + (47/54 +
-        sqrt(93)/6)**(1/3))**3]''')
+        [(-(sqrt(93)/6 - 47/54)**(1/3) + (sqrt(93)/6 + 47/54)**(1/3) +
+        1/3)**3]''')
     assert solve(sqrt(sqrt(x + 1)) + x**Rational(1, 3) - 2) == S('''
         [(-sqrt(-2*(-1/16 + sqrt(6913)/16)**(1/3) + 6/(-1/16 +
         sqrt(6913)/16)**(1/3) + 17/2 + 121/(4*sqrt(-6/(-1/16 +
@@ -1384,7 +1384,7 @@ def test_unrad1():
         sqrt(-6/(-1/16 + sqrt(6913)/16)**(1/3) + 2*(-1/16 +
         sqrt(6913)/16)**(1/3) + 17/4)/2 + 9/4)**3]''')
     assert solve(sqrt(x) + root(sqrt(x) + 1, 3) - 2) == S('''
-        [(-(81/2 + 3*sqrt(741)/2)**(1/3)/3 + (81/2 + 3*sqrt(741)/2)**(-1/3) +
+        [((sqrt(741)/18 - 3/2)**(1/3) - (sqrt(741)/18 + 3/2)**(1/3) +
         2)**2]''')
     eq = S('''
         -x + (1/2 - sqrt(3)*I/2)*(3*x**3/2 - x*(3*x**2 - 34)/2 + sqrt((-3*x**3
@@ -2135,10 +2135,11 @@ def test_issue_2725():
     R = Symbol('R')
     eq = sqrt(2)*R*sqrt(1/(R + 1)) + (R + 1)*(sqrt(2)*sqrt(1/(R + 1)) - 1)
     sol = solve(eq, R, set=True)[1]
-    assert sol == {(Rational(5, 3) + (Rational(-1, 2) - sqrt(3)*I/2)*(Rational(251, 27) +
-        sqrt(111)*I/9)**Rational(1, 3) + 40/(9*((Rational(-1, 2) - sqrt(3)*I/2)*(Rational(251, 27) +
-        sqrt(111)*I/9)**Rational(1, 3))),), (Rational(5, 3) + 40/(9*(Rational(251, 27) +
-        sqrt(111)*I/9)**Rational(1, 3)) + (Rational(251, 27) + sqrt(111)*I/9)**Rational(1, 3),)}
+    assert sol == {
+        (Rational(5, 3) - 2*sqrt(10)*cos(atan(3*sqrt(111)/251)/3)/3
+         + 2*sqrt(30)*sin(atan(3*sqrt(111)/251)/3)/3,),
+        (Rational(5, 3) + 4*sqrt(10)*cos(atan(3*sqrt(111)/251)/3)/3,),
+    }
 
 
 def test_issue_5114_6611():
@@ -2788,3 +2789,10 @@ def test_issue_26504_solve_empty_symbols():
     assert solve([log(2) + log(3) - log(6)]) == {}
     assert solve([x - 1, cos(1)**2 + sin(1)**2 - 1], x) == {x: 1}
     assert solve([x - 1, cos(1)**2 + sin(1)**2 - 2], x) == []
+
+
+def test_issue_30837():
+    p, q = symbols('p q', real=True)
+    sols = solve(x**3 + p*x + q, x)
+    specialized = {expand_complex(s.subs({p: 0, q: -1})) for s in sols}
+    assert specialized == set(solve(x**3 - 1, x))

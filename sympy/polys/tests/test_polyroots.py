@@ -1,6 +1,7 @@
 """Tests for algorithms for computing symbolic roots of polynomials. """
 from __future__ import annotations
 
+from sympy.core.function import expand_complex
 from sympy.core.numbers import (I, Rational, pi)
 from sympy.core.singleton import S
 from sympy.core.symbol import (Symbol, Wild, symbols)
@@ -11,6 +12,7 @@ from sympy.functions.elementary.piecewise import Piecewise
 from sympy.functions.elementary.trigonometric import (acos, cos, sin)
 from sympy.polys.domains.integerring import ZZ
 from sympy.sets.sets import Interval
+from sympy.simplify import simplify
 
 from sympy.polys import Poly, cyclotomic_poly, intervals, nroots, rootof
 
@@ -22,6 +24,7 @@ from sympy.polys.orthopolys import legendre_poly
 from sympy.polys.polyerrors import PolynomialError, \
     UnsolvableFactorError
 from sympy.polys.polyutils import _nsort
+from sympy.utilities.lambdify import lambdify
 
 from sympy.testing.pytest import raises, slow
 from sympy.core.random import verify_numerically
@@ -99,10 +102,98 @@ def test_issue_8438():
     roots = roots_cubic(Poly(p, x), x)
     z = Rational(-3, 2) - I*7/2  # this will fail in code given in commit msg
     post = [r.subs(y, z) for r in roots]
-    assert set(post) == \
-    set(roots_cubic(Poly(p.subs(y, z), x)))
-    # /!\ if p is not made an expression, this is *very* slow
-    assert all(p.subs({y: z, x: i}).n(2, chop=True) == 0 for i in post)
+    expected = roots_cubic(Poly(p.subs(y, z), x))
+    post_numerical = sorted((r.evalf(30) for r in post),
+                            key=lambda r: (re(r), im(r)))
+    expected_numerical = sorted((r.evalf(30) for r in expected),
+                                key=lambda r: (re(r), im(r)))
+    assert len(post_numerical) == len(expected_numerical) == 3
+    assert all(abs(a - b) < 1e-25
+               for a, b in zip(post_numerical, expected_numerical))
+    numerical_coefficients = [
+        complex(coefficient.evalf(30))
+        for coefficient in Poly(p.subs(y, z), x).all_coeffs()
+    ]
+    for r in post_numerical:
+        numerical_root = complex(r)
+        residual = sum(
+            coefficient*numerical_root**(3 - i)
+            for i, coefficient in enumerate(numerical_coefficients)
+        )
+        assert abs(residual) < 1e-12
+
+
+def test_roots_cubic_unsimplified_zero_coefficient():
+    p = sin(1)**2 + cos(1)**2 - 1
+    q = -1 + I
+    f = Poly(x**3 + p*x + q, x)
+
+    with mpmath.workdps(30):
+        numerical_roots = [
+            lambdify((), r, modules='mpmath')() for r in roots_cubic(f)
+        ]
+        numerical_p = lambdify((), p, modules='mpmath')()
+        numerical_q = lambdify((), q, modules='mpmath')()
+        residuals = [
+            abs(r**3 + numerical_p*r + numerical_q)
+            for r in numerical_roots
+        ]
+
+        assert max(residuals) < mpmath.mpf('1e-25')
+
+
+def test_issue_30837():
+    p, q = symbols('p q', real=True)
+    f = x**3 + p*x + q
+
+    symbolic_roots = roots_cubic(Poly(f, x))
+    specialized_roots = [
+        r.subs({p: 0, q: -1}) for r in symbolic_roots
+    ]
+    expected_roots = roots_cubic(Poly(x**3 - 1, x))
+
+    assert {expand_complex(r) for r in specialized_roots} == set(expected_roots)
+
+
+def test_roots_cubic_simultaneous_substitution():
+    p, q = symbols('p q', real=True)
+    symbolic_roots = roots_cubic(Poly(x**3 + p*x + q, x))
+    specialized_roots = [
+        r.subs({p: 0, q: -1}, simultaneous=True) for r in symbolic_roots
+    ]
+
+    assert not any(r.has(S.NaN) for r in specialized_roots)
+    assert {expand_complex(r) for r in specialized_roots} == \
+        set(roots_cubic(Poly(x**3 - 1, x)))
+
+
+def test_roots_cubic_generic_complex_symbols():
+    p, q = symbols('p q')
+    symbolic_roots = roots_cubic(Poly(x**3 + p*x + q, x))
+    expected_roots = {1, -S.Half + sqrt(3)*I/2, -S.Half - sqrt(3)*I/2}
+
+    for simultaneous in (False, True):
+        specialized_roots = [
+            r.subs({p: 0, q: -1}, simultaneous=simultaneous)
+            for r in symbolic_roots
+        ]
+        assert not any(r.has(S.NaN) for r in specialized_roots)
+        assert [r.is_real for r in specialized_roots] == [True, False, False]
+        assert [r.is_zero for r in specialized_roots] == [False, False, False]
+        assert {expand_complex(r) for r in specialized_roots} == expected_roots
+
+
+def test_roots_cubic_casus_irreducibilis():
+    p, q = symbols('p q', real=True)
+    symbolic_roots = roots_cubic(Poly(x**3 + p*x + q, x))
+    roots = [r.subs({p: -3, q: 1}).expand(complex=True)
+             for r in symbolic_roots]
+
+    assert roots == [
+        2*cos(2*pi/9),
+        -sqrt(3)*sin(2*pi/9) - cos(2*pi/9),
+        -cos(2*pi/9) + sqrt(3)*sin(2*pi/9),
+    ]
 
 
 def test_issue_8285():
@@ -469,16 +560,18 @@ def test_roots0():
 
     r1_2, r1_3 = S.Half, Rational(1, 3)
 
-    x0 = (3*sqrt(33) + 19)**r1_3
-    x1 = 4/x0/3
-    x2 = x0/3
     x3 = sqrt(3)*I/2
-    x4 = x3 - r1_2
-    x5 = -x3 - r1_2
     assert roots(x**3 + x**2 - x + 1, x, cubics=True) == {
-        -x1 - x2 - r1_3: 1,
-        -x1/x4 - x2*x4 - r1_3: 1,
-        -x1/x5 - x2*x5 - r1_3: 1,
+        -(sqrt(33)/9 + Rational(19, 27))**r1_3 -
+            (Rational(19, 27) - sqrt(33)/9)**r1_3 - r1_3: 1,
+        -r1_3 + r1_2*((sqrt(33)/9 + Rational(19, 27))**r1_3 +
+            (Rational(19, 27) - sqrt(33)/9)**r1_3) + x3*(
+            (sqrt(33)/9 + Rational(19, 27))**r1_3 -
+            (Rational(19, 27) - sqrt(33)/9)**r1_3): 1,
+        -r1_3 + r1_2*((sqrt(33)/9 + Rational(19, 27))**r1_3 +
+            (Rational(19, 27) - sqrt(33)/9)**r1_3) - x3*(
+            (sqrt(33)/9 + Rational(19, 27))**r1_3 -
+            (Rational(19, 27) - sqrt(33)/9)**r1_3): 1,
     }
 
     f = (x**2 + 2*x + 3).subs(x, 2*x**2 + 3*x).subs(x, 5*x - 4)
@@ -557,9 +650,10 @@ def test_roots0():
     }
 
     r = roots(x**3 + 40*x + 64)
-    real_root = [rx for rx in r if rx.is_real][0]
+    real_roots = [expand_complex(rx) for rx in r if expand_complex(rx).is_real]
     cr = 108 + 6*sqrt(1074)
-    assert real_root == -2*root(cr, 3)/3 + 20/root(cr, 3)
+    assert len(real_roots) == 1
+    assert simplify(real_roots[0] + 2*root(cr, 3)/3 - 20/root(cr, 3)) == 0
 
     eq = Poly((7 + 5*sqrt(2))*x**3 + (-6 - 4*sqrt(2))*x**2 + (-sqrt(2) - 1)*x + 2, x, domain='EX')
     assert roots(eq) == {-1 + sqrt(2): 1, -2 + 2*sqrt(2): 1, -sqrt(2) + 1: 1}

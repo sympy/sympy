@@ -19,7 +19,8 @@ from sympy.core.relational import Eq
 from sympy.core.sorting import ordered
 from sympy.core.symbol import Dummy, Symbol, symbols
 from sympy.core.sympify import sympify
-from sympy.functions import exp, im, cos, acos, Piecewise
+from sympy.functions import (exp, im, re, cos, acos, Piecewise, cbrt,
+    conjugate, Abs, sign)
 from sympy.functions.elementary.miscellaneous import root, sqrt
 from sympy.ntheory import divisors, isprime, nextprime
 from sympy.polys.domains import EX
@@ -125,6 +126,19 @@ def roots_quadratic(f):
     return [r0, r1]
 
 
+def _modified_cbrt(z):
+    eta = Rational(1, 2) + sqrt(3)*I/2
+    return eta*cbrt(z) + conjugate(eta)*conjugate(cbrt(conjugate(z)))
+
+
+def _real_cbrt(z):
+    if z.is_nonnegative:
+        return cbrt(z)
+    if z.is_negative:
+        return -cbrt(-z)
+    return None
+
+
 def roots_cubic(f, trig=False):
     """Returns a list of roots of a cubic polynomial.
 
@@ -157,42 +171,65 @@ def roots_cubic(f, trig=False):
 
     pon3 = p/3
     aon3 = a/3
+    coeff = I*sqrt(3)/2
+    omega = Rational(-1, 2) + coeff
+    omega2 = Rational(-1, 2) - coeff
 
-    u1 = None
-    if p is S.Zero:
-        if q is S.Zero:
+    if p.is_zero:
+        if q.is_zero:
             return [-aon3]*3
-        u1 = -root(q, 3) if q.is_positive else root(-q, 3)
-    elif q is S.Zero:
+        u = -cbrt(q) if q.is_positive else cbrt(-q)
+        return [u - aon3, u*omega - aon3, u*omega2 - aon3]
+    if q.is_zero:
         y1, y2 = roots([1, 0, p], multiple=True)
         return [tmp - aon3 for tmp in [y1, S.Zero, y2]]
-    elif q.is_real and q.is_negative:
-        u1 = -root(-q/2 + sqrt(q**2/4 + pon3**3), 3)
 
-    coeff = I*sqrt(3)/2
-    if u1 is None:
-        u1 = S.One
-        u2 = Rational(-1, 2) + coeff
-        u3 = Rational(-1, 2) - coeff
-        b, c, d = a, b, c  # a, b, c, d = S.One, a, b, c
-        D0 = b**2 - 3*c  # b**2 - 3*a*c
-        D1 = 2*b**3 - 9*b*c + 27*d  # 2*b**3 - 9*a*b*c + 27*a**2*d
-        C = root((D1 + sqrt(D1**2 - 4*D0**3))/2, 3)
-        return [-(b + uk*C + D0/C/uk)/3 for uk in [u1, u2, u3]]  # -(b + uk*C + D0/C/uk)/3/a
+    D = q**2/4 + pon3**3
+    s = sqrt(D)
+    A, B = -q/2 + s, -q/2 - s
 
-    u2 = u1*(Rational(-1, 2) + coeff)
-    u3 = u1*(Rational(-1, 2) - coeff)
+    if D.is_zero and p.is_zero is False:
+        return [3*q/p - aon3, -3*q/(2*p) - aon3, -3*q/(2*p) - aon3]
 
-    if p is S.Zero:
-        return [u1 - aon3, u2 - aon3, u3 - aon3]
+    real = all(coeff.is_real for coeff in f.all_coeffs())
+    if real:
+        if D.is_positive:
+            r, t = _real_cbrt(A), _real_cbrt(B)
+            if r is not None and t is not None:
+                return [
+                    r + t - aon3,
+                    -(r + t)/2 - aon3 + coeff*(r - t),
+                    -(r + t)/2 - aon3 - coeff*(r - t),
+                ]
+        elif D.is_negative:
+            u = cbrt(-q/2 + I*sqrt(-D))
+            return [
+                2*re(u) - aon3,
+                -re(u) - sqrt(3)*im(u) - aon3,
+                -re(u) + sqrt(3)*im(u) - aon3,
+            ]
 
-    soln = [
-        -u1 + pon3/u1 - aon3,
-        -u2 + pon3/u2 - aon3,
-        -u3 + pon3/u3 - aon3
+    if re(q).is_negative or (re(q).is_zero and im(q).is_negative):
+        u = cbrt(A)
+        v = -pon3/u
+    elif re(q).is_positive or (re(q).is_zero and im(q).is_positive):
+        v = -cbrt(-B)
+        u = -pon3/v
+    elif real:
+        u, v = _modified_cbrt(A), _modified_cbrt(B)
+    elif p.is_zero is False:
+        u = _modified_cbrt(A)
+        v = -pon3/u
+    else:
+        u = _modified_cbrt(A)
+        v = (cbrt(Abs(B))*sign(-pon3*conjugate(u))
+             + (1 - Abs(sign(A)))*_modified_cbrt(-q))
+    return [
+        u + v - aon3,
+        omega*u + omega2*v - aon3,
+        omega2*u + omega*v - aon3,
     ]
 
-    return soln
 
 def _roots_quartic_euler(p, q, r, a):
     """
