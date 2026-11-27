@@ -51,7 +51,7 @@ class PolynomialRing(
         self.domain: Domain[Er] = ring.domain
 
         if symbols:
-            if ring.domain.is_Field and ring.domain.is_Exact and len(symbols)==1:
+            if ring.domain.is_Field and ring.domain.is_Exact and len(ring.symbols)==1:
                 self.is_PID = True
 
         # TODO: remove this
