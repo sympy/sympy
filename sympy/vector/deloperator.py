@@ -1,6 +1,7 @@
 from __future__ import annotations
 from sympy.core import Basic
 from sympy.vector.operators import gradient, divergence, curl
+from sympy.printing.pretty.stringpict import prettyForm
 
 
 class Del(Basic):
@@ -119,3 +120,11 @@ class Del(Basic):
 
     def _sympystr(self, printer):
         return self._name
+
+    def _pretty(self, printer):
+        if printer._use_unicode:
+            return prettyForm('\u2207')
+        return prettyForm(self._name)
+
+    def _latex(self, printer):
+        return r"\nabla"
