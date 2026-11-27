@@ -22,7 +22,7 @@ from sympy.physics.units.definitions import (
     stefan_boltzmann_constant, atomic_mass_constant, molar_gas_constant,
     faraday_constant, josephson_constant, von_klitzing_constant,
     acceleration_due_to_gravity, magnetic_constant, vacuum_permittivity,
-    vacuum_impedance, coulomb_constant, atmosphere, bar, pound, psi, mmHg,
+    vacuum_impedance, coulomb_constant, atmosphere, bar, pound, psi, mmHg, torr,
     milli_mass_unit, quart, lightyear, astronomical_unit, planck_mass,
     planck_time, planck_temperature, planck_length, planck_charge,
     planck_area, planck_volume, planck_momentum, planck_energy, planck_force,
@@ -127,7 +127,7 @@ dimsys_length_weight_time.set_quantity_scale_factor(hbar, planck / (2 * pi))
 
 
 __all__ = [
-    'mmHg', 'atmosphere', 'newton', 'meter', 'vacuum_permittivity', 'pascal',
+    'mmHg', 'torr', 'atmosphere', 'newton', 'meter', 'vacuum_permittivity', 'pascal',
     'magnetic_constant', 'angular_mil', 'julian_year', 'weber', 'exbibyte',
     'liter', 'molar_gas_constant', 'faraday_constant', 'avogadro_constant',
     'planck_momentum', 'planck_density', 'gee', 'mol', 'bit', 'gray', 'kibi',
