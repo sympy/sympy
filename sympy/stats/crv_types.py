@@ -1117,7 +1117,9 @@ def Dagum(name, p, a, b):
 class DavisDistribution(SingleContinuousDistribution):
     _argnames = ('b', 'n', 'mu')
 
-    set = Interval(0, oo)
+    @property
+    def set(self):
+        return Interval(self.mu, oo)
 
     @staticmethod
     def check(b, n, mu):
@@ -1141,9 +1143,9 @@ def Davis(name, b, n, mu):
     The density of Davis distribution is given by
 
     .. math::
-        f(x; \mu; b, n) := \frac{b^{n}(x - \mu)^{1-n}}{ \left( e^{\frac{b}{x-\mu}} - 1 \right) \Gamma(n)\zeta(n)}
+        f(x; \mu; b, n) := \frac{b^{n}(x - \mu)^{-1-n}}{ \left( e^{\frac{b}{x-\mu}} - 1 \right) \Gamma(n)\zeta(n)}
 
-    with :math:`x \in [0,\infty]`.
+    with :math:`x \in [\mu,\infty)`.
 
     Davis distribution is a generalization of the Planck's law of radiation from statistical physics. It is used for modeling income distribution.
 

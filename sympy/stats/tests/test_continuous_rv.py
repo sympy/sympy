@@ -606,6 +606,10 @@ def test_davis():
     dividend = b**n*(x - mu)**(-1-n)
     divisor = (exp(b/(x-mu))-1)*(gamma(n)*zeta(n))
     assert density(X)(x) == dividend/divisor
+    assert X.pspace.domain.set == Interval(mu, oo)
+
+    Y = Davis('y', 2, 3, 1)
+    assert P(Y < 1) == 0
 
 
 def test_erlang():
