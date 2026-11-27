@@ -25,6 +25,16 @@ The above functions are only for convenience and ease of use. It is possible to
 plot any plot by passing the corresponding ``Series`` class to :class:`~.Plot` as
 argument.
 
+.. note::
+
+   All public plotting functions (such as ``plot``, ``plot3d``,
+   ``plot_parametric``, and ``plot_implicit``) are exposed directly in the
+   ``sympy.plotting`` namespace (e.g., ``from sympy.plotting import plot3d`` or
+   ``sympy.plotting.plot3d(...)``). Accessing ``sympy.plotting.plot.<func>``
+   as an attribute will raise an ``AttributeError`` because
+   ``sympy.plotting.plot`` resolves to the :func:`~sympy.plotting.plot`
+   function itself rather than the submodule.
+
 Plot Class
 ----------
 
