@@ -25,6 +25,9 @@ def symmetric_residue(a, m):
 def crt(m, v, symmetric=False, check=True):
     r"""Chinese Remainder Theorem.
 
+    The sequences of moduli and residues must have the same length;
+    otherwise, a ValueError is raised.
+
     The moduli in m are assumed to be pairwise coprime.  The output
     is then an integer f, such that f = v_i mod m_i for each pair out
     of v and m. If ``symmetric`` is False a positive integer will be
@@ -80,6 +83,12 @@ def crt(m, v, symmetric=False, check=True):
     solve_congruence
     sympy.polys.galoistools.gf_crt : low level crt routine used by this routine
     """
+    m = list(m)
+    v = list(v)
+
+    if len(m) != len(v):
+        raise ValueError("Moduli and residues must have the same length.")
+
     if check:
         m = list(map(as_int, m))
         v = list(map(as_int, v))
@@ -151,6 +160,9 @@ def crt2(m, v, mm, e, s, symmetric=False):
 
     See ``crt1`` for usage.
 
+    The sequences of moduli and residues must have the same length;
+    otherwise, a ValueError is raised.
+
     Examples
     ========
 
@@ -167,6 +179,12 @@ def crt2(m, v, mm, e, s, symmetric=False):
     sympy.ntheory.modular.crt1
 
     """
+
+    m = list(m)
+    v = list(v)
+
+    if len(m) != len(v):
+        raise ValueError("Moduli and residues must have the same length.")
 
     result = gf_crt2(v, m, mm, e, s, ZZ)
 
