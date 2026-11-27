@@ -144,6 +144,59 @@ def test_BlockMatrix_Determinant():
     assert det(BlockMatrix([A])) == det(A)
     assert det(BlockMatrix([ZeroMatrix(n, n)])) == 0
 
+
+def test_BlockMatrix_determinant_block_triangular():
+    A = MatrixSymbol('A', 3, 3)
+    B = MatrixSymbol('B', 3, 3)
+    C = MatrixSymbol('C', 3, 3)
+    D = MatrixSymbol('D', 3, 3)
+    Z = ZeroMatrix(3, 3)
+
+    # 2x2 upper and lower block triangular without invertible assumptions
+    U2 = BlockMatrix([[A, B], [Z, D]])
+    assert det(U2) == det(A) * det(D)
+
+    L2 = BlockMatrix([[A, Z], [C, D]])
+    assert det(L2) == det(A) * det(D)
+
+    # 2x2 block diagonal
+    BD2 = BlockMatrix([[A, Z], [Z, D]])
+    assert det(BD2) == det(A) * det(D)
+
+    # 3x3 block triangular (symbolic)
+    U3 = BlockMatrix([[A, B, C], [Z, D, B], [Z, Z, A]])
+    assert det(U3) == det(A)**2 * det(D)
+
+    L3 = BlockMatrix([[A, Z, Z], [B, C, Z], [B, C, D]])
+    assert det(L3) == det(A) * det(C) * det(D)
+
+    # Concrete numerical block diagonal and triangular
+    M1 = Matrix([[1, 2], [3, 4]])
+    M2 = Matrix([[2, 0], [1, 3]])
+    M3 = Matrix([[1, 1], [0, 2]])
+    Z2 = ZeroMatrix(2, 2)
+    B_num = BlockMatrix([[M1, M2, M3], [Z2, M2, M1], [Z2, Z2, M3]])
+    assert det(B_num) == det(M1) * det(M2) * det(M3)
+    assert det(B_num) == det(B_num.as_explicit())
+
+    # Singular diagonal blocks evaluate to zero
+    Singular1 = Matrix([[1, 2], [2, 4]])
+    Singular2 = Matrix([[2, 4], [4, 8]])
+    B_sing = BlockMatrix([[Singular1, M2], [Z2, Singular2]])
+    assert det(B_sing) == 0
+    assert det(B_sing) == det(B_sing.as_explicit())
+
+    # Mixed symbolic (n, n) and concrete (2, 2) diagonal blocks
+    A_sym = MatrixSymbol('A_sym', n, n)
+    B_sym = MatrixSymbol('B_sym', n, 2)
+    Z_sym = ZeroMatrix(2, n)
+    D_conc = MatrixSymbol('D_conc', 2, 2)
+    U_mixed = BlockMatrix([[A_sym, B_sym], [Z_sym, D_conc]])
+    assert det(U_mixed) == det(A_sym) * det(D_conc)
+
+    L_mixed = BlockMatrix([[A_sym, ZeroMatrix(n, 2)], [MatrixSymbol('C_sym', 2, n), D_conc]])
+    assert det(L_mixed) == det(A_sym) * det(D_conc)
+
 def test_squareBlockMatrix():
     A = MatrixSymbol('A', n, n)
     B = MatrixSymbol('B', n, m)

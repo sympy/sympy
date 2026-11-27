@@ -22,6 +22,14 @@ from sympy.matrices.expressions.trace import trace
 from sympy.matrices.expressions.transpose import Transpose, transpose
 
 
+def _is_zero_block(b):
+    if b == 0 or getattr(b, 'is_ZeroMatrix', False) or getattr(b, 'is_zero_matrix', False):
+        return True
+    if isinstance(b, BlockMatrix):
+        return all(_is_zero_block(sub) for sub in b.blocks)
+    return False
+
+
 class BlockMatrix(MatrixExpr):
     """A BlockMatrix is a Matrix comprised of other matrices.
 
@@ -204,6 +212,16 @@ class BlockMatrix(MatrixExpr):
     def _eval_determinant(self):
         if self.blockshape == (1, 1):
             return det(self.blocks[0, 0])
+
+        if self.blockshape[0] == self.blockshape[1] and self.rowblocksizes == self.colblocksizes:
+            n = self.blockshape[0]
+            is_upper = all(_is_zero_block(self.blocks[i, j])
+                           for i in range(n) for j in range(i))
+            is_lower = all(_is_zero_block(self.blocks[i, j])
+                           for i in range(n) for j in range(i + 1, n))
+            if is_upper or is_lower:
+                return Mul(*[det(self.blocks[i, i]) for i in range(n)])
+
         if self.blockshape == (2, 2):
             [[A, B],
              [C, D]] = self.blocks.tolist()
