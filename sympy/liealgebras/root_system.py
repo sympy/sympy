@@ -1,12 +1,12 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Sequence
+from typing import Sequence, TYPE_CHECKING
 
 from .cartan_type import CartanType
-from sympy.core import Atom, Integer, Rational
+from sympy.core import Atom, Rational
+from sympy.matrices.dense import Matrix
 
 if TYPE_CHECKING:
-    from sympy.matrices.dense import Matrix
     from .type_a import TypeA
     from .type_b import TypeB
     from .type_c import TypeC
@@ -63,7 +63,7 @@ class RootSystem(Atom):
         obj.cartan_type = CartanType(cartantype)
         return obj
 
-    def simple_roots(self) -> dict[int, list[int] | list[Rational]]:
+    def simple_roots(self) -> dict[int, Matrix]:
         """Generate the simple roots of the Lie algebra
 
         The rank of the Lie algebra determines the number of simple roots that
@@ -78,7 +78,7 @@ class RootSystem(Atom):
         >>> c = RootSystem("A3")
         >>> roots = c.simple_roots()
         >>> roots
-        {1: [1, -1, 0, 0], 2: [0, 1, -1, 0], 3: [0, 0, 1, -1]}
+        {1: Matrix([[1, -1, 0, 0]]), 2: Matrix([[0, 1, -1, 0]]), 3: Matrix([[0, 0, 1, -1]])}
 
         """
         n = self.cartan_type.rank()
@@ -86,24 +86,18 @@ class RootSystem(Atom):
         return roots
 
 
-    def all_roots(self) -> dict[int, list[int] | list[Rational]]:
+    def all_roots(self) -> list[Matrix]:
         """Generate all the roots of a given root system
 
-        The result is a dictionary where the keys are integer numbers.  It
-        generates the roots by getting the dictionary of all positive roots
+        The result is a list of matrices representing the roots.  It
+        generates the roots by getting the list of all positive roots
         from the bases classes, and then taking each root, and multiplying it
-        by -1 and adding it to the dictionary.  In this way all the negative
+        by -1 and adding it to the list.  In this way all the negative
         roots are generated.
 
         """
-        alpha = {**self.cartan_type.positive_roots()}
-        keys = list(alpha.keys())
-        k = max(keys)
-        for val in keys:
-            k += 1
-            root = alpha[val]
-            newroot: list[int] | list[Rational] = [-x for x in root] #type: ignore
-            alpha[k] = newroot
+        alpha = self.cartan_type.positive_roots()
+        alpha.extend([-root for root in alpha])
         return alpha
 
     def root_space(self) -> str:
@@ -127,7 +121,7 @@ class RootSystem(Atom):
         rs = " + ".join("alpha["+str(i) +"]" for i in range(1, n+1))
         return rs
 
-    def add_simple_roots(self, root1: int, root2: int) -> list[int] | list[Rational | Integer]:
+    def add_simple_roots(self, root1: int, root2: int) -> Matrix:
         """Add two simple roots together
 
         The function takes as input two integers, root1 and root2.  It then
@@ -141,21 +135,20 @@ class RootSystem(Atom):
         >>> c = RootSystem("A3")
         >>> newroot = c.add_simple_roots(1, 2)
         >>> newroot
-        [1, 0, -1, 0]
+        Matrix([[1, 0, -1, 0]])
 
         """
 
         alpha = self.simple_roots()
         if root1 > len(alpha) or root2 > len(alpha):
             raise ValueError("You've used a root that doesn't exist!")
-        a1: Sequence[int | Rational] = alpha[root1]
-        a2: Sequence[int | Rational] = alpha[root2]
-        newroot = [_a1 + _a2 for _a1, _a2 in zip(a1, a2)]
-        return newroot
+        a1 = alpha[root1]
+        a2 = alpha[root2]
+        return a1 + a2
 
     def add_as_roots(self,
                      root1: Sequence[int | Rational],
-                     root2: Sequence[int | Rational]) -> list[int] | list[Rational | Integer] | str:
+                     root2: Sequence[int | Rational]) -> Matrix | str:
         """Add two roots together if and only if their sum is also a root
 
         It takes as input two vectors which should be roots.  It then computes
@@ -167,16 +160,17 @@ class RootSystem(Atom):
         ========
 
         >>> from sympy.liealgebras.root_system import RootSystem
+        >>> from sympy.matrices import Matrix
         >>> c = RootSystem("A3")
         >>> c.add_as_roots([1, 0, -1, 0], [0, 0, 1, -1])
-        [1, 0, 0, -1]
-        >>> c.add_as_roots([1, -1, 0, 0], [0, 0, -1, 1])
+        Matrix([[1, 0, 0, -1]])
+        >>> c.add_as_roots(Matrix([1, -1, 0, 0]), Matrix([0, 0, -1, 1]))
         'The sum of these two roots is not a root'
 
         """
         alpha = self.all_roots()
-        newroot = [r1 + r2 for r1, r2 in zip(root1, root2)]
-        if newroot in alpha.values():
+        newroot = Matrix([[r1 + r2 for r1, r2 in zip(root1, root2)]])
+        if newroot in alpha:
             return newroot
         else:
             return "The sum of these two roots is not a root"
