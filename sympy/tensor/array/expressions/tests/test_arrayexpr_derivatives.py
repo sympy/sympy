@@ -1,7 +1,7 @@
 from __future__ import annotations
 from sympy import (exp, log, Matrix, Array, derive_by_array, ImmutableMatrix,
     ImmutableDenseNDimArray, Transpose, Inverse, Determinant, MatPow, ZeroMatrix,
-    Trace, atan2)
+    Trace, atan2, HadamardPower)
 from sympy.core.symbol import symbols, Dummy
 from sympy.core.function import Lambda
 from sympy.functions.elementary.trigonometric import (cos, sin)
@@ -9,6 +9,7 @@ from sympy.matrices.expressions.diagonal import DiagMatrix, DiagonalMatrix
 from sympy.matrices.expressions.matexpr import MatrixExpr, MatrixSymbol, MatrixElement
 from sympy.matrices.expressions.special import Identity, MatrixUnit
 from sympy.testing.pytest import raises
+from sympy.utilities.iterables import flatten
 from sympy.matrices.expressions.applyfunc import ElementwiseApplyFunction
 from sympy.tensor.array.expressions.array_expressions import ArraySymbol, ArrayTensorProduct, \
     PermuteDims, ArrayDiagonal, ArrayElementwiseApplyFunc, ArrayContraction, _permute_dims, \
@@ -227,6 +228,52 @@ def _check_numeric(expr, wrt, replmap, numreplmap={}):
     expected = expected.subs(numreplmap)
     diff = (got - expected).applyfunc(lambda t: t.doit(deep=True).simplify())
     assert diff == ImmutableDenseNDimArray.zeros(*expected.shape), expr
+
+
+def test_array_derive_elementwise_parameter_dependence():
+    # Elementwise rules used to treat the body of the Lambda as a function of
+    # its bound variable only, ignoring parameters that depend on x (an
+    # exponent such as Trace(M), or a matrix element captured by applyfunc).
+    M = MatrixSymbol("M", 2, 2)
+    Mexp = ImmutableMatrix(2, 2, symbols("m:4"))
+
+    def check(expr):
+        res = array_derive(expr, M)
+        got = ImmutableDenseNDimArray(
+            res.as_explicit().subs(M, Mexp)).applyfunc(lambda t: t.doit(deep=True))
+        ground = expr.subs(M, Mexp)
+        if isinstance(ground, MatrixExpr):
+            ground = ground.as_explicit()
+        expected = derive_by_array(ground, Mexp.as_explicit())
+        diff = (got - ImmutableDenseNDimArray(expected)
+                ).applyfunc(lambda t: t.doit(deep=True).simplify())
+        assert diff == ImmutableDenseNDimArray.zeros(*expected.shape)
+
+    check(HadamardPower(M, Trace(M)))
+    check(M.applyfunc(lambda z: z**2*M[0, 0]))
+
+
+def test_array_derive_scalar_matpow_exponent_dependence():
+    # A 1x1 MatPow with an exponent depending on the base used to drop the
+    # log term of d(base**exponent)/dx.
+    a = MatrixSymbol("a", 2, 1)
+    b = MatrixSymbol("b", 2, 1)
+    M = MatrixSymbol("M", 2, 2)
+    ms = symbols("m:4")
+    Mexp = ImmutableMatrix(2, 2, ms)
+    expr = MatPow(a.T*M*b, Trace(M))
+    res = expr.diff(M)
+    got = ImmutableDenseNDimArray(
+        res.as_explicit().subs(M, Mexp)).applyfunc(lambda t: t.doit(deep=True))
+    expected = derive_by_array(expr.subs(M, Mexp).as_explicit(),
+                               Mexp.as_explicit())
+    num = dict(zip(ms, [3, 1, 2, 5]))
+    rep = {a: ImmutableMatrix([1, 2]), b: ImmutableMatrix([3, 4])}
+    got = got.subs(rep).applyfunc(lambda t: t.subs(num).evalf())
+    expected = ImmutableDenseNDimArray(expected).subs(rep
+                ).applyfunc(lambda t: t.subs(num).evalf())
+    diff = (got - expected).applyfunc(lambda t: abs(t))
+    assert max(flatten(diff.tolist())) < 1e-9
 
 
 def test_array_derive_matpow_negative_exponent():
