@@ -175,6 +175,10 @@ def test_zeta():
     assert simplify(variance(x)) == (
         zeta(s) * zeta(s-2) - zeta(s-1)**2) / zeta(s)**2
 
+    # The MGF may not have a Taylor series at zero.
+    assert E(Zeta('x', 2)) == oo
+    assert E(Zeta('x', 3)**2) == oo
+
 
 def test_discrete_probability():
     X = Geometric('X', Rational(1, 5))
