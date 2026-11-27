@@ -196,6 +196,9 @@ class Limit(Expr):
     def pow_heuristics(self, e, z, z0, dir):
         b1, e1 = e.base, e.exp
         if not b1.has(z):
+            if b1.is_zero:
+                return None # let Gruntz handle it
+
             res = limit(e1*log(b1), z, z0, dir=dir)
             return exp(res)
 
