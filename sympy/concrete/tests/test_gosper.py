@@ -60,6 +60,13 @@ def test_gosper_sum():
         + 1/(gamma(a)*gamma(b))
 
 
+def test_gosper_sum_removable_endpoint():
+    n = Symbol('n', integer=True, positive=True)
+    assert gosper_sum(k*(n - k), (k, 1, n)) == n*(n - 1)*(n + 1)/6
+    f = 2*n**2 + 2*n - k*(2*n + 2)
+    assert gosper_sum(f, (k, 1, n)) == n*(n - 1)*(n + 1)
+
+
 def test_gosper_sum_indefinite():
     assert gosper_sum(k, k) == k*(k - 1)/2
     assert gosper_sum(k**2, k) == k*(k - 1)*(2*k - 1)/6

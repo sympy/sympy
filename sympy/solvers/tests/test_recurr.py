@@ -84,7 +84,8 @@ def test_rsolve_hyper():
     assert rsolve_hyper([-1, 1], 1/k, k) is None
 
     assert rsolve_hyper([-2, 1], 2**(n**3 + 1), n) is None
-    assert rsolve_hyper([-2, 1], 2**(a*n + 1), n) is None
+    assert rsolve_hyper([-2, 1], 2**(a*n + 1), n) == (
+        C0*2**n + 2**(a*n + 1)/(2**a - 2))
 
     assert rsolve_hyper([-1, 1], fibonacci(n), n) is None
     assert rsolve_hyper([-1, 1], euler(n), n) is None

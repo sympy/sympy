@@ -369,6 +369,9 @@ def test_hypersimp():
     term = binomial(n, k)*(-1)**k/factorial(k)
     assert hypersimp(term, k) == (k - n)/(k + 1)**2
 
+    assert hypersimp(2**(a*n + 1), n) == 2**a
+    assert hypersimp(gamma(a*(n + 1) - n*(a - 1)), n) == a + n
+
 
 @slow
 def test_nsimplify():
