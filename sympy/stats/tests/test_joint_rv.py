@@ -47,6 +47,11 @@ def test_Normal():
     p = Normal('C',  Matrix([1, 2]), Matrix([[1, 0], [0, 1]]))
     assert density(m)(x, y) == density(p)(x, y)
     assert marginal_distribution(n, 0, 1)(1, 2) == 1/(2*pi)
+    assert marginal_distribution(n, 2)(3) == 1/sqrt(2*pi)
+    assert marginal_distribution(n, 0, 2)(1, 3) == 1/(2*pi)
+    n3 = Normal('D', [0, 0, 0], Matrix([[1, 0, 0], [0, 1, 0], [0, 0, 4]]))
+    assert marginal_distribution(n3, n3[2])(0) == sqrt(2)/(4*sqrt(pi))
+    assert marginal_distribution(n3, 2, 0)(0, 0) == 1/(4*pi)
     raises(ValueError, lambda: marginal_distribution(m))
     assert integrate(density(m)(x, y), (x, -oo, oo), (y, -oo, oo)).evalf() == 1.0
     N = Normal('N', [1, 2], [[x, 0], [0, y]])
