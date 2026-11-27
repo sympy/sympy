@@ -2996,13 +2996,13 @@ def test_sympy__integrals__transforms__FourierTypeTransform():
     pass
 
 
-def test_sympy__integrals__transforms__InverseFourierTransform():
-    from sympy.integrals.transforms import InverseFourierTransform
+def test_sympy__integrals__fourier__InverseFourierTransform():
+    from sympy.integrals.fourier import InverseFourierTransform
     assert _test_args(InverseFourierTransform(2, x, y))
 
 
-def test_sympy__integrals__transforms__FourierTransform():
-    from sympy.integrals.transforms import FourierTransform
+def test_sympy__integrals__fourier__FourierTransform():
+    from sympy.integrals.fourier import FourierTransform
     assert _test_args(FourierTransform(2, x, y))
 
 
