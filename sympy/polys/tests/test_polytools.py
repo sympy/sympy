@@ -2922,6 +2922,11 @@ def test_factor():
     assert factor_list(pi*pin, x) == (pi*pin, [])
     assert factor_list((x - sqrt(2)*pi)*(x + sqrt(2)*pi), x) == (
         1, [(x - sqrt(2)*pi, 1), (x + sqrt(2)*pi, 1)])
+    assert factor_list(x - sqrt(5)*x, extension=sqrt(5)) == (
+        1 - sqrt(5), [(x, 1)])
+    assert factor_list((36 + 2*sqrt(301))*(x**2 - 301), extension=sqrt(301)) == (
+        36 + 2*sqrt(301), [(x - sqrt(301), 1), (x + sqrt(301), 1)])
+    assert factor_list(1 - sqrt(5), extension=sqrt(5)) == (1 - sqrt(5), [])
 
     # https://github.com/sympy/sympy/issues/26497
     p = ((y - I)**2 * (y + I) * (x + 1))
