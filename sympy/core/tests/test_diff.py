@@ -160,3 +160,29 @@ def test_issue_16160():
         Derivative(x**3, (x, 2)), x, 2)
     assert Derivative(1 + x**3, (x, x)).subs(x, 0
         ) == Derivative(1 + y**3, (y, 0)).subs(y, 0)
+
+
+def test_issue_27995():
+    from sympy.matrices.dense import Matrix
+    from sympy.matrices.expressions.matexpr import MatrixSymbol
+
+    p = Matrix([x, y, z])
+    f = Function('f')
+    r = f(p)
+
+    # Derivative with respect to a scalar variable should remain an unevaluated scalar Derivative
+    dx = r.diff(x)
+    assert isinstance(dx, Derivative)
+    assert dx.is_scalar
+    assert dx == Derivative(f(p), x)
+    assert dx.doit() == dx
+
+    # Derivative with respect to the matrix p should return the gradient vector
+    dp = r.diff(p)
+    assert dp == Matrix([[Derivative(f(p), x)], [Derivative(f(p), y)], [Derivative(f(p), z)]])
+    assert dp.doit() == dp
+
+    # MatrixSymbol argument: derivative wrt an unrelated scalar is zero
+    X = MatrixSymbol('X', 2, 2)
+    assert f(X).diff(x) is S.Zero
+
