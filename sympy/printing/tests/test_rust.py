@@ -63,6 +63,8 @@ def test_Functions():
     assert rust_code(abs(x)) == "x.abs()"
     assert rust_code(ceiling(x)) == "x.ceil()"
     assert rust_code(floor(x)) == "x.floor()"
+    assert rust_code(floor(x) + 1) == "x.floor() + 1.0"
+    assert rust_code(2*ceiling(x)) == "2.0*x.ceil()"
 
     # Automatic rewrite
     assert rust_code(Mod(x, 3)) == 'x - 3.0*((1_f64/3.0)*x).floor()'
