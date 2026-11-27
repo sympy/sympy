@@ -137,8 +137,9 @@ docstrings consist of the following sections in this order:
 2. Explanation
 3. Examples
 4. Parameters
-5. See Also
-6. References
+5. Attributes
+6. See Also
+7. References
 
 The Single-Sentence Summary and Examples sections are **required** for every
 docstring. Docstrings will not pass review if these sections are not included.
@@ -333,9 +334,62 @@ Here is an example of a correctly formatted Parameters section::
 
         """
 
+5. Attributes Section
+^^^^^^^^^^^^^^^^^^^^^
+
+This section is encouraged for classes that have attributes (instance or class
+attributes with a persistent value). It should be labeled with the heading
+"Attributes" underlined with the same length in equals signs.
+
+::
+
+    Attributes
+    ==========
+
+The Attributes section follows the same formatting as the Parameters section.
+Each attribute should be listed with its name, optional type, and description.
+The colon must be preceded by a space, or omitted if the type is absent.
+
+Attributes are data that are stored on an instance of the class after
+initialization, as opposed to ``Parameters``, which are the inputs to a
+function or class constructor. If your class has no attributes beyond what is
+passed in as parameters (and stored directly as ``self.<parameter>``), you do
+not need an Attributes section — the constructor parameters are already
+documented in the Parameters section.
+
+The `numpydoc guide
+<https://numpydoc.readthedocs.io/en/latest/format.html#documenting-classes>`_
+provides a more detailed description of how to document class attributes.
+
+**Example**
+
+Here is an example of a correctly formatted Attributes section::
+
+    class Point:
+        """
+        A point in a 2D plane.
+
+        Parameters
+        ==========
+
+        x : float
+            The x-coordinate of the point.
+        y : float
+            The y-coordinate of the point.
+
+        Attributes
+        ==========
+
+        x : float
+            The x-coordinate of the point.
+        y : float
+            The y-coordinate of the point.
+
+        """
+
 .. _style_guide_see_also:
 
-5. See Also Section
+6. See Also Section
 ^^^^^^^^^^^^^^^^^^^^^^
 
 This section is encouraged. If you choose to include a See Also section in your
@@ -392,7 +446,7 @@ Here is a correctly formatted See Also section with just a list of names::
 
         """
 
-6. References Section
+7. References Section
 ^^^^^^^^^^^^^^^^^^^^^^
 
 This section is encouraged. If you choose to include a References section in
