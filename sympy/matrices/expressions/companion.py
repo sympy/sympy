@@ -1,5 +1,4 @@
 from __future__ import annotations
-from sympy.core.singleton import S
 from sympy.core.sympify import _sympify
 from sympy.polys.polytools import Poly
 
@@ -44,12 +43,28 @@ class CompanionMatrix(MatrixExpr):
         return size, size
 
 
-    def _entry(self, i, j):
-        if j == self.cols - 1:
-            return -self.args[0].all_coeffs()[-1 - i]
-        elif i == j + 1:
-            return S.One
-        return S.Zero
+    def _entry(self, i, j, **kwargs):
+        from sympy.core.numbers import Integer
+        from sympy.core.relational import Eq
+        from sympy.core.singleton import S
+        from sympy.functions.elementary.piecewise import Piecewise
+        from sympy.functions.special.tensor_functions import KroneckerDelta
+
+        poly = self.args[0]
+        n = self.cols
+
+        if isinstance(j, (int, Integer)) and j < n - 1:
+            return KroneckerDelta(i, j + 1)
+
+        coeffs = poly.all_coeffs()
+        if isinstance(j, (int, Integer)) and j == n - 1 and isinstance(i, (int, Integer)):
+            return -coeffs[-1 - int(i)]
+
+        last_col = Piecewise(*[(-coeffs[-1 - k], Eq(i, k)) for k in range(n)], (S.Zero, True))
+        if isinstance(j, (int, Integer)) and j == n - 1:
+            return last_col
+
+        return Piecewise((last_col, Eq(j, n - 1)), (KroneckerDelta(i, j + 1), True))
 
 
     def as_explicit(self):
