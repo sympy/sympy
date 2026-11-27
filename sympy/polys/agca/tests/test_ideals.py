@@ -1,6 +1,8 @@
 """Test ideals.py code."""
 from __future__ import annotations
 
+import pickle
+
 from sympy.polys import QQ, ilex
 from sympy.abc import x, y, z
 from sympy.testing.pytest import raises
@@ -46,6 +48,13 @@ def test_ideal_operations():
     assert T**1 == T
     assert T**2 == R.ideal(x**2, y**2, x*y)
     assert I**5 == R.ideal(x**5)
+
+
+def test_ideal_pickle():
+    I = QQ.old_poly_ring(x, y).ideal(1 - x)
+    restored = pickle.loads(pickle.dumps(I))
+    assert restored.contains(1 - x**2)
+    assert not restored.contains(y)
 
 
 def test_exceptions():

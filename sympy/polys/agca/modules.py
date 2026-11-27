@@ -1090,8 +1090,12 @@ class SubQuotientModule(SubModule):
         return self.base.identity_hom().quotient_codomain(self.killed_module)
 
 
-_subs0 = lambda x: x[0]
-_subs1 = lambda x: x[1:]
+def _subs0(x):
+    return x[0]
+
+
+def _subs1(x):
+    return x[1:]
 
 
 class ModuleOrder(ProductOrder):
