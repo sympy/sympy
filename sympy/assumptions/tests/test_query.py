@@ -1413,6 +1413,25 @@ def test_extended_real():
 
     assert _ask_recursive(Q.extended_real(x), Q.infinite(x)) is None
 
+    ext = Q.extended_real(x) & Q.extended_real(y)
+    assert _ask_recursive(Q.extended_real(x + y), ext) is None
+    assert _ask_recursive(Q.extended_real(x * y), ext) is None
+    assert _ask_recursive(Q.extended_real(x + y),
+        Q.extended_nonnegative(x) & Q.extended_nonnegative(y)) is True
+    assert _ask_recursive(Q.extended_real(x + y),
+        Q.extended_real(x) & Q.real(y)) is True
+    assert _ask_recursive(Q.extended_real(x + y),
+        Q.real(x) & Q.imaginary(y)) is False
+    assert _ask_recursive(Q.extended_real(x + S.NegativeInfinity),
+        Q.positive_infinite(x)) is None
+    assert _ask_recursive(Q.extended_real(x * y),
+        Q.extended_positive(x) & Q.extended_negative(y)) is True
+    assert _ask_recursive(Q.extended_real(x * y),
+        Q.real(x) & Q.real(y)) is True
+    assert _ask_recursive(Q.extended_real(x * y),
+        Q.real(x) & Q.imaginary(y) & Q.nonzero(x)) is False
+    assert _ask_recursive(Q.extended_real(x * S.Infinity), Q.zero(x)) is None
+
 
 @_both_exp_pow
 def test_rational():
