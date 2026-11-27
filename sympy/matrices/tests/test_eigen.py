@@ -536,7 +536,13 @@ def test_singular_values():
     assert A.singular_values() == \
         [sqrt(sqrt(221) + 15), sqrt(15 - sqrt(221))]
     assert A.T.singular_values() == \
-        [sqrt(sqrt(221) + 15), sqrt(15 - sqrt(221)), 0, 0]
+        [sqrt(sqrt(221) + 15), sqrt(15 - sqrt(221))]
+    # issue #30900 (M3-4)
+    W = Matrix([[1, 0, 0]])
+    assert W.singular_values() == [1]
+    assert W.condition_number() == 1
+    W_rank_def = Matrix([[1, 0, 0], [0, 0, 0]])
+    assert W_rank_def.singular_values() == [1, 0]
 
 def test___eq__():
     assert (Matrix(

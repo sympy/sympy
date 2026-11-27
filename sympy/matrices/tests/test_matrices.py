@@ -2158,7 +2158,8 @@ def test_matrix_norm():
     # Check non-square
     A = Matrix([[1, 2, -3], [4, 5, Rational(13, 2)]])
     assert A.norm(2) == sqrt(Rational(389, 8) + sqrt(78665)/8)
-    assert A.norm(-2) is S.Zero
+    assert A.norm(-2) == sqrt(Rational(389, 8) - sqrt(78665)/8)
+    assert A.T.norm(-2) == A.norm(-2)
     assert A.norm('frobenius') == sqrt(389)/2
 
     # Test properties of matrix norms
