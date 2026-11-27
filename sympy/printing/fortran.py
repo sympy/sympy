@@ -374,8 +374,8 @@ class FCodePrinter(CodePrinter):
         return "%sd0" % printed
 
     def _print_Relational(self, expr):
-        lhs_code = self._print(expr.lhs)
-        rhs_code = self._print(expr.rhs)
+        lhs_code = self._print_relational_operand(expr.lhs)
+        rhs_code = self._print_relational_operand(expr.rhs)
         op = expr.rel_op
         op = op if op not in self._relationals else self._relationals[op]
         return "{} {} {}".format(lhs_code, op, rhs_code)
