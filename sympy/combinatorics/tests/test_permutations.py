@@ -165,6 +165,10 @@ def test_Permutation():
     assert q.max() == 4
     assert q.min() == 0
 
+    for id_perm in (Permutation([]), Permutation(1), Permutation(5)):
+        assert id_perm.max() == 0
+        assert id_perm.min() == 0
+
     p = Permutation([1, 5, 2, 0, 3, 6, 4])
     q = Permutation([[1, 2, 3, 5, 6], [0, 4]])
 
