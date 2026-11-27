@@ -2067,9 +2067,11 @@ def _uncouple(state, jn, jcoupling_list):
         if jcoupling_list is None:
             # Use default
             jcoupling_list = []
-            for i in range(1, len(jn)):
+            for i in range(1, len(jn) - 1):
                 jcoupling_list.append(
                     (1, 1 + i, Add(*[jn[j] for j in range(i + 1)])) )
+            if len(jn) > 1:
+                jcoupling_list.append((1, len(jn), state.j))
         if not isinstance(jcoupling_list, (list, tuple)):
             raise TypeError("jcoupling must be a list or tuple")
         if not len(jcoupling_list) == len(jn) - 1:

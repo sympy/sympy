@@ -20,6 +20,7 @@ from sympy.physics.quantum.spin import (
     JxBra, JyBra, JzBra,
     JxKet, JyKet, JzKet,
     JxKetCoupled, JyKetCoupled, JzKetCoupled,
+    JxBraCoupled, JyBraCoupled, JzBraCoupled,
     couple, uncouple,
     Rotation, WignerD
 )
@@ -591,6 +592,33 @@ def test_innerproducts_of_rewritten_states():
     assert qapply(JzBra(1, -1)*JzKet(1, 0).rewrite('Jx')).doit() == 0
     assert qapply(JzBra(1, -1)*JzKet(1, 1).rewrite('Jy')) == 0
     assert qapply(JzBra(1, -1)*JzKet(1, 0).rewrite('Jy')).doit() == 0
+
+
+def test_uncouple_singlet():
+    up = JzKet(S.Half, S.Half)
+    down = JzKet(S.Half, -S.Half)
+    expected = (TensorProduct(up, down) - TensorProduct(down, up))/sqrt(2)
+    assert uncouple(JzKet(0, 0), (S.Half, S.Half)) == expected.expand()
+
+
+def test_uncouple_default_coupling():
+    for state, coupled_state in (
+            (JxKet, JxKetCoupled), (JyKet, JyKetCoupled),
+            (JzKet, JzKetCoupled), (JxBra, JxBraCoupled),
+            (JyBra, JyBraCoupled), (JzBra, JzBraCoupled)):
+        for jn, total_j in (((S.Half, S.Half), 0),
+                            ((S.Half, S.Half), 1),
+                            ((S.Half, S.Half, S.Half), S.Half),
+                            ((S.Half, S.Half, S.Half), Rational(3, 2))):
+            for twice_m in range(-int(2*total_j), int(2*total_j) + 1, 2):
+                magnetic_m = S(twice_m)/2
+                assert uncouple(state(total_j, magnetic_m), jn) == \
+                    uncouple(coupled_state(total_j, magnetic_m, jn))
+
+
+def test_uncouple_default_coupling_symbolic():
+    for jn in ((j1, j2), (j1, j2, j3), (j1, j2, j3, j4)):
+        assert uncouple(JzKet(j, m), jn) == uncouple(JzKetCoupled(j, m, jn))
 
 
 def test_uncouple_2_coupled_states():
