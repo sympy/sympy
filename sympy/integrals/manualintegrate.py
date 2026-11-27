@@ -2730,6 +2730,11 @@ def sqrt_fractional_linear_rule(integral : IntegralInfo):
                 simplified_b = simplified_b.subs({a0: 0, c0: 0}) # if det = 0, c = 0 and d != 0, a must be 0
                 degenerate_step_b = yield IntegralInfo(simplified_b, x)
                 pieces.append((degenerate_step_b, (And(Eq(det, 0), Eq(c0, 0)))))
+        if c0.is_Symbol and Eq(c0, 0) is not S.false and not _if_zero_implies_zero(c0, base0_denom):
+            simplified_c = integrand.subs(c0, 0)
+            degenerate_step_c = yield IntegralInfo(simplified_c, x)
+            if not degenerate_step_c.contains_dont_know():
+                pieces.append((RewriteRule(integrand, x, simplified_c, degenerate_step_c), Eq(c0, 0)))
         step: Rule = URule(integrand, x, u, u_x, substep)
         if pieces:
             pieces.append((step, S.true))
