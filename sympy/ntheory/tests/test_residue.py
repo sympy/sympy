@@ -308,8 +308,16 @@ def test_residue():
     raises(ValueError, lambda: polynomial_congruence(x**i, 6125))
     raises(ValueError, lambda: polynomial_congruence(0.1*x**2 + 6, 100))
 
-    assert binomial_mod(-1, 1, 10) == 0
+    assert binomial_mod(-1, 1, 5) == 4
+    assert binomial_mod(-1, 0, 5) == 1
+    assert binomial_mod(-1, 1, 10) == 9
+    assert binomial_mod(-2, 1, 5) == 3
+    assert binomial_mod(-3, 2, 5) == 1
     assert binomial_mod(1, -1, 10) == 0
+    assert binomial_mod(-1, -1, 5) == 0
+    assert binomial_mod(-1, 1, 1) == 0
+    assert binomial_mod(-1, 0, 1) == 0
+    assert binomial_mod(2, 3, 1) == 0
     raises(ValueError, lambda: binomial_mod(2, 1, -1))
     assert binomial_mod(51, 10, 10) == 0
     assert binomial_mod(10**3, 500, 3**6) == 567
