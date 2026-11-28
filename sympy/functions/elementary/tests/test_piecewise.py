@@ -833,6 +833,8 @@ def test_piecewise_series():
     p1 = Piecewise((sin(x), x < 0), (cos(x), x > 0))
     p2 = Piecewise((x + O(x**2), x < 0), (1 + O(x**2), x > 0))
     assert p1.nseries(x, n=2) == p2
+    p3 = Piecewise((Sum(exp(x*y), (y, 1, oo)), x < 0), (x, True))
+    raises(NotImplementedError, lambda: p3.nseries(x, n=2))
 
 
 def test_piecewise_as_leading_term():
