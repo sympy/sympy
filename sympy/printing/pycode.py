@@ -572,7 +572,7 @@ class ArrayPrinter:
             subranks = _get_sub_ndim_list(expr.expr)
             elems = expr.expr.args
         else:
-            subranks = _get_sub_ndim_list(expr)
+            subranks = [len(expr.expr.shape)]
             elems = [expr.expr]
         diagonal_string, letters_free, letters_dum = self._get_einsum_string(subranks, diagonal_indices)
         elems = [self._print(i) for i in elems]
