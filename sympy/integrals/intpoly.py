@@ -19,10 +19,10 @@ from __future__ import annotations
 from functools import cmp_to_key
 
 from sympy.abc import x, y, z
-from sympy.core import S, diff, Expr, Symbol
+from sympy.core import Add, S, diff, Expr
 from sympy.core.sympify import _sympify
 from sympy.geometry import Segment2D, Polygon, Point, Point2D
-from sympy.polys.polytools import LC, gcd_list, degree_list, Poly
+from sympy.polys.polytools import LC, gcd_list, total_degree
 from sympy.simplify.simplify import nsimplify
 
 
@@ -100,20 +100,11 @@ def polytope_integrate(poly, expr=None, *, clockwise=False, max_degree=None):
 
     if max_degree is not None:
         result = {}
+        dims = (x, y, z) if len(hp_params[0][0]) == 3 else (x, y)
         if expr is not None:
-            f_expr = []
-            for e in expr:
-                _ = decompose(e)
-                if len(_) == 1 and not _.popitem()[0]:
-                    f_expr.append(e)
-                elif Poly(e).total_degree() <= max_degree:
-                    f_expr.append(e)
-            expr = f_expr
+            expr = [e for e in expr if total_degree(e, *dims) <= max_degree]
 
-        if not isinstance(expr, list) and expr is not None:
-            raise TypeError('Input polynomials must be list of expressions')
-
-        if len(hp_params[0][0]) == 3:
+        if len(dims) == 3:
             result_dict = main_integrate3d(0, facets, vertices, hp_params,
                                            max_degree)
         else:
@@ -132,7 +123,7 @@ def polytope_integrate(poly, expr=None, *, clockwise=False, max_degree=None):
                 monoms = decompose(poly, separate=True)
                 for monom in monoms:
                     monom = nsimplify(monom)
-                    coeff, m = strip(monom)
+                    coeff, m = strip(monom, *dims)
                     integral_value += result_dict[m] * coeff
                 result[poly] = integral_value
         return result
@@ -143,13 +134,13 @@ def polytope_integrate(poly, expr=None, *, clockwise=False, max_degree=None):
     return main_integrate(expr, facets, hp_params)
 
 
-def strip(monom):
+def strip(monom, *gens):
     if monom.is_zero:
         return S.Zero, S.Zero
     elif monom.is_number:
         return monom, S.One
     else:
-        coeff = LC(monom)
+        coeff = LC(monom, *gens)
         return coeff, monom / coeff
 
 def _polynomial_integrate(polynomials, facets, hp_params):
@@ -208,7 +199,7 @@ def main_integrate3d(expr, facets, vertices, hp_params, max_degree=None):
     result = {}
     dims = (x, y, z)
     dim_length = len(dims)
-    if max_degree:
+    if max_degree is not None:
         grad_terms = gradient_terms(max_degree, 3)
         flat_list = [term for z_terms in grad_terms
                      for x_term in z_terms
@@ -241,15 +232,15 @@ def main_integrate3d(expr, facets, vertices, hp_params, max_degree=None):
         return result
     else:
         integral_value = S.Zero
-        polynomials = decompose(expr)
-        for deg in polynomials:
+        polynomials = decompose(expr, gens=dims)
+        for deg, part in polynomials.items():
             poly_contribute = S.Zero
             facet_count = 0
             for i, facet in enumerate(facets):
                 hp = hp_params[i]
                 if hp[1].is_zero:
                     continue
-                pi = polygon_integrate(facet, hp, i, facets, vertices, expr, deg)
+                pi = polygon_integrate(facet, hp, i, facets, vertices, part, deg)
                 poly_contribute += pi *\
                     (hp[1] / norm(tuple(hp[0])))
                 facet_count += 1
@@ -289,7 +280,7 @@ def main_integrate(expr, facets, hp_params, max_degree=None):
     dim_length = len(dims)
     result = {}
 
-    if max_degree:
+    if max_degree is not None:
         grad_terms = [[0, 0, 0, 0]] + gradient_terms(max_degree)
 
         for facet_count, hp in enumerate(hp_params):
@@ -321,10 +312,10 @@ def main_integrate(expr, facets, hp_params, max_degree=None):
         return result
     else:
         if not isinstance(expr, list):
-            polynomials = decompose(expr)
+            polynomials = decompose(expr, gens=dims)
             return _polynomial_integrate(polynomials, facets, hp_params)
         else:
-            return {e: _polynomial_integrate(decompose(e), facets, hp_params) for e in expr}
+            return {e: _polynomial_integrate(decompose(e, gens=dims), facets, hp_params) for e in expr}
 
 
 def polygon_integrate(facet, hp_param, index, facets, vertices, expr, degree):
@@ -995,7 +986,7 @@ def best_origin(a, b, lineseg, expr):
     return x0
 
 
-def decompose(expr, separate=False):
+def decompose(expr, separate=False, *, gens=None):
     """Decomposes an input polynomial into homogeneous ones of
     smaller or equal degree.
 
@@ -1014,6 +1005,8 @@ def decompose(expr, separate=False):
         If True then simply return a list of the constituent monomials
         If not then break up the polynomial into constituent homogeneous
         polynomials.
+    gens : sequence of symbols, optional
+        Variables used to determine degree. Defaults to the free symbols of ``expr``.
 
     Examples
     ========
@@ -1025,41 +1018,17 @@ def decompose(expr, separate=False):
     >>> decompose(x**2 + x*y + x + y + x**3*y**2 + y**5, True)
     {x, x**2, y, y**5, x*y, x**3*y**2}
     """
-    poly_dict = {}
-
-    if isinstance(expr, Expr) and not expr.is_number:
-        if expr.is_Symbol:
-            poly_dict[1] = expr
-        elif expr.is_Add:
-            symbols = expr.atoms(Symbol)
-            degrees = [(sum(degree_list(monom, *symbols)), monom)
-                       for monom in expr.args]
-            if separate:
-                return {monom[1] for monom in degrees}
-            else:
-                for monom in degrees:
-                    degree, term = monom
-                    if poly_dict.get(degree):
-                        poly_dict[degree] += term
-                    else:
-                        poly_dict[degree] = term
-        elif expr.is_Pow:
-            _, degree = expr.args
-            poly_dict[degree] = expr
-        else:  # Now expr can only be of `Mul` type
-            degree = 0
-            for term in expr.args:
-                term_type = len(term.args)
-                if term_type == 0 and term.is_Symbol:
-                    degree += 1
-                elif term_type == 2:
-                    degree += term.args[1]
-            poly_dict[degree] = expr
-    else:
-        poly_dict[0] = expr
-
+    expr = _sympify(expr)
+    terms = Add.make_args(expr.expand())
     if separate:
-        return set(poly_dict.values())
+        return set(terms)
+
+    if gens is None:
+        gens = expr.free_symbols
+    poly_dict = {}
+    for term in terms:
+        degree = total_degree(term, *gens) if gens else 0
+        poly_dict[degree] = poly_dict.get(degree, S.Zero) + term
     return poly_dict
 
 

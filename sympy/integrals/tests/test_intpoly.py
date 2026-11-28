@@ -532,6 +532,20 @@ def test_polytopes_intersecting_sides():
         S(88161333955921)/(3*10**12)
 
 
+def test_polytope_integrate_polynomial_coefficients():
+    square = Polygon((0, 0), (0, 1), (1, 1), (1, 0))
+    expr = sqrt(3)*(2*x - 1)
+    assert polytope_integrate(square, expr) == 0
+    assert polytope_integrate(square, z*x) == z/2
+    assert polytope_integrate(square, [z, x], max_degree=0) == {z: z}
+    assert polytope_integrate(square, [expr, z*x, x**2], max_degree=1) == {
+        expr: 0, z*x: z/2}
+
+    tetrahedron = [[(0, 0, 0), (1, 0, 0), (0, 1, 0), (0, 0, 1)],
+                   [0, 2, 1], [0, 1, 3], [0, 3, 2], [1, 2, 3]]
+    assert polytope_integrate(tetrahedron, sqrt(3)*(z + 1)) == 5*sqrt(3)/24
+
+
 def test_max_degree():
     polygon = Polygon((0, 0), (0, 1), (1, 1), (1, 0))
     polys = [1, x, y, x*y, x**2*y, x*y**2]
