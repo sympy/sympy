@@ -306,7 +306,9 @@ def powsimp(expr, deep=False, combine='all', force=False, measure=count_ops):
                 ee = []  # (factor's expo. and it's current value in common_b)
                 for bi in Mul.make_args(b):
                     bib, bie = bkey(bi)
-                    if bib not in common_b or common_b[bib] < bie:
+                    if (bib not in common_b or
+                            not (common_b[bib].is_Integer and bie.is_Integer) or
+                            common_b[bib] < bie):
                         ee = bb = []  # failed
                         break
                     ee.append([bie, common_b[bib]])

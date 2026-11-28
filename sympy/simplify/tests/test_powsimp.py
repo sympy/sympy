@@ -367,3 +367,12 @@ def test_issue_22546():
     ans = ref.subs(i, e)
     assert ans.is_Pow
     assert powsimp(x**e/y**e) == ans
+
+
+
+def test_issue_31283_symbolic_count():
+    n = Symbol('n', integer=True)
+    np = Symbol('np', integer=True, positive=True)
+    for expr in (x**(2*n)*sqrt(x*y), x**(2*np)*sqrt(x*y), x**(3*n/2)*sqrt(x*y)):
+        assert powsimp(expr) == expr
+        assert powsimp(expr, combine='exp') == expr
