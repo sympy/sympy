@@ -233,7 +233,7 @@ from sympy.core import Add, S, Mul, Pow, oo
 from sympy.core.containers import Tuple
 from sympy.core.expr import AtomicExpr, Expr
 from sympy.core.function import (Function, Derivative, AppliedUndef, diff,
-    expand, expand_mul, Subs)
+    expand, expand_mul, Lambda, Subs)
 from sympy.core.numbers import nan, zoo, Number
 from sympy.core.relational import Equality, Eq
 from sympy.core.sorting import default_sort_key, ordered
@@ -717,6 +717,12 @@ def _helper_simplify(eq, hint, match, simplify=True, ics=None, **kwargs):
             for s in rv_c:
                 if s not in rv1:
                     rv1.append(s)
+        if all(s == False for s in rv1):
+            # The solution of the initial value problem may not be a member
+            # of the general solution, e.g. when the solver lost it by
+            # dividing by zero. Try a straight line as a last resort.
+            if rv_l := _get_linear_solutions(eq, func, ics):
+                rv1 = rv_l
         if simplify and len(rv1) > 1:
             rv1 = _remove_redundant_solutions(eq, rv1, order, func.args[0])
         if len(rv1) == 1:
@@ -883,6 +889,64 @@ def _get_constant_solutions(eq, func, ics):
     for sol in solve(eq, func):
         if not sol.has(x) and (const_val is None or sol == const_val):
             result.append(Eq(func, sol))
+    return result
+
+
+def _get_linear_solutions(eq, func, ics):
+    """
+    Return solutions of the form ``func = a*x + b`` that satisfy ``ics``.
+
+    This is used when none of the solutions found by the solver satisfies the
+    initial conditions. The solution of the initial value problem can then be
+    a special solution that is not part of the general solution, e.g. one
+    that was lost by dividing by zero. Constant solutions are found by
+    :func:`_get_constant_solutions`; this function also finds the lines with
+    a nonzero slope.
+
+    Examples
+    ========
+
+    >>> from sympy import symbols, Function, Eq, sqrt
+    >>> from sympy.solvers.ode.ode import _get_linear_solutions
+    >>> x = symbols("x")
+    >>> y = Function("y")
+    >>> ode = Eq(y(x).diff(x), sqrt(x - y(x)))
+    >>> _get_linear_solutions(ode, func=y(x), ics={y(2): 1})
+    [Eq(y(x), x - 1)]
+
+    """
+    from sympy.solvers.ode.subscheck import checkodesol
+
+    x = func.args[0]
+    a, b = Dummy('a'), Dummy('b')
+    line = Lambda(x, a*x + b)
+
+    eq = eq.lhs - eq.rhs if isinstance(eq, Equality) else eq
+    residual = eq.replace(func.func, line).doit()
+
+    conditions = []
+    for funcarg, value in ics.items():
+        if not funcarg.has(func.func):
+            continue
+        conditions.append(funcarg.replace(func.func, line).doit() - value)
+        if isinstance(funcarg, AppliedUndef):
+            # the ODE itself must hold at the initial point
+            conditions.append(residual.subs(x, funcarg.args[0]))
+    if not conditions:
+        return []
+
+    try:
+        candidates = solve(conditions, [a, b], dict=True)
+    except NotImplementedError:
+        return []
+
+    result = []
+    for candidate in candidates:
+        sol = Eq(func, line.expr.subs(candidate))
+        if sol.rhs.has(a, b) or sol in result:
+            continue
+        if checkodesol(eq, sol, func)[0] is True:
+            result.append(sol)
     return result
 
 
