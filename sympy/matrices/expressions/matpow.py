@@ -18,6 +18,8 @@ class MatPow(MatrixExpr):
             raise NonSquareMatrixError("Power of non-square matrix %s" % base)
 
         exp = _sympify(exp)
+        if exp.is_Matrix:
+            raise TypeError("MatPow exponent should be a scalar, not a matrix")
         obj = super().__new__(cls, base, exp)
 
         if evaluate:

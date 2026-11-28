@@ -266,3 +266,11 @@ def test_adjoint_conjugate_power():
     B = MatrixSymbol('B', n, n)
     assert (X**(-2)).adjoint().shape == (n, n)
     assert ((X**(-2)).adjoint() * B).shape == (n, n)
+
+
+def test_matpow_matrix_exponent():
+    # Issue #30900 (item E1-17): MatPow should reject matrix exponents
+    raises(TypeError, lambda: MatPow(C, C))
+    raises(TypeError, lambda: C**C)
+    X = ImmutableMatrix([[1, 2], [3, 4]])
+    raises(TypeError, lambda: MatPow(X, X))
