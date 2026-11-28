@@ -203,7 +203,8 @@ def deltaproduct(f, limit):
                 delta.subs(limit[0], k) *
                 deltaproduct(newexpr, (limit[0], k + 1, limit[2])),
                 (k, limit[1], limit[2]),
-                no_piecewise=_has_simple_delta(newexpr, limit[0])
+                no_piecewise=_has_simple_delta(newexpr, limit[0]),
+                reversed_limits=False
             )
         return _remove_multiple_delta(result)
 
@@ -223,7 +224,7 @@ def deltaproduct(f, limit):
 
 
 @cacheit
-def deltasummation(f, limit, no_piecewise=False):
+def deltasummation(f, limit, no_piecewise=False, reversed_limits=True):
     """
     Handle summations containing a KroneckerDelta.
 
@@ -301,7 +302,8 @@ def deltasummation(f, limit, no_piecewise=False):
     g = _expand_delta(f, x)
     if g.is_Add:
         return piecewise_fold(
-            g.func(*[deltasummation(h, limit, no_piecewise) for h in g.args]))
+            g.func(*[deltasummation(h, limit, no_piecewise, reversed_limits)
+                     for h in g.args]))
 
     # try to extract a simple KroneckerDelta term
     delta, expr = _extract_delta(g, x)
@@ -322,7 +324,10 @@ def deltasummation(f, limit, no_piecewise=False):
     value = solns[0]
     if no_piecewise:
         return expr.subs(x, value)
-    return Piecewise(
-        (expr.subs(x, value), Interval(*limit[1:3]).as_relational(value)),
-        (S.Zero, True)
-    )
+    a, b = limit[1:3]
+    val = expr.subs(x, value)
+    forward = (val, Interval(a, b).as_relational(value))
+    if not reversed_limits:
+        return Piecewise(forward, (S.Zero, True))
+    reverse = (-val, Interval(b + 1, a - 1).as_relational(value))
+    return Piecewise(forward, reverse, (S.Zero, True))
