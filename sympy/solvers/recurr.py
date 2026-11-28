@@ -48,6 +48,7 @@ For the sake of completeness, `f(n)` can be:
 """
 from __future__ import annotations
 from collections import defaultdict
+from itertools import chain
 
 from sympy.concrete import product
 from sympy.core.singleton import S
@@ -61,7 +62,7 @@ from sympy.core.sympify import sympify
 
 from sympy.simplify import simplify, hypersimp, hypersimilar  # type: ignore
 from sympy.solvers import solve, solve_undetermined_coeffs
-from sympy.polys import Poly, quo, gcd, lcm, roots, resultant
+from sympy.polys import Poly, quo, gcd, lcm, roots, resultant, degree
 from sympy.functions import binomial, factorial, FallingFactorial, RisingFactorial
 from sympy.matrices import Matrix, casoratian
 from sympy.utilities.iterables import numbered_symbols
@@ -463,6 +464,80 @@ def rsolve_ratio(coeffs, f, n, **hints):
             return None
 
 
+def _monic_divisors(roots_dict, n, deg):
+    """Yield the monic divisors of degree ``deg`` of the polynomial with the
+    given roots.
+
+    ``roots_dict`` maps each root to its multiplicity, as returned by
+    :func:`~.roots`. The divisors are generated one at a time, so a caller
+    that stops early does not pay for the others.
+
+    Examples
+    ========
+
+    >>> from sympy.solvers.recurr import _monic_divisors
+    >>> from sympy.abc import n
+    >>> list(_monic_divisors({-1: 2, -2: 1}, n, 2))
+    [(n + 1)*(n + 2), (n + 1)**2]
+
+    """
+    items = list(roots_dict.items())
+    # room[i] is the highest degree the roots from i on can still give
+    room = [0]*(len(items) + 1)
+    for i in reversed(range(len(items))):
+        room[i] = room[i + 1] + items[i][1]
+
+    def divisors(i, left):
+        if left > room[i]:
+            return
+        if i == len(items):
+            yield S.One
+            return
+        root, mult = items[i]
+        for k in range(min(mult, left) + 1):
+            for d in divisors(i + 1, left - k):
+                yield (n - root)**k*d
+
+    yield from divisors(0, deg)
+
+
+def _degree_differences(coeffs, n):
+    """Return the values of ``degree(A) - degree(B)`` worth trying in
+    :func:`rsolve_hyper`.
+
+    For a pair `(A, B)` the polynomial in `Z` is built from the terms of
+    highest degree, and the degree of term `i` is
+    ``degree(coeffs[i]) + i*(degree(A) - degree(B))`` plus a constant. If
+    only one term has the highest degree, the polynomial is a monomial and
+    its only root is `Z = 0`, so the pair gives no solution. The difference
+    must therefore make two of the terms tie for the highest degree, i.e. it
+    is minus the slope of an edge of the Newton polygon of the recurrence.
+
+    Examples
+    ========
+
+    >>> from sympy.solvers.recurr import _degree_differences
+    >>> from sympy.abc import n
+    >>> _degree_differences([-1, (n + 1)**2], n)
+    {-2}
+    >>> _degree_differences([n**2, -2*(n + 1)**2, (n + 2)**2], n)
+    {0}
+
+    """
+    points = [(i, degree(c, n)) for i, c in enumerate(map(sympify, coeffs))
+              if not c.is_zero]
+    differences = set()
+    for k, (i, di) in enumerate(points):
+        for j, dj in points[k + 1:]:
+            delta, rem = divmod(di - dj, j - i)
+            if rem:
+                continue
+            top = di + i*delta
+            if all(dl + l*delta <= top for l, dl in points):
+                differences.add(delta)
+    return differences
+
+
 def rsolve_hyper(coeffs, f, n, **hints):
     r"""
     Given linear recurrence operator `\operatorname{L}` of order `k`
@@ -589,8 +664,10 @@ def rsolve_hyper(coeffs, f, n, **hints):
 
     p, q = coeffs[0], coeffs[r].subs(n, n - r + 1)
 
-    p_factors = list(roots(p, n).keys())
-    q_factors = list(roots(q, n).keys())
+    p_roots = roots(p, n)
+    q_roots = roots(q, n)
+    p_factors = list(p_roots.keys())
+    q_factors = list(q_roots.keys())
 
     factors = [(S.One, S.One)]
 
@@ -606,7 +683,42 @@ def rsolve_hyper(coeffs, f, n, **hints):
 
     factors = p + factors + q
 
-    for A, B in factors:
+    # Petkovsek's algorithm needs every monic divisor A of p and B of q, not
+    # only the linear ones above, e.g. B = (n + 1)**2 for
+    # (n + 1)**2*y(n + 1) - y(n) = 0 and A = (n + 1)*(n + 2) for
+    # y(n + 1) - (n + 1)*(n + 2)*y(n) = 0. Roots known to be non-real are
+    # left out: the products over them cannot be simplified yet.
+    p_real = {root: m for root, m in p_roots.items()
+              if root.is_extended_real is not False}
+    q_real = {root: m for root, m in q_roots.items()
+              if root.is_extended_real is not False}
+
+    differences = _degree_differences(coeffs, n)
+
+    def extra_factors():
+        # Generated lazily and only for the degree differences that can give
+        # a solution, so a recurrence solved by the first candidates never
+        # builds the up to 2**deg(p) * 2**deg(q) pairs.
+        p_deg, q_deg = sum(p_real.values()), sum(q_real.values())
+        if p_deg < 2 and q_deg < 2:
+            return
+        for delta in sorted(differences):
+            for B_deg in range(max(0, -delta), min(q_deg, p_deg - delta) + 1):
+                for A in _monic_divisors(p_real, n, B_deg + delta):
+                    for B in _monic_divisors(q_real, n, B_deg):
+                        yield A, B
+
+    linear, seen = set(factors), set()
+    for A, B in chain(factors, extra_factors()):
+        if kernel and len(kernel) == r:
+            # a recurrence of order r has at most r independent solutions
+            break
+        if (A, B) in seen:
+            continue
+        seen.add((A, B))
+        if r and degree(A, n) - degree(B, n) not in differences:
+            # the polynomial in Z would have no nonzero root
+            continue
         polys, degrees = [], []
         D = A*B.subs(n, n + r - 1)
 
@@ -632,7 +744,7 @@ def rsolve_hyper(coeffs, f, n, **hints):
                 poly += coeff * Z**i
 
         for z in roots(poly, Z).keys():
-            if z.is_zero:
+            if z.is_zero or kernel and len(kernel) == r:
                 continue
 
             recurr_coeffs = [polys[i].as_expr()*z**i for i in range(r + 1)]
@@ -652,11 +764,22 @@ def rsolve_hyper(coeffs, f, n, **hints):
                 # this indicates that the term y(n_root) is zero, and one should
                 # start the product with the term y(n_root + 1).
                 n0 = 0
-                for n_root in roots(ratio.as_numer_denom()[1], n).keys():
+                num, den = ratio.as_numer_denom()
+                for n_root in roots(den, n).keys():
                     if n_root.has(I):
                         return None
                     elif (n0 < (n_root + 1)) == True:
                         n0 = n_root + 1
+                # A nonnegative integer root of the numerator at or after n0
+                # makes the product zero from there on. Such solutions with
+                # finite support are left to the linear factors, as before,
+                # since the casoratian below does not see that e.g. the
+                # products of n/(n + 1) and of n**2/(n + 1)**2 from 0 are
+                # the same sequence 1, 0, 0, ...
+                if (A, B) not in linear and any(
+                        k.is_integer and (k >= n0) == True
+                        for k in roots(num, n)):
+                    continue
                 K = product(ratio, (n, n0, n - 1))
                 if K.has(factorial, FallingFactorial, RisingFactorial):
                     K = simplify(K)
