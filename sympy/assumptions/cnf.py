@@ -388,24 +388,36 @@ class CNF:
 
         return And(*(Or(*(remove_literal(arg) for arg in clause)) for clause in cnf.clauses))
 
-
 class EncodedCNF:
     """
     Class for encoding the CNF expression.
+
+    Invariants:
+    - ``self.data`` is a list of sets of nonzero signed integers.
+    - ``self.data == []`` represents ``True`` (empty conjunction).
+    - ``self.data == [set()]`` represents ``False`` (contains an empty clause).
+    - Tautological clauses (containing ``x`` and ``-x``, or ``S.true``) are omitted.
     """
+
     def __init__(self, data=None, encoding=None):
-        if not data and not encoding:
-            data = []
-            encoding = {}
-        self.data = data
-        self.encoding = encoding
-        self._symbols = list(encoding.keys())
+        self.data = []
+        self._clause_set = set()
+        self.encoding = {}
+        self._symbols = []
+        if data is not None:
+            for clause in data:
+                self.add_clause(clause)
+        if encoding is not None:
+            self.encoding = dict(encoding)
+            self._symbols = list(encoding.keys())
 
     def from_cnf(self, cnf):
-        self._symbols = list(cnf.all_predicates())
+        self._symbols = [s for s in cnf.all_predicates() if s not in (S.true, S.false)]
         n = len(self._symbols)
         self.encoding = dict(zip(self._symbols, range(1, n + 1)))
-        self.data = [self.encode(clause) for clause in cnf.clauses]
+        self.data = []
+        self._clause_set = set()
+        self.add_from_cnf(cnf)
 
     @property
     def symbols(self):
@@ -416,16 +428,22 @@ class EncodedCNF:
         return range(1, len(self._symbols) + 1)
 
     def copy(self):
-        new_data = [set(clause) for clause in self.data]
-        return EncodedCNF(new_data, dict(self.encoding))
+        new_cnf = EncodedCNF()
+        new_cnf.data = [set(c) for c in self.data]
+        new_cnf._clause_set = set(self._clause_set)
+        new_cnf.encoding = dict(self.encoding)
+        new_cnf._symbols = list(self._symbols)
+        return new_cnf
 
     def add_prop(self, prop):
         cnf = CNF.from_prop(prop)
         self.add_from_cnf(cnf)
 
     def add_from_cnf(self, cnf):
-        clauses = [self.encode(clause) for clause in cnf.clauses]
-        self.data += clauses
+        for clause in cnf.clauses:
+            encoded = self.encode(clause)
+            if encoded is not None:
+                self.add_clause(encoded)
 
     def new_auxiliary_variable(self):
         token = object()
@@ -447,4 +465,45 @@ class EncodedCNF:
             return value
 
     def encode(self, clause):
-        return {self.encode_arg(arg) if not arg.lit == S.false else 0 for arg in clause}
+        encoded_clause = set()
+        for arg in clause:
+            if arg.lit == S.true:
+                if not arg.is_Not:
+                    return None
+                continue
+            if arg.lit == S.false:
+                if arg.is_Not:
+                    return None
+                continue
+            lit = self.encode_arg(arg)
+            if -lit in encoded_clause:
+                return None
+            encoded_clause.add(lit)
+        return encoded_clause
+
+    def add_clause(self, clause):
+        """Normalize and add a single clause of nonzero signed integer literals."""
+        if self.data == [set()]:
+            return
+
+        normalized = set()
+        for lit in clause:
+            if type(lit) is not int:
+                if not isinstance(lit, int) or isinstance(lit, bool):
+                    raise ValueError(f"Invalid CNF literal {lit!r}: expected nonzero int.")
+                lit = int(lit)
+            if lit == 0:
+                raise ValueError(f"Invalid CNF literal {lit!r}: expected nonzero int.")
+            if -lit in normalized:
+                return
+            normalized.add(lit)
+
+        if not normalized:
+            self.data = [set()]
+            self._clause_set = {frozenset()}
+            return
+
+        fs = frozenset(normalized)
+        if fs not in self._clause_set:
+            self._clause_set.add(fs)
+            self.data.append(normalized)

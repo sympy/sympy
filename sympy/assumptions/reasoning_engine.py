@@ -70,7 +70,6 @@ class ReasoningEngine:
         else:
             return selector_value > 0
 
-
 def _encode_with_selector(prop: CNF, encoded: EncodedCNF,
                           activation_literal: int) -> None:
     """
@@ -82,7 +81,8 @@ def _encode_with_selector(prop: CNF, encoded: EncodedCNF,
     clauses must hold; when False, the added literal satisfies every clause,
     deactivating them.
     """
-    encoded.data.extend(
-        (encoded.encode(clause) - {0}) | {-activation_literal}
-        for clause in prop.clauses
-    )
+    for clause in prop.clauses:
+        encoded_clause = encoded.encode(clause)
+        if encoded_clause is not None:
+            encoded.add_clause(encoded_clause | {-activation_literal})
+

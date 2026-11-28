@@ -28,31 +28,58 @@ def z3_satisfiable(expr, all_models=False):
     """
     Check satisfiability of a Boolean expression using the Z3 theorem prover.
     """
+    z3 = import_module("z3")
+    if z3 is None:
+        raise ImportError("z3 is not installed")
+
     if not isinstance(expr, EncodedCNF):
         exprs = EncodedCNF()
         exprs.add_prop(expr)
         expr = exprs
 
-    # Return UNSAT when False (encoded as 0) or empty clause is present in the CNF
-    if {0} in expr.data or set() in expr.data:
+    if not expr.data:
+        if all_models:
+            return iter([{True: True}])
+        return {True: True}
+
+    if set() in expr.data:
         if all_models:
             return (f for f in [False])
         return False
 
-    z3 = import_module("z3")
-    if z3 is None:
-        raise ImportError("z3 is not installed")
-
     s = encoded_cnf_to_z3_solver(expr, z3)
 
-    res = str(s.check())
-    if res == "unsat":
-        return False
-    elif res == "sat":
-        sympy_model = z3_model_to_sympy_model(s.model(), expr)
-        return {True: True} if sympy_model == {} else sympy_model
-    else:
-        return None
+    if not all_models:
+        res = str(s.check())
+        if res == "unsat":
+            return False
+        elif res == "sat":
+            sympy_model = z3_model_to_sympy_model(s.model(), expr)
+            return {True: True} if sympy_model == {} else sympy_model
+        else:
+            return None
+
+    def _gen():
+        satisfiable = False
+        while str(s.check()) == "sat":
+            m = s.model()
+            sympy_model = z3_model_to_sympy_model(m, expr)
+            yield {True: True} if sympy_model == {} else sympy_model
+            satisfiable = True
+            block = []
+            for var_id in expr.variables:
+                val = m.eval(z3.Bool(f"d{var_id}"), model_completion=True)
+                if z3.is_true(val):
+                    block.append(f"(not d{var_id})")
+                else:
+                    block.append(f"d{var_id}")
+            if not block:
+                break
+            s.from_string("(assert (or " + " ".join(block) + "))")
+        if not satisfiable:
+            yield False
+
+    return _gen()
 
 
 def z3_model_to_sympy_model(z3_model, enc_cnf):
