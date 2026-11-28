@@ -1208,3 +1208,15 @@ def test_logcombine_numeric_log_factors():
     for base in [sqrt(2), pi]:
         expr = Mul(Rational(1, 3), 1 + 2*log(base, evaluate=False), evaluate=False)
         assert logcombine(expr) == Rational(1, 3) + log(base**Rational(2, 3))
+
+
+
+def test_issue_31283_sum_simplify_variable_capture():
+    from sympy.simplify.simplify import sum_simplify
+    m = Symbol('m')
+    e = x*Sum(x, (x, 1, m)) + Sum(x, (x, 1, m))
+    assert sum_simplify(e) == e
+    assert simplify(e).subs({x: 5, m: 2}) == 18
+    e2 = x**2*Sum(x, (x, 1, m)) + x*Sum(x, (x, 1, m))
+    assert sum_simplify(e2) == e2
+    assert simplify(e2).subs({x: 5, m: 2}) == 90

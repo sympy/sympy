@@ -887,6 +887,8 @@ def sum_add(self, other, method=0):
         args = Mul.make_args(val)
         sumv = next(x for x in args if isinstance(x, Sum))
         constant = Mul(*[x for x in args if x != sumv])
+        if constant.free_symbols.intersection(sumv.variables):
+            return val
         return Sum(constant * sumv.function, *sumv.limits)
 
     if isinstance(self, Mul):
@@ -899,7 +901,7 @@ def sum_add(self, other, method=0):
     else:
         rother = other
 
-    if type(rself) is type(rother):
+    if isinstance(rself, Sum) and isinstance(rother, Sum):
         if method == 0:
             if rself.limits == rother.limits:
                 return factor_sum(Sum(rself.function + rother.function, *rself.limits))
