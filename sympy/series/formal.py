@@ -1769,7 +1769,7 @@ class FormalPowerSeriesInverse(FiniteFormalPowerSeries):
 
         """
         ffps = self.ffps
-        terms = [ffps.zero_coeff()]
+        terms = [1 / ffps.zero_coeff()]
 
         for i in range(1, n):
             bell_seq = ffps.coeff_bell(i)
