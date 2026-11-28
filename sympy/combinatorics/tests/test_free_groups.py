@@ -259,3 +259,12 @@ def test_FreeGroupElm_cyclic():
     assert identity.is_cyclic_conjugate(x * x**-1)
     v = x*y*x*y*x
     assert v.cyclic_conjugates() == {x*y*x**2*y, x**2*y*x*y, y*x*y*x**2, y*x**2*y*x, x*y*x*y*x}
+
+def test_FreeGroupElm_power_of():
+    assert F.identity.power_of(F.identity) is True
+    assert F.identity.power_of(x) is True
+    assert x.power_of(F.identity) is False
+    assert (x*y).power_of(F.identity) is False
+    assert ((x*y)**2).power_of(x*y) is True
+    assert (x**-3).power_of(x) is True
+    assert (x*y).power_of(x) is False

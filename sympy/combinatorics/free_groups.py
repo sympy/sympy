@@ -1359,6 +1359,8 @@ class FreeGroupElement(CantSympify, DefaultPrinting, tuple):
             return True
 
         l = len(other)
+        if l == 0:
+            return False
         if l == 1:
             # self has to be a power of one generator
             gens = self.contains_generators()
