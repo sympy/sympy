@@ -416,6 +416,9 @@ class Application(Basic, metaclass=FunctionClass):
             callable(old) and callable(new) and
             old == self.func and len(self.args) in new.nargs):
             return new(*[i._subs(old, new) for i in self.args])
+        if old.is_Pow and old.base == self and isinstance(self, Expr) and (old.exp.is_integer or old.exp.is_negative):
+            from sympy.core.power import Pow
+            return Pow(self, S.One, evaluate=False)._eval_subs(old, new)
 
 
 class Function(Application, Expr):

@@ -940,3 +940,16 @@ def test_guard_against_indeterminate_evaluation():
     assert eq.subs([(y, oo), (x, 1)]) is S.NaN
     assert eq.subs({x: 1, y: oo}) is S.NaN
     assert eq.subs([(x, 1), (y, oo)], simultaneous=True) is S.NaN
+
+
+def test_issue_26405():
+    f = Function('f')
+    assert cos(x).subs(1/cos(x), y) == 1/y
+    assert f(x).subs(1/f(x), y) == 1/y
+    t = Tuple(cos(x)**2, cos(x), 1/cos(x), 1/cos(x)**2)
+    assert t.subs(1/cos(x), 1/y) == (y**2, y, 1/y, y**(-2))
+    tf = Tuple(f(x)**2, f(x), 1/f(x), 1/f(x)**2)
+    assert tf.subs(1/f(x), 1/y) == (y**2, y, 1/y, y**(-2))
+
+    f_pos = Function('f', positive=True)
+    assert f_pos(x).subs(f_pos(x)**2, y) == sqrt(y)
