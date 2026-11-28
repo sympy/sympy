@@ -36,6 +36,12 @@ class PythonPrinter(ReprPrinter, StrPrinter):
             self.symbols.append(symbol)
         return StrPrinter._print_Symbol(self, expr)
 
+    def _print_Limit(self, expr):
+        e, z, z0, dir = expr.args
+        dir_str = dir.name
+        return "Limit(%s, %s, %s, dir='%s')" % (
+            self._print(e), self._print(z), self._print(z0), dir_str)
+
     def _print_module(self, expr):
         raise ValueError('Modules in the expression are unacceptable')
 

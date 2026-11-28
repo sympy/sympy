@@ -9,7 +9,7 @@ from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.functions.elementary.trigonometric import sin
 from sympy.integrals.integrals import Integral
 from sympy.matrices.dense import Matrix
-from sympy.series.limits import limit
+from sympy.series.limits import (limit, Limit)
 
 from sympy.printing.python import python
 
@@ -191,6 +191,28 @@ def test_python_matrix():
 def test_python_limits():
     assert python(limit(x, x, oo)) == 'e = oo'
     assert python(limit(x**2, x, 0)) == 'e = 0'
+
+    f = Function('f')
+    lim = Limit(f(x), x, 0)
+    expected = "x = Symbol('x')\nf = Function('f')\ne = Limit(f(x), x, 0, dir='+')"
+    assert python(lim) == expected
+    loc = {}
+    exec(python(lim), {'Symbol': Symbol, 'Function': Function, 'Limit': Limit}, loc)
+    assert loc['e'] == lim
+
+    lim_neg = Limit(f(x), x, 0, dir='-')
+    expected_neg = "x = Symbol('x')\nf = Function('f')\ne = Limit(f(x), x, 0, dir='-')"
+    assert python(lim_neg) == expected_neg
+    loc = {}
+    exec(python(lim_neg), {'Symbol': Symbol, 'Function': Function, 'Limit': Limit}, loc)
+    assert loc['e'] == lim_neg
+
+    lim_both = Limit(f(x), x, 0, dir='+-')
+    expected_both = "x = Symbol('x')\nf = Function('f')\ne = Limit(f(x), x, 0, dir='+-')"
+    assert python(lim_both) == expected_both
+    loc = {}
+    exec(python(lim_both), {'Symbol': Symbol, 'Function': Function, 'Limit': Limit}, loc)
+    assert loc['e'] == lim_both
 
 def test_issue_20762():
     # Make sure Python removes curly braces from subscripted variables
