@@ -1911,7 +1911,9 @@ def nc_simplify(expr, deep=True):
             if l in m[end-1][0]:
                 p += 1
                 end += l
-            elif isinstance(args[end], _Pow) and args[end].args[0].args == subterm:
+            elif (isinstance(args[end], _Pow) and
+                  args[end].args[0].args == subterm and
+                  args[end].args[0] == _Mul(*subterm)):
                 # for cases like a*b*a*b*(a*b)**2*a*b
                 p += args[end].args[1]
                 end += 1
