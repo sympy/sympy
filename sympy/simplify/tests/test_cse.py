@@ -845,3 +845,17 @@ def test_cse_matrix_kalman_filter():
         MatAdd(Sigma, MatMul(S.NegativeOne, Sigma, x0, x1, H, Sigma)),
     ]
     assert cse_expr == (replacements_expected, reduced_exprs_expected)
+
+
+
+def test_issue_31283_cse_release_variables_collision():
+    from sympy.simplify.cse_main import cse_release_variables
+    u = Symbol('_0')
+    rv, rvs = cse_release_variables(*cse([(x + y)**2 + u, sin(x + y)]))
+    assert rvs == (Symbol('_1'), Symbol('_2'))
+    assert rv == [
+        (Symbol('x0'), x + y),
+        (Symbol('_1'), u + Symbol('x0')**2),
+        (Symbol('_2'), sin(Symbol('x0'))),
+        (Symbol('x0'), None),
+    ]

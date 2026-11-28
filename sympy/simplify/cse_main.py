@@ -195,7 +195,15 @@ def cse_release_variables(r, e):
         return r, e
 
     s, p = zip(*r)
-    esyms = symbols('_:%d' % len(e))
+    exclude = set(s)
+    for expr in (*p, *e):
+        if isinstance(expr, Basic):
+            for sym in expr.free_symbols:
+                exclude.add(sym)
+                if hasattr(sym, 'name'):
+                    exclude.add(Symbol(sym.name))
+    sym_gen = numbered_symbols(prefix='_', exclude=exclude)
+    esyms = tuple(next(sym_gen) for _ in range(len(e)))
     syms = list(esyms)
     s = list(s)
     in_use = set(s)
