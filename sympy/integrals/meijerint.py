@@ -455,7 +455,11 @@ def _split_mul(f, x):
                 c, t = a.base.as_coeff_mul(x)
                 if t != (x,):
                     c, t = expand_mul(a.base).as_coeff_mul(x)
-                if t == (x,):
+                if t == (x,) and (
+                    a.exp.is_integer
+                    or c.is_positive is not False
+                    or x.is_positive
+                ):
                     po *= x**a.exp
                     fac *= unpolarify(polarify(c**a.exp, subs=False))
                     continue
@@ -1666,10 +1670,15 @@ def meijerint_indefinite(f, x):
     f = sympify(f)
     results = []
     for a in sorted(_find_splitting_points(f, x) | {S.Zero}, key=default_sort_key):
-        res = _meijerint_indefinite_1(f.subs(x, x + a), x)
+        if a == 0:
+            res = _meijerint_indefinite_1(f, x)
+        else:
+            d = _dummy('x', 'meijerint-indefinite', f)
+            res = _meijerint_indefinite_1(f.subs(x, d + a), d)
+            if res:
+                res = res.subs(d, x - a)
         if not res:
             continue
-        res = res.subs(x, x - a)
         if _has(res, hyper, meijerg):
             results.append(res)
         else:

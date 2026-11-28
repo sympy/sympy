@@ -802,3 +802,10 @@ def test_issue_25949():
     from sympy.core.symbol import symbols
     y = symbols("y", nonzero=True)
     assert integrate(cosh(y*(x + 1)), (x, -1, -0.25), meijerg=True) == sinh(0.75*y)/y
+
+
+def test_issue_31365():
+    assert integrate((x - 1)**2*sqrt(x)*sqrt(1 - x), (x, 0, 1)) == 5*pi/128
+    assert integrate((x - 1)**2*sqrt(x)*sqrt(1 - x), (x, 0, 1), meijerg=True) == 5*pi/128
+    assert integrate((2*x - 2)**2*sqrt(x)*sqrt(1 - x), (x, 0, 1), meijerg=True) == 5*pi/32
+    assert integrate(x**2*sqrt(-x)*sqrt(x + 1), (x, -1, 0), meijerg=True) == 5*pi/128
