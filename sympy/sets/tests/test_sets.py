@@ -1,7 +1,7 @@
 from __future__ import annotations
 from sympy.concrete.summations import Sum
 from sympy.core.add import Add
-from sympy.core.containers import TupleKind
+from sympy.core.containers import Tuple, TupleKind
 from sympy.core.function import Lambda
 from sympy.core.kind import NumberKind, UndefinedKind
 from sympy.core.numbers import (Float, I, Rational, nan, oo, pi, zoo)
@@ -723,6 +723,14 @@ def test_ProductSet():
     assert Z2.contains((x, y)) == Contains(x, S.Integers) & Contains(y, S.Integers)
     assert unchanged(Contains, (x, y), Z2)
     assert Contains((1, 2), Z2) is S.true
+
+
+def test_ProductSet_iter_returns_Tuple():
+    product = ProductSet(FiniteSet(x), FiniteSet(1, 2))
+    elements = list(product)
+    assert elements == [Tuple(x, 1), Tuple(x, 2)]
+    assert all(isinstance(element, Tuple) for element in elements)
+    assert [element.subs(x, 3) for element in elements] == [Tuple(3, 1), Tuple(3, 2)]
 
 
 def test_ProductSet_of_single_arg_is_not_arg():
@@ -1758,6 +1766,14 @@ def test_DisjointUnion_iter():
     raises(StopIteration, lambda: next(it))
 
     raises(ValueError, lambda: iter(DisjointUnion(Interval(0, 1), S.EmptySet)))
+
+def test_DisjointUnion_iter_returns_Tuple():
+    union = DisjointUnion(FiniteSet(x), FiniteSet(1))
+    elements = list(union)
+    assert set(elements) == {Tuple(x, 0), Tuple(1, 1)}
+    assert all(isinstance(element, Tuple) for element in elements)
+    assert [element.subs(x, 3) for element in elements if element[0] == x] == [Tuple(3, 0)]
+
 
 def test_DisjointUnion_len():
     assert len(DisjointUnion(FiniteSet(3, 5, 7, 9), FiniteSet(x, y, z))) == 7
