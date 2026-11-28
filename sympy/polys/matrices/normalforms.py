@@ -309,7 +309,7 @@ def _gcdex(a, b):
     return x, y, g
 
 
-def _hermite_normal_form(A):
+def _hermite_normal_form(A, full = False):
     r"""
     Compute the Hermite Normal Form of DomainMatrix *A* over :ref:`ZZ`.
 
@@ -343,6 +343,8 @@ def _hermite_normal_form(A):
     # way up.
     m, n = A.shape
     A = A.to_ddm().copy()
+    if full:
+        U = DomainMatrix.eye(n, ZZ).to_ddm()
     # Our goal is to put pivot entries in the rightmost columns.
     # Invariant: Before processing each row, k should be the index of the
     # leftmost column in which we have so far put a pivot.
@@ -364,10 +366,14 @@ def _hermite_normal_form(A):
                 u, v, d = _gcdex(A[i][k], A[i][j])
                 r, s = A[i][k] // d, A[i][j] // d
                 add_columns(A, k, j, u, v, -s, r)
+                if full:
+                    add_columns(U, k, j, u, v, -s, r)
         b = A[i][k]
         # Do not want the pivot entry to be negative.
         if b < 0:
             add_columns(A, k, k, -1, 0, -1, 0)
+            if full:
+                add_columns(A, k, k, -1, 0, -1, 0)
             b = -b
         # The pivot entry will be 0 iff the row was 0 from the pivot col all the
         # way to the left. In this case, we are still working on the same pivot
@@ -381,10 +387,15 @@ def _hermite_normal_form(A):
             for j in range(k + 1, n):
                 q = A[i][j] // b
                 add_columns(A, j, k, 1, -q, 0, 1)
+                if full:
+                    add_columns(U, j, k, 1, -q, 0, 1)
     # Finally, the HNF consists of those columns of A in which we succeeded in making
     # a nonzero pivot.
-    return DomainMatrix.from_rep(A.to_dfm_or_ddm())[:, k:]
-
+    H = DomainMatrix.from_rep(A.to_dfm_or_ddm())[:, k:]
+    if full:
+        U = DomainMatrix.from_rep(U.to_dfm_or_ddm())[:, k:]
+        return H,U
+    return H
 
 def _hermite_normal_form_modulo_D(A, D):
     r"""
@@ -539,3 +550,43 @@ def hermite_normal_form(A, *, D=None, check_rank=False):
         return _hermite_normal_form_modulo_D(A, D)
     else:
         return _hermite_normal_form(A)
+
+def hermite_normal_decomp(A):
+    r"""
+    Compute the Hermite Normal Form decomposition of :py:class:`~.DomainMatrix`
+    *A* over :ref:`ZZ`, returning ``(H, U)`` such that ``A * U == H``.
+
+    Examples
+    ========
+
+    >>> from sympy import ZZ
+    >>> from sympy.polys.matrices import DomainMatrix
+    >>> from sympy.polys.matrices.normalforms import hermite_normal_decomp
+    >>> m = DomainMatrix([[ZZ(12), ZZ(6), ZZ(4)],
+    ...                   [ZZ(3), ZZ(9), ZZ(6)],
+    ...                   [ZZ(2), ZZ(16), ZZ(14)]], (3, 3), ZZ)
+    >>> H, U = hermite_normal_decomp(m)
+    >>> m * U == H
+    True
+
+    Parameters
+    ==========
+
+    A : $m \times n$ ``DomainMatrix`` over :ref:`ZZ`.
+
+    Returns
+    =======
+
+    (:py:class:`~.DomainMatrix`, :py:class:`~.DomainMatrix`)
+        Tuple ``(H, U)`` where *H* is the HNF of *A* and *U* satisfies
+        ``A * U == H`` (and is unimodular when *A* has full column rank).
+
+    Raises
+    ======
+
+    DMDomainError
+        If the domain of the matrix is not :ref:`ZZ`.
+    """
+    if not A.domain.is_ZZ:
+        raise DMDomainError("Matrix must be over domain ZZ.")
+    return _hermite_normal_form(A, full = True)
