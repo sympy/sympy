@@ -3,6 +3,7 @@ from collections import defaultdict
 from sympy.core.containers import Tuple
 from sympy.core.singleton import S
 from sympy.core.symbol import (Dummy, Symbol)
+from sympy.functions.combinatorial.factorials import binomial
 from sympy.functions.combinatorial.numbers import totient
 from sympy.ntheory import n_order, is_primitive_root, is_quad_residue, \
     legendre_symbol, jacobi_symbol, primerange, sqrt_mod, \
@@ -308,13 +309,17 @@ def test_residue():
     raises(ValueError, lambda: polynomial_congruence(x**i, 6125))
     raises(ValueError, lambda: polynomial_congruence(0.1*x**2 + 6, 100))
 
-    assert binomial_mod(-1, 1, 10) == 0
+    assert binomial_mod(-1, 1, 10) == 9
     assert binomial_mod(1, -1, 10) == 0
     raises(ValueError, lambda: binomial_mod(2, 1, -1))
     assert binomial_mod(51, 10, 10) == 0
     assert binomial_mod(10**3, 500, 3**6) == 567
     assert binomial_mod(10**18 - 1, 123456789, 4) == 0
     assert binomial_mod(10**18, 10**12, (10**5 + 3)**2) == 3744312326
+    # issue 31240: negative n uses binomial(n, m) = (-1)**m*binomial(m - n - 1, m)
+    for n, m, k in [(-1, 0, 5), (-1, 1, 5), (-2, 2, 5), (-5, 3, 11), (-7, 1, 5),
+            (-10, 7, 6), (-4, 6, 97)]:
+        assert binomial_mod(n, m, k) == binomial(n, m) % k
 
 
 @slow
