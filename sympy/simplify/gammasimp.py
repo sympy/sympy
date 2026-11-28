@@ -296,7 +296,7 @@ def _gammasimp(expr, as_comb):
                 for i in range(len(u)):
                     dj = ([((u[j] - u[i]) % 1, j) for j in range(i + 1, len(u))])
                     for one, j in dj:
-                        if one.p == 1 and one.q != 1:
+                        if one.is_Rational and one.p == 1 and one.q != 1:
                             n = one.q
                             got = [i]
                             get = list(range(1, n))
