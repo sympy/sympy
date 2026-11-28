@@ -845,3 +845,13 @@ def test_cse_matrix_kalman_filter():
         MatAdd(Sigma, MatMul(S.NegativeOne, Sigma, x0, x1, H, Sigma)),
     ]
     assert cse_expr == (replacements_expected, reduced_exprs_expected)
+
+
+
+def test_issue_31283_cse_separate_lhs():
+    from sympy import Eq
+    from sympy.simplify.cse_main import cse_separate
+    r, red = cse([Eq(x + y, 2), sin(x + y)], postprocess=cse_separate)
+    x0 = Symbol('x0')
+    assert r == [(x0, x + y)]
+    assert red == [Eq(x0, 2), sin(x0)]
