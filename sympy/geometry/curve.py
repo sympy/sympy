@@ -97,7 +97,7 @@ class Curve(GeometrySet):
         a, b = [i.evalf(n=dps, **options) for i in (a, b)]
         return self.func(f, (t, a, b))
 
-    def arbitrary_point(self, parameter='t'):
+    def arbitrary_point(self, parameter='t', *, normalize=False):
         """A parameterized point on the curve.
 
         Parameters
@@ -107,6 +107,11 @@ class Curve(GeometrySet):
             Default value is 't'.
             The Curve's parameter is selected with None or self.parameter
             otherwise the provided symbol is used.
+        normalize : bool, optional
+            If True, parameter values 0 and 1 correspond to the first and
+            last limits of the curve. Symbolic limits are treated as finite
+            unless either limit is known to be infinite, in which case the
+            original parameterization is used. The default is False.
 
         Returns
         =======
@@ -134,6 +139,8 @@ class Curve(GeometrySet):
         Point2D(2*s, s**2)
         >>> C.arbitrary_point(Symbol('a'))
         Point2D(2*a, a**2)
+        >>> C.arbitrary_point(s, normalize=True)
+        Point2D(4*s, 4*s**2)
 
         See Also
         ========
@@ -141,15 +148,16 @@ class Curve(GeometrySet):
         sympy.geometry.point.Point
 
         """
-        if parameter is None:
-            return Point(*self.functions)
-
-        tnew = _symbol(parameter, self.parameter, real=True)
         t = self.parameter
+        tnew = t if parameter is None else _symbol(parameter, t, real=True)
         if (tnew.name != t.name and
                 tnew.name in (f.name for f in self.free_symbols)):
             raise ValueError('Symbol %s already appears in object '
                 'and cannot be used as a parameter.' % tnew.name)
+        if normalize:
+            _, start, end = self.limits
+            if not (start.is_infinite or end.is_infinite):
+                tnew = start + tnew*(end - start)
         return Point(*[w.subs(t, tnew) for w in self.functions])
 
     @property
