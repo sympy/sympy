@@ -19,6 +19,8 @@ from sympy.core import Pow
 from sympy.codegen.matrix_nodes import MatrixSolve
 from sympy.codegen.numpy_nodes import logaddexp, logaddexp2
 from sympy.codegen.cfunctions import log1p, expm1, hypot, log10, exp2, log2, Sqrt
+from sympy.tensor.indexed import IndexedBase
+from sympy.tensor.array.expressions.from_indexed_to_array import convert_indexed_to_array
 from sympy.tensor.array import Array
 from sympy.tensor.array.expressions.array_expressions import ArrayTensorProduct, ArrayAdd, \
     PermuteDims, ArrayDiagonal
@@ -91,6 +93,21 @@ def test_multiple_sums():
     x_ = np.linspace(-1, +1, 10)
     assert np.allclose(f(a_, b_, c_, d_, x_),
                        sum((x_ + j_) * i_ for i_ in range(a_, b_ + 1) for j_ in range(c_, d_ + 1)))
+
+
+def test_numpy_diagonal_of_contraction():
+    if not np:
+        skip("NumPy not installed")
+
+    j, k = symbols('j k', integer=True)
+    M = IndexedBase('M', shape=(2, 2))
+    v = IndexedBase('v', shape=(2,))
+    expr = v[k] * Sum(M[j, k] * v[j], (j, 0, 1))
+    f = lambdify((M, v), convert_indexed_to_array(expr), 'numpy')
+
+    matrix = np.array([[1, 2], [3, 4]])
+    vector = np.array([5, 7])
+    assert np.array_equal(f(matrix, vector), vector * (matrix.T @ vector))
 
 
 def test_codegen_einsum():
