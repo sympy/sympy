@@ -590,4 +590,3 @@ def hermite_normal_decomp(A):
     if not A.domain.is_ZZ:
         raise DMDomainError("Matrix must be over domain ZZ.")
     return _hermite_normal_form(A, full = True)
-
