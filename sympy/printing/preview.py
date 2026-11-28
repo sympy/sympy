@@ -110,34 +110,65 @@ def pyglet_viewer(fname, fmt):
     win.close()
 
 
-def _get_latex_main(expr, *, preamble=None, packages=(), extra_preamble=None,
-                    euler=True, fontsize=None, **latex_settings):
-    """
-    Generate string of a LaTeX document rendering ``expr``.
-    """
-    if preamble is None:
-        actual_packages = packages + ("amsmath", "amsfonts")
-        if euler:
-            actual_packages += ("euler",)
-        package_includes = "\n" + "\n".join(["\\usepackage{%s}" % p
-                                             for p in actual_packages])
-        if extra_preamble:
-            package_includes += extra_preamble
+_PDF_TEX_CMDS = frozenset({"context", "pdflatex", "xelatex", "lualatex"})
 
+
+def _is_context_cmd(latex_cmd):
+    return Path(latex_cmd).stem.lower() == "context"
+
+
+def _get_latex_main(expr, *, preamble=None, packages=(), extra_preamble=None,
+                    euler=True, fontsize=None, latex_cmd='latex',
+                    **latex_settings):
+    """
+    Generate string of a LaTeX or ConTeXt document rendering ``expr``.
+    """
+    if latex_cmd is None:
+        latex_cmd = "latex"
+    is_context = _is_context_cmd(latex_cmd)
+
+    if preamble is None:
         if not fontsize:
             fontsize = "12pt"
         elif isinstance(fontsize, int):
             fontsize = "{}pt".format(fontsize)
-        preamble = r"""\documentclass[varwidth,%s]{standalone}
+
+        if is_context:
+            module_includes = ""
+            if packages:
+                module_includes = "\n" + "\n".join(
+                    "\\usemodule[%s]" % p for p in packages
+                )
+            if extra_preamble:
+                module_includes += extra_preamble
+            preamble = r"""\setupbodyfont[%s]%s
+
+\starttext
+\startTEXpage
+""" % (fontsize, module_includes)
+            end_doc = "\\stopTEXpage\n\\stoptext"
+        else:
+            actual_packages = packages + ("amsmath", "amsfonts")
+            if euler:
+                actual_packages += ("euler",)
+            package_includes = "\n" + "\n".join(
+                "\\usepackage{%s}" % p for p in actual_packages
+            )
+            if extra_preamble:
+                package_includes += extra_preamble
+
+            preamble = r"""\documentclass[varwidth,%s]{standalone}
 %s
 
 \begin{document}
 """ % (fontsize, package_includes)
+            end_doc = r"\end{document}"
     else:
         if packages or extra_preamble:
             raise ValueError("The \"packages\" or \"extra_preamble\" keywords"
                              "must not be set if a "
                              "custom LaTeX preamble was specified")
+        end_doc = r"\stoptext" if is_context else r"\end{document}"
 
     if isinstance(expr, str):
         latex_string = expr
@@ -146,7 +177,7 @@ def _get_latex_main(expr, *, preamble=None, packages=(), extra_preamble=None,
                         latex(expr, mode='plain', **latex_settings) +
                         '$')
 
-    return preamble + '\n' + latex_string + '\n\n' + r"\end{document}"
+    return preamble + '\n' + latex_string + '\n\n' + end_doc
 
 
 @doctest_depends_on(exe=('latex', 'dvipng'), modules=('pyglet',),
@@ -154,14 +185,14 @@ def _get_latex_main(expr, *, preamble=None, packages=(), extra_preamble=None,
 def preview(expr, output='png', viewer=None, euler=True, packages=(),
             filename=None, outputbuffer=None, preamble=None, dvioptions=None,
             outputTexFile=None, extra_preamble=None, fontsize=None,
-            **latex_settings):
+            latex_cmd='latex', **latex_settings):
     r"""
-    View expression or LaTeX markup in PNG, DVI, PostScript or PDF form.
+    View expression or LaTeX/ConTeXt markup in PNG, DVI, PostScript or PDF form.
 
     If the expr argument is an expression, it will be exported to LaTeX and
     then compiled using the available TeX distribution.  The first argument,
-    'expr', may also be a LaTeX string.  The function will then run the
-    appropriate viewer for the given output format or use the user defined
+    'expr', may also be a LaTeX or ConTeXt string.  The function will then run
+    the appropriate viewer for the given output format or use the user defined
     one. By default png output is generated.
 
     By default pretty Euler fonts are used for typesetting (they were used to
@@ -169,7 +200,8 @@ def preview(expr, output='png', viewer=None, euler=True, packages=(),
     need the 'eulervm.sty' LaTeX style (in Debian/Ubuntu, install the
     texlive-fonts-extra package). If you prefer default AMS fonts or your
     system lacks 'eulervm' LaTeX package then unset the 'euler' keyword
-    argument.
+    argument. This option applies only to LaTeX and is ignored when using
+    ConTeXt.
 
     To use viewer auto-detection, lets say for 'png' output, issue
 
@@ -252,8 +284,30 @@ def preview(expr, output='png', viewer=None, euler=True, packages=(),
 
     >>> preview(x + y, outputTexFile="sample.tex")
 
+    To compile using ConTeXt or another TeX engine (such as ``'pdflatex'``,
+    ``'xelatex'``, or ``'lualatex'``) instead of ``'latex'``, pass the
+    command name or path via the ``latex_cmd`` keyword argument:
+
+    >>> preview(x + y, output='pdf', latex_cmd='context')  # doctest: +SKIP
+
+    When ``latex_cmd='context'`` is used, a ConTeXt document wrapper using
+    ``\setupbodyfont``, ``\usemodule[...]`` (for ``packages``), and
+    ``\starttext ... \stoptext`` (with ``\startTEXpage ... \stopTEXpage`` when
+    no custom ``preamble`` is given) is generated instead of a LaTeX
+    ``\documentclass`` / ``\begin{document} ... \end{document}`` wrapper.
+    Because ConTeXt and PDF-based TeX engines produce PDF directly rather than
+    DVI, ``output='dvi'`` is not supported with them, ``output='pdf'`` requires
+    no conversion step, and ``'png'``, ``'ps'``, or ``'svg'`` outputs use
+    available PDF conversion tools (such as ``pdftoppm``/``gs``,
+    ``pdftops``/``pdf2ps``, or ``pdf2svg``/``dvisvgm``).
 
     """
+    if latex_cmd is None:
+        latex_cmd = "latex"
+    cmd_name = Path(latex_cmd).stem.lower()
+    is_context = cmd_name == "context"
+    intermediate_fmt = "pdf" if cmd_name in _PDF_TEX_CMDS else "dvi"
+
     # pyglet is the default for png
     if viewer is None and output == "png":
         try:
@@ -295,9 +349,10 @@ def preview(expr, output='png', viewer=None, euler=True, packages=(),
 
     latex_main = _get_latex_main(expr, preamble=preamble, packages=packages,
                                  euler=euler, extra_preamble=extra_preamble,
-                                 fontsize=fontsize, **latex_settings)
+                                 fontsize=fontsize, latex_cmd=latex_cmd,
+                                 **latex_settings)
 
-    debug("Latex code:")
+    debug("ConTeXt code:" if is_context else "Latex code:")
     debug(latex_main)
     with tempfile.TemporaryDirectory() as workdir:
         Path(join(workdir, 'texput.tex')).write_text(latex_main, encoding='utf-8')
@@ -305,30 +360,77 @@ def preview(expr, output='png', viewer=None, euler=True, packages=(),
         if outputTexFile is not None:
             shutil.copyfile(join(workdir, 'texput.tex'), outputTexFile)
 
-        if not shutil.which('latex'):
-            raise RuntimeError("latex program is not installed")
+        if not shutil.which(latex_cmd):
+            raise RuntimeError("%s program is not installed" % latex_cmd)
+
+        if is_context:
+            compile_cmd = [latex_cmd, '--nonstopmode', 'texput.tex']
+        else:
+            compile_cmd = [
+                latex_cmd, '-halt-on-error', '-interaction=nonstopmode',
+                'texput.tex',
+            ]
 
         try:
             _check_output_no_window(
-                ['latex', '-halt-on-error', '-interaction=nonstopmode',
-                 'texput.tex'],
+                compile_cmd,
                 cwd=workdir,
                 stderr=STDOUT)
         except CalledProcessError as e:
             raise RuntimeError(
-                "'latex' exited abnormally with the following output:\n%s" %
-                e.output)
+                "'%s' exited abnormally with the following output:\n%s" %
+                (latex_cmd, e.output))
 
         src = "texput.%s" % (output)
 
-        if output != "dvi":
-            # in order of preference
-            commandnames = {
-                "ps": ["dvips"],
-                "pdf": ["dvipdfmx", "dvipdfm", "dvipdf"],
-                "png": ["dvipng"],
-                "svg": ["dvisvgm"],
-            }
+        if output != intermediate_fmt:
+            if intermediate_fmt == "pdf":
+                if output == "dvi":
+                    raise ValueError(
+                        "Output format 'dvi' is not supported when using %s"
+                        % latex_cmd
+                    )
+                commandnames = {
+                    "ps": ["pdftops", "pdf2ps"],
+                    "png": ["pdftoppm", "gs"],
+                    "svg": ["pdf2svg", "dvisvgm"],
+                }
+                defaultoptions = {
+                    "pdftoppm": ["-r", "150"],
+                    "gs": ["-r150"],
+                    "dvisvgm": ["--no-fonts"],
+                }
+                commandend = {
+                    "pdftops": ["texput.pdf", src],
+                    "pdf2ps": ["texput.pdf", src],
+                    "pdftoppm": ["-png", "-singlefile", "texput.pdf", "texput"],
+                    "gs": ["-dSAFER", "-dBATCH", "-dNOPAUSE",
+                           "-sDEVICE=pngalpha", "-sOutputFile=%s" % src,
+                           "texput.pdf"],
+                    "pdf2svg": ["texput.pdf", src],
+                    "dvisvgm": ["--pdf", "-o", src, "texput.pdf"],
+                }
+            else:
+                # in order of preference
+                commandnames = {
+                    "ps": ["dvips"],
+                    "pdf": ["dvipdfmx", "dvipdfm", "dvipdf"],
+                    "png": ["dvipng"],
+                    "svg": ["dvisvgm"],
+                }
+                defaultoptions = {
+                    "dvipng": ["-T", "tight", "-z", "9", "--truecolor"],
+                    "dvisvgm": ["--no-fonts"],
+                }
+                commandend = {
+                    "dvips": ["-o", src, "texput.dvi"],
+                    "dvipdf": ["texput.dvi", src],
+                    "dvipdfm": ["-o", src, "texput.dvi"],
+                    "dvipdfmx": ["-o", src, "texput.dvi"],
+                    "dvipng": ["-o", src, "texput.dvi"],
+                    "dvisvgm": ["-o", src, "texput.dvi"],
+                }
+
             try:
                 cmd_variants = commandnames[output]
             except KeyError:
@@ -345,20 +447,6 @@ def preview(expr, output='png', viewer=None, euler=True, packages=(),
                     raise RuntimeError("None of %s are installed" % ", ".join(cmd_variants))
                 else:
                     raise RuntimeError("%s is not installed" % cmd_variants[0])
-
-            defaultoptions = {
-                "dvipng": ["-T", "tight", "-z", "9", "--truecolor"],
-                "dvisvgm": ["--no-fonts"],
-            }
-
-            commandend = {
-                "dvips": ["-o", src, "texput.dvi"],
-                "dvipdf": ["texput.dvi", src],
-                "dvipdfm": ["-o", src, "texput.dvi"],
-                "dvipdfmx": ["-o", src, "texput.dvi"],
-                "dvipng": ["-o", src, "texput.dvi"],
-                "dvisvgm": ["-o", src, "texput.dvi"],
-            }
 
             if dvioptions is not None:
                 cmd.extend(dvioptions)
