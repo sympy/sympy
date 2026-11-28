@@ -6,7 +6,7 @@ from sympy.matrices.expressions.blockmatrix import (
     BlockMatrix, bc_dist, bc_matadd, bc_transpose, bc_inverse,
     blockcut, reblock_2x2, deblock)
 from sympy.matrices.expressions import (
-    MatrixSymbol, Identity, trace, det, ZeroMatrix, OneMatrix)
+    MatrixSymbol, Identity, trace, det, Determinant, ZeroMatrix, OneMatrix)
 from sympy.matrices.expressions.inverse import Inverse
 from sympy.matrices.expressions.matpow import MatPow
 from sympy.matrices.expressions.transpose import Transpose
@@ -15,6 +15,8 @@ from sympy.matrices import (
     Matrix, ImmutableMatrix, ImmutableSparseMatrix, zeros)
 from sympy.core import Tuple, Expr, S, Function
 from sympy.core.symbol import Symbol, symbols
+from sympy.assumptions.ask import Q
+from sympy.assumptions.assume import assuming
 from sympy.functions import transpose, im, re
 
 i, j, k, l, m, n, p = symbols('i:n, p', integer=True)
@@ -141,8 +143,120 @@ def test_BlockMatrix_Determinant():
         assert det(X) == det(A) * det(X.schur('A'))
 
     assert isinstance(det(X), Expr)
+    assert det(X) == Determinant(X)
     assert det(BlockMatrix([A])) == det(A)
     assert det(BlockMatrix([ZeroMatrix(n, n)])) == 0
+
+
+def test_BlockMatrix_triangular_Determinant():
+    A = MatrixSymbol('A', n, n)
+    D = MatrixSymbol('D', m, m)
+    C_low = MatrixSymbol('C', m, n)
+    C_up = MatrixSymbol('C', n, m)
+
+    M_lower = BlockMatrix([[A, ZeroMatrix(n, m)], [C_low, D]])
+    assert det(M_lower) == det(A)*det(D)
+
+    M_upper = BlockMatrix([[A, C_up], [ZeroMatrix(m, n), D]])
+    assert det(M_upper) == det(A)*det(D)
+
+    A2 = MatrixSymbol('A2', 2, 2)
+    D2 = MatrixSymbol('D2', 3, 3)
+    C2_low = MatrixSymbol('C2', 3, 2)
+    C2_up = MatrixSymbol('C2', 2, 3)
+    assert det(BlockMatrix([[A2, ZeroMatrix(2, 3)], [C2_low, D2]])) == det(A2)*det(D2)
+    assert det(BlockMatrix([[A2, C2_up], [ZeroMatrix(3, 2), D2]])) == det(A2)*det(D2)
+
+    E = MatrixSymbol('E', k, k)
+    B12 = MatrixSymbol('B12', n, m)
+    B13 = MatrixSymbol('B13', n, k)
+    B23 = MatrixSymbol('B23', m, k)
+    B21 = MatrixSymbol('B21', m, n)
+    B31 = MatrixSymbol('B31', k, n)
+    B32 = MatrixSymbol('B32', k, m)
+
+    M_upper_3x3 = BlockMatrix([
+        [A, B12, B13],
+        [ZeroMatrix(m, n), D, B23],
+        [ZeroMatrix(k, n), ZeroMatrix(k, m), E],
+    ])
+    assert det(M_upper_3x3) == det(A)*det(D)*det(E)
+
+    M_lower_3x3 = BlockMatrix([
+        [A, ZeroMatrix(n, m), ZeroMatrix(n, k)],
+        [B21, D, ZeroMatrix(m, k)],
+        [B31, B32, E],
+    ])
+    assert det(M_lower_3x3) == det(A)*det(D)*det(E)
+
+    M1 = Matrix([[1, 2], [3, 4]])
+    M2 = Matrix([[2, 1], [0, 3]])
+    M3 = Matrix([[5]])
+    M21 = Matrix([[1, 0], [2, -1]])
+    M31 = Matrix([[4, 5]])
+    M32 = Matrix([[6, 7]])
+    M_exp_upper = BlockMatrix([
+        [M1, Matrix([[1, 2], [0, 1]]), Matrix([[3], [4]])],
+        [ZeroMatrix(2, 2), M2, Matrix([[1], [2]])],
+        [ZeroMatrix(1, 2), ZeroMatrix(1, 2), M3],
+    ])
+    assert det(M_exp_upper) == det(M1)*det(M2)*det(M3)
+    assert det(M_exp_upper) == M_exp_upper.as_explicit().det()
+
+    M_exp_lower = BlockMatrix([
+        [M1, ZeroMatrix(2, 2), ZeroMatrix(2, 1)],
+        [M21, M2, ZeroMatrix(2, 1)],
+        [M31, M32, M3],
+    ])
+    assert det(M_exp_lower) == det(M1)*det(M2)*det(M3)
+    assert det(M_exp_lower) == M_exp_lower.as_explicit().det()
+
+    M_sing = Matrix([[1, 2], [2, 4]])
+    M_sing_tri = BlockMatrix([
+        [M_sing, ZeroMatrix(2, 2), ZeroMatrix(2, 1)],
+        [M21, M2, ZeroMatrix(2, 1)],
+        [M31, M32, M3],
+    ])
+    assert det(M_sing_tri) == 0
+    assert det(BlockMatrix([[ZeroMatrix(n, n), ZeroMatrix(n, m)], [C_low, D]])) == 0
+    with assuming(Q.singular(A), ~Q.invertible(D)):
+        assert det(M_lower) == det(A)*det(D)
+        assert det(M_upper) == det(A)*det(D)
+
+    B = MatrixSymbol('B', n, m)
+    M_dense = BlockMatrix([[A, B], [C_low, D]])
+    assert det(M_dense) == Determinant(M_dense)
+    assert M_dense._eval_determinant() is None
+
+    M_dense_3x3 = BlockMatrix([
+        [A, ZeroMatrix(n, m), B13],
+        [B21, D, ZeroMatrix(m, k)],
+        [ZeroMatrix(k, n), B32, E],
+    ])
+    assert det(M_dense_3x3) == Determinant(M_dense_3x3)
+    assert M_dense_3x3._eval_determinant() is None
+
+    A_ns = MatrixSymbol('A_ns', n, m)
+    D_ns = MatrixSymbol('D_ns', m, n)
+    C_ns = MatrixSymbol('C_ns', m, m)
+    M_ns = BlockMatrix([[A_ns, ZeroMatrix(n, n)], [C_ns, D_ns]])
+    assert det(M_ns) == Determinant(M_ns)
+    assert M_ns._eval_determinant() is None
+
+    M_ns_3x3 = BlockMatrix([
+        [A, ZeroMatrix(n, m), ZeroMatrix(n, n)],
+        [MatrixSymbol('C31', n, n), MatrixSymbol('D32', n, m), ZeroMatrix(n, n)],
+        [MatrixSymbol('E31', m, n), MatrixSymbol('E32', m, m), MatrixSymbol('E33', m, n)],
+    ])
+    assert det(M_ns_3x3) == Determinant(M_ns_3x3)
+    assert M_ns_3x3._eval_determinant() is None
+
+    M_rect_grid = BlockMatrix([
+        [MatrixSymbol('R11', 2, 1), MatrixSymbol('R12', 2, 1), MatrixSymbol('R13', 2, 2)],
+        [ZeroMatrix(2, 1), MatrixSymbol('R22', 2, 1), MatrixSymbol('R23', 2, 2)],
+    ])
+    assert det(M_rect_grid) == Determinant(M_rect_grid)
+    assert M_rect_grid._eval_determinant() is None
 
 def test_squareBlockMatrix():
     A = MatrixSymbol('A', n, n)
