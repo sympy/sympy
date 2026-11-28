@@ -1572,6 +1572,8 @@ def evalf(x: Expr, prec: int, options: OPT_DICT) -> TMP_RES:
         if 'subs' in options:
             x = x.subs(evalf_subs(prec, options['subs']))
         xe = x._eval_evalf(prec)
+        if x is S.ComplexInfinity or xe is S.ComplexInfinity:
+            return S.ComplexInfinity
         if xe is None:
             raise NotImplementedError
         as_real_imag = getattr(xe, "as_real_imag", None)

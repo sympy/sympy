@@ -422,6 +422,23 @@ def test_jn():
               [0.09941975672 - 0.05452508024*I])
 
 
+def test_jn_at_zero():
+    for order, value in [(0, S.One), (1, S.Zero), (-1, S.ComplexInfinity)]:
+        expr = jn(order, 0, evaluate=False)
+        assert expr.rewrite(besselj) == value
+        assert expr.rewrite(bessely) == value
+        assert expand_func(expr) == value
+        assert expr.evalf(30) == value.evalf(30)
+        assert jn(order, x).evalf(30, subs={x: 0}) == value.evalf(30)
+
+    n = symbols('n', integer=True)
+    expr = jn(n, 0, evaluate=False)
+    assert jn(n, 0) == expr
+    assert expr.rewrite(besselj) == expr
+    assert expr.rewrite(bessely) == expr
+    assert expr.evalf() == expr
+
+
 def test_yn():
     z = symbols("z")
     assert myn(0, z) == -cos(z)/z
