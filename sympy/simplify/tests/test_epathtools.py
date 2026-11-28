@@ -89,3 +89,11 @@ def test_EPath():
     raises(ValueError, lambda: EPath("/[0]%"))
 
     raises(NotImplementedError, lambda: EPath("Symbol"))
+
+
+
+def test_epath_attr_alternatives():
+    L = [x, (1, 2), sin(x)]
+    assert epath("/__iter__?", L) == [(1, 2)]
+    assert epath("/is_Symbol?", L) == [x, sin(x)]
+    assert epath("/__iter__?|is_Symbol?", L) == [x, (1, 2), sin(x)]
