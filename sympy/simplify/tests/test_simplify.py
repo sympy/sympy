@@ -897,6 +897,8 @@ def test_nc_simplify():
     assert nc_simplify(a.adjoint()*a*a.adjoint()) == a.adjoint()*a*a.adjoint()
     # commutative expressions should be returned without an error
     assert nc_simplify(2*x**2) == 2*x**2
+    # issue 31283 (S3): (a + b)**2 must not be treated as (a*b)**2
+    _check(a*b*a*b*(a + b)**2, (a*b)**2*(a + b)**2)
 
 def test_issue_15965():
     A = Sum(z*x**y, (x, 1, a))
