@@ -8,6 +8,7 @@ combinatorial polynomials.
 from __future__ import annotations
 
 from sympy.core import Rational
+from sympy.functions.elementary.hyperbolic import atanh
 from sympy.core.function import DefinedFunction, ArgumentIndexError
 from sympy.core.singleton import S
 from sympy.core.symbol import Dummy
@@ -16,12 +17,13 @@ from sympy.functions.elementary.complexes import re
 from sympy.functions.elementary.exponential import exp
 from sympy.functions.elementary.integers import floor
 from sympy.functions.elementary.miscellaneous import sqrt
-from sympy.functions.elementary.trigonometric import cos, sec
+from sympy.functions.elementary.trigonometric import cos, sec, sin
 from sympy.functions.special.gamma_functions import gamma
 from sympy.functions.special.hyper import hyper
 from sympy.polys.orthopolys import (chebyshevt_poly, chebyshevu_poly,
                                     gegenbauer_poly, hermite_poly, hermite_prob_poly,
                                     jacobi_poly, laguerre_poly, legendre_poly)
+import mpmath
 
 _x = Dummy('x')
 
@@ -886,6 +888,128 @@ class legendre(OrthogonalPolynomial):
         # but should not be used
         return self._eval_rewrite_as_Sum(n, x, **kwargs)
 
+
+class legendre_q(DefinedFunction):
+    r"""
+    Legendre function of the second kind for integer degree.
+
+    For nonnegative integer degree n and real x in (-1, 1),
+    the function is evaluated using the recurrence relation:
+
+    .. math::
+
+        Q_0(x) = \operatorname{atanh}(x)
+
+        Q_1(x) = x Q_0(x) - 1
+
+        Q_{n+1}(x) =
+        \frac{(2n + 1)x Q_n(x) - n Q_{n-1}(x)}{n + 1}
+
+    Explanation
+    ===========
+
+    The Legendre functions of the second kind are solutions of
+    the Legendre differential equation:
+
+    .. math::
+
+        (1 - x^2)y'' - 2xy' + n(n + 1)y = 0.
+
+    For nonnegative integer degree n, the Legendre function
+    of the second kind can be evaluated using the recurrence
+    relation:
+
+    .. math::
+
+        (n + 1) Q_{n+1}(x) =
+        (2n + 1)x Q_n(x) - n Q_{n-1}(x),
+
+    with initial values:
+
+    .. math::
+
+        Q_0(x) = \operatorname{atanh}(x)
+
+        Q_1(x) = x\operatorname{atanh}(x) - 1.
+
+    Examples
+    ========
+
+    >>> from sympy import S, legendre_q
+    >>> legendre_q(S(0), S(0.5))
+    0.549306144334055
+    >>> legendre_q(S(1), S(0.5))
+    -0.725346927832972
+    >>> legendre_q(S(2), S(0.5))
+    -0.818663268041757
+    >>> legendre_q(S(2.2), S(0.1)).evalf()
+    0.0298369238092866
+
+    See Also
+    ========
+
+    legendre, assoc_legendre
+    jacobi, gegenbauer
+    chebyshevt, chebyshevu
+    hermite, hermite_prob
+    laguerre, assoc_laguerre
+
+    References
+    =========
+
+    .. [1] https://en.wikipedia.org/wiki/Legendre_function
+    .. [2] https://mathworld.wolfram.com/LegendreFunctionoftheSecondKind.html
+    """
+
+    @classmethod
+    def eval_at_order(cls , n , x):
+        n = int(n)
+        if n == 0:
+            return atanh(x)
+        q_0 = atanh(x)
+        q_1 = x * q_0 - 1
+        if n == 1:
+            return q_1
+        for k in range(1 , n):
+            q_2 = ((2 * k + 1) * x * q_1 - k * q_0) / (k + 1)
+            q_0 = q_1
+            q_1 = q_2
+        return q_1
+
+    @classmethod
+    def eval(cls , n , x):
+        if n.is_integer and n.is_nonnegative:
+            return cls.eval_at_order(n , x)
+        else:
+            return None
+
+    def _eval_mpmath(self):
+        n , x = self.args
+        func = mpmath.legenq
+        args = (n , S.Zero , x)
+        return func , args
+
+    def _eval_rewrite_as_hyper(self, n, x, **kwargs):
+        w1 = (
+            gamma((n + 1)/2)
+            / (sqrt(S.Pi) * gamma(n/2 + 1))
+            * hyper([-n/2, (n + 1)/2], [S.Half], x**2)
+        )
+
+        w2 = (
+            2 * gamma(n/2 + 1)
+            / (sqrt(S.Pi) * gamma((n + 1)/2))
+            * x * hyper(
+                [(1 - n)/2, (n + 2)/2],
+                [S(3)/2],
+                x**2
+            )
+        )
+
+        return S.Pi/2 * (
+            -sin(S.Pi*n/2) * w1
+            + cos(S.Pi*n/2) * w2
+        )
 
 class assoc_legendre(DefinedFunction):
     r"""
