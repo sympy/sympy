@@ -1510,3 +1510,12 @@ def test_issue_30568():
     assert limit(Max(x, sin(x)), x, 0) == 0
     assert limit(Min(exp(x), exp(2*x)), x, oo) == oo
     assert limit(Max(1/x, 1/x**2), x, oo) == 0
+
+def test_issue_26949():
+    """ A part of the issue with 'untreated f ~ 0**t' for t -> oo """
+    t = Symbol('t')
+    assert limit(0**t, t, oo) == 0 # (was exp(Limit(zoo*t, ...)))
+    assert limit(0**t, t, 1) == 0
+    assert limit(0**(1/t), t, oo) == 0
+    assert limit(0**(t**2), t, oo) == 0
+    assert limit(0**t, t, 0, '+') == 0
