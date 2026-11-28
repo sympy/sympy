@@ -361,6 +361,10 @@ def test_latex_permutation():
         Permutation.print_cyclic = old_print_cyclic
 
 def test_latex_Float():
+    assert latex(Float('10', 2)) == '10.'
+    assert latex(Float('-20.2', 2), decimal_separator='comma') == '-20{,}'
+    assert latex(Float('100', 1)) == r"1. \cdot 10^{2}"
+    assert latex(Float('10', 3)) == '10.0'
     assert latex(Float(1.0e100)) == r"1.0 \cdot 10^{100}"
     assert latex(Float(1.0e-100)) == r"1.0 \cdot 10^{-100}"
     assert latex(Float(1.0e-100), mul_symbol="times") == \
