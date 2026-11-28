@@ -327,6 +327,16 @@ def test_classify_ode():
         'lie_group', 'separable_Integral',
         '1st_exact_Integral')
 
+    # test issue 25882
+    # The normal form of this ODE is f'' + 3/(4*(x - 1)**2)*f = 0, which has a
+    # single finite singular point. The 2F1 matcher used to raise an IndexError
+    # on it; it should simply not be offered as a hint.
+    eq = (x - 1)*f(x).diff(x, 2) - f(x).diff(x)
+    a = classify_ode(eq, f(x))
+    assert a == ('Liouville', 'nth_order_reducible',
+        '2nd_power_series_ordinary', 'Liouville_Integral')
+    raises(ValueError, lambda: dsolve(eq, f(x), hint='2nd_hypergeometric'))
+
 
 def test_classify_ode_ics():
     # Dummy
