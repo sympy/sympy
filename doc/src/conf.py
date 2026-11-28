@@ -37,7 +37,8 @@ extensions = ['sphinx.ext.autodoc', 'sphinx.ext.linkcode',
               'sphinx_reredirects', 'sphinx_copybutton',
               'sphinx.ext.graphviz', 'sphinxcontrib.jquery',
               'matplotlib.sphinxext.plot_directive', 'myst_parser',
-              'convert-svg-to-pdf', 'sphinx.ext.intersphinx', ]
+              'convert-svg-to-pdf', 'sphinx.ext.intersphinx',
+              'sphinxext.opengraph']
 
 # Add redirects here. This should be done whenever a page that is in the
 # existing release docs is moved somewhere else so that the URLs don't break.
@@ -107,6 +108,7 @@ redirects = {
 }
 
 html_baseurl = "https://docs.sympy.org/latest/"
+ogp_site_url = "https://docs.sympy.org/latest/"
 
 # Configure Sphinx copybutton (see https://sphinx-copybutton.readthedocs.io/en/latest/use.html)
 copybutton_prompt_text = r">>> |\.\.\. |\$ |In \[\d*\]: | {2,5}\.\.\.: | {5,8}: "
