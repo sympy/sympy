@@ -434,3 +434,24 @@ def test_issue_21057_pymc():
                     assert tuple(s.flatten()) in p.pspace.distribution.set
         except NotImplementedError:
             continue
+
+
+def test_marginal_distribution_joint_distribution_pdf():
+    # Test for issue #15859: MarginalDistribution.pdf on JointDistribution
+    from sympy.stats.joint_rv import MarginalDistribution
+    from sympy.stats.joint_rv_types import MultivariateNormalDistribution
+    from sympy import Matrix, IndexedBase, sqrt, pi, exp, S
+
+    mu = Matrix([0, 0])
+    sigma = Matrix([[1, 0], [0, 1]])
+    mvn = MultivariateNormalDistribution(mu, sigma)
+    x = IndexedBase('x')
+    md = MarginalDistribution(mvn, x[0])
+
+    # Verify pdf call does not raise AttributeError or TypeError
+    pdf_func = md.pdf()
+    assert pdf_func is not None
+    # Verify density evaluation at x[0] = 0
+    assert md.pdf(0) == sqrt(2)/(2*sqrt(pi))
+    # Verify density evaluation at x[0] = 1
+    assert md.pdf(1) == sqrt(2)*exp(-S.Half)/(2*sqrt(pi))
