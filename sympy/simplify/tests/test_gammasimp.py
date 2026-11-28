@@ -126,3 +126,14 @@ def test_issue_22606():
     assert gammasimp(eq.subs(x, cos(x))).subs(cos(x), x) == ans
     assert 1/gammasimp(1/eq) == ans
     assert gammasimp(fx.subs(x, eq)).args[0] == ans
+
+
+
+def test_issue_31283_float_offset():
+    assert gammasimp(gamma(x)*gamma(x + 0.5)) == gamma(x)*gamma(x + 0.5)
+    assert gammasimp(gamma(x + 0.5)*gamma(x + 1)) == gamma(x + 0.5)*gamma(x + 1)
+    from sympy.simplify.combsimp import combsimp
+    assert combsimp(gamma(x)*gamma(x + 0.5)) == gamma(x)*gamma(x + 0.5)
+    res = gammasimp(gamma(x)*gamma(x + S.Half)*gamma(x + 0.3))
+    assert res.has(gamma(2*x), gamma(x + 0.3))
+    assert not res.has(gamma(x + S.Half))
