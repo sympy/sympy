@@ -280,6 +280,43 @@ def test_periodicity_check():
     assert periodicity(Abs(sec(sec(x))), x) == pi
 
 
+def test_periodicity_algebraic():
+    assert periodicity(x/(x**2 + 1), x) is None
+
+    assert periodicity(sqrt(x), x) is None
+    assert periodicity((x**3 - 2)**Rational(1, 3), x) is None
+
+    assert periodicity(sqrt(x**2 + 1) - x, x) is None
+
+    assert periodicity(sqrt(x)/(x*(x - 1)), x) is None
+    assert periodicity(sqrt(x*(x - 1)*(x + 1)), x) is None
+
+    assert periodicity(sqrt(x)/(7*x - 1) > 1, x) is None
+
+    assert periodicity(sqrt(y*x + 1), x) is None
+
+    u = Symbol('u')
+    epsilon_1 = (u + 1)/(2*(2*u + 1))*(5*u + 2 - sqrt(u*(17*u + 8)))
+    epsilon_2 = (u + 1)/(2*(2*u + 1))*(5*u + 2 + sqrt(u*(17*u + 8)))
+
+    assert periodicity(epsilon_1, u) is None
+    assert periodicity(epsilon_1 - 1, u) is None
+    assert periodicity(epsilon_2 - 1, u) is None
+
+
+def test_periodicity_constant():
+    assert periodicity((x**2 - 1)/(x - 1) - x, x) is S.Zero
+    assert periodicity(y*x/(x + 1) + y/(x + 1), x) is S.Zero
+
+    assert periodicity(
+        (sqrt(x**2 + 1) - x)*(sqrt(x**2 + 1) + x), x) is S.Zero
+    assert periodicity(
+        (sqrt(x**2 + 1.0) - x)*(sqrt(x**2 + 1.0) + x), x) is S.Zero
+
+    assert periodicity(x*(sin(y)**2 + cos(y)**2 - 1), x) is S.Zero
+    assert periodicity(x*(sin(S.One)**2 + cos(S.One)**2 - 1), x) is S.Zero
+
+
 def test_lcim():
     assert lcim([S.Half, S(2), S(3)]) == 6
     assert lcim([pi/2, pi/4, pi]) == pi
