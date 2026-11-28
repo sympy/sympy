@@ -2655,8 +2655,7 @@ class PrettyPrinter(Printer):
         return pform
 
     def _print_GroebnerBasis(self, basis):
-        exprs = [ self._print_Add(arg, order=basis.order)
-                  for arg in basis.exprs ]
+        exprs = [self._print_poly_expr(poly, basis.order) for poly in basis.polys]
         exprs = prettyForm(*self.join(", ", exprs).parens(left="[", right="]"))
 
         gens = [ self._print(gen) for gen in basis.gens ]

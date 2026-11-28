@@ -217,6 +217,7 @@ from functools import cmp_to_key, update_wrapper
 
 from sympy.core.add import Add
 from sympy.core.basic import Basic
+from sympy.core.mul import Mul
 from sympy.core.singleton import S
 
 from sympy.core.function import AppliedUndef, UndefinedFunction, Function
@@ -350,6 +351,14 @@ class Printer:
 
     def emptyPrinter(self, expr):
         return str(expr)
+
+    def _print_poly_expr(self, poly, order):
+        """Print a polynomial as an expression in its ring's monomial order."""
+        terms = [Mul(coeff, *(g**e for g, e in zip(poly.gens, monom) if e))
+                 for monom, coeff in poly.terms(order=order)]
+        if len(terms) == 1:
+            return self._print(terms[0])
+        return self._print(Add(*terms, evaluate=False), order='none')
 
     def _as_ordered_terms(self, expr, order=None):
         """A compatibility function for ordering terms in Add. """
