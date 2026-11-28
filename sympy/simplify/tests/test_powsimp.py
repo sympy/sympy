@@ -140,6 +140,16 @@ def test_powsimp_negated_base():
     # if x is 0 then the lhs is 0**a*oo**a which is not (-1)**a
     eq = (-x)**a/x**a
     assert powsimp(eq) == eq
+    # issue 31283 (W1): b.is_positive is False does not imply b.is_negative
+    im = Symbol('im', imaginary=True)
+    assert powsimp(sqrt(im)*sqrt(-im)) == sqrt(im)*sqrt(-im)
+    assert powsimp(sqrt(-im)/sqrt(im)) == sqrt(-im)/sqrt(im)
+    np = Symbol('np', nonpositive=True)
+    assert powsimp(np**x*(-np)**y) == np**x*(-np)**y
+    nr = Symbol('nr', extended_real=False)
+    assert powsimp((-nr)**Rational(1, 3)/sqrt(nr)) == (-nr)**Rational(1, 3)/sqrt(nr)
+    r, s = symbols('r s', real=True)
+    assert powsimp((-r**2 - s**2)**x*(r**2 + s**2)**y) == (-r**2 - s**2)**x*(r**2 + s**2)**y
 
 
 def test_powsimp_nc():
