@@ -845,3 +845,25 @@ def test_cse_matrix_kalman_filter():
         MatAdd(Sigma, MatMul(S.NegativeOne, Sigma, x0, x1, H, Sigma)),
     ]
     assert cse_expr == (replacements_expected, reduced_exprs_expected)
+
+
+
+def test_issue_31283_cse_excluded_symbol_like():
+    from sympy.tensor.array.expressions import ArraySymbol
+    i = Symbol('i')
+    X = MatrixSymbol('x0', 2, 2)
+    B = MatrixSymbol('B', 2, 2)
+    r, red = cse([(X + B)*(X + B) + X, X + B])
+    x1 = MatrixSymbol('x1', 2, 2)
+    assert r == [(x1, B + X)]
+    assert red[0].doit() == x1**2 + X
+    assert red[1] == x1
+
+    r2, red2 = cse([(B*B + B)**2, B*B + B, X])
+    assert r2 == [(MatrixSymbol('x1', 2, 2), B**2 + B)]
+    assert red2 == [MatrixSymbol('x1', 2, 2)**2, MatrixSymbol('x1', 2, 2), X]
+
+    for obj in (IndexedBase('x0')[i], ArraySymbol('x0', (3,))[i]):
+        r3, red3 = cse([(obj + 1)**2, obj + 1])
+        assert r3 == [(Symbol('x1'), obj + 1)]
+        assert red3 == [Symbol('x1')**2, Symbol('x1')]
