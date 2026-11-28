@@ -1414,6 +1414,8 @@ def evalf_sum(expr: 'Sum', prec: int, options: OPT_DICT) -> TMP_RES:
         raise NotImplementedError
     if func.is_zero:
         return None, None, prec, None
+    if not expr.is_number and not (limits[0][2] - limits[0][1]).is_Integer:
+        raise NotImplementedError
     prec2 = prec + 10
     try:
         n, a, b = limits[0]
