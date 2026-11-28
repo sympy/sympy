@@ -85,4 +85,3 @@ def _encode_with_selector(prop: CNF, encoded: EncodedCNF,
         encoded_clause = encoded.encode(clause)
         if encoded_clause is not None:
             encoded.add_clause(encoded_clause | {-activation_literal})
-
