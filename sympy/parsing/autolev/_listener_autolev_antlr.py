@@ -1163,9 +1163,9 @@ if AutolevListener:
             # Units(deg, rad)
             elif func_name == "units":
                 if ch.expr(0).getText().lower() == "deg" and ch.expr(1).getText().lower() == "rad":
-                    factor = 0.0174533
+                    factor = "(_sm.pi/180)"
                 elif ch.expr(0).getText().lower() == "rad" and ch.expr(1).getText().lower() == "deg":
-                    factor = 57.2958
+                    factor = "(180/_sm.pi)"
                 self.setValue(ctx, str(factor))
             # Mass(A)
             elif func_name == "mass":
