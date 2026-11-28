@@ -34,6 +34,7 @@ In general, we represent a matrix without concerning about the :py:class:`~.Doma
 
 .. py:class:: FlatNzData
 .. py:class:: FLINT_MAT_P
+.. py:class:: _ConstructedMatrix
 
 .. automodule:: sympy.polys.matrices.domainmatrix
    :members:

@@ -61,10 +61,19 @@ from .dfm import DFM
 from .rref import _dm_rref, _dm_rref_den
 
 if TYPE_CHECKING:
-    from typing import Any, Iterator, Sequence, Callable, Mapping, TypeGuard
+    from typing import Any, Iterable, Iterator, Sequence, Callable, Mapping, TypeGuard
     from sympy.polys.matrices._typing import FlatNzData
     from sympy.core.expr import Expr
+    from sympy.external.gmpy import MPZ, MPQ
+    from sympy.external.mpmath import mpf, mpc
     from sympy.matrices.dense import MutableDenseMatrix
+    from sympy.matrices.matrixbase import MatrixBase
+    from sympy.polys.constructor import _ConstructedList
+    from sympy.polys.domains.algebraicfield import Alg
+    from sympy.polys.domains.expressiondomain import ExpressionDomain
+    from sympy.polys.domains.gaussiandomains import GaussianInteger, GaussianRational
+    from sympy.polys.fields import FracElement
+    from sympy.polys.rings import PolyElement
     from ..domains import Domain
 
 
@@ -365,7 +374,13 @@ class DomainMatrix(Generic[Er]):
         return DomainMatrix(domain_rows, (nrows, ncols), domain)
 
     @classmethod
-    def from_list_sympy(cls, nrows, ncols, rows, **kwargs):
+    def from_list_sympy(
+        cls,
+        nrows: int,
+        ncols: int,
+        rows: Sequence[Sequence[Expr | complex]],
+        **kwargs: Any,
+    ) -> _ConstructedMatrix:
         r"""
         Convert a list of lists of Expr into a DomainMatrix using construct_domain
 
@@ -401,16 +416,65 @@ class DomainMatrix(Generic[Er]):
 
         items_sympy = [_sympify(item) for row in rows for item in row]
 
-        domain, items_domain = cls.get_domain(items_sympy, **kwargs)
+        return cls._from_constructed(
+            cls.get_domain(items_sympy, **kwargs), nrows, ncols, None
+        )
 
-        domain_rows = [
-            [items_domain[ncols * r + c] for c in range(ncols)] for r in range(nrows)
-        ]
+    @overload
+    @classmethod
+    def _from_constructed(
+        cls,
+        K_items: tuple[Domain[Es], list[Es]],
+        nrows: int,
+        ncols: int,
+        elemsdict: None,
+    ) -> DomainMatrix[Es]: ...
 
-        return DomainMatrix(domain_rows, (nrows, ncols), domain)
+    @overload
+    @classmethod
+    def _from_constructed(
+        cls,
+        K_items: tuple[Domain[Es], list[Es]],
+        nrows: int,
+        ncols: int,
+        elemsdict: Mapping[int, Mapping[int, object]],
+    ) -> DomainMatrix[Es]: ...
 
     @classmethod
-    def from_dict_sympy(cls, nrows, ncols, elemsdict, **kwargs):
+    def _from_constructed(
+        cls,
+        K_items: tuple[Domain[Es], list[Es]],
+        nrows: int,
+        ncols: int,
+        elemsdict: Mapping[int, Mapping[int, object]] | None,
+    ) -> DomainMatrix[Es]:
+        domain, items_domain = K_items
+
+        if elemsdict is None:
+            domain_rows = [
+                [items_domain[ncols * r + c] for c in range(ncols)] for r in range(nrows)
+            ]
+
+            return DomainMatrix(domain_rows, (nrows, ncols), domain)
+
+        idx = 0
+        items_dict: dict[int, dict[int, Es]] = {}
+        for i, row in elemsdict.items():
+            items_dict[i] = {}
+            for j in row:
+                items_dict[i][j] = items_domain[idx]
+                idx += 1
+
+        return DomainMatrix(items_dict, (nrows, ncols), domain)
+
+    @classmethod
+    def from_dict_sympy(
+        cls,
+        nrows: int,
+        ncols: int,
+        elemsdict: Mapping[int, Mapping[int, Expr | complex]],
+        **kwargs: Any,
+    ) -> _ConstructedMatrix:
         """
 
         Parameters
@@ -449,20 +513,14 @@ class DomainMatrix(Generic[Er]):
         items_sympy = [
             _sympify(item) for row in elemsdict.values() for item in row.values()
         ]
-        domain, items_domain = cls.get_domain(items_sympy, **kwargs)
-
-        idx = 0
-        items_dict = {}
-        for i, row in elemsdict.items():
-            items_dict[i] = {}
-            for j in row:
-                items_dict[i][j] = items_domain[idx]
-                idx += 1
-
-        return DomainMatrix(items_dict, (nrows, ncols), domain)
+        return cls._from_constructed(
+            cls.get_domain(items_sympy, **kwargs), nrows, ncols, elemsdict
+        )
 
     @classmethod
-    def from_Matrix(cls, M, fmt="sparse", **kwargs):
+    def from_Matrix(
+        cls, M: MatrixBase, fmt: str = "sparse", **kwargs: Any
+    ) -> _ConstructedMatrix:
         r"""
         Convert Matrix to DomainMatrix
 
@@ -507,9 +565,10 @@ class DomainMatrix(Generic[Er]):
         return cls.from_dict_sympy(*M.shape, M.todod(), **kwargs)
 
     @classmethod
-    def get_domain(cls, items_sympy, **kwargs):
-        K, items_K = construct_domain(items_sympy, **kwargs)
-        return K, items_K
+    def get_domain(
+        cls, items_sympy: Iterable[Expr | complex], **kwargs: Any
+    ) -> _ConstructedList:
+        return construct_domain(items_sympy, **kwargs)
 
     def choose_domain(self, **opts):
         """Convert to a domain found by :func:`~.construct_domain`.
@@ -1324,7 +1383,7 @@ class DomainMatrix(Generic[Er]):
         """
         return self.shape[0] == self.shape[1]
 
-    def rank(self):
+    def rank(self) -> int:
         rref, pivots = self.rref()
         return len(pivots)
 
@@ -2225,7 +2284,9 @@ class DomainMatrix(Generic[Er]):
         M_primitive = self.from_flat_nz(prims, data, K)
         return content, M_primitive
 
-    def rref(self, *, method="auto"):
+    def rref(
+        self, *, method: str = "auto"
+    ) -> tuple[DomainMatrix[Any], tuple[int, ...]]:
         r"""
         Returns reduced-row echelon form (RREF) and list of pivots.
 
@@ -4130,3 +4191,28 @@ def _collect_factors(factors_list):
     factors_list = [(list(f), e) for f, e in factors.items()]
 
     return _sort_factors(factors_list)
+
+
+if TYPE_CHECKING:
+    _ConstructedMatrix = (
+          DomainMatrix[MPZ]
+        | DomainMatrix[MPQ]
+        | DomainMatrix[GaussianInteger]
+        | DomainMatrix[GaussianRational]
+        | DomainMatrix[mpf]
+        | DomainMatrix[mpc]
+        | DomainMatrix[Alg]
+        | DomainMatrix[PolyElement[MPZ]]
+        | DomainMatrix[PolyElement[MPQ]]
+        | DomainMatrix[PolyElement[GaussianInteger]]
+        | DomainMatrix[PolyElement[GaussianRational]]
+        | DomainMatrix[PolyElement[mpf]]
+        | DomainMatrix[PolyElement[mpc]]
+        | DomainMatrix[FracElement[MPZ]]
+        | DomainMatrix[FracElement[MPQ]]
+        | DomainMatrix[FracElement[GaussianInteger]]
+        | DomainMatrix[FracElement[GaussianRational]]
+        | DomainMatrix[FracElement[mpf]]
+        | DomainMatrix[FracElement[mpc]]
+        | DomainMatrix[ExpressionDomain.Expression]
+    )
