@@ -95,6 +95,19 @@ def test_meijerint_definite():
     assert v.is_zero and b is True
 
 
+def test_issue_31365():
+    from sympy.core.function import diff
+    from sympy.core.numbers import pi
+    from sympy.core.symbol import Symbol
+    from sympy.integrals.integrals import integrate
+
+    for real in (True, None):
+        xr = Symbol('x', real=real)
+        assert integrate((xr - 1)**2*sqrt(xr)*sqrt(1 - xr), (xr, 0, 1)) == 5*pi/128
+        expr = xr*(1 - xr)*diff((1 - xr)**2, xr)**2*sqrt(xr)*sqrt(1 - xr)
+        assert integrate(expr, (xr, 0, 1)) == 7*pi/256
+
+
 def test_inflate():
     subs = {a: randcplx()/10, b: randcplx()/10 + I, c: randcplx(),
             d: randcplx(), y: randcplx()/10}

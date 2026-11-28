@@ -871,8 +871,18 @@ class Integral(AddWithLimits):
                 if meijerg1 is False and meijerg is True:
                     antideriv = None
                 else:
-                    antideriv = self._eval_integral(
-                        function, xab[0], **eval_kwargs)
+                    x_var = xab[0]
+                    if (len(xab) == 3 and xab[1].is_extended_real
+                            and xab[2].is_extended_real
+                            and x_var.is_extended_real is None):
+                        real_x = Dummy(x_var.name, real=True)
+                        antideriv = self._eval_integral(
+                            function.subs(x_var, real_x), real_x, **eval_kwargs)
+                        if antideriv is not None:
+                            antideriv = antideriv.subs(real_x, x_var)
+                    else:
+                        antideriv = self._eval_integral(
+                            function, x_var, **eval_kwargs)
                     if antideriv is None and meijerg is True:
                         ret = try_meijerg(function, xab)
                         if ret is not None:

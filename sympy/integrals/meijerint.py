@@ -1650,6 +1650,19 @@ def _rewrite2(f, x):
                 return fac, po, g1[0], g2[0], cond
 
 
+def _has_neg_coeff_frac_pow(expr, x, a):
+    """Return True if ``expr`` has ``(c*(x - a))**p`` with negative ``c`` and non-integer ``p``."""
+    from sympy.core.power import Pow
+
+    for p in expr.atoms(Pow):
+        if not p.exp.is_Integer and x in p.base.free_symbols:
+            b0 = p.base.subs(x, S.Zero)
+            c, t = (p.base - b0).as_coeff_mul(x)
+            if t == (x,) and c.is_extended_negative and (b0 + c * a).is_zero:
+                return True
+    return False
+
+
 def meijerint_indefinite(f, x):
     """
     Compute an indefinite integral of ``f`` by rewriting it as a G function.
@@ -1669,7 +1682,17 @@ def meijerint_indefinite(f, x):
         res = _meijerint_indefinite_1(f.subs(x, x + a), x)
         if not res:
             continue
-        res = res.subs(x, x - a)
+        if x.is_extended_real and _has_neg_coeff_frac_pow(f, x, a):
+            res_neg = _meijerint_indefinite_1(f.subs(x, a - x), x)
+            if res_neg:
+                res = Piecewise(
+                    ((-res_neg).subs(x, a - x), x < a),
+                    (res.subs(x, x - a), True),
+                )
+            else:
+                res = res.subs(x, x - a)
+        else:
+            res = res.subs(x, x - a)
         if _has(res, hyper, meijerg):
             results.append(res)
         else:
