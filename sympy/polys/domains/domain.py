@@ -872,7 +872,6 @@ class Domain(Generic[Er]):
 
         domain = K0_ground.unify(K1_ground)
         symbols = _unify_gens(K0_symbols, K1_symbols)
-        order = K0.order if K0.is_Composite else K1.order
 
         # E.g. ZZ[x].unify(QQ.frac_field(x)) -> ZZ.frac_field(x)
         if ((K0.is_FractionField and K1.is_PolynomialRing or
@@ -889,10 +888,14 @@ class Domain(Generic[Er]):
         # Here cls might be PolynomialRing, FractionField, GlobalPolynomialRing
         # (dense/old Polynomialring) or dense/old FractionField.
 
+        from sympy.polys.domains.old_fractionfield import FractionField as OldFractionField
         from sympy.polys.domains.old_polynomialring import GlobalPolynomialRing
+        if cls == OldFractionField:
+            return cls(domain, *symbols)
         if cls == GlobalPolynomialRing:
             return cls(domain, symbols)
 
+        order = K0.order if K0.is_Composite else K1.order
         return cls(domain, symbols, order)
 
     def unify(K0, K1, symbols=None):

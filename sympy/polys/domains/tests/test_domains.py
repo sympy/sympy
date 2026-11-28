@@ -285,6 +285,23 @@ def test_Domain_unify_composite():
     assert unify(QQ.frac_field(x, y), ZZ.poly_ring(x, z)) == ZZ.frac_field(x, y, z)
     assert unify(QQ.frac_field(x, y), QQ.poly_ring(x, z)) == QQ.frac_field(x, y, z)
 
+def test_Domain_unify_old_fraction_field():
+    F = QQ.old_frac_field(x)
+    for A, B in [(ZZ, F), (F, ZZ)]:
+        K = A.unify(B)
+        assert K == F
+        a = K.convert(ZZ(2), ZZ)
+        b = K.convert(F.from_sympy(1/x), F)
+        assert K.to_sympy(a*b) == 2/x
+
+    G = ZZ.old_frac_field(y)
+    K = F.unify(G)
+    assert K == QQ.old_frac_field(x, y)
+    a = K.convert(F.from_sympy(1/x), F)
+    b = K.convert(G.from_sympy(y), G)
+    assert K.to_sympy(a*b) == y/x
+
+
 def test_Domain_unify_algebraic():
     sqrt5 = QQ.algebraic_field(sqrt(5))
     sqrt7 = QQ.algebraic_field(sqrt(7))
