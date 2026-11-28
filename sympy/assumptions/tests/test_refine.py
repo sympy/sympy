@@ -359,3 +359,14 @@ def test_Heaviside():
     assert refine(Heaviside(x, 1), Q.zero(x)) == 1
     assert refine(Heaviside(x, 1), Q.positive(x)) == 1
     assert refine(Heaviside(x, 1), Q.negative(x)) == 0
+
+
+
+def test_refine_Pow_no_longer_Pow():
+
+    n = Symbol('n')
+    # Result becomes I (ImaginaryUnit)
+    assert refine((-1)**(2*n + S.Half), Q.integer(n)) == I
+
+    # Result becomes -I (Mul)
+    assert refine((-1)**(n/2 - S.Half), Q.zero(n)) == -I
