@@ -151,7 +151,8 @@ def cse_separate(r, e):
     ...
     True
     """
-    d = sift(e, lambda w: w.is_Equality and w.lhs.is_Symbol)
+    rep_syms = {k for k, _ in r}
+    d = sift(e, lambda w: w.is_Equality and w.lhs.is_Symbol and w.lhs not in rep_syms)
     r = r + [w.args for w in d[True]]
     e = d[False]
     return [reps_toposort(r), e]
