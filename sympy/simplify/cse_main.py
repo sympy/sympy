@@ -680,8 +680,12 @@ def tree_cse(exprs, symbols, opt_subs=None, order='canonical', ignore=()):
 
         if isinstance(expr, Basic) and (
                 expr.is_symbol or expr.is_Atom or expr.is_Order):
-            if expr.is_Symbol:
-                excluded_symbols.add(expr.name)
+            if expr.is_symbol:
+                for sym in expr.free_symbols:
+                    if hasattr(sym, 'name'):
+                        excluded_symbols.add(sym.name)
+                if hasattr(expr, 'name'):
+                    excluded_symbols.add(expr.name)
             return
 
         if iterable(expr):
