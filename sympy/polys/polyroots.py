@@ -33,7 +33,12 @@ from sympy.utilities import public
 from sympy.utilities.misc import filldedent
 
 if TYPE_CHECKING:
+    from collections.abc import Callable
     from sympy.core.expr import Expr
+    from sympy.core.numbers import NegativeInfinity
+    from typing import TypeVar
+
+    Tcoeff = TypeVar('Tcoeff', bound='Expr | complex')
 
 
 
@@ -193,6 +198,7 @@ def roots_cubic(f, trig=False):
     ]
 
     return soln
+
 
 def _roots_quartic_euler(p, q, r, a):
     """
@@ -747,7 +753,7 @@ def _integer_basis(poly):
     monoms = monoms[:-1]
     coeffs = coeffs[:-1]
 
-    # Special case for two-term polynominals
+    # Special case for two-term polynomials
     if len(monoms) == 1:
         r = Pow(coeffs[0], S.One/monoms[0])
         if r.is_Integer:
@@ -775,11 +781,11 @@ def _integer_basis(poly):
             return div
 
 
-def preprocess_roots(poly):
+def preprocess_roots(poly: Poly) -> tuple[Expr, Poly]:
     """Try to get rid of symbolic coefficients from ``poly``. """
-    coeff = S.One
+    coeff: Expr = S.One
 
-    poly_func = poly.func
+    poly_func: type[Poly] = poly.func
     try:
         _, poly = poly.clear_denoms(convert=True)
     except DomainError:
@@ -792,32 +798,34 @@ def preprocess_roots(poly):
     if poly.get_domain().is_Poly and all(c.is_term for c in poly.rep.coeffs()):
         poly = poly.inject()
 
-        strips = list(zip(*poly.monoms()))
-        gens = list(poly.gens[1:])
+        strips: list[tuple[int, ...]] = list(zip(*poly.monoms()))
+        gens: list[Expr] = list(poly.gens[1:])
 
         base, strips = strips[0], strips[1:]
 
         for gen, strip in zip(list(gens), strips):
-            reverse = False
+            reverse: bool = False
 
             if strip[0] < strip[-1]:
-                strip = reversed(strip)
+                strip = strip[::-1]
                 reverse = True
 
-            ratio = None
+            ratio: int | None = None
 
             for a, b in zip(base, strip):
                 if not a and not b:
                     continue
                 if not a or not b or b % a != 0:
+                    # This break comes too soon for the type checkers to know what will happen to `ratio`.
                     break
 
-                _ratio = b // a
+                _ratio: int = b // a
                 if ratio is None:
                     ratio = _ratio
                 elif ratio != _ratio:
                     break
             else:
+                assert ratio is not None  # Design by Brinkmanship
                 if reverse:
                     ratio = -ratio
 
@@ -829,10 +837,10 @@ def preprocess_roots(poly):
             poly = poly.eject(*gens)
 
     if poly.is_univariate and poly.get_domain().is_ZZ:
-        basis = _integer_basis(poly)
+        basis: int | None = _integer_basis(poly)
 
         if basis is not None:
-            n = poly.degree()
+            n: int | NegativeInfinity = poly.degree()
 
             def func(k, coeff):
                 return coeff//basis**(n - k[0])
@@ -847,47 +855,62 @@ def preprocess_roots(poly):
 
 @overload
 def roots(
-    f,
-    *gens,
+    f: Expr | Poly | list[Tcoeff],
+    *gens: Expr,
     auto: bool = True,
     cubics: bool = True,
     trig: bool = False,
     quartics: bool = True,
     quintics: bool = False,
     multiple: Literal[False] = False,
-    filter: None = None,
-    predicate: None = None,
+    filter: Literal['C', 'Z', 'Q', 'R', 'I'] | None = None,
+    predicate: Callable[[Expr], bool | None] | None = None,
     strict: bool = False,
     **flags: Any,
 ) -> dict[Expr, int]: ...
 @overload
 def roots(
-    f,
-    *gens,
+    f: Expr | Poly | list[Tcoeff],
+    *gens: Expr,
     auto: bool = True,
     cubics: bool = True,
     trig: bool = False,
     quartics: bool = True,
     quintics: bool = False,
     multiple: Literal[True],
-    filter: None = None,
-    predicate: None = None,
+    filter: Literal['C', 'Z', 'Q', 'R', 'I'] | None = None,
+    predicate: Callable[[Expr], bool | None] | None = None,
     strict: bool = False,
     **flags: Any,
-) -> list[tuple[Expr, int]]: ...
+) -> list[Expr]: ...
+@overload
+def roots(
+    f: Expr | Poly | list[Tcoeff],
+    *gens: Expr,
+    auto: bool = True,
+    cubics: bool = True,
+    trig: bool = False,
+    quartics: bool = True,
+    quintics: bool = False,
+    multiple: bool = False,
+    filter: Literal['C', 'Z', 'Q', 'R', 'I'] | None = None,
+    predicate: Callable[[Expr], bool | None] | None = None,
+    strict: bool = False,
+    **flags: Any,
+) -> dict[Expr, int] | list[Expr]: ...
 
 @public
-def roots(f, *gens,
-        auto=True,
-        cubics=True,
-        trig=False,
-        quartics=True,
-        quintics=False,
-        multiple=False,
-        filter=None,
-        predicate=None,
-        strict=False,
-        **flags):
+def roots(f: Expr | Poly | list[Tcoeff], *gens: Expr,
+        auto: bool = True,
+        cubics: bool = True,
+        trig: bool = False,
+        quartics: bool = True,
+        quintics: bool = False,
+        multiple: bool = False,
+        filter: Literal['C', 'Z', 'Q', 'R', 'I'] | None = None,
+        predicate: Callable[[Expr], bool | None] | None = None,
+        strict: bool = False,
+        **flags: Any) -> dict[Expr, int] | list[Expr]:
     """
     Computes symbolic roots of a univariate polynomial.
 
@@ -999,8 +1022,8 @@ def roots(f, *gens,
 
         poly, i = {}, len(f) - 1
 
-        for coeff in f:
-            poly[i], i = sympify(coeff), i - 1
+        for coefficient in f:
+            poly[i], i = sympify(coefficient), i - 1
 
         f = Poly(poly, x, field=True)
     else:
@@ -1023,9 +1046,9 @@ def roots(f, *gens,
                 if fcon != con:
                     con = fcon
                     bases = []
-                    for i in Mul.make_args(con):
-                        if i.is_Pow:
-                            b, e = i.as_base_exp()
+                    for arg in Mul.make_args(con):
+                        if arg.is_Pow:
+                            b, e = arg.as_base_exp()
                             if e.is_Integer and b.is_Add:
                                 bases.append((b, Dummy(positive=True)))
                     if bases:
@@ -1040,6 +1063,9 @@ def roots(f, *gens,
                             filter=filter,
                             predicate=predicate,
                             **flags)
+                        if isinstance(rv, list):
+                            return [factor_terms(k.xreplace(
+                                {v: k for k, v in bases})) for k in rv]
                         return {factor_terms(k.xreplace(
                             {v: k for k, v in bases})
                         ): v for k, v in rv.items()}
@@ -1121,7 +1147,7 @@ def roots(f, *gens,
     (k,), f = f.terms_gcd()
 
     if not k:
-        zeros = {}
+        zeros: dict[Expr, int] = {}
     else:
         zeros = {S.Zero: k}
 
@@ -1134,10 +1160,10 @@ def roots(f, *gens,
     if f.get_domain().is_QQ_I:
         f = f.per(f.rep.convert(EX))
 
-    rescale_x = None
-    translate_x = None
+    rescale_x: Expr | None = None
+    translate_x: Expr | None = None
 
-    result = {}
+    result: dict[Expr, int] = {}
 
     if not f.is_ground:
         dom = f.get_domain()
@@ -1208,13 +1234,13 @@ def roots(f, *gens,
                 del result[zero]
     if rescale_x:
         result1 = {}
-        for k, v in result.items():
-            result1[k*rescale_x] = v
+        for zero, v in result.items():
+            result1[zero*rescale_x] = v
         result = result1
     if translate_x:
         result1 = {}
-        for k, v in result.items():
-            result1[k + translate_x] = v
+        for zero, v in result.items():
+            result1[zero + translate_x] = v
         result = result1
 
     # adding zero roots after non-trivial roots have been translated
@@ -1231,12 +1257,12 @@ def roots(f, *gens,
     if not multiple:
         return result
     else:
-        zeros = []
+        zero_list: list[Expr] = []
 
         for zero in ordered(result):
-            zeros.extend([zero]*result[zero])
+            zero_list.extend([zero]*result[zero])
 
-        return zeros
+        return zero_list
 
 
 def root_factors(f, *gens, filter=None, **args):

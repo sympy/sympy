@@ -165,6 +165,8 @@ Symbolic root-finding algorithms
 
 .. autofunction:: roots
 
+.. py:class:: Tcoeff
+
 Special polynomials
 ===================
 
