@@ -347,10 +347,12 @@ def test_issue_2460():
     assert block_collapse(bdm1 + bdm2) == BlockDiagMatrix(Matrix([i + k]), Matrix([j + l]))
 
 def test_blockcut():
-    A = MatrixSymbol('A', n, m)
-    B = blockcut(A, (n/2, n/2), (m/2, m/2))
-    assert B == BlockMatrix([[A[:n/2, :m/2], A[:n/2, m/2:]],
-                             [A[n/2:, :m/2], A[n/2:, m/2:]]])
+    n_pos = Symbol('n', integer=True, positive=True)
+    m_pos = Symbol('m', integer=True, positive=True)
+    A = MatrixSymbol('A', n_pos, m_pos)
+    B = blockcut(A, (n_pos/2, n_pos/2), (m_pos/2, m_pos/2))
+    assert B == BlockMatrix([[A[:n_pos/2, :m_pos/2], A[:n_pos/2, m_pos/2:]],
+                             [A[n_pos/2:, :m_pos/2], A[n_pos/2:, m_pos/2:]]])
 
     M = ImmutableMatrix(4, 4, range(16))
     B = blockcut(M, (2, 2), (2, 2))
@@ -385,9 +387,45 @@ def test_block_collapse_type():
     assert bm1.T.__class__ == BlockDiagMatrix
     assert block_collapse(bm1 - bm2).__class__ == BlockDiagMatrix
     assert block_collapse(Inverse(bm1)).__class__ == BlockDiagMatrix
+    assert block_collapse(Inverse(bm1)) == BlockDiagMatrix(
+        ImmutableMatrix([1]), ImmutableMatrix([S.Half]))
     assert block_collapse(Transpose(bm1)).__class__ == BlockDiagMatrix
     assert bc_transpose(Transpose(bm1)).__class__ == BlockDiagMatrix
     assert bc_inverse(Inverse(bm1)).__class__ == BlockDiagMatrix
+    assert bc_inverse(Inverse(bm1)) == BlockDiagMatrix(
+        ImmutableMatrix([1]), ImmutableMatrix([S.Half]))
+
+
+def test_block_collapse_blockdiag_inverse():
+    # Issue #31178: bc_inverse must invert expr.arg, not expr
+    A, B, C, D = [MatrixSymbol(s, 2, 2) for s in 'ABCD']
+
+    M = BlockDiagMatrix(A, B)
+    assert block_collapse(Inverse(M)) == BlockDiagMatrix(A.I, B.I)
+    assert block_collapse(Inverse(M)) != M
+
+    M1 = BlockDiagMatrix(A, B)
+    M2 = BlockDiagMatrix(C, D)
+    assert block_collapse((M1 + M2).I) == BlockDiagMatrix((A + C).I, (B + D).I)
+    assert block_collapse(Inverse(M1 * M2)) == BlockDiagMatrix(C.I * A.I, D.I * B.I)
+
+    # 1x1 BlockDiagMatrix
+    BD1 = BlockDiagMatrix(A)
+    assert block_collapse(Inverse(BD1)) == BlockDiagMatrix(A.I)
+
+    # Concrete numeric blocks
+    N1 = BlockDiagMatrix(Matrix([[2, 0], [0, 3]]), Matrix([[4]]))
+    N2 = BlockDiagMatrix(Matrix([[1, 0], [0, 1]]), Matrix([[1]]))
+    assert block_collapse(Inverse(N1)).as_explicit() == N1.as_explicit().inv()
+    assert block_collapse((N1 + N2).I).as_explicit() == (N1 + N2).as_explicit().inv()
+    assert block_collapse(Inverse(N1 * N2)).as_explicit() == (N1 * N2).as_explicit().inv()
+
+    # Singular and non-square block-diagonal matrices raise NonInvertibleMatrixError
+    N_sing = BlockDiagMatrix(Matrix([[1, 0], [0, 0]]), Matrix([[2]]))
+    raises(NonInvertibleMatrixError, lambda: block_collapse(Inverse(N_sing)))
+    P = MatrixSymbol('P', 2, 3)
+    Q = MatrixSymbol('Q', 3, 2)
+    raises(NonInvertibleMatrixError, lambda: block_collapse(Inverse(BlockDiagMatrix(P, Q))))
 
 def test_invalid_block_matrix():
     raises(ValueError, lambda: BlockMatrix([

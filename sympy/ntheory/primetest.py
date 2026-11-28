@@ -72,7 +72,9 @@ def is_fermat_pseudoprime(n: SupportsIndex, a: SupportsIndex) -> bool:
     """
     n, a = as_int(n), as_int(a)
     if a == 1:
-        return n == 2 or bool(n % 2)
+        if n < 1:
+            raise ValueError("n should be an integer greater than 0")
+        return n > 1 and (n == 2 or bool(n % 2))
     return is_fermat_prp(n, a)
 
 
@@ -173,7 +175,9 @@ def is_euler_jacobi_pseudoprime(n: SupportsIndex, a: SupportsIndex) -> bool:
     """
     n, a = as_int(n), as_int(a)
     if a == 1:
-        return n == 2 or bool(n % 2)
+        if n < 1:
+            raise ValueError("n should be an integer greater than 0")
+        return n > 1 and (n == 2 or bool(n % 2))
     return is_euler_prp(n, a)
 
 

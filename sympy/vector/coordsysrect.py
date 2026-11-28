@@ -81,6 +81,7 @@ class CoordSys3D(Basic):
                 if isinstance(transformation[0], MatrixBase):
                     rotation_matrix = transformation[0]
                     location = transformation[1]
+                    transformation = None
                 else:
                     transformation = Lambda(transformation[0],
                                             transformation[1])
@@ -393,7 +394,7 @@ class CoordSys3D(Basic):
                 return lambda r, theta, h: (S.One, r, S.One)
             raise ValueError('Wrong set of parameters.'
                              ' Type of coordinate system is not defined')
-        return CoordSys3D._calculate_lame_coefficients(curv_coord_name)
+        return CoordSys3D._calculate_lame_coeff(curv_coord_name)
 
     @staticmethod
     def _calculate_lame_coeff(equations):
@@ -659,13 +660,13 @@ class CoordSys3D(Basic):
         >>> vN_matrix = T_fromA_toN * vA_matrix
         >>> vN_matrix
         Matrix([
-        [                     1],
-        [-3*sin(q1) + 2*cos(q1)],
-        [ 2*sin(q1) + 3*cos(q1)]])
+        [                    1],
+        [2*cos(q1) - 3*sin(q1)],
+        [2*sin(q1) + 3*cos(q1)]])
         >>> vA = A.i + 2 * A.j + 3 * A.k
         >>> vN = express(vA, N)
         >>> vN
-        N.i + (-3*sin(q1) + 2*cos(q1))*N.j + (2*sin(q1) + 3*cos(q1))*N.k
+        N.i + (2*cos(q1) - 3*sin(q1))*N.j + (2*sin(q1) + 3*cos(q1))*N.k
 
         Change-of-basis matrix from spherical to Cartesian coordinates:
 

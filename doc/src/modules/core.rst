@@ -55,6 +55,8 @@ expr
 ----
 .. module:: sympy.core.expr
 
+.. py:class:: MonomKey
+
 .. autoclass:: Expr
    :members:
 
@@ -210,6 +212,8 @@ power
 mul
 ---
 .. module:: sympy.core.mul
+
+.. py:class:: MonomKey
 
 .. autoclass:: Mul
    :members:

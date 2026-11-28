@@ -1,10 +1,22 @@
 from __future__ import annotations
 from sympy.core.sympify import _sympify
 
+from sympy.matrices.exceptions import NonSquareMatrixError
 from sympy.matrices.expressions import MatrixExpr
-from sympy.core import S, Eq, Ge
+from sympy.core import S, Eq, Ge, Integer
+from sympy.core.add import Add
 from sympy.core.mul import Mul
 from sympy.functions.special.tensor_functions import KroneckerDelta
+
+
+def _hadamard_power(expr, exp):
+    from sympy.matrices.expressions.hadamard import HadamardPower
+    if isinstance(expr, HadamardPower) and expr.exp.is_integer:
+        new_exp = expr.exp * exp
+        if new_exp == S.One:
+            return expr.base
+        return HadamardPower(expr.base, new_exp)
+    return HadamardPower(expr, exp)
 
 
 class DiagonalMatrix(MatrixExpr):
@@ -55,11 +67,11 @@ class DiagonalMatrix(MatrixExpr):
     @property
     def diagonal_length(self):
         r, c = self.shape
-        if r.is_Integer and c.is_Integer:
+        if isinstance(r, (int, Integer)) and isinstance(c, (int, Integer)):
             m = min(r, c)
-        elif r.is_Integer and not c.is_Integer:
+        elif isinstance(r, (int, Integer)):
             m = r
-        elif c.is_Integer and not r.is_Integer:
+        elif isinstance(c, (int, Integer)):
             m = c
         elif r == c:
             m = r
@@ -82,6 +94,68 @@ class DiagonalMatrix(MatrixExpr):
         elif eq is S.false:
             return S.Zero
         return self.arg[i, j]*KroneckerDelta(i, j)
+
+    def _eval_transpose(self):
+        from sympy.matrices.expressions.transpose import transpose
+        return DiagonalMatrix(transpose(self.arg))
+
+    def _eval_conjugate(self):
+        from sympy.functions.elementary.complexes import conjugate
+        return DiagonalMatrix(conjugate(self.arg))
+
+    def _eval_adjoint(self):
+        from sympy.matrices.expressions.adjoint import adjoint
+        return DiagonalMatrix(adjoint(self.arg))
+
+    def _eval_trace(self):
+        if self.is_square:
+            from sympy.matrices.expressions.trace import trace
+            return trace(self.arg)
+        return None
+
+    def _eval_determinant(self):
+        from sympy.matrices.expressions.determinant import Determinant
+        if self.is_square:
+            r, c = self.shape
+            if isinstance(r, (int, Integer)):
+                if r == 0:
+                    return S.One
+                return Mul(*[self.arg[i, i] for i in range(r)])
+        return Determinant(self)
+
+    def _eval_power(self, exp):
+        from sympy.matrices.expressions.matpow import MatPow
+        from sympy.matrices.expressions.special import Identity, ZeroMatrix
+        if not self.is_square:
+            return super()._eval_power(exp)
+        if exp == S.Zero:
+            return Identity(self.rows)
+        if exp == S.One:
+            return self
+        if self.arg.is_ZeroMatrix:
+            if exp.is_integer and exp.is_positive:
+                return ZeroMatrix(*self.shape)
+        if self.arg.is_Identity:
+            return Identity(self.rows)
+        r, c = self.shape
+        if isinstance(r, (int, Integer)) and exp.is_Integer:
+            from sympy.matrices.dense import Matrix
+            diag_entries = [self.arg[i, i]**exp for i in range(r)]
+            diag_col = Matrix(r, 1, diag_entries)
+            return DiagMatrix(diag_col)
+        return MatPow(self, exp)
+
+    def _eval_inverse(self):
+        from sympy.matrices.expressions.inverse import Inverse
+        if not self.is_square:
+            raise NonSquareMatrixError('Inverse of non-square matrix')
+        r, c = self.shape
+        if isinstance(r, (int, Integer)):
+            from sympy.matrices.dense import Matrix
+            diag_entries = [self.arg[i, i]**-1 for i in range(r)]
+            diag_col = Matrix(r, 1, diag_entries)
+            return DiagMatrix(diag_col)
+        return Inverse(self)
 
 
 class DiagonalOf(MatrixExpr):
@@ -132,11 +206,11 @@ class DiagonalOf(MatrixExpr):
     @property
     def shape(self):
         r, c = self.arg.shape
-        if r.is_Integer and c.is_Integer:
+        if isinstance(r, (int, Integer)) and isinstance(c, (int, Integer)):
             m = min(r, c)
-        elif r.is_Integer and not c.is_Integer:
+        elif isinstance(r, (int, Integer)):
             m = r
-        elif c.is_Integer and not r.is_Integer:
+        elif isinstance(c, (int, Integer)):
             m = c
         elif r == c:
             m = r
@@ -188,6 +262,51 @@ class DiagMatrix(MatrixExpr):
     def _eval_transpose(self):
         return self
 
+    def _eval_conjugate(self):
+        from sympy.functions.elementary.complexes import conjugate
+        return DiagMatrix(conjugate(self._vector))
+
+    def _eval_adjoint(self):
+        from sympy.functions.elementary.complexes import conjugate
+        return DiagMatrix(conjugate(self._vector))
+
+    def _eval_trace(self):
+        r = self.shape[0]
+        if isinstance(r, (int, Integer)):
+            if r == 0:
+                return S.Zero
+            if self._iscolumn:
+                return Add(*[self._vector[i, 0] for i in range(r)])
+            else:
+                return Add(*[self._vector[0, i] for i in range(r)])
+        return None
+
+    def _eval_determinant(self):
+        from sympy.matrices.expressions.determinant import Determinant
+        r = self.shape[0]
+        if isinstance(r, (int, Integer)):
+            if r == 0:
+                return S.One
+            if self._iscolumn:
+                return Mul(*[self._vector[i, 0] for i in range(r)])
+            else:
+                return Mul(*[self._vector[0, i] for i in range(r)])
+        return Determinant(self)
+
+    def _eval_power(self, exp):
+        from sympy.matrices.expressions.matpow import MatPow
+        from sympy.matrices.expressions.special import Identity
+        if exp == S.Zero:
+            return Identity(self.rows)
+        if exp == S.One:
+            return self
+        if exp.is_Integer:
+            return DiagMatrix(_hadamard_power(self._vector, exp))
+        return MatPow(self, exp)
+
+    def _eval_inverse(self):
+        return DiagMatrix(_hadamard_power(self._vector, S.NegativeOne))
+
     def as_explicit(self):
         from sympy.matrices.dense import diag
         return diag(*list(self._vector.as_explicit()))
@@ -196,17 +315,24 @@ class DiagMatrix(MatrixExpr):
         from sympy.assumptions import ask, Q
         from sympy.matrices.expressions.matmul import MatMul
         from sympy.matrices.expressions.transpose import Transpose
+        from sympy.matrices.expressions.special import ZeroMatrix
         from sympy.matrices.dense import eye
         from sympy.matrices.matrixbase import MatrixBase
         vector = self._vector
-        # This accounts for shape (1, 1) and identity matrices, among others:
-        if ask(Q.diagonal(vector)):
-            return vector
+        if hints.get('deep', True):
+            vector = vector.doit(**hints)
+        if isinstance(vector, Transpose):
+            vector = vector.arg
         if isinstance(vector, MatrixBase):
-            ret = eye(max(vector.shape))
+            ret = eye(self.shape[0])
             for i in range(ret.shape[0]):
                 ret[i, i] = vector[i]
             return type(vector)(ret)
+        if vector.is_ZeroMatrix:
+            return ZeroMatrix(*self.shape)
+        # This accounts for shape (1, 1) and identity matrices, among others:
+        if vector.shape == self.shape and ask(Q.diagonal(vector)):
+            return vector
         if vector.is_MatMul:
             matrices = [arg for arg in vector.args if arg.is_Matrix]
             scalars = [arg for arg in vector.args if arg not in matrices]

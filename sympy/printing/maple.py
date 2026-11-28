@@ -247,14 +247,15 @@ class MapleCodePrinter(CodePrinter):
         return '*'.join(self.parenthesize(_m, PREC) for _m in _fact_list)
 
     def _print_Derivative(self, expr):
-        _f, (_var, _order) = expr.args
-
-        if _order != 1:
-            _second_arg = '{var}${order}'.format(var=self._print(_var),
-                                                 order=self._print(_order))
-        else:
-            _second_arg = '{var}'.format(var=self._print(_var))
-        return 'diff({func_expr}, {sec_arg})'.format(func_expr=self._print(_f), sec_arg=_second_arg)
+        diff_args = []
+        for var, order in expr.variable_count:
+            if order != 1:
+                diff_args.append('{var}${order}'.format(var=self._print(var),
+                                                        order=self._print(order)))
+            else:
+                diff_args.append('{var}'.format(var=self._print(var)))
+        return 'diff({func_expr}, {sec_args})'.format(func_expr=self._print(expr.expr),
+                                                      sec_args=', '.join(diff_args))
 
 
 def maple_code(expr, assign_to=None, **settings):

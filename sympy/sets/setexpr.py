@@ -1,6 +1,8 @@
 from __future__ import annotations
 from sympy.core import Expr
 from sympy.core.decorators import call_highest_priority, _sympifyit
+from sympy.core.sympify import sympify
+from sympy.sets.sets import Set
 from .fancysets import ImageSet
 from .sets import set_add, set_sub, set_mul, set_div, set_pow, set_function
 
@@ -11,19 +13,24 @@ class SetExpr(Expr):
     Examples
     ========
 
-    >>> from sympy import Interval, FiniteSet
+    >>> from sympy import Interval, FiniteSet, oo
     >>> from sympy.sets.setexpr import SetExpr
 
     >>> a = SetExpr(Interval(0, 5))
-    >>> b = SetExpr(FiniteSet(1, 10))
+    >>> b = SetExpr({1, 10})
     >>> (a + b).set
     Union(Interval(1, 6), Interval(10, 15))
     >>> (2*a + b).set
     Interval(1, 20)
+    >>> SetExpr({0, 1})*oo
+    SetExpr({nan, oo})
     """
     _op_priority = 11.0
 
     def __new__(cls, setarg):
+        setarg = sympify(setarg)
+        if not isinstance(setarg, Set):
+            raise TypeError("SetExpr requires a Set")
         return Expr.__new__(cls, setarg)
 
     set = property(lambda self: self.args[0])

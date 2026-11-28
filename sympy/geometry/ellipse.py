@@ -19,6 +19,7 @@ from sympy.core.symbol import Dummy, uniquely_named_symbol, _symbol
 from sympy.external.mpmath import prec_to_dps
 from sympy.simplify.simplify import simplify
 from sympy.simplify.trigsimp import trigsimp
+from sympy.functions.elementary.complexes import Abs
 from sympy.functions.elementary.miscellaneous import sqrt, Max
 from sympy.functions.elementary.trigonometric import cos, sin
 from sympy.functions.special.elliptic_integrals import elliptic_e
@@ -506,15 +507,15 @@ class Ellipse(GeometrySet):
         >>> from sympy import Point, Ellipse
         >>> e1 = Ellipse(Point(1, 0), 3, 2)
         >>> e1.evolute()
-        2**(2/3)*y**(2/3) + (3*x - 3)**(2/3) - 5**(2/3)
+        2**(2/3)*Abs(y)**(2/3) - 5**(2/3) + Abs(3*x - 3)**(2/3)
         """
         if len(self.args) != 3:
             raise NotImplementedError('Evolute of arbitrary Ellipse is not supported.')
         x = _symbol(x, real=True)
         y = _symbol(y, real=True)
-        t1 = (self.hradius*(x - self.center.x))**Rational(2, 3)
-        t2 = (self.vradius*(y - self.center.y))**Rational(2, 3)
-        return t1 + t2 - (self.hradius**2 - self.vradius**2)**Rational(2, 3)
+        t1 = Abs(self.hradius*(x - self.center.x))**Rational(2, 3)
+        t2 = Abs(self.vradius*(y - self.center.y))**Rational(2, 3)
+        return t1 + t2 - Abs(self.hradius**2 - self.vradius**2)**Rational(2, 3)
 
     @property
     def foci(self):

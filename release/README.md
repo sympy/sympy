@@ -55,7 +55,7 @@ This will run all the release scripts. If they are successful, they will
 create release tarballs and put them all into a new "release-VERSION"
 directory of the current directory. Most likely they will fail the first time,
 in which case you will need to investigate why and fix things (e.g., update
-authors, run tests, update whitelists in `rever.xsh`, fix setup.py). The whole
+authors, run tests, update whitelists in `rever.xsh`, fix pyproject.toml). The whole
 script can take about an hour or so to run (depending on how long the tests
 take). Every time you re-run the script, it pulls from the branch and runs
 everything from scratch.

@@ -20,7 +20,7 @@ def test_printmethod():
 
 def test_print_without_operators():
     assert glsl_code(x*y,use_operators = False) == 'mul(x, y)'
-    assert glsl_code(x**y+z,use_operators = False) == 'add(pow(x, y), z)'
+    assert glsl_code(x**y+z,use_operators = False) == 'add(z, pow(x, y))'
     assert glsl_code(x*(y+z),use_operators = False) == 'mul(x, add(y, z))'
     assert glsl_code(x*(y+z),use_operators = False) == 'mul(x, add(y, z))'
     assert glsl_code(x*(y+z**y**0.5),use_operators = False) == 'mul(x, add(y, pow(z, sqrt(y))))'
@@ -38,7 +38,7 @@ def test_glsl_code_Pow():
     assert glsl_code(x**3) == "pow(x, 3.0)"
     assert glsl_code(x**(y**3)) == "pow(x, pow(y, 3.0))"
     assert glsl_code(1/(g(x)*3.5)**(x - y**x)/(x**2 + y)) == \
-        "pow(3.5*2*x, -x + pow(y, x))/(pow(x, 2.0) + y)"
+        'pow(3.5*2*x, pow(y, x) - x)/(pow(x, 2.0) + y)'
     assert glsl_code(x**-1.0) == '1.0/x'
 
 

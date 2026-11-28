@@ -15,7 +15,7 @@ eflags = {"deep": False, "mul": True, "power_exp": False, "power_base": False,
               "basic": False, "multinomial": False, "log": False}
 
 @public
-class ExpressionDomain(Field, CharacteristicZero, SimpleDomain, ConjugateDomain):
+class ExpressionDomain(Field["ExpressionDomain.Expression"], CharacteristicZero, SimpleDomain, ConjugateDomain):
     """A class for arbitrary expressions. """
 
     is_SymbolicDomain = is_EX = True

@@ -230,6 +230,7 @@ class PrettyPrinter(Printer):
 
     def _print_Not(self, e):
         from sympy.logic.boolalg import (Equivalent, Implies)
+        from sympy.sets.contains import Contains
         if self._use_unicode:
             arg = e.args[0]
             pform = self._print(arg)
@@ -238,7 +239,7 @@ class PrettyPrinter(Printer):
             if isinstance(arg, Implies):
                 return self._print_Implies(arg, altchar=pretty_atom('NotArrow'))
 
-            if arg.is_Boolean and not arg.is_Not:
+            if (arg.is_Boolean or arg.is_Relational or isinstance(arg, Contains)) and not arg.is_Not:
                 pform = prettyForm(*pform.parens())
 
             return prettyForm(*pform.left(pretty_atom('Not')))
@@ -855,7 +856,7 @@ class PrettyPrinter(Printer):
                 x[0] = ''
             if x[1] == dim:
                 x[1] = ''
-            return prettyForm(*self._print_seq(x, delimiter=':'))
+            return self._print_seq(x, delimiter=':')
         prettyArgs = self._print_seq((ppslice(m.rowslice, m.parent.rows),
             ppslice(m.colslice, m.parent.cols)), delimiter=', ').parens(left='[', right=']')[0]
 
@@ -892,6 +893,9 @@ class PrettyPrinter(Printer):
         pform = pform**dag
         return pform
 
+    def _print_Conjugate(self, expr):
+        return self._print_conjugate(expr)
+
     def _print_BlockMatrix(self, B):
         if B.blocks.shape == (1, 1):
             return self._print(B.blocks[0, 0])
@@ -904,10 +908,11 @@ class PrettyPrinter(Printer):
             if s is None:
                 s = pform     # First element
             else:
-                coeff = item.as_coeff_mmul()[0]
-                if S(coeff).could_extract_minus_sign():
+                coeff = S(item.as_coeff_mmul()[0])
+                # an Add coefficient is printed in parentheses, so the
+                # term does not start with a minus sign
+                if not coeff.is_Add and coeff.could_extract_minus_sign():
                     s = prettyForm(*stringPict.next(s, ' '))
-                    pform = self._print(item)
                 else:
                     s = prettyForm(*stringPict.next(s, ' + '))
                 s = prettyForm(*stringPict.next(s, pform))
@@ -1214,9 +1219,8 @@ class PrettyPrinter(Printer):
         #Fixing the newlines
         lengths = []
         strs = ['']
-        flag = []
+        flag = [0] * len(o1)
         for i, partstr in enumerate(o1):
-            flag.append(0)
             # XXX: What is this hack?
             if '\n' in partstr:
                 tempstr = partstr
@@ -1276,6 +1280,9 @@ class PrettyPrinter(Printer):
 
         if expr.ndim == 0:
             return self._print(expr[()])
+
+        if 0 in expr.shape:
+            return prettyForm('[]')
 
         level_str = [[]] + [[] for i in range(expr.ndim)]
         shape_ranges = [list(range(i)) for i in expr.shape]
@@ -1975,7 +1982,10 @@ class PrettyPrinter(Printer):
         if pform.binding > prettyForm.MUL:
             pform = prettyForm(*pform.parens())
         pform = prettyForm(*pform.right(' mod '))
-        pform = prettyForm(*pform.right(self._print(expr.args[1])))
+        divisor = self._print(expr.args[1])
+        if divisor.binding > prettyForm.MUL:
+            divisor = prettyForm(*divisor.parens())
+        pform = prettyForm(*pform.right(divisor))
         pform.binding = prettyForm.OPEN
         return pform
 
@@ -2316,7 +2326,7 @@ class PrettyPrinter(Printer):
 
         return self._print_seq(u.args, None, None, delimiter,
              parenthesize=lambda set: set.is_ProductSet or set.is_Intersection
-                               or set.is_Union)
+                               or set.is_Union or set.is_Complement)
 
     def _print_ImageSet(self, ts):
         if self._use_unicode:
@@ -2425,7 +2435,7 @@ class PrettyPrinter(Printer):
             dots = '...'
 
         if len(s.start.free_symbols) > 0 or len(s.stop.free_symbols) > 0:
-            raise NotImplementedError("Pretty printing of sequences with symbolic bound not implemented")
+            return self._print_Function(s)
 
         if s.start is S.NegativeInfinity:
             stop = s.stop

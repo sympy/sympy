@@ -1426,3 +1426,34 @@ def test_rewrite_Add():
     from sympy.testing.pytest import warns_deprecated_sympy
     with warns_deprecated_sympy():
         assert Eq(x, y).rewrite(Add) == x - y
+
+
+def test_issue_21429():
+    p = Symbol('p', integer=True, positive=True)
+    n = Symbol('n', integer=True, negative=True)
+    z = Symbol('z', integer=True)
+
+    # A unit fraction with nonzero integer denominator lies in [-1, 1].
+    assert 1/p <= 1
+    assert -1/p >= -1
+
+    assert 1/n >= -1
+    assert -1/n <= 1
+
+    # A possibly-zero denominator gives no such conclusion.
+    assert unchanged(Le, 1/z, S.One)
+    assert unchanged(Ge, S.One, 1/z)
+    assert unchanged(Ge, 1/z, S.NegativeOne)
+    assert unchanged(Le, S.NegativeOne, 1/z)
+
+    # Endpoint equality is possible, so strict inequalities are unknown.
+    assert unchanged(Lt, 1/p, S.One)
+    assert unchanged(Gt, S.One, 1/p)
+    assert unchanged(Gt, -1/p, S.NegativeOne)
+    assert unchanged(Lt, S.NegativeOne, -1/p)
+
+    # floor/ceiling work
+    assert floor(-1/p) == -1
+    assert ceiling(1/p) == 1
+    assert floor(1/n) == -1
+    assert ceiling(-1/n) == 1

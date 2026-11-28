@@ -380,11 +380,27 @@ class tribonacci(DefinedFunction):
     def __trib(cls,n:int):
         if n<2: return [0,1,0] if n else [1,0,0]
         def mul(a,b):
-            a0,a1,a2=a
-            b0,b1,b2=b
-            c=a1*b2+a2*b1
-            d=a2*b2
-            return [a0*b0+c+d,a0*b1+a1*b0+c+2*d,a0*b2+a1*b1+a2*b0+c+2*d]
+            #the polynomial multiplication, if expanded out naively, takes 9 bigint muls
+            if n.bit_length()<15: #we can use Karatsuba's method thrice to reduce it to 6
+                a0,a1,a2=a
+                b0,b1,b2=b
+                c0=a0*b0;            c1=a1*b1;            c2=a2*b2
+                c01=(a0+a1)*(b0+b1); c12=(a1+a2)*(b1+b2); c02=(a0+a2)*(b0+b2)
+                return [c0+c12-c1,c01-c0+c12-2*c1+c2,c02-c0+c12]
+            else: #for large n, mul is much more expensive than add so this is about 5/6ths the time
+                a0,a1,a2=a
+                b0,b1,b2=b
+                #this is the same idea as the Toom-Cook algorithm
+                #we want to compute c(x) = a(x)*b(x), so we compute it at 4 points
+                c0 = a0           * b0            #c( 0)
+                c1 =(a0+  a1+  a2)*(b0+  b1+  b2) #c( 1)
+                cm1=(a0-  a1+  a2)*(b0-  b1+  b2) #c(-1)
+                c2 =(a0+2*a1+4*a2)*(b0+2*b1+4*b2) #c( 2)
+                cl=            a2 *           b2 #leading coeff
+
+                #c(x) - cl*x**4 is cubic, so its coeffs can be obtained from these 4 points by Lagrange interpolation
+                return [(3*c0-c1+(c2-cm1)//3 >> 1) - cl, (c1-cm1>>1) + 2*cl, ((c2+2*cm1)//3-c0 >> 1) - cl]
+
         return mul(cls.__trib(p:=1<<n.bit_length()-1),cls.__trib(n-p)) if n&n-1 else mul(t:=cls.__trib(n>>1),t)
     @classmethod
     def _trib(cls,n): return cls.__trib(int(n)+2)[0]
@@ -851,14 +867,13 @@ class harmonic(DefinedFunction):
     harmonic(1/3)
     >>> He = expand_func(H)
     >>> He
-    -log(6) - sqrt(3)*pi/6 + 2*Sum(log(sin(_k*pi/3))*cos(2*_k*pi/3), (_k, 1, 1))
-                           + 3*Sum(1/(3*_k + 1), (_k, 0, 0))
+    -sqrt(3)*pi/6 - log(6) + 2*Sum(log(sin(_k*pi/3))*cos(2*_k*pi/3), (_k, 1, 1)) + 3*Sum(1/(3*_k + 1), (_k, 0, 0))
     >>> He.doit()
-    -log(6) - sqrt(3)*pi/6 - log(sqrt(3)/2) + 3
+    -sqrt(3)*pi/6 - log(6) - log(sqrt(3)/2) + 3
     >>> H = harmonic(25/S(7))
     >>> He = simplify(expand_func(H).doit())
     >>> He
-    log(sin(2*pi/7)**(2*cos(16*pi/7))/(14*sin(pi/7)**(2*cos(pi/7))*cos(pi/14)**(2*sin(pi/14)))) + pi*tan(pi/14)/2 + 30247/9900
+    pi*tan(pi/14)/2 + log(sin(2*pi/7)**(2*cos(16*pi/7))/(14*sin(pi/7)**(2*cos(pi/7))*cos(pi/14)**(2*sin(pi/14)))) + 30247/9900
     >>> He.n(40)
     1.983697455232980674869851942390639915940
     >>> harmonic(25/S(7)).n(40)
@@ -870,17 +885,16 @@ class harmonic(DefinedFunction):
     >>> m = Symbol("m", integer=True, positive=True)
 
     >>> harmonic(n).rewrite(digamma)
-    polygamma(0, n + 1) + EulerGamma
+    EulerGamma + polygamma(0, n + 1)
 
     >>> harmonic(n).rewrite(polygamma)
-    polygamma(0, n + 1) + EulerGamma
+    EulerGamma + polygamma(0, n + 1)
 
     >>> harmonic(n,3).rewrite(polygamma)
     polygamma(2, n + 1)/2 + zeta(3)
 
     >>> simplify(harmonic(n,m).rewrite(polygamma))
-    Piecewise((polygamma(0, n + 1) + EulerGamma, Eq(m, 1)),
-    (-(-1)**m*polygamma(m - 1, n + 1)/factorial(m - 1) + zeta(m), True))
+    Piecewise((EulerGamma + polygamma(0, n + 1), Eq(m, 1)), (zeta(m) - (-1)**m*polygamma(m - 1, n + 1)/factorial(m - 1), True))
 
     Integer offsets in the argument can be pulled out:
 
@@ -1285,7 +1299,7 @@ class catalan(DefinedFunction):
     continuous real function in n:
 
     >>> diff(catalan(n), n)
-    (polygamma(0, n + 1/2) - polygamma(0, n + 2) + log(4))*catalan(n)
+    (log(4) + polygamma(0, n + 1/2) - polygamma(0, n + 2))*catalan(n)
 
     As a more advanced example consider the following ratio
     between consecutive numbers:
@@ -2676,12 +2690,22 @@ def _eval_stirling1(n, k):
     return _stirling1(n, k)
 
 
+
 @cacheit
 def _stirling1(n, k):
-    row = [0, 1]+[0]*(k-1) # for n = 1
-    for i in range(2, n+1):
-        for j in range(min(k,i), 0, -1):
-            row[j] = (i-1) * row[j] + row[j-1]
+    if n < k:
+        return S.Zero
+    if not k:
+        return Integer(n == 0)
+
+    d = n-k
+    row = [1]*(k+1)
+    row[0] = 0
+
+    for h in range(1, d+1):
+        for j in range(1, k+1):
+            row[j] = (h+j-1)*row[j] + row[j-1] #row[j] = stirling1(h+j,j)
+
     return Integer(row[k])
 
 
@@ -2703,13 +2727,21 @@ def _eval_stirling2(n, k):
 
     return _stirling2(n, k)
 
-
 @cacheit
 def _stirling2(n, k):
-    row = [0, 1]+[0]*(k-1) # for n = 1
-    for i in range(2, n+1):
-        for j in range(min(k,i), 0, -1):
-            row[j] = j * row[j] + row[j-1]
+    if n < k:
+        return S.Zero
+    if not k:
+        return Integer(n == 0)
+
+    d = n-k
+    row = [1]*(k+1)
+    row[0] = 0
+
+    for h in range(1, d+1):
+        for j in range(1, k+1):
+            row[j] = j*row[j] + row[j-1] #row[j] = stirling2(h+j,j)
+
     return Integer(row[k])
 
 

@@ -15,7 +15,7 @@ expressions for this purpose::
     >>> optimize(exp(2*x) - 1 - exp(-33), optims_c99)
     expm1(2*x) - exp(-33)
     >>> optimize(log(3*x + 3), optims_c99)
-    log1p(x) + log(3)
+    log(3) + log1p(x)
     >>> optimize(log(2*x + 3), optims_c99)
     log(2*x + 3)
 

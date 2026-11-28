@@ -117,9 +117,9 @@ NOT_EQUAL: /\\neq(?![a-zA-Z])/ | /\\ne(?![a-zA-Z])/
 LT: "<"
 // "\le" requires a negative lookahead to avoid matching as a prefix of "\left". Without the negative lookahead,
 // LTE was matching the "\le" part of "\left", leaving behind "ft" as garbage tokens.
-LTE: "\\leq" | /\\le(?![a-zA-Z])/ | "\\leqslant"   
+LTE: "\\leq" | /\\le(?![a-zA-Z])/ | "\\leqslant" | "\\leqq"
 GT: ">"
-GTE: "\\geq" | "\\ge" | "\\geqslant"
+GTE: "\\geq" | "\\ge" | "\\geqslant" | "\\geqq"
 
 DIV_SYMBOL: CMD_DIV | DIV
 MUL_SYMBOL: MUL | CMD_TIMES | CMD_CDOT

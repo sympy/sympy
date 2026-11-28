@@ -1,6 +1,7 @@
 """Tools for constructing domains for expressions. """
 from __future__ import annotations
 from math import prod
+from typing import TYPE_CHECKING, overload
 
 from sympy.core import sympify
 from sympy.core.evalf import pure_complex
@@ -11,6 +12,94 @@ from sympy.polys.domains.realfield import RealField
 from sympy.polys.polyoptions import build_options
 from sympy.polys.polyutils import parallel_dict_from_basic, _not_a_coeff
 from sympy.utilities import public
+
+if TYPE_CHECKING:
+    from typing import Any, Iterable, TypeVar
+    from sympy.core.expr import Expr
+    from sympy.external.gmpy import MPZ, MPQ
+    from sympy.external.mpmath import mpf, mpc
+    from sympy.polys.domains.algebraicfield import AlgebraicField, Alg
+    from sympy.polys.domains.expressiondomain import ExpressionDomain
+    from sympy.polys.domains.fractionfield import FractionField
+    from sympy.polys.domains.gaussiandomains import (
+        GaussianInteger, GaussianIntegerRing, GaussianRational, GaussianRationalField)
+    from sympy.polys.domains.integerring import IntegerRing
+    from sympy.polys.domains.polynomialring import PolynomialRing
+    from sympy.polys.domains.rationalfield import RationalField
+    from sympy.polys.fields import FracElement
+    from sympy.polys.rings import PolyElement
+
+    _K = TypeVar('_K')
+    _V = TypeVar('_V', bound='Expr | complex')
+
+    _ConstructedElement = (
+          tuple[IntegerRing, MPZ]
+        | tuple[RationalField, MPQ]
+        | tuple[GaussianIntegerRing, GaussianInteger]
+        | tuple[GaussianRationalField, GaussianRational]
+        | tuple[RealField, mpf]
+        | tuple[ComplexField, mpc]
+        | tuple[AlgebraicField, Alg]
+        | tuple[PolynomialRing[MPZ], PolyElement[MPZ]]
+        | tuple[PolynomialRing[MPQ], PolyElement[MPQ]]
+        | tuple[PolynomialRing[GaussianInteger], PolyElement[GaussianInteger]]
+        | tuple[PolynomialRing[GaussianRational], PolyElement[GaussianRational]]
+        | tuple[PolynomialRing[mpf], PolyElement[mpf]]
+        | tuple[PolynomialRing[mpc], PolyElement[mpc]]
+        | tuple[FractionField[MPZ], FracElement[MPZ]]
+        | tuple[FractionField[MPQ], FracElement[MPQ]]
+        | tuple[FractionField[GaussianInteger], FracElement[GaussianInteger]]
+        | tuple[FractionField[GaussianRational], FracElement[GaussianRational]]
+        | tuple[FractionField[mpf], FracElement[mpf]]
+        | tuple[FractionField[mpc], FracElement[mpc]]
+        | tuple[ExpressionDomain, ExpressionDomain.Expression]
+    )
+
+    _ConstructedList = (
+          tuple[IntegerRing, list[MPZ]]
+        | tuple[RationalField, list[MPQ]]
+        | tuple[GaussianIntegerRing, list[GaussianInteger]]
+        | tuple[GaussianRationalField, list[GaussianRational]]
+        | tuple[RealField, list[mpf]]
+        | tuple[ComplexField, list[mpc]]
+        | tuple[AlgebraicField, list[Alg]]
+        | tuple[PolynomialRing[MPZ], list[PolyElement[MPZ]]]
+        | tuple[PolynomialRing[MPQ], list[PolyElement[MPQ]]]
+        | tuple[PolynomialRing[GaussianInteger], list[PolyElement[GaussianInteger]]]
+        | tuple[PolynomialRing[GaussianRational], list[PolyElement[GaussianRational]]]
+        | tuple[PolynomialRing[mpf], list[PolyElement[mpf]]]
+        | tuple[PolynomialRing[mpc], list[PolyElement[mpc]]]
+        | tuple[FractionField[MPZ], list[FracElement[MPZ]]]
+        | tuple[FractionField[MPQ], list[FracElement[MPQ]]]
+        | tuple[FractionField[GaussianInteger], list[FracElement[GaussianInteger]]]
+        | tuple[FractionField[GaussianRational], list[FracElement[GaussianRational]]]
+        | tuple[FractionField[mpf], list[FracElement[mpf]]]
+        | tuple[FractionField[mpc], list[FracElement[mpc]]]
+        | tuple[ExpressionDomain, list[ExpressionDomain.Expression]]
+    )
+
+    _ConstructedDict = (
+          tuple[IntegerRing, dict[_K, MPZ]]
+        | tuple[RationalField, dict[_K, MPQ]]
+        | tuple[GaussianIntegerRing, dict[_K, GaussianInteger]]
+        | tuple[GaussianRationalField, dict[_K, GaussianRational]]
+        | tuple[RealField, dict[_K, mpf]]
+        | tuple[ComplexField, dict[_K, mpc]]
+        | tuple[AlgebraicField, dict[_K, Alg]]
+        | tuple[PolynomialRing[MPZ], dict[_K, PolyElement[MPZ]]]
+        | tuple[PolynomialRing[MPQ], dict[_K, PolyElement[MPQ]]]
+        | tuple[PolynomialRing[GaussianInteger], dict[_K, PolyElement[GaussianInteger]]]
+        | tuple[PolynomialRing[GaussianRational], dict[_K, PolyElement[GaussianRational]]]
+        | tuple[PolynomialRing[mpf], dict[_K, PolyElement[mpf]]]
+        | tuple[PolynomialRing[mpc], dict[_K, PolyElement[mpc]]]
+        | tuple[FractionField[MPZ], dict[_K, FracElement[MPZ]]]
+        | tuple[FractionField[MPQ], dict[_K, FracElement[MPQ]]]
+        | tuple[FractionField[GaussianInteger], dict[_K, FracElement[GaussianInteger]]]
+        | tuple[FractionField[GaussianRational], dict[_K, FracElement[GaussianRational]]]
+        | tuple[FractionField[mpf], dict[_K, FracElement[mpf]]]
+        | tuple[FractionField[mpc], dict[_K, FracElement[mpc]]]
+        | tuple[ExpressionDomain, dict[_K, ExpressionDomain.Expression]]
+    )
 
 
 def _construct_simple(coeffs, opt):
@@ -39,6 +128,8 @@ def _construct_simple(coeffs, opt):
             if is_complex:
                 complexes = True
                 x, y = is_complex
+                if _not_a_coeff(x) or _not_a_coeff(y):
+                    return False
                 if x.is_Rational and y.is_Rational:
                     if not (x.is_Integer and y.is_Integer):
                         rationals = True
@@ -143,8 +234,11 @@ def _construct_composite(coeffs, opt):
     if not gens:
         return None
 
+    if any(_not_a_coeff(gen) for gen in gens):
+        return None
+
     if opt.composite is None:
-        if any(_not_a_coeff(gen) or gen.is_number and gen.is_algebraic for gen in gens):
+        if any(gen.is_number and gen.is_algebraic for gen in gens):
             return None # generators are number-like so lets better use EX
 
         all_symbols = set()
@@ -263,6 +357,13 @@ def _construct_expression(coeffs, opt):
 
     return domain, result
 
+
+@overload
+def construct_domain(obj: dict[_K, _V], **args: Any) -> _ConstructedDict[_K]: ...
+@overload
+def construct_domain(obj: Iterable[Expr | complex], **args: Any) -> _ConstructedList: ...
+@overload
+def construct_domain(obj: Expr | complex, **args: Any) -> _ConstructedElement: ...
 
 @public
 def construct_domain(obj, **args):

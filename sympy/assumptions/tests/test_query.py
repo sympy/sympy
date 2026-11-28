@@ -2163,6 +2163,18 @@ def test_matrix():
     _A = Matrix([[0, -2 - I, 0], [z, 0, -I], [0, -I, 0]])
     assert _ask_recursive(Q.antihermitian(_A)) is None
 
+    # non-square matrices cannot be hermitian or antihermitian
+    tall = Matrix([[1, 2], [2, 3], [4, 5]])
+    wide = Matrix([[1, 2, 3], [2, 5, 6]])
+    assert _ask_recursive(Q.hermitian(tall)) is False
+    assert _ask_recursive(Q.hermitian(wide)) is False
+    assert _ask_recursive(Q.antihermitian(tall)) is False
+    assert _ask_recursive(Q.antihermitian(wide)) is False
+    assert _ask_recursive(Q.hermitian(SparseMatrix(tall))) is False
+    assert _ask_recursive(Q.hermitian(SparseMatrix(wide))) is False
+    assert _ask_recursive(Q.antihermitian(SparseMatrix(tall))) is False
+    assert _ask_recursive(Q.antihermitian(SparseMatrix(wide))) is False
+
 
 @_both_exp_pow
 def test_algebraic():
@@ -2587,6 +2599,27 @@ def test_issue_28127():
     assert _ask_recursive(Q.gt(y,x), Q.lt(x,y)) is True
     assert _ask_recursive(Q.lt(y,x), Q.gt(x,y)) is True
     assert _ask_recursive(Q.le(y,x), Q.ge(x,y)) is True
+
+
+def test_radical_root_evalf_prec():
+    from sympy.polys.polyroots import roots
+    y = Symbol('y')
+    r = roots(y**4 + y + 1, y, multiple=True)[0]
+    assert ask(Q.real(r)) is None
+    assert ask(Q.positive(r)) is None
+    assert ask(Q.negative(r)) is None
+    assert ask(Q.imaginary(r)) is None
+    assert ask(Q.nonzero(r)) is None
+
+    r_pos = roots(y**4 - y - 1, y, multiple=True)[3]
+    assert ask(Q.real(r_pos)) is True
+    assert ask(Q.positive(r_pos)) is True
+    assert ask(Q.negative(r_pos)) is False
+
+    r_neg = roots(y**4 - y - 1, y, multiple=True)[2]
+    assert ask(Q.real(r_neg)) is True
+    assert ask(Q.positive(r_neg)) is False
+    assert ask(Q.negative(r_neg)) is True
 
 
 # https://github.com/sympy/sympy/pull/30175

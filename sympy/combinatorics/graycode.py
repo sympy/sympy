@@ -54,7 +54,7 @@ class GrayCode(Basic):
     _current = 0
     _rank = None
 
-    def __new__(cls: type[GrayCode], n: int, *args: Any, **kw_args: Any) -> GrayCode:
+    def __new__(cls: type[GrayCode], n: Integer | int, *args: Any, **kw_args: Any) -> GrayCode:
         """
         Default constructor.
 

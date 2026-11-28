@@ -235,3 +235,34 @@ def test_no_exponentiation():
     # if this passes, Pow.as_numer_denom should recognize
     # MatAdd as exponent
     raises(NotImplementedError, lambda: 3**(-2*C))
+
+
+def test_adjoint_conjugate_power():
+    from sympy import I, conjugate
+    from sympy.matrices.expressions.adjoint import Adjoint
+
+    X = MatrixSymbol('X', n, n)
+    p = symbols('p', integer=True, nonnegative=True)
+    z = symbols('z')
+
+    # Nonnegative integer powers evaluate cleanly
+    assert Adjoint(X**2).doit() == Adjoint(X)**2
+    assert (X**2).adjoint() == Adjoint(X)**2
+    assert (X**0).adjoint() == Identity(n)
+    assert (X**p).adjoint() == Adjoint(X)**p
+    assert (X**2).conjugate() == Adjoint(X.T)**2
+    assert (X**0).conjugate() == Identity(n)
+    assert (X**p).conjugate() == Adjoint(X.T)**p
+
+    # Negative integer, complex, and generic powers remain unevaluated
+    assert (X**(-2)).adjoint() == conjugate(X.T**(-2))
+    assert (X**(-2)).conjugate() == conjugate(X**(-2))
+    assert (X**I).adjoint() == conjugate(X.T**I)
+    assert (X**I).conjugate() == conjugate(X**I)
+    assert (X**z).adjoint() == conjugate(X.T**z)
+    assert (X**z).conjugate() == conjugate(X**z)
+
+    # Issue #30900 / #16498: conjugate/adjoint of negative powers preserves shape and matrix operations
+    B = MatrixSymbol('B', n, n)
+    assert (X**(-2)).adjoint().shape == (n, n)
+    assert ((X**(-2)).adjoint() * B).shape == (n, n)

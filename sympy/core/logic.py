@@ -9,11 +9,13 @@ this stuff for general purpose.
 
 from __future__ import annotations
 
+from typing import Iterable
+
 # Type of a fuzzy bool
 FuzzyBool = bool | None
 
 
-def _torf(args):
+def _torf(args: Iterable[bool | None]) -> bool | None:
     """Return True if all args are True, False if they
     are all False, else None.
 
@@ -28,18 +30,18 @@ def _torf(args):
     for a in args:
         if a is True:
             if sawF:
-                return
+                return None
             sawT = True
         elif a is False:
             if sawT:
-                return
+                return None
             sawF = True
         else:
-            return
+            return None
     return sawT
 
 
-def _fuzzy_group(args, quick_exit=False):
+def _fuzzy_group(args: Iterable[bool | None], quick_exit: bool = False) -> bool | None:
     """Return True if all args are True, None if there is any None else False
     unless ``quick_exit`` is True (then return None as soon as a second False
     is seen.
@@ -81,14 +83,14 @@ def _fuzzy_group(args, quick_exit=False):
         if a is True:
             continue
         if a is None:
-            return
+            return None
         if quick_exit and saw_other:
-            return
+            return None
         saw_other = True
     return not saw_other
 
 
-def fuzzy_bool(x):
+def fuzzy_bool(x: bool | None) -> bool | None:
     """Return True, False or None according to x.
 
     Whereas bool(x) returns True or False, fuzzy_bool allows
@@ -109,9 +111,10 @@ def fuzzy_bool(x):
         return None
     if x in (True, False):
         return bool(x)
+    return None
 
 
-def fuzzy_and(args):
+def fuzzy_and(args: Iterable[bool | None]) -> bool | None:
     """Return True (all True), False (any False) or None.
 
     Examples
@@ -137,7 +140,7 @@ def fuzzy_and(args):
     False
     """
 
-    rv = True
+    rv: bool | None = True
     for ai in args:
         ai = fuzzy_bool(ai)
         if ai is False:
@@ -170,7 +173,7 @@ def fuzzy_not(v: bool | None) -> bool | None:
         return not v
 
 
-def fuzzy_or(args):
+def fuzzy_or(args: Iterable[bool | None]) -> bool | None:
     """
     Or in fuzzy logic. Returns True (any True), False (all False), or None
 
@@ -188,7 +191,7 @@ def fuzzy_or(args):
     None
 
     """
-    rv = False
+    rv: bool | None = False
     for ai in args:
         ai = fuzzy_bool(ai)
         if ai is True:
@@ -198,7 +201,7 @@ def fuzzy_or(args):
     return rv
 
 
-def fuzzy_xor(args):
+def fuzzy_xor(args: Iterable[bool | None]) -> bool | None:
     """Return None if any element of args is not True or False, else
     True (if there are an odd number of True elements), else False."""
     t = 0
@@ -207,11 +210,11 @@ def fuzzy_xor(args):
         if ai:
             t += 1
         elif ai is None:
-            return
+            return None
     return t % 2 == 1
 
 
-def fuzzy_nand(args):
+def fuzzy_nand(args: Iterable[bool | None]) -> bool | None:
     """Return False if all args are True, True if they are all False,
     else None."""
     return fuzzy_not(fuzzy_and(args))

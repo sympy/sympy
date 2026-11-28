@@ -17,7 +17,7 @@ from sympy.functions.elementary.exponential import (exp, exp_polar, log)
 from sympy.functions.elementary.hyperbolic import (cosh, csch, sinh)
 from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.functions.elementary.piecewise import Piecewise
-from sympy.functions.elementary.trigonometric import (acos, asin, atan, cos, sin, sinc, tan)
+from sympy.functions.elementary.trigonometric import (acos, asin, atan, atan2, cos, sin, sinc, tan)
 from sympy.functions.special.error_functions import erf
 from sympy.functions.special.gamma_functions import gamma
 from sympy.functions.special.hyper import hyper
@@ -361,7 +361,7 @@ def test_hypersimp():
     assert hypersimp(binomial(n + 1, k), k) == (n - k + 1)/(k + 1)
 
     term = (4*k + 1)*factorial(k)/factorial(2*k + 1)
-    assert hypersimp(term, k) == S.Half*((4*k + 5)/(3 + 14*k + 8*k**2))
+    assert hypersimp(term, k) == (4*k + 5)/(16*k**2 + 28*k + 6)
 
     term = 1/((2*k - 1)*factorial(2*k + 1))
     assert hypersimp(term, k) == (k - S.Half)/((k + 1)*(2*k + 1)*(2*k + 3))
@@ -954,21 +954,16 @@ def test_issue_7971_21740():
     assert z is not S.Zero and z == 0.0
 
 
-@slow
-def test_issue_17141_slow():
-    # Should not give RecursionError
-    assert simplify((2**acos(I+1)**2).rewrite('log')) == 2**((pi + 2*I*log(-1 +
-                   sqrt(1 - 2*I) + I))**2/4)
-
-
 def test_issue_17141():
     # Check that there is no RecursionError
-    assert simplify(x**(1 / acos(I))) == x**(2/(pi - 2*I*log(1 + sqrt(2))))
+    assert simplify(x**(1 / acos(I))) == x**(2/(pi - 2*I*log(sqrt(2) + 1)))
     assert simplify(acos(-I)**2*acos(I)**2) == \
            log(1 + sqrt(2))**4 + pi**2*log(1 + sqrt(2))**2/2 + pi**4/16
-    assert simplify(2**acos(I)**2) == 2**((pi - 2*I*log(1 + sqrt(2)))**2/4)
+    assert simplify(2**acos(I)**2) == 2**((pi - 2*I*log(sqrt(2) + 1))**2/4)
     p = 2**acos(I+1)**2
     assert simplify(p) == p
+    assert isinstance(atan2(0, 1 + log(-sqrt(2)*I/2 - sqrt(2)*sqrt(I
+        )*I/2 + sqrt(2)*sqrt(I)/2 + sqrt(I))**2), Piecewise)  # no recursion
 
 
 def test_simplify_kroneckerdelta():
@@ -1124,6 +1119,54 @@ def test_issue_14269():
     root = (sqrt(2) - 1)**Rational(1, 3) - (sqrt(2) + 1)**Rational(1, 3)
     expr = (x**3 + 3*x + 2).subs(x, root)
     assert simplify(expr) == 0
+
+
+def test_simplify_exp_rational_exponents_7769_19380():
+    #x, y, z, a, b = symbols('x y z a b', positive=True)
+
+    # 19380
+    r = (x - 1)/(x**2 - 1)
+    red = 1/(x + 1)
+    assert (2**r).simplify() == 2**red
+    assert sqrt(r).simplify() == sqrt(red)
+
+    # 7769
+    # Black-Scholes option pricing formula
+    eq = S('''-sqrt(2)*K*exp(-r*(T - t))*exp(-(sigma*sqrt(T - t)/2 - log(
+        S*exp(r*(T - t))/K)/(sigma*sqrt(T - t)))**2/2)/(2*sqrt(pi
+        )*S*sigma*sqrt(T - t)) + sqrt(2)*exp(-(sigma*sqrt(T - t
+        )/2 + log(S*exp(r*(T - t))/K)/(sigma*sqrt(T - t)))**2/2)/(
+        2*sqrt(pi)*sigma*sqrt(T - t))''', locals={'S': Symbol("S")})
+    assert eq.simplify() == 0
+    assert eq.expand().simplify() == 0
+
+    # 19380 generalized
+    def pair(c, p):
+        return (
+            exp(-(p + log(c))**2/p)
+            - exp(-(p - log(c))**2/p)/c**4
+        )
+
+    e = pair(a, x + y) + pair(b, x + y)
+    assert simplify(e) == 0
+
+    e += pair(a, x + z) + pair(b, x + z)
+    assert simplify(e) == 0
+
+
+def test_simplify_ratsimp_noncommutative():
+    A, B = symbols('A B', commutative=False)
+
+    assert simplify(exp(A + B)) == exp(A + B)
+    assert simplify((A*B)**x) == (A*B)**x
+
+    e = exp(A + (x - 1)/(x**2 - 1))
+    s = simplify(e)
+    assert s.func == exp
+    assert (s.args[0] - A - 1/(x + 1)).cancel() == 0
+
+    e = ((x - 1)/(x**2 - 1)*A*B)**2
+    assert simplify(e).expand() == A*B*A*B/(x**2 + 2*x + 1)
 
 
 def test_logcombine_affine_rational_log():

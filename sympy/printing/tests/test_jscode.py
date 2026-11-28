@@ -1,5 +1,5 @@
 from __future__ import annotations
-from sympy.core import (pi, oo, symbols, Rational, Integer, GoldenRatio,
+from sympy.core import (pi, oo, nan, symbols, Rational, Integer, GoldenRatio,
                         EulerGamma, Catalan, Lambda, Dummy, S, Eq, Ne, Le,
                         Lt, Gt, Ge, Mod)
 from sympy.functions import (Piecewise, sin, cos, Abs, exp, ceiling, sqrt,
@@ -30,7 +30,7 @@ def test_jscode_Pow():
     assert jscode(x**3) == "Math.pow(x, 3)"
     assert jscode(x**(y**3)) == "Math.pow(x, Math.pow(y, 3))"
     assert jscode(1/(g(x)*3.5)**(x - y**x)/(x**2 + y)) == \
-        "Math.pow(3.5*2*x, -x + Math.pow(y, x))/(Math.pow(x, 2) + y)"
+        'Math.pow(3.5*2*x, Math.pow(y, x) - x)/(Math.pow(x, 2) + y)'
     assert jscode(x**-1.0) == '1/x'
 
 
@@ -47,6 +47,22 @@ def test_jscode_constants_other():
     assert jscode(2*Catalan) == "var Catalan = %s;\n2*Catalan" % Catalan.evalf(17)
     assert jscode(
         2*EulerGamma) == "var EulerGamma = %s;\n2*EulerGamma" % EulerGamma.evalf(17)
+
+
+def test_jscode_boolean_literals():
+    assert jscode(S.true) == 'true'
+    assert jscode(S.false) == 'false'
+    assert jscode(True) == 'true'
+    assert jscode(False) == 'false'
+    expr = Piecewise((S.true, x > 0), (S.false, True))
+    assert jscode(expr) == '((x > 0) ? (\n   true\n)\n: (\n   false\n))'
+
+
+def test_jscode_nan():
+    assert jscode(nan) == 'NaN'
+    assert jscode(S.NaN) == 'NaN'
+    expr = Piecewise((nan, x > 0), (0, True))
+    assert jscode(expr) == '((x > 0) ? (\n   NaN\n)\n: (\n   0\n))'
 
 
 def test_jscode_Rational():
@@ -90,7 +106,7 @@ def test_jscode_functions():
     assert jscode(sinh(x) * cosh(x)) == "Math.sinh(x)*Math.cosh(x)"
     assert jscode(Max(x, y) + Min(x, y)) == "Math.max(x, y) + Math.min(x, y)"
     assert jscode(tanh(x)*acosh(y)) == "Math.tanh(x)*Math.acosh(y)"
-    assert jscode(asin(x)-acos(y)) == "-Math.acos(y) + Math.asin(x)"
+    assert jscode(asin(x)-acos(y)) == 'Math.asin(x) - Math.acos(y)'
 
 
 def test_jscode_inline_function():
@@ -399,3 +415,15 @@ def test_MatrixElement_printing():
 
     F = C[0, 0].subs(C, A - B)
     assert(jscode(F) == "(A - B)[0]")
+
+
+def test_jscode_reserved_words():
+    s1, s2 = symbols('if else')
+    raises(ValueError, lambda: jscode(s1 + s2, error_on_reserved=True))
+    js_str = jscode(s1 + s2)
+    assert js_str in ('else_ + if_', 'if_ + else_')
+    for name in ('var', 'let', 'const', 'function', 'new', 'class', 'await', 'null', 'true', 'false'):
+        symbol = symbols(name)
+        assert jscode(symbol + 1) == name + '_ + 1'
+        assert jscode(symbol, reserved_word_suffix='_symbol') == name + '_symbol'
+        raises(ValueError, lambda: jscode(symbol, error_on_reserved=True))

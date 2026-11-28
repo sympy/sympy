@@ -2120,7 +2120,7 @@ def rs_series(expr, a, prec):
     -a*sin(c)*tan(b) + a*cos(c)*tan(b)**2 + a*cos(c) + cos(c)*tan(b)
     >>> series = rs_series(exp(a**QQ(1,3) + a**QQ(2, 5)), a, 1)
     >>> series.as_expr()
-    a**(11/15) + a**(4/5)/2 + a**(2/5) + a**(2/3)/2 + a**(1/3) + 1
+    a**(1/3) + a**(2/5) + a**(2/3)/2 + a**(11/15) + a**(4/5)/2 + 1
 
     """
     R, series = sring(expr, domain=QQ, expand=False, series=True)

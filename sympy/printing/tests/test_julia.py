@@ -52,7 +52,7 @@ def test_Pow():
     assert julia_code(x**Rational(2, 3)) == 'x .^ (2 // 3)'
     g = implemented_function('g', Lambda(x, 2*x))
     assert julia_code(1/(g(x)*3.5)**(x - y**x)/(x**2 + y)) == \
-        "(3.5 * 2 * x) .^ (-x + y .^ x) ./ (x .^ 2 + y)"
+        '(3.5 * 2 * x) .^ (y .^ x - x) ./ (x .^ 2 + y)'
     # For issue 14160
     assert julia_code(Mul(-2, x, Pow(Mul(y,y,evaluate=False), -1, evaluate=False),
                                                 evaluate=False)) == '-2 * x ./ (y .* y)'

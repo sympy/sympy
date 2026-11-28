@@ -1,6 +1,6 @@
 from __future__ import annotations
 from sympy.core import (S, pi, oo, symbols, Function, Rational, Integer,
-                        Tuple, Symbol, Eq, Ne, Le, Lt, Gt, Ge)
+                        Tuple, Symbol, Eq, Ne, Le, Lt, Gt, Ge, Derivative)
 from sympy.core import EulerGamma, GoldenRatio, Catalan, Lambda, Mul, Pow
 from sympy.functions import Piecewise, sqrt, ceiling, exp, sin, cos, sinc, lucas
 from sympy.testing.pytest import raises
@@ -52,7 +52,7 @@ def test_Pow():
 
     g = implemented_function('g', Lambda(x, 2 * x))
     assert maple_code(1 / (g(x) * 3.5) ** (x - y ** x) / (x ** 2 + y)) == \
-           "(3.5*2*x)^(-x + y^x)/(x^2 + y)"
+           '(3.5*2*x)^(y^x - x)/(x^2 + y)'
     # For issue 14160
     assert maple_code(Mul(-2, x, Pow(Mul(y, y, evaluate=False), -1, evaluate=False),
                           evaluate=False)) == '-2*x/(y*y)'
@@ -368,12 +368,18 @@ def test_maple_piecewise_times_const():
 
 def test_maple_derivatives():
     f = Function('f')
+    n = symbols('n')
     assert maple_code(f(x).diff(x)) == 'diff(f(x), x)'
     assert maple_code(f(x).diff(x, 2)) == 'diff(f(x), x$2)'
+    assert maple_code(f(x, y).diff(x, y)) == 'diff(f(x, y), x, y)'
+    assert maple_code(f(x, y).diff(x, 2, y)) == 'diff(f(x, y), x$2, y)'
+    assert maple_code(f(x, y, z).diff(x, 2, y, 3, z)) == 'diff(f(x, y, z), x$2, y$3, z)'
+    assert maple_code(Derivative(f(x), (x, n))) == 'diff(f(x), x$n)'
+    assert maple_code(Derivative(f(x, y), (x, n), (y, 2))) == 'diff(f(x, y), x$n, y$2)'
 
 
 def test_automatic_rewrites():
-    assert maple_code(lucas(x)) == '(2^(-x)*((1 - sqrt(5))^x + (1 + sqrt(5))^x))'
+    assert maple_code(lucas(x)) == '(2^(-x)*((1 - sqrt(5))^x + (sqrt(5) + 1)^x))'
     assert maple_code(sinc(x)) == '(piecewise(x <> 0, sin(x)/x, 1))'
 
 

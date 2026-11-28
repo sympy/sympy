@@ -487,6 +487,10 @@ def dsolve(eq, func=None, hint="default", simplify=True,
           solves the solution explicitly for the function being solved for.
           Otherwise, it returns an implicit solution.
         - Arbitrary constants are symbols named ``C1``, ``C2``, and so on.
+        - To rename the arbitrary constants after calling ``dsolve``, pass the
+          solution to :py:meth:`~sympy.solvers.ode.ode.constant_renumber`.
+          Set ``newconstants`` to an iterator of the new symbols, for example
+          ``numbered_symbols('K', start=1)``.
         - Because all solutions should be mathematically equivalent, some
           hints may return the exact same result for an ODE. Often, though,
           two different hints will return the same solution formatted
@@ -534,9 +538,9 @@ def dsolve(eq, func=None, hint="default", simplify=True,
 
     >>> eq = sin(x)*cos(f(x)) + cos(x)*sin(f(x))*f(x).diff(x)
     >>> dsolve(eq, hint='1st_exact')
-    [Eq(f(x), -acos(C1/cos(x)) + 2*pi), Eq(f(x), acos(C1/cos(x)))]
+    [Eq(f(x), 2*pi - acos(C1/cos(x))), Eq(f(x), acos(C1/cos(x)))]
     >>> dsolve(eq, hint='almost_linear')
-    [Eq(f(x), -acos(C1/cos(x)) + 2*pi), Eq(f(x), acos(C1/cos(x)))]
+    [Eq(f(x), 2*pi - acos(C1/cos(x))), Eq(f(x), acos(C1/cos(x)))]
     >>> t = symbols('t')
     >>> x, y = symbols('x, y', cls=Function)
     >>> eq = (Eq(Derivative(x(t),t), 12*t*x(t) + 8*y(t)), Eq(Derivative(y(t),t), 21*x(t) + 7*t*y(t)))
@@ -2150,8 +2154,8 @@ def constant_renumber(expr, variables=None, newconstants=None):
     >>> constant_renumber(expr)
     C1 + C2*x + C3*x**2
 
-    The ``variables`` argument specifies which are constants so that the
-    other symbols will not be renumbered:
+    The ``variables`` argument specifies symbols that are not constants and
+    therefore will not be renumbered:
 
     >>> constant_renumber(expr, [C1, x])
     C1*x**2  + C2 + C3*x

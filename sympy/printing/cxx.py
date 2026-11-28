@@ -16,7 +16,7 @@ from sympy.printing.codeprinter import cxxcode # noqa:F401
 reserved = {
     'C++98': [
         'and', 'and_eq', 'asm', 'auto', 'bitand', 'bitor', 'bool', 'break',
-        'case', 'catch,', 'char', 'class', 'compl', 'const', 'const_cast',
+        'case', 'catch', 'char', 'class', 'compl', 'const', 'const_cast',
         'continue', 'default', 'delete', 'do', 'double', 'dynamic_cast',
         'else', 'enum', 'explicit', 'export', 'extern', 'false', 'float',
         'for', 'friend', 'goto', 'if', 'inline', 'int', 'long', 'mutable',

@@ -400,6 +400,13 @@ def test_ContinuousMarkovChain():
     C1 = ContinuousMarkovChain('C', [0, 1, 2], T1)
     assert C1.limiting_distribution() == ImmutableMatrix([[Rational(3, 19), Rational(12, 19), Rational(4, 19)]])
 
+    G = MatrixSymbol('G', 2, 2)
+    Q = Matrix([[-1, 1], [2, -2]])
+    pi = Matrix([[Rational(2, 3), Rational(1, 3)]])
+    condition = ContinuousMarkovChain('X', [0, 1], G).limiting_distribution()
+    equation = condition(pi, Q)
+    assert equation.lhs.as_explicit() == equation.rhs.as_explicit()
+
     T2 = Matrix([[-S.One, S.One, S.Zero], [S.One, -S.One, S.Zero], [S.Zero, S.One, -S.One]])
     C2 = ContinuousMarkovChain('C', [0, 1, 2], T2)
     A, t = C2.generator_matrix, symbols('t', positive=True)
@@ -678,7 +685,7 @@ def test_WienerProcess():
     assert P((X(t) > 4) & (X(d) > 3) & (X(x) > 2) & (X(y) > 1),
         Contains(t, Interval.Lopen(0, 1)) & Contains(d, Interval.Lopen(1, 2))
         & Contains(x, Interval.Lopen(2, 3)) & Contains(y, Interval.Lopen(3, 4))).simplify() ==\
-        (1 - erf(sqrt(2)/2))*(1 - erf(sqrt(2)))*(1 - erf(3*sqrt(2)/2))*(1 - erf(2*sqrt(2)))/16
+        (erf(sqrt(2)/2) - 1)*(erf(sqrt(2)) - 1)*(erf(3*sqrt(2)/2) - 1)*(erf(2*sqrt(2)) - 1)/16
 
     # Contains an overlapping interval so, return Probability
     assert P((X(t)< 2) & (X(d)> 3), Contains(t, Interval.Lopen(0, 2))
@@ -687,7 +694,7 @@ def test_WienerProcess():
 
     assert str(P(Not((X(t) < 5) & (X(d) > 3)), Contains(t, Interval.Ropen(2, 4)) &
         Contains(d, Interval.Lopen(7, 8))).simplify()) == \
-                '-(1 - erf(3*sqrt(2)/2))*(2 - erfc(5/2))/4 + 1'
+                '1 - (erf(3*sqrt(2)/2) - 1)*(erfc(5/2) - 2)/4'
     # Distribution has mean 0 at each timestamp
     assert E(X(t)) == 0
     assert E(x*(X(t) + X(d))*(X(t)**2+X(d)**2), Contains(t, Interval.Lopen(0, 1))

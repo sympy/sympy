@@ -7,11 +7,12 @@ from typing import Any
 
 from sympy.core import S, Rational, Pow, Basic, Mul, Number, UnevaluatedExpr
 from sympy.core.function import Lambda
+from sympy.core.mod import Mod
 from sympy.core.mul import _keep_coeff
 from sympy.core.numbers import Integer
 from sympy.core.relational import Relational
 from sympy.core.sorting import default_sort_key
-from sympy.core.symbol import Symbol
+from sympy.core.symbol import Dummy, Symbol
 from sympy.external.mpmath import prec_to_dps, to_str as mlib_to_str
 from sympy.utilities.iterables import sift
 from .precedence import precedence, PRECEDENCE
@@ -24,6 +25,9 @@ _rootsum_w = Symbol('w')
 
 class StrPrinter(Printer):
     printmethod = "_sympystr"
+
+    _mod_precedence = PRECEDENCE["Func"]
+
     _default_settings: dict[str, Any] = {
         "order": None,
         "full_prec": "auto",
@@ -38,13 +42,69 @@ class StrPrinter(Printer):
     _relationals: dict[str, str] = {}
 
     def parenthesize(self, item, level, strict=False):
-        if (precedence(item) < level) or ((not strict) and precedence(item) <= level):
+        prec = self._mod_precedence if isinstance(item, Mod) else precedence(item)
+        if prec < level or (not strict and prec <= level):
             return "(%s)" % self._print(item)
         else:
             return self._print(item)
 
     def stringify(self, args, sep, level=0):
         return sep.join([self.parenthesize(item, level) for item in args])
+
+    def _mul_factors(self, args, *, rational='none', symbolic=False):
+        """Stage ordered Mul factors without evaluating reciprocal powers.
+
+        Rational factors are kept by code printers, split by the string and
+        Octave printers, or split only for unit numerators by Julia.
+        The string printer also recognizes negative symbolic exponents.
+        """
+        a, b, pow_paren = [], [], []
+        for item in args:
+            if (item.is_commutative and isinstance(item, Pow) and
+                    (bool(item.exp.as_coeff_Mul()[0] < 0) if symbolic else
+                     item.exp.is_Rational and item.exp.is_negative)):
+                if item.exp is S.NegativeOne:
+                    b.append(item.base)
+                    if (len(item.base.args) != 1 and
+                            isinstance(item.base, (Mul, Pow) if symbolic else Mul)):
+                        pow_paren.append(item)
+                else:
+                    if symbolic:
+                        eargs = list(Mul.make_args(item.exp))
+                        if eargs[0] is S.NegativeOne:
+                            eargs = eargs[1:]
+                        else:
+                            eargs[0] = -eargs[0]
+                        exp = Mul._from_args(eargs)
+                    else:
+                        exp = -item.exp
+                    b.append(Pow(item.base, exp, evaluate=False))
+            elif rational == 'split' and item.is_Rational and item is not S.Infinity:
+                if item.p != 1:
+                    a.append(Rational(item.p))
+                if item.q != 1:
+                    b.append(Rational(item.q))
+            elif (rational == 'unit' and item.is_Rational and
+                    item is not S.Infinity and item.p == 1):
+                b.append(Rational(item.q))
+            else:
+                a.append(item)
+        return a or [S.One], b, pow_paren
+
+    def _parenthesize_mul_denominator(self, factor, rendered):
+        # A Pow can print as a division, depending on the target language.
+        # Inspect the rendered expression rather than guessing from its
+        # exponent: an interior slash in pow(x, 1.0/2.0) needs no grouping.
+        if factor.is_Pow and '/' in rendered:
+            depth = 0
+            for char in rendered:
+                if char in '([{':
+                    depth += 1
+                elif char in ')]}':
+                    depth -= 1
+                elif char == '/' and depth == 0:
+                    return "(%s)" % rendered
+        return rendered
 
     def emptyPrinter(self, expr):
         if isinstance(expr, str):
@@ -306,7 +366,9 @@ class StrPrinter(Printer):
                 pre = [self._print(d.pop(0))]
             else:
                 pre = []
-            dfactors = pre + [self.parenthesize(a, prec, strict=False)
+            dfactors = pre + [self.parenthesize(a,
+                PRECEDENCE["Pow"] if a.is_Pow and a.exp in (-S.One, -S.Half)
+                else PRECEDENCE["Mul"], strict=False)
                 for a in d]
 
             n = '*'.join(nfactors)
@@ -324,59 +386,29 @@ class StrPrinter(Printer):
         else:
             sign = ""
 
-        a = []  # items in the numerator
-        b = []  # items that are in the denominator (if any)
-
-        pow_paren = []  # Will collect all pow with more than one base element and exp = -1
-
         if self.order not in ('old', 'none'):
             args = expr.as_ordered_factors()
         else:
-            # use make_args in case expr was something like -x -> x
             args = Mul.make_args(expr)
 
-        # Gather args for numerator/denominator
-        def apow(i):
-            b, e = i.as_base_exp()
-            eargs = list(Mul.make_args(e))
-            if eargs[0] is S.NegativeOne:
-                eargs = eargs[1:]
-            else:
-                eargs[0] = -eargs[0]
-            e = Mul._from_args(eargs)
-            if isinstance(i, Pow):
-                return i.func(b, e, evaluate=False)
-            return i.func(e, evaluate=False)
-
-        for item in args:
-            if (item.is_commutative and
-                    isinstance(item, Pow) and
-                    bool(item.exp.as_coeff_Mul()[0] < 0)):
-                if item.exp is not S.NegativeOne:
-                    b.append(apow(item))
-                else:
-                    if (len(item.args[0].args) != 1 and
-                            isinstance(item.base, (Mul, Pow))):
-                        # To avoid situations like #14160
-                        pow_paren.append(item)
-                    b.append(item.base)
-            elif item.is_Rational and item is not S.Infinity:
-                if item.p != 1:
-                    a.append(Rational(item.p))
-                if item.q != 1:
-                    b.append(Rational(item.q))
-            else:
-                a.append(item)
-
-        a = a or [S.One]
+        a, b, pow_paren = self._mul_factors(args, rational='split', symbolic=True)
 
         a_str = [self.parenthesize(x, prec, strict=False) for x in a]
-        b_str = [self.parenthesize(x, prec, strict=False) for x in b]
+        b_str = [self.parenthesize(x, PRECEDENCE["Mul"], strict=False)
+                 for x in b]
 
-        # To parenthesize Pow with exp = -1 and having more than one Symbol
         for item in pow_paren:
-            if item.base in b:
-                b_str[b.index(item.base)] = "(%s)" % b_str[b.index(item.base)]
+            if item.base.is_Pow and item.base in b:
+                index = b.index(item.base)
+                # Preserve the original grouping for symbolic/positive powers,
+                # but avoid redundant parentheses on negative numeric powers
+                # that print with exponentiation rather than division.
+                if not (item.base.exp.is_Number and
+                        item.base.exp.is_negative):
+                    b_str[index] = "(%s)" % b_str[index]
+
+        b_str = [self._parenthesize_mul_denominator(x, printed)
+                 for x, printed in zip(b, b_str)]
 
         if not b:
             return sign + '*'.join(a_str)
@@ -427,8 +459,32 @@ class StrPrinter(Printer):
         else:
             return 'O(%s)' % self.stringify(expr.args, ', ', 0)
 
+    def _print_OrdinalZero(self, expr):
+        return "0"
+
+    def _print_OrdinalOmega(self, expr):
+        return "w"
+
+    def _print_OmegaPower(self, expr):
+        exp, mul = expr.args
+        if exp == 0:
+            return f"{mul}"
+
+        output_str = ""
+        if exp == 1:
+            output_str += "w"
+        elif len(exp.terms) > 1 or exp.is_limit_ordinal:
+            output_str += f"w**({self._print(exp)})"
+        else:
+            output_str += f"w**{self._print(exp)}"
+
+        if mul != 1:
+            output_str += f"*{mul}"
+
+        return output_str
+
     def _print_Ordinal(self, expr):
-        return expr.__str__()
+        return " + ".join([self._print(arg) for arg in expr.args])
 
     def _print_Cycle(self, expr):
         return expr.__str__()
@@ -542,6 +598,21 @@ class StrPrinter(Printer):
             denom = self.parenthesize(frac.denom, PRECEDENCE["Atom"], strict=True)
             return numer + "/" + denom
 
+    def _print_composite_domain(self, domain):
+        """Print a domain using constructors that preserve its generators."""
+        if domain.is_PolynomialRing or domain.is_FractionField:
+            base = self._print_composite_domain(domain.domain)
+            method = 'poly_ring' if domain.is_PolynomialRing else 'frac_field'
+            symbols = ', '.join(self._print(s) for s in domain.symbols)
+            if not domain.order.is_default:
+                symbols += ", order=%r" % str(domain.order)
+            return "%s.%s(%s)" % (base, method, symbols)
+        if domain.is_AlgebraicField:
+            base = self._print_composite_domain(domain.dom)
+            extensions = ', '.join(self._print(s) for s in domain.orig_ext)
+            return "%s.algebraic_field(%s)" % (base, extensions)
+        return str(domain)
+
     def _print_Poly(self, expr):
         ATOM_PREC = PRECEDENCE["Atom"] - 1
         terms, gens = [], [ self.parenthesize(s, ATOM_PREC) for s in expr.gens ]
@@ -598,7 +669,36 @@ class StrPrinter(Printer):
         try:
             format += ", modulus=%s" % expr.get_modulus()
         except PolynomialError:
-            format += ", domain='%s'" % expr.get_domain()
+            domain = expr.get_domain()
+            domain_str = repr(str(domain))
+            if domain.is_PolynomialRing or domain.is_FractionField:
+                # Abbreviated domain strings can lose assumptions, parse names
+                # as SymPy functions, or omit nesting and monomial order.
+                from sympy.core.sympify import SympifyError
+                from sympy.polys.polyoptions import Domain
+                from sympy.polys.polyerrors import BasePolynomialError
+                try:
+                    parsed = Domain.preprocess(str(domain))
+                    safe = parsed == domain
+                    if not safe and any(isinstance(s, Dummy) for s in domain.symbols):
+                        # Domain strings cannot preserve Dummy identity.
+                        # Accept its Symbol equivalent when all other
+                        # domain properties survive parsing.
+                        symbols = tuple(
+                            Symbol(str(s)) if isinstance(s, Dummy) else s
+                            for s in domain.symbols)
+                        if domain.is_PolynomialRing:
+                            normalized = domain.domain.poly_ring(
+                                *symbols, order=domain.order)
+                        else:
+                            normalized = domain.domain.frac_field(
+                                *symbols, order=domain.order)
+                        safe = parsed == normalized
+                except (BasePolynomialError, SympifyError, ValueError, TypeError):
+                    safe = False
+                if not safe:
+                    domain_str = self._print_composite_domain(domain)
+            format += ", domain=%s" % domain_str
 
         format += ")"
 

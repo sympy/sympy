@@ -7,6 +7,7 @@ from sympy.core.function import Lambda, FunctionClass, diff, expand_mul
 from sympy.core.numbers import Float, oo
 from sympy.core.symbol import Dummy, symbols, Wild
 from sympy.functions.elementary.exponential import exp, log
+from sympy.functions.elementary.trigonometric import sin, cos
 from sympy.functions.elementary.miscellaneous import Min, Max
 from sympy.logic.boolalg import true
 from sympy.multipledispatch import Dispatcher
@@ -74,7 +75,11 @@ def _(f, x):
 
     try:
         from sympy.polys.polyutils import _nsort
-        sing = list(singularities(expr, var, x))
+        sing = singularities(expr, var, x)
+        # Do not try to enumerate infinitely many or unresolved singularities.
+        if not sing.is_finite_set:
+            return
+        sing = list(sing)
         if len(sing) > 1:
             sing = _nsort(sing)
     except NotImplementedError:
@@ -90,30 +95,32 @@ def _(f, x):
         _end = f(x.end)
 
     if len(sing) == 0:
-        soln_expr = solveset(diff(expr, var), var)
+        soln_expr = solveset(diff(expr, var), var, x)
         if not (isinstance(soln_expr, FiniteSet)
                 or soln_expr is S.EmptySet):
             return
         solns = list(soln_expr)
 
-        extr = [_start, _end] + [f(i) for i in solns
-                                 if i.is_real and i in x]
-        start, end = Min(*extr), Max(*extr)
+        critical_values = [f(i) for i in solns if i.is_real and i in x]
+        start, end = Min(_start, _end, *critical_values), Max(
+            _start, _end, *critical_values)
 
-        left_open, right_open = False, False
-        if _start <= _end:
-            # the minimum or maximum value can occur simultaneously
-            # on both the edge of the interval and in some interior
-            # point
-            if start == _start and start not in solns:
-                left_open = x.left_open
-            if end == _end and end not in solns:
-                right_open = x.right_open
-        else:
-            if start == _end and start not in solns:
-                left_open = x.right_open
-            if end == _start and end not in solns:
-                right_open = x.left_open
+        # A bound is open only when it is not attained at any included
+        # endpoint or interior critical point.
+        attained = list(critical_values)
+        if not x.left_open:
+            attained.append(_start)
+        if not x.right_open:
+            attained.append(_end)
+        left_open = all(start != value for value in attained)
+        right_open = all(end != value for value in attained)
+
+        if start == end and start in (S.Infinity, S.NegativeInfinity):
+            return FiniteSet(start)
+
+        if (start is S.NegativeInfinity and end is S.Infinity
+                and expr.has(S.Infinity, S.NegativeInfinity)):
+            return None
 
         return Interval(start, end, left_open, right_open)
     else:
@@ -129,6 +136,8 @@ def _(f, x):
         return Interval(exp(x.start), exp(x.end), x.left_open, x.right_open)
     elif f == log:
         return Interval(log(x.start), log(x.end), x.left_open, x.right_open)
+    elif f in (sin, cos):
+        return imageset(f, x)
     return ImageSet(Lambda(_x, f(_x)), x)
 
 @_set_function.register(FunctionUnion, Union)

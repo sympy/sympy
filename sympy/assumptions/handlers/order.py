@@ -23,28 +23,23 @@ from ..predicates.order import (NegativePredicate, NonNegativePredicate,
 
 # NegativePredicate
 
-def _NegativePredicate_number(expr, assumptions):
+def _number_sign(expr, positive):
     r, i = expr.as_real_imag()
-
-    if r == S.NaN or i == S.NaN:
-        return None
-
-    # If the imaginary part can symbolically be shown to be zero then
-    # we just evaluate the real part; otherwise we evaluate the imaginary
-    # part to see if it actually evaluates to zero and if it does then
-    # we make the comparison between the real part and zero.
-    if not i:
-        r = r.evalf(2)
-        if r._prec != 1:
-            return r < 0
-    else:
+    if r is S.NaN or i is S.NaN:
+        return
+    if i:
         i = i.evalf(2)
-        if i._prec != 1:
-            if i != 0:
-                return False
-            r = r.evalf(2)
-            if r._prec != 1:
-                return r < 0
+        if getattr(i, '_prec', 1) == 1:
+            return
+        if i:
+            return False
+    r = r.evalf(2)
+    if getattr(r, '_prec', 1) != 1:
+        return r > 0 if positive else r < 0
+
+
+def _NegativePredicate_number(expr, assumptions):
+    return _number_sign(expr, False)
 
 @NegativePredicate.register(Basic)
 def _(expr, assumptions):
@@ -169,7 +164,7 @@ def _(expr, assumptions):
         # if there are no symbols just evalf
         i = expr.evalf(2)
         def nonz(i):
-            if i._prec != 1:
+            if getattr(i, '_prec', 1) != 1:
                 return i != 0
         return fuzzy_or(nonz(i) for i in i.as_real_imag())
 
@@ -249,23 +244,7 @@ def _(expr, assumptions):
 # PositivePredicate
 
 def _PositivePredicate_number(expr, assumptions):
-    r, i = expr.as_real_imag()
-    # If the imaginary part can symbolically be shown to be zero then
-    # we just evaluate the real part; otherwise we evaluate the imaginary
-    # part to see if it actually evaluates to zero and if it does then
-    # we make the comparison between the real part and zero.
-    if not i:
-        r = r.evalf(2)
-        if r._prec != 1:
-            return r > 0
-    else:
-        i = i.evalf(2)
-        if i._prec != 1:
-            if i != 0:
-                return False
-            r = r.evalf(2)
-            if r._prec != 1:
-                return r > 0
+    return _number_sign(expr, True)
 
 @PositivePredicate.register(Expr)
 def _(expr, assumptions):

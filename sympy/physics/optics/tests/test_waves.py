@@ -1,6 +1,6 @@
 from __future__ import annotations
 from sympy.core.function import (Derivative, Function)
-from sympy.core.numbers import (I, pi)
+from sympy.core.numbers import (Float, I, pi)
 from sympy.core.symbol import (Symbol, symbols)
 from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.functions.elementary.trigonometric import (atan2, cos, sin)
@@ -81,3 +81,47 @@ def test_twave():
 
     raises(ValueError, lambda:TWave(A1))
     raises(ValueError, lambda:TWave(A1, f, phi1, t))
+
+    # Test preservation of refractive index n and chained superposition
+    A3 = Symbol('A3')
+    w_med1 = TWave(A1, f, n=1.5)
+    w_med2 = TWave(A2, f, n=1.5)
+    w_med3 = TWave(A3, f, n=1.5)
+    w_med_sum = w_med1 + w_med2
+    assert w_med_sum.n == 1.5
+    assert w_med_sum.speed == c/1.5
+    w_med_chain = w_med1 + w_med2 + w_med3
+    assert w_med_chain.n == 1.5
+
+    # Test error handling when waves have same frequency but different media
+    w_diff_n = TWave(A2, f, n=2.0)
+    exc = raises(NotImplementedError, lambda: w_med1 + w_diff_n)
+    assert "different media" in str(exc.value)
+
+    # Test error handling when waves have different frequencies
+    f2 = Symbol('f2')
+    w_diff_f = TWave(A2, f2, n=1.5)
+    exc = raises(NotImplementedError, lambda: w_med1 + w_diff_f)
+    assert "different frequencies" in str(exc.value)
+
+    # Test additive identity with zero and sum()
+    assert w_med1 + 0 == w_med1
+    assert 0 + w_med1 == w_med1
+    assert w_med1 - 0 == w_med1
+    assert 0 - w_med1 == -w_med1
+
+    assert w_med1 + Float(0) == w_med1
+    assert Float(0) + w_med1 == w_med1
+    assert w_med1 - Float(0) == w_med1
+    assert Float(0) - w_med1 == -w_med1
+
+    assert sum([w_med1, w_med2]) == w_med_sum
+
+    # Test floating-point frequency superposition without time_period rounding error
+    f_fl = Float('7e-10')
+    w_fl1 = TWave(1, f_fl, n=1.5)
+    w_fl2 = TWave(2, f_fl, n=1.5)
+    w_fl_sum = w_fl1 + w_fl2
+    assert w_fl_sum.frequency == f_fl
+    assert w_fl_sum.n == 1.5
+    assert w_fl_sum.time_period == 1/f_fl

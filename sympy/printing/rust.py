@@ -44,7 +44,7 @@ from sympy.core import S, Rational, Float, Lambda
 from sympy.core.expr import Expr
 from sympy.core.numbers import equal_valued
 from sympy.functions.elementary.integers import ceiling, floor
-from sympy.printing.codeprinter import CodePrinter
+from sympy.printing.codeprinter import CodePrinter, rust_code, print_rust_code  # noqa:F401
 from sympy.printing.precedence import PRECEDENCE, precedence
 
 # Rust's methods for integer and float can be found at here :
@@ -113,8 +113,6 @@ known_functions = {
     # "": "log10",
     # "": "to_degrees",
     # "": "to_radians",
-    "Max": "max",
-    "Min": "min",
     # "": "hypot",        # (x**2 + y**2) ** 0.5
     "sin": "sin",
     "cos": "cos",
@@ -337,13 +335,20 @@ class RustCodePrinter(CodePrinter):
         return open_lines, close_lines
 
     def _print_caller_var(self, expr):
-        if len(expr.args) > 1:
+        if isinstance(expr, TypeCast) and not expr.explicit:
+            return self._print_caller_var(expr.expr)
+        elif expr.is_Rational and not expr.is_integer:
+            return '(' + self._print(expr) + ')'
+        elif len(expr.args) > 1:
             # for something like `sin(x + y + z)`,
             # make sure we can get '(x + y + z).sin()'
             # instead of 'x + y + z.sin()'
             return '(' + self._print(expr) + ')'
         elif expr.is_number:
-            return self._print(expr, _type=True)
+            code = self._print(expr, _type=True)
+            if code.startswith('-'):
+                return '(' + code + ')'
+            return code
         else:
             return self._print(expr)
 
@@ -418,11 +423,30 @@ class RustCodePrinter(CodePrinter):
             return self._print(expr)
         return self._print_Function(expr)
 
+    def _print_minmax(self, expr, method):
+        if expr.func.__name__ in self.known_functions:
+            return self._print_Function(expr)
+
+        args = expr.args
+        if any(a.is_real and not a.is_integer for a in args):
+            args = [self._cast_to_float(a) for a in args]
+
+        res = self._print_caller_var(args[0])
+        for arg in args[1:]:
+            res += f".{method}({self._print(arg)})"
+        return res
+
+    def _print_Max(self, expr):
+        return self._print_minmax(expr, "max")
+
+    def _print_Min(self, expr):
+        return self._print_minmax(expr, "min")
+
     def _print_TypeCast(self, expr):
         if not expr.explicit:
             return self._print(expr.expr)
         else:
-            return self._print(expr.expr) + ' as %s' % self.type_mappings[self.type_aliases[expr.type_]]
+            return self.parenthesize(expr.expr, PRECEDENCE["Pow"]) + ' as %s' % self.type_mappings[self.type_aliases[expr.type_]]
 
     def _print_Float(self, expr, _type=False):
         ret = super()._print_Float(expr)
@@ -604,6 +628,8 @@ class RustCodePrinter(CodePrinter):
             and all(self._can_print(f) for f in required_fs)
         }
         for func in expression_functions:
+            if self._can_print(func.__name__):
+                continue
             target_f, _ = rewriteable_functions.get(func.__name__, (None, None))
             if target_f:
                 expr = expr.rewrite(target_f)

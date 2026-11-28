@@ -865,7 +865,7 @@ Phase = S = PhaseGate
 #-----------------------------------------------------------------------------
 
 
-class CNotGate(HermitianOperator, CGate, TwoQubitGate):
+class CNotGate(HermitianOperator, CGate, TwoQubitGate): # type: ignore
     """Two qubit controlled-NOT.
 
     This gate performs the NOT or X gate on the target qubit if the control

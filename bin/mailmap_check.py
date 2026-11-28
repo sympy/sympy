@@ -34,7 +34,10 @@ from sympy.external.importtools import version_tuple
 def main(*args):
 
     parser = ArgumentParser(description='Update the .mailmap file')
-    parser.add_argument('--update-authors', action='store_true',
+    authors_options = parser.add_mutually_exclusive_group()
+    authors_options.add_argument('--check-authors', action='store_true',
+            help='Fail if AUTHORS needs updating.')
+    authors_options.add_argument('--update-authors', action='store_true',
             help=filldedent("""
             Also updates the AUTHORS file. DO NOT use this option as part of a
             pull request. The AUTHORS file will be updated later at the time a
@@ -149,6 +152,9 @@ https://docs.sympy.org/dev/contributing/new-contributors-guide/workflow-process.
 
     # Actually update the AUTHORS file (if --update-authors was passed)
     authors_changed = update_authors_file(lines_authors, old_lines_authors, args.update_authors)
+    if args.check_authors and lines_authors != old_lines_authors:
+        print(red('AUTHORS needs updating. Run bin/mailmap_check.py --update-authors.'))
+        authors_changed = 1
 
     return int(problems) + int(authors_changed)
 

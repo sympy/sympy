@@ -367,7 +367,7 @@ class GaussianDomain(RingExtension[Telem, Tdom], ConjugateDomain):
         return self.dtype(a.x, -a.y)
 
 
-class GaussianIntegerRing(GaussianDomain[GaussianInteger, MPZ], Ring[MPZ]):
+class GaussianIntegerRing(GaussianDomain[GaussianInteger, MPZ], Ring[GaussianInteger]):
     r"""Ring of Gaussian integers ``ZZ_I``
 
     The :ref:`ZZ_I` domain represents the `Gaussian integers`_ `\mathbb{Z}[i]`

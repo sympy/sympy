@@ -70,7 +70,10 @@ class Transpose(MatrixExpr):
 
     def _eval_derivative(self, x):
         # x is a scalar:
-        return self.arg._eval_derivative(x)
+        d = self.arg._eval_derivative(x)
+        if d is not None:
+            return d.T
+        return None
 
 
 def transpose(expr):

@@ -125,8 +125,8 @@ def _(a, b):
                                       a.end.is_finite)
     if open_left_in_b_and_finite or open_right_in_b_and_finite:
         # Fill in my end points and return
-        open_left = a.left_open and a.start not in b
-        open_right = a.right_open and a.end not in b
+        open_left = a.left_open and not open_left_in_b_and_finite
+        open_right = a.right_open and not open_right_in_b_and_finite
         new_a = Interval(a.start, a.end, open_left, open_right)
         return {new_a, b}
     return None

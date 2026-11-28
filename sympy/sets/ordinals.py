@@ -1,9 +1,8 @@
 from __future__ import annotations
 
-from operator import lt
-from typing import Callable
+from typing import cast
 
-from sympy.core import Basic, Integer
+from sympy.core import Basic, Integer, S
 
 
 class OmegaPower(Basic):
@@ -33,12 +32,6 @@ class OmegaPower(Basic):
     def mult(self) -> Integer:
         return self.args[1]
 
-    def _compare_term(self, other: OmegaPower, op: Callable) -> bool:
-        if self.exp == other.exp:
-            return op(self.mult, other.mult)
-        else:
-            return op(self.exp, other.exp)
-
     def __eq__(self, other: object) -> bool:
         if not isinstance(other, OmegaPower):
             if not isinstance(other, (Integer, int)):
@@ -55,7 +48,10 @@ class OmegaPower(Basic):
                 other = OmegaPower(0, other)
             except TypeError:
                 return NotImplemented
-        return self._compare_term(other, lt)
+        if self.exp == other.exp:
+            return bool(self.mult < other.mult)
+        else:
+            return bool(self.exp < other.exp)
 
 
 class Ordinal(Basic):
@@ -86,9 +82,12 @@ class Ordinal(Basic):
     args: tuple[OmegaPower, ...]
 
     def __new__(cls, *terms: OmegaPower):
+        if len(terms) == 0 and cls is Ordinal:
+            return ord0
+
         obj = super().__new__(cls, *terms)
         powers = [i.exp for i in obj.args]
-        if not all(powers[i] >= powers[i+1] for i in range(len(powers) - 1)):
+        if not all(powers[i] > powers[i+1] for i in range(len(powers) - 1)):
             raise ValueError("powers must be in decreasing order")
         return obj
 
@@ -98,14 +97,10 @@ class Ordinal(Basic):
 
     @property
     def leading_term(self) -> OmegaPower:
-        if self == ord0:
-            raise ValueError("ordinal zero has no leading term")
         return self.terms[0]
 
     @property
     def trailing_term(self) -> OmegaPower:
-        if self == ord0:
-            raise ValueError("ordinal zero has no trailing term")
         return self.terms[-1]
 
     @property
@@ -162,29 +157,6 @@ class Ordinal(Basic):
 
     def __ge__(self, other: Ordinal | Integer | int) -> bool:
         return not self < other
-
-    def __str__(self) -> str:
-        net_str = ""
-        if self == ord0:
-            return 'ord0'
-        for plus_count, i in enumerate(self.terms):
-            if plus_count:
-                net_str += " + "
-
-            if i.exp == ord0:
-                net_str += str(i.mult)
-            elif i.exp == 1:
-                net_str += 'w'
-            elif len(i.exp.terms) > 1 or i.exp.is_limit_ordinal:
-                net_str += 'w**(%s)'%i.exp
-            else:
-                net_str += 'w**%s'%i.exp
-
-            if not i.mult == 1 and not i.exp == ord0:
-                net_str += '*%s'%i.mult
-        return(net_str)
-
-    __repr__ = __str__
 
     def __add__(self, other: Ordinal | Integer | int) -> Ordinal:
         if not isinstance(other, Ordinal):
@@ -248,10 +220,77 @@ class Ordinal(Basic):
                 return NotImplemented
         return other * self
 
+    def _pow(self, other: Ordinal) -> Ordinal:
+        if other == ord0:
+            return Ordinal.convert(1)
+        if self == ord0:
+            return ord0
+        if self == Ordinal.convert(1):
+            return self
+
+        if other.is_limit_ordinal:
+            infinite_terms = other.terms
+            finite_part = Integer(0)
+        else:
+            infinite_terms = other.terms[:-1]
+            finite_part = other.trailing_term.mult
+
+        # finite self to arbitrary other
+        if self.degree == ord0:
+            exponent_terms = []
+            for term in infinite_terms:
+                if term.exp >= omega:
+                    exponent_terms.append(term)
+                else:
+                    exponent_terms.append(
+                        OmegaPower(
+                            term.exp.leading_term.mult - 1,
+                            term.mult,
+                            )
+                        )
+            new_degree = Ordinal(*exponent_terms)
+            if finite_part == ord0:
+                mult: Integer = S.One
+            else:
+                mult = cast(Integer, self.leading_term.mult ** finite_part)
+            return Ordinal(OmegaPower(new_degree, mult))
+
+        # infinite self to limit ordinal other
+        if other.is_limit_ordinal:
+            return Ordinal(OmegaPower(self.degree*other,1))
+
+        # infinite self to successor ordinal
+        # other = beta + m
+        m = other.trailing_term.mult
+        beta = Ordinal(*other.terms[:-1])
+        first_term = Ordinal(OmegaPower(self.degree*(beta + (m-1)),1))
+        if self.is_limit_ordinal:
+            return first_term * self
+        else:
+            # self = alpha + k
+            k = self.trailing_term.mult
+            alpha = Ordinal(*self.terms[:-1])
+            out = first_term*alpha
+            for i in reversed(range(m-1)):
+                out += Ordinal(OmegaPower(self.degree*(beta + i),1))*alpha*k
+            out += Ordinal(OmegaPower(self.degree*beta,k))
+            return out
+
     def __pow__(self, other: Ordinal | Integer | int) -> Ordinal:
-        if not self == omega:
-            return NotImplemented
-        return Ordinal(OmegaPower(other, 1))
+        if not isinstance(other, Ordinal):
+            try:
+                other = Ordinal.convert(other)
+            except TypeError:
+                return NotImplemented
+        return self._pow(other)
+
+    def __rpow__(self, other: Ordinal | Integer | int) -> Ordinal:
+        if not isinstance(other, Ordinal):
+            try:
+                other = Ordinal.convert(other)
+            except TypeError:
+                return NotImplemented
+        return other._pow(self)
 
 
 class OrdinalZero(Ordinal):
@@ -259,28 +298,33 @@ class OrdinalZero(Ordinal):
 
     OrdinalZero can be imported as ``ord0``.
     """
-    pass
-
-
-class OrdinalOmega(Ordinal):
-    """The ordinal omega which forms the base of all ordinals in cantor normal form.
-
-    OrdinalOmega can be imported as ``omega``.
-
-    Examples
-    ========
-
-    >>> from sympy.sets.ordinals import omega
-    >>> omega + omega
-    w*2
-    """
     def __new__(cls):
         return Ordinal.__new__(cls)
 
     @property
-    def terms(self) -> tuple[OmegaPower]:
-        return (OmegaPower(1, 1),)
+    def leading_term(self) -> OmegaPower:
+        raise ValueError("OrdinalZero has no leading term")
+
+    @property
+    def trailing_term(self) -> OmegaPower:
+        raise ValueError("OrdinalZero has no trailing term")
+
+
+def OrdinalOmega():
+    """The ordinal omega which forms the base of all ordinals in cantor normal form.
+
+    OrdinalOmega can be imported as ``w``.
+
+    Examples
+    ========
+
+    >>> from sympy.sets.ordinals import w
+    >>> w + w
+    w*2
+    """
+    return Ordinal(OmegaPower(1, 1))
 
 
 ord0 = OrdinalZero()
-omega = OrdinalOmega()
+w = OrdinalOmega()
+omega = w

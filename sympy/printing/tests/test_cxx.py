@@ -4,6 +4,7 @@ from sympy.core.symbol import symbols
 from sympy.functions import beta, Ei, zeta, Max, Min, sqrt, riemann_xi, frac
 from sympy.printing.cxx import CXX98CodePrinter, CXX11CodePrinter, CXX17CodePrinter, cxxcode
 from sympy.codegen.cfunctions import log1p
+from sympy.testing.pytest import raises
 
 
 x, y, u, v = symbols('x y u v')
@@ -16,7 +17,12 @@ def test_CXX98CodePrinter():
     assert cxx98printer.language == 'C++'
     assert cxx98printer.standard == 'C++98'
     assert 'template' in cxx98printer.reserved_words
+    assert 'catch' in cxx98printer.reserved_words
+    assert 'catch,' not in cxx98printer.reserved_words
     assert 'alignas' not in cxx98printer.reserved_words
+    catch_sym = symbols('catch')
+    assert cxx98printer.doprint(catch_sym) == 'catch_'
+    raises(ValueError, lambda: cxxcode(catch_sym, error_on_reserved=True))
 
 
 def test_CXX11CodePrinter():

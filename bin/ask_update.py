@@ -135,7 +135,7 @@ def generate_code():
     return code_string % (all_clauses, matrix_clauses, number_clauses, m)
 
 code = generate_code()
-Path('sympy/assumptions/ask_generated.py').write_text(code)
+Path('sympy/assumptions/ask_generated.py').write_text(code, encoding='utf-8')
 
 representation = _generate_assumption_rules()._to_python()
 code_string = dedent('''\
@@ -147,4 +147,4 @@ Instead, run ./bin/ask_update.py.
 %s
 ''')
 code = code_string % (representation,)
-Path('sympy/core/assumptions_generated.py').write_text(code)
+Path('sympy/core/assumptions_generated.py').write_text(code, encoding='utf-8')

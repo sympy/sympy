@@ -67,6 +67,18 @@ geometry module.
     >>> intersection(c, l)
     [Point2D(-5*sqrt(2)/2, -5*sqrt(2)/2), Point2D(5*sqrt(2)/2, 5*sqrt(2)/2)]
 
+The circle and tangent line can be visualized together with implicit plotting:
+
+.. plot::
+   :context: reset
+   :format: doctest
+   :include-source: True
+
+   >>> from sympy import Eq, Or, plot_implicit, symbols
+   >>> x, y = symbols('x y')
+   >>> p = plot_implicit(Or(Eq(x**2 + y**2, 25), Eq(x, 5)),
+   ...                   (x, -6, 6), (y, -6, 6))
+
 Intersection of medians
 -----------------------
 ::

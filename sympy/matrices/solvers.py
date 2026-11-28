@@ -423,7 +423,7 @@ def _QRsolve(M, b):
 
     dps  = _get_intermediate_simp(expand_mul, expand_mul)
     Q, R = M.QRdecomposition()
-    y    = Q.T * b
+    y    = Q.H * b
 
     # back substitution to solve R*x = y:
     # We build up the result "backwards" in the vector 'x' and reverse it

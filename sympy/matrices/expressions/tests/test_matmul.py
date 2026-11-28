@@ -133,10 +133,20 @@ def test_collapse_MatrixBase():
 
 def test_refine():
     assert refine(C*C.T*D, Q.orthogonal(C)).doit() == D
+    assert refine(C.T*C*D, Q.orthogonal(C)).doit() == D
+    assert refine(C*C.adjoint()*D, Q.unitary(C)).doit() == D
+    assert refine(C.adjoint()*C*D, Q.unitary(C)).doit() == D
 
     kC = k*C
     assert refine(kC*C.T, Q.orthogonal(C)).doit() == k*Identity(n)
     assert refine(kC* kC.T, Q.orthogonal(C)).doit() == (k**2)*Identity(n)
+    assert refine(kC*C.adjoint(), Q.unitary(C)).doit() == k*Identity(n)
+    assert refine(kC* kC.adjoint(), Q.unitary(C)).doit() == (k**2)*Identity(n)
+
+    # Rectangular orthogonal matrix (E2-4 from #30900)
+    An = MatrixSymbol('An', 2, 3)
+    assert refine(An*An.T, Q.orthogonal(An)).doit() == Identity(2)
+    assert refine(An.T*An, Q.orthogonal(An)).doit() == Identity(3)
 
 def test_matmul_no_matrices():
     assert MatMul(1) == 1

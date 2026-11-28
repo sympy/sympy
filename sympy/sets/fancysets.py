@@ -948,7 +948,8 @@ class Range(Set):
                 raise ValueError(ooslice)
             val = (rv - self.start)/self.step
             rel = fuzzy_or([val.is_infinite,
-                            fuzzy_and([val.is_nonnegative, (n-val).is_nonnegative])])
+                            fuzzy_and([val.is_nonnegative,
+                                       (n - val).is_extended_positive])])
             if rel:
                 return rv
             if rel is None:

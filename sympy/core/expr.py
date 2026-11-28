@@ -22,10 +22,15 @@ from sympy.external.mpmath import prec_to_dps, giant_steps as _giant_steps, mpf_
 
 
 if TYPE_CHECKING:
-    from typing import Any, Hashable
+    from typing import Any, Hashable, TypeVar, SupportsIndex
     from typing_extensions import Self
     from .numbers import Number
+    from sympy.core.basic import _SupportsItems, Tbasic
     from sympy.logic.boolalg import Boolean
+    from .symbol import Symbol
+    from sympy.polys.orderings import MonomKey
+
+    Texpr = TypeVar("Texpr", bound='Expr')
 
 from collections import defaultdict
 
@@ -75,13 +80,13 @@ class Expr(Basic, EvalfMixin):
             ...
 
         @overload # type: ignore
-        def subs(self, arg1: Mapping[Basic | complex, Expr | complex], arg2: None=None) -> Expr: ...
+        def subs(self, arg1: _SupportsItems[Basic | complex, Expr | complex], arg2: None=None, **kwargs: Any) -> Expr: ...
         @overload
         def subs(self, arg1: Iterable[tuple[Basic | complex, Expr | complex]], arg2: None=None, **kwargs: Any) -> Expr: ...
         @overload
-        def subs(self, arg1: Expr | complex, arg2: Expr | complex) -> Expr: ...
+        def subs(self, arg1: Basic | complex, arg2: Expr | complex, **kwargs: Any) -> Expr: ...
         @overload
-        def subs(self, arg1: Mapping[Basic | complex, Basic | complex], arg2: None=None, **kwargs: Any) -> Basic: ...
+        def subs(self, arg1: _SupportsItems[Basic | complex, Basic | complex], arg2: None=None, **kwargs: Any) -> Basic: ...
         @overload
         def subs(self, arg1: Iterable[tuple[Basic | complex, Basic | complex]], arg2: None=None, **kwargs: Any) -> Basic: ...
         @overload
@@ -91,7 +96,21 @@ class Expr(Basic, EvalfMixin):
                  arg2: Basic | complex | None = None, **kwargs: Any) -> Basic:
             ...
 
+        @overload
+        def xreplace(self, rule: Mapping[Tbasic, Expr]) -> Expr: ...
+        @overload
+        def xreplace(self, rule: Mapping[Tbasic, Basic]) -> Basic: ...
+
+        def xreplace(self, rule: Mapping[Tbasic, Basic]) -> Basic:
+            ...
+
         def simplify(self, **kwargs) -> Expr:
+            ...
+
+        def refine(self, assumption: Boolean | bool = True) -> Expr:
+            ...
+
+        def doit(self, **hints: Any) -> Expr:
             ...
 
         def evalf(self, n: int | None = 15, subs: dict[Basic, Basic | float] | None = None,
@@ -293,7 +312,7 @@ class Expr(Basic, EvalfMixin):
 
     @sympify_return([('other', 'Expr')], NotImplemented)
     @call_highest_priority('__pow__')
-    def __rpow__(self, other) -> Expr:
+    def __rpow__(self, other: Expr | complex) -> Expr:
         return Pow(other, self)
 
     @sympify_return([('other', 'Expr')], NotImplemented)
@@ -1176,7 +1195,7 @@ class Expr(Basic, EvalfMixin):
             # CoercionFailed is caught for e.g. pi.as_poly(x, domain='QQ')
             return None
 
-    def as_ordered_terms(self, order=None, data: Literal[False] = False) -> list[Expr]:
+    def as_ordered_terms(self, order: str | Symbol | MonomKey | None = None, data: Literal[False] = False) -> list[Expr]:
         """
         Transform an expression to an ordered list of terms.
 
@@ -1190,23 +1209,6 @@ class Expr(Basic, EvalfMixin):
         [sin(x)**2*cos(x), sin(x)**2, 1]
 
         """
-
-        from .numbers import Number, NumberSymbol
-
-        if order is None and self.is_Add:
-            # Spot the special case of Add(Number, Mul(Number, expr)) with the
-            # first number positive and the second number negative
-            key = lambda x:not isinstance(x, (Number, NumberSymbol))
-            add_args = sorted(Add.make_args(self), key=key)
-            if (len(add_args) == 2
-                and isinstance(add_args[0], (Number, NumberSymbol))
-                and isinstance(add_args[1], Mul)):
-                mul_args = sorted(Mul.make_args(add_args[1]), key=key)
-                if (len(mul_args) == 2
-                    and isinstance(mul_args[0], Number)
-                    and add_args[0].is_positive
-                    and mul_args[0].is_negative):
-                    return add_args
 
         key, reverse = self._parse_order(order)
         terms, gens = self.as_terms()
@@ -1225,41 +1227,49 @@ class Expr(Basic, EvalfMixin):
 
     def as_terms(self) -> tuple[list[tuple[Expr, Any]], list[Expr]]:
         """Transform an expression to a list of terms. """
-        from .exprtools import decompose_power
 
         gens_set, terms = set(), []
 
         for term in Add.make_args(self):
-            coeff, _term = term.as_coeff_Mul()
+            coeff, _term = term.as_coeff_mul(rational=False)
+            if not (coeff.is_Rational or coeff.is_Float):
+                _term = (coeff,) + _term
+                coeff = S.One
 
-            coeff_complex = complex(coeff)
             cpart: dict[Expr, int] = {}
             ncpart = []
+            # A single literal I is treated as an imaginary coefficient;
+            # repeated occurrences contribute to the monomial instead.
+            # No numerical evaluation or inference about imaginary values is needed.
+            nI = 0
 
-            if _term is not S.One:
-                for factor in Mul.make_args(_term):
-                    if factor.is_number:
-                        try:
-                            coeff_complex *= complex(factor)
-                        except (TypeError, ValueError):
-                            pass
-                        else:
-                            continue
+            for factor in _term:
+                if factor is S.ImaginaryUnit:
+                    nI += 1
+                    continue
 
-                    if factor.is_commutative:
-                        base, exp = decompose_power(factor)
-
-                        cpart[base] = cpart.get(base, 0) + exp
-                        gens_set.add(base)
+                if factor.is_commutative:
+                    base, exponent = factor.as_base_exp()
+                    if exponent.is_Integer:
+                        exp = int(exponent)
                     else:
-                        ncpart.append(factor)
+                        base, exp = factor, 1
+                    cpart[base] = cpart.get(base, 0) + exp
+                    gens_set.add(base)
+                else:
+                    ncpart.append(factor)
 
-            coeff_tuple = coeff_complex.real, coeff_complex.imag
+            if nI > 1:
+                cpart[S.ImaginaryUnit] = cpart.get(S.ImaginaryUnit, 0) + nI
+                gens_set.add(S.ImaginaryUnit)
+            coeff_tuple = (S.Zero, coeff) if nI == 1 else (coeff, S.Zero)
             ncpart_tuple = tuple(ncpart)
 
             terms.append((term, (coeff_tuple, cpart, ncpart_tuple)))
 
-        gens = sorted(gens_set, key=default_sort_key)
+        # Put symbols first to preserve monomial precedence, without
+        # checking whether other generators represent numerical values.
+        gens = sorted(gens_set, key=lambda g: (not g.is_Symbol, default_sort_key(g)))
 
         k, indices = len(gens), {}
 
@@ -1399,7 +1409,7 @@ class Expr(Basic, EvalfMixin):
                                  [ci for ci in c if list(self.args).count(ci) > 1])
         return [c, nc]
 
-    def coeff(self, x: Expr | complex, n=1, right=False, _first=True):
+    def coeff(self, x: Expr | complex, n: SupportsIndex = 1, right: bool = False, _first: bool = True) -> Expr:
         """
         Returns the coefficient from the term(s) containing ``x**n``. If ``n``
         is zero then all terms independent of ``x`` will be returned.
@@ -1603,7 +1613,7 @@ class Expr(Basic, EvalfMixin):
             d = Add(*[i for i in Add.make_args(self.as_independent(xe)[1])
                 if all(xi in Mul.make_args(i) for xi in xargs)])
             rv = d.coeff(xe, right=right, _first=False)
-            if not rv.is_Add or not right:
+            if not isinstance(rv, Add) or not right:
                 return rv
             c_part, nc_part = zip(*[i.args_cnc() for i in rv.args])
             if has_variety(c_part):
@@ -1628,7 +1638,7 @@ class Expr(Basic, EvalfMixin):
         if one_c:
             if co2 == []:
                 return S.Zero
-            elif co2:
+            else:
                 return Add(*co2)
         else:  # both nc
             # now check the non-comm parts
@@ -1666,20 +1676,20 @@ class Expr(Basic, EvalfMixin):
                         return Mul(*end[ii + len(nx):])
             # look for single match
             hit = None
-            for i, (r, n) in enumerate(co):
-                ii = find(n, nx, right)
+            for i, (r, nc) in enumerate(co):
+                ii = find(nc, nx, right)
                 if ii is not None:
                     if not hit:
-                        hit = ii, r, n
+                        hit = ii, r, nc
                     else:
                         break
             else:
                 if hit:
-                    ii, r, n = hit
+                    ii, r, nc = hit
                     if not right:
-                        return Mul(*(list(r) + n[:ii]))
+                        return Mul(*(list(r) + nc[:ii]))
                     else:
-                        return Mul(*n[ii + len(nx):])
+                        return Mul(*nc[ii + len(nx):])
 
             return S.Zero
 
@@ -2213,7 +2223,7 @@ class Expr(Basic, EvalfMixin):
         Radical content can also be factored out of the primitive:
 
         >>> (2*sqrt(2) + 4*sqrt(10)).as_content_primitive(radical=True)
-        (2, sqrt(2)*(1 + 2*sqrt(5)))
+        (2, sqrt(2)*(2*sqrt(5) + 1))
 
         If clear=False (default is True) then content will not be removed
         from an Add if it can be distributed to leave one or more
@@ -2997,14 +3007,10 @@ class Expr(Basic, EvalfMixin):
         -x
         >>> f = tan(x)
         >>> f.series(x, 2, 6, "+")
-        tan(2) + (1 + tan(2)**2)*(x - 2) + (x - 2)**2*(tan(2)**3 + tan(2)) +
-        (x - 2)**3*(1/3 + 4*tan(2)**2/3 + tan(2)**4) + (x - 2)**4*(tan(2)**5 +
-        5*tan(2)**3/3 + 2*tan(2)/3) + (x - 2)**5*(2/15 + 17*tan(2)**2/15 +
-        2*tan(2)**4 + tan(2)**6) + O((x - 2)**6, (x, 2))
+        tan(2) + (x - 2)*(tan(2)**2 + 1) + (x - 2)**2*(tan(2)**3 + tan(2)) + (x - 2)**3*(tan(2)**4 + 4*tan(2)**2/3 + 1/3) + (x - 2)**4*(tan(2)**5 + 5*tan(2)**3/3 + 2*tan(2)/3) + (x - 2)**5*(tan(2)**6 + 2*tan(2)**4 + 17*tan(2)**2/15 + 2/15) + O((x - 2)**6, (x, 2))
 
         >>> f.series(x, 2, 3, "-")
-        tan(2) + (2 - x)*(-tan(2)**2 - 1) + (2 - x)**2*(tan(2)**3 + tan(2))
-        + O((x - 2)**3, (x, 2))
+        tan(2) + (2 - x)*(-tan(2)**2 - 1) + (2 - x)**2*(tan(2)**3 + tan(2)) + O((x - 2)**3, (x, 2))
 
         For rational expressions this method may return original expression without the Order term.
         >>> (1/x).series(x, n=8)
@@ -3227,7 +3233,7 @@ class Expr(Basic, EvalfMixin):
         (1/(24*x**4) - 1/(2*x**2) + 1 + O(x**(-6), (x, oo)))*exp(-x)
 
         >>> e.aseries(x, n=3, hir=True)
-        -exp(-2*x)*sin(1/x)/2 + exp(-x)*cos(1/x) + O(exp(-3*x), (x, oo))
+        exp(-x)*cos(1/x) - exp(-2*x)*sin(1/x)/2 + O(exp(-3*x), (x, oo))
 
         >>> e = exp(exp(x)/(1 - 1/x))
 
@@ -3372,7 +3378,7 @@ class Expr(Basic, EvalfMixin):
         Wrapper for series yielding an iterator of the terms of the series.
 
         Note: an infinite series will yield an infinite iterator. The following,
-        for exaxmple, will never terminate. It will just keep printing terms
+        for example, will never terminate. It will just keep printing terms
         of the sin(x) series::
 
           for term in sin(x).lseries(x):
@@ -3625,7 +3631,7 @@ class Expr(Basic, EvalfMixin):
     ##################### DERIVATIVE, INTEGRAL, FUNCTIONAL METHODS ####################
     ###################################################################################
 
-    def diff(self, *symbols, **assumptions) -> Expr:
+    def diff(self, *symbols: Basic | int | tuple[Basic, int | Expr], **assumptions: bool) -> Expr:
         assumptions.setdefault("evaluate", True)
         return _derivative_dispatch(self, *symbols, **assumptions)
 
@@ -3650,10 +3656,7 @@ class Expr(Basic, EvalfMixin):
         ``False`` otherwise.
         """
         hit = False
-        # XXX: Hack to support non-Basic args
-        #              |
-        #              V
-        if deep and getattr(expr, 'args', ()) and not expr.is_Atom:
+        if deep and expr.args and not expr.is_Atom:
             sargs = []
             for arg in expr.args:
                 arg, arghit = Expr._expand_hint(arg, hint, **hints)

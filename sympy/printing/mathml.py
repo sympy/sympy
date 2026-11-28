@@ -201,13 +201,10 @@ class MathMLContentPrinter(MathMLPrinterBase):
                 x.appendChild(self._print(-arg))
                 # invert expression since this is now minused
                 lastProcessed = x
-                if arg == args[-1]:
-                    plusNodes.append(lastProcessed)
             else:
                 plusNodes.append(lastProcessed)
                 lastProcessed = self._print(arg)
-                if arg == args[-1]:
-                    plusNodes.append(self._print(arg))
+        plusNodes.append(lastProcessed)
         if len(plusNodes) == 1:
             return lastProcessed
         x = self.dom.createElement('apply')
@@ -577,7 +574,7 @@ class MathMLPresentationPrinter(MathMLPrinterBase):
             'GreaterThan': '&#x2265;',
             'LessThan': '&#x2264;',
             'StrictGreaterThan': '>',
-            'StrictLessThan': '<',
+            'StrictLessThan': '&lt;',
             'lerchphi': '&#x3A6;',
             'zeta': '&#x3B6;',
             'dirichlet_eta': '&#x3B7;',
@@ -710,7 +707,7 @@ class MathMLPresentationPrinter(MathMLPrinterBase):
 
             coeff, terms = expr.as_coeff_mul()
             if coeff is S.One and len(terms) == 1:
-                mrow.appendChild(self._print(terms[0]))
+                mrow.appendChild(self.parenthesize(terms[0], PRECEDENCE['Add']))
                 return mrow
             if self.order != 'old':
                 terms = Mul._from_args(terms).as_ordered_factors()
@@ -721,9 +718,9 @@ class MathMLPresentationPrinter(MathMLPrinterBase):
                 y.appendChild(self.dom.createTextNode(self.mathml_tag(expr)))
                 mrow.appendChild(x)
                 mrow.appendChild(y)
-            for term in terms:
+            for i, term in enumerate(terms):
                 mrow.appendChild(self.parenthesize(term, PRECEDENCE['Mul']))
-                if not term == terms[-1]:
+                if i < len(terms) - 1:
                     y = self.dom.createElement('mo')
                     y.appendChild(self.dom.createTextNode(self.mathml_tag(expr)))
                     mrow.appendChild(y)
@@ -748,7 +745,7 @@ class MathMLPresentationPrinter(MathMLPrinterBase):
                 # use minus
                 x = self.dom.createElement('mo')
                 x.appendChild(self.dom.createTextNode('-'))
-                y = self._print(-arg)
+                y = self.parenthesize(-arg, PRECEDENCE['Add'])
                 # invert expression since this is now minused
             else:
                 x = self.dom.createElement('mo')
@@ -1153,17 +1150,15 @@ class MathMLPresentationPrinter(MathMLPrinterBase):
         dim = 0  # Total diff dimension, for numerator
         for sym, num in reversed(e.variable_count):
             dim += num
-            if num >= 2:
-                x = self.dom.createElement('msup')
-                xx = self.dom.createElement('mo')
-                xx.appendChild(self.dom.createTextNode(d))
-                x.appendChild(xx)
-                x.appendChild(self._print(num))
-            else:
-                x = self.dom.createElement('mo')
-                x.appendChild(self.dom.createTextNode(d))
+            x = self.dom.createElement('mo')
+            x.appendChild(self.dom.createTextNode(d))
             m.appendChild(x)
             y = self._print(sym)
+            if num >= 2:
+                power = self.dom.createElement('msup')
+                power.appendChild(y)
+                power.appendChild(self._print(num))
+                y = power
             m.appendChild(y)
 
         mnum = self.dom.createElement('mrow')
@@ -1456,17 +1451,19 @@ class MathMLPresentationPrinter(MathMLPrinterBase):
         return self._print_LogOp(args, '&#x21D4;')
 
     def _print_Not(self, e):
+        from sympy.sets.contains import Contains
         mrow = self.dom.createElement('mrow')
         mo = self.dom.createElement('mo')
         mo.appendChild(self.dom.createTextNode('&#xAC;'))
         mrow.appendChild(mo)
-        if (e.args[0].is_Boolean):
+        arg = e.args[0]
+        if (arg.is_Boolean or arg.is_Relational or isinstance(arg, Contains)) and not arg.is_Not:
             x = self.dom.createElement('mrow')
             x.appendChild(self._l_paren())
-            x.appendChild(self._print(e.args[0]))
+            x.appendChild(self._print(arg))
             x.appendChild(self._r_paren())
         else:
-            x = self._print(e.args[0])
+            x = self._print(arg)
         mrow.appendChild(x)
         return mrow
 

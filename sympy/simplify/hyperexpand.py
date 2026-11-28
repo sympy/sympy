@@ -2384,7 +2384,7 @@ def _meijergexpand(func, z0, allow_hyper=False, rewrite='default',
     m = func(z)
     if m.delta > 0 or \
         (m.delta == 0 and len(m.ap) == len(m.bq) and
-            (re(m.nu) < -1) is not False and polar_lift(z0) == polar_lift(1)):
+            (re(m.nu) < -1) is not S.false and polar_lift(z0) == polar_lift(1)):
         # The condition delta > 0 means that the convergence region is
         # connected. Any expression we find can be continued analytically
         # to the entire convergence region.

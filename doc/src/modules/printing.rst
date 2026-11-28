@@ -128,6 +128,13 @@ Usage::
 LLVM JIT Code Printing
 ----------------------
 
+The LLVM JIT module uses ``llvmlite`` to compile SymPy expressions into
+native functions for repeated numerical evaluation. Use
+:py:func:`sympy.printing.llvmjitcode.llvm_callable` to compile an expression;
+its documentation below includes examples for direct calls, integration
+callbacks, and expressions returned by
+:py:func:`sympy.simplify.cse_main.cse`.
+
 .. automodule:: sympy.printing.llvmjitcode
    :members:
 
@@ -255,11 +262,11 @@ function.
     >>> print(fcode(x - pi**2 - E))
           parameter (E = 2.7182818284590452d0)
           parameter (pi = 3.1415926535897932d0)
-          x - pi**2 - E
+          x - E - pi**2
     >>> print(fcode(x - pi**2 - E, precision=25))
           parameter (E = 2.718281828459045235360287d0)
           parameter (pi = 3.141592653589793238462643d0)
-          x - pi**2 - E
+          x - E - pi**2
     >>> print(fcode(N(x - pi**2, 25)))
           x - 9.869604401089358618834491d0
 

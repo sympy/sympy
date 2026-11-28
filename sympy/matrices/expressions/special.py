@@ -43,6 +43,8 @@ class ZeroMatrix(MatrixExpr):
     def _eval_power(self, exp):
         # exp = -1, 0, 1 are already handled at this stage
         if (exp < 0) == True:
+            if self.is_square and self.rows.is_zero:
+                return self
             raise NonInvertibleMatrixError("Matrix det == 0; not invertible")
         return self
 
@@ -56,9 +58,13 @@ class ZeroMatrix(MatrixExpr):
         return S.Zero
 
     def _eval_determinant(self):
+        if self.is_square and self.rows.is_zero:
+            return S.One
         return S.Zero
 
     def _eval_inverse(self):
+        if self.is_square and self.rows.is_zero:
+            return self
         raise NonInvertibleMatrixError("Matrix det == 0; not invertible.")
 
     def _eval_as_real_imag(self):
@@ -275,6 +281,8 @@ class OneMatrix(MatrixExpr):
 
     def _eval_power(self, exp):
         # exp = -1, 0, 1 are already handled at this stage
+        if self.is_square and self.rows.is_zero:
+            return self
         if self._is_1x1() == True:
             return Identity(1)
         if (exp < 0) == True:
@@ -298,6 +306,8 @@ class OneMatrix(MatrixExpr):
         return Eq(shape[0], 1) & Eq(shape[1], 1)
 
     def _eval_determinant(self):
+        if self.is_square and self.rows.is_zero:
+            return S.One
         condition = self._is_1x1()
         if condition == True:
             return S.One
@@ -308,6 +318,8 @@ class OneMatrix(MatrixExpr):
             return Determinant(self)
 
     def _eval_inverse(self):
+        if self.is_square and self.rows.is_zero:
+            return self
         condition = self._is_1x1()
         if condition == True:
             return Identity(1)
@@ -393,18 +405,12 @@ class MatrixUnit(MatrixExpr):
     def cols(self):
         return self._args[1]
 
-    @property
-    def is_square(self):
-        return Eq(self.rows, self.cols)
-
     def _eval_transpose(self):
         return MatrixUnit(self.cols, self.rows, self._j, self._i)
 
     def _eval_trace(self):
-        if (self.rows == self.cols) == True:
-            if self.shape == (1, 1):
-                return S.One
-            return S.Zero
+        if self.is_square:
+            return KroneckerDelta(self._i, self._j, (0, self.rows-1))
 
     def _eval_inverse(self):
         if self.shape == (1, 1):

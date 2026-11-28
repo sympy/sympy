@@ -4,7 +4,9 @@ Walsh Hadamard Transform, Mobius Transform
 """
 from __future__ import annotations
 
-from sympy.core import S, Symbol, sympify
+from typing import Sequence, SupportsIndex
+
+from sympy.core import S, Symbol, Expr, sympify
 from sympy.core.function import expand_mul
 from sympy.core.numbers import pi, I
 from sympy.functions.elementary.trigonometric import sin, cos
@@ -19,7 +21,9 @@ from sympy.utilities.misc import as_int
 #                                                                            #
 #----------------------------------------------------------------------------#
 
-def _fourier_transform(seq, dps, inverse=False):
+def _fourier_transform(
+    seq: Sequence[Expr | complex], dps: int | None, inverse: bool = False
+) -> list[Expr]:
     """Utility function for the Discrete Fourier Transform"""
 
     if not iterable(seq):
@@ -68,7 +72,7 @@ def _fourier_transform(seq, dps, inverse=False):
     return a
 
 
-def fft(seq, dps=None):
+def fft(seq: Sequence[Expr | complex], dps: int | None = None) -> list[Expr]:
     r"""
     Performs the Discrete Fourier Transform (**DFT**) in the complex domain.
 
@@ -117,7 +121,7 @@ def fft(seq, dps=None):
     return _fourier_transform(seq, dps=dps)
 
 
-def ifft(seq, dps=None):
+def ifft(seq: Sequence[Expr | complex], dps: int | None = None) -> list[Expr]:
     return _fourier_transform(seq, dps=dps, inverse=True)
 
 ifft.__doc__ = fft.__doc__
@@ -129,7 +133,9 @@ ifft.__doc__ = fft.__doc__
 #                                                                            #
 #----------------------------------------------------------------------------#
 
-def _number_theoretic_transform(seq, prime, inverse=False):
+def _number_theoretic_transform(
+    seq: Sequence[SupportsIndex], prime: SupportsIndex, inverse: bool = False
+) -> list[int]:
     """Utility function for the Number Theoretic Transform"""
 
     if not iterable(seq):
@@ -162,6 +168,8 @@ def _number_theoretic_transform(seq, prime, inverse=False):
             a[i], a[j] = a[j], a[i]
 
     pr = primitive_root(p)
+    if pr is None:
+        raise ValueError("Expected prime modulus to have a primitive root")
 
     rt = pow(pr, (p - 1) // n, p)
     if inverse:
@@ -187,7 +195,7 @@ def _number_theoretic_transform(seq, prime, inverse=False):
     return a
 
 
-def ntt(seq, prime):
+def ntt(seq: Sequence[SupportsIndex], prime: SupportsIndex) -> list[int]:
     r"""
     Performs the Number Theoretic Transform (**NTT**), which specializes the
     Discrete Fourier Transform (**DFT**) over quotient ring `Z/pZ` for prime
@@ -230,7 +238,7 @@ def ntt(seq, prime):
     return _number_theoretic_transform(seq, prime=prime)
 
 
-def intt(seq, prime):
+def intt(seq: Sequence[SupportsIndex], prime: SupportsIndex) -> list[int]:
     return _number_theoretic_transform(seq, prime=prime, inverse=True)
 
 intt.__doc__ = ntt.__doc__
@@ -242,7 +250,9 @@ intt.__doc__ = ntt.__doc__
 #                                                                            #
 #----------------------------------------------------------------------------#
 
-def _walsh_hadamard_transform(seq, inverse=False):
+def _walsh_hadamard_transform(
+    seq: Sequence[Expr | complex], inverse: bool = False
+) -> list[Expr]:
     """Utility function for the Walsh Hadamard Transform"""
 
     if not iterable(seq):
@@ -273,7 +283,7 @@ def _walsh_hadamard_transform(seq, inverse=False):
     return a
 
 
-def fwht(seq):
+def fwht(seq: Sequence[Expr | complex]) -> list[Expr]:
     r"""
     Performs the Walsh Hadamard Transform (**WHT**), and uses Hadamard
     ordering for the sequence.
@@ -312,7 +322,7 @@ def fwht(seq):
     return _walsh_hadamard_transform(seq)
 
 
-def ifwht(seq):
+def ifwht(seq: Sequence[Expr | complex]) -> list[Expr]:
     return _walsh_hadamard_transform(seq, inverse=True)
 
 ifwht.__doc__ = fwht.__doc__
@@ -324,7 +334,9 @@ ifwht.__doc__ = fwht.__doc__
 #                                                                            #
 #----------------------------------------------------------------------------#
 
-def _mobius_transform(seq, sgn, subset):
+def _mobius_transform(
+    seq: Sequence[Expr | complex], sgn: int, subset: bool
+) -> list[Expr]:
     r"""Utility function for performing Mobius Transform using
     Yate's Dynamic Programming method"""
 
@@ -362,7 +374,9 @@ def _mobius_transform(seq, sgn, subset):
     return a
 
 
-def mobius_transform(seq, subset=True):
+def mobius_transform(
+    seq: Sequence[Expr | complex], subset: bool = True
+) -> list[Expr]:
     r"""
     Performs the Mobius Transform for subset lattice with indices of
     sequence as bitmasks.
@@ -420,7 +434,9 @@ def mobius_transform(seq, subset=True):
 
     return _mobius_transform(seq, sgn=+1, subset=subset)
 
-def inverse_mobius_transform(seq, subset=True):
+def inverse_mobius_transform(
+    seq: Sequence[Expr | complex], subset: bool = True
+) -> list[Expr]:
     return _mobius_transform(seq, sgn=-1, subset=subset)
 
 inverse_mobius_transform.__doc__ = mobius_transform.__doc__

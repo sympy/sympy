@@ -45,12 +45,19 @@ def test_inverse():
     assert OneMatrix(1, 1).I == Identity(1)
     assert isinstance(OneMatrix(n, n).I, Inverse)
 
+    assert ZeroMatrix(0, 0).I == ZeroMatrix(0, 0)
+    assert OneMatrix(0, 0).I == OneMatrix(0, 0)
+    assert Inverse(ZeroMatrix(0, 0)).doit() == ZeroMatrix(0, 0)
+    assert Inverse(OneMatrix(0, 0)).doit() == OneMatrix(0, 0)
+
 def test_inverse_non_invertible():
     raises(NonInvertibleMatrixError, lambda: ZeroMatrix(n, n).I)
+    raises(NonInvertibleMatrixError, lambda: ZeroMatrix(2, 2).I)
     raises(NonInvertibleMatrixError, lambda: OneMatrix(2, 2).I)
 
 def test_refine():
     assert refine(C.I, Q.orthogonal(C)) == C.T
+    assert refine(C.I, Q.unitary(C)) == C.adjoint()
 
 
 def test_inverse_matpow_canonicalization():
@@ -68,3 +75,37 @@ def test_adjoint_trnaspose_conjugate():
     assert A.transpose().inverse() == A.inverse().transpose()
     assert A.conjugate().inverse() == A.inverse().conjugate()
     assert A.adjoint().inverse() == A.inverse().adjoint()
+
+
+def test_inverse_derivative():
+    from sympy.core.symbol import Symbol
+    from sympy.matrices.expressions.special import MatrixUnit
+    from sympy.tensor.array.expressions.array_expressions import PermuteDims
+    x = Symbol('x')
+    X = MatrixSymbol('X', 3, 3)
+    Z = MatrixSymbol('Z', 3, 3)
+
+    # Scalar derivative of matrix inverse: d(M^-1)/dx = - M^-1 (dM/dx) M^-1
+    inv_expr = Inverse(x*X + Z)
+    assert inv_expr.diff(x) == -(x*X + Z)**(-1) * X * (x*X + Z)**(-1)
+
+    # Constant matrix derivative is ZeroMatrix
+    assert Inverse(X).diff(x) == ZeroMatrix(3, 3)
+
+    # Non-linear scalar argument with chain rule
+    expected = (-2*x) * (x**2*X + Z)**(-1) * X * (x**2*X + Z)**(-1)
+    assert Inverse(x**2 * X + Z).diff(x) == expected
+
+    # Matrix element differentiation
+    unit = MatrixUnit(3, 3, 0, 1)
+    assert Inverse(X).diff(X[0, 1]) == -X**(-1) * unit * X**(-1)
+
+    # Matrix-by-matrix differentiation preserves tensor array engine
+    assert isinstance(Inverse(X).diff(X), PermuteDims)
+
+
+def test_inverse_invalid_exponent():
+    # Issue #30900 (item E1-16): Inverse should reject exponents other than -1
+    raises(ValueError, lambda: Inverse(C, 2))
+    raises(ValueError, lambda: Inverse(C, 0))
+    raises(ValueError, lambda: Inverse(C, S.One))

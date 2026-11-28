@@ -407,6 +407,15 @@ def test_lambda_subs_capture():
     assert r.variables[0] != integral.variables[0]
     assert r(5).doit() == x + y
 
+    # old containing a bound symbol does not match inside
+    f = Lambda(x, x**2)
+    assert f.subs(x**2, z) == f
+    assert (x**2 + f).subs(x**2, z) == z + f
+    f = Lambda((x, y), x*y + z)
+    assert f.subs(x*y, z) == f
+    assert f.subs(x*z, y) == f
+    assert Lambda(x, x + y**2).subs(y**2, z) == Lambda(x, x + z)
+
 
 def test_IdentityFunction():
     assert Lambda(x, x) is Lambda(y, y) is S.IdentityFunction
@@ -496,6 +505,8 @@ def test_Subs():
     assert len(Subs(f(x, y), (x, y), (0, 1)).variables) == 2
     assert Subs(f(x, y), (x, y), (0, 1)).point == Tuple(0, 1)
 
+    assert Subs(x + Symbol('_0'), x, 0) != Subs(2*x, x, 0)
+
     assert Subs(f(x), x, 0) == Subs(f(y), y, 0)
     assert Subs(f(x, y), (x, y), (0, 1)) == Subs(f(x, y), (y, x), (1, 0))
     assert Subs(f(x)*y, (x, y), (0, 1)) == Subs(f(y)*x, (y, x), (0, 1))
@@ -540,6 +551,52 @@ def test_Subs():
     assert Derivative(f(x, g(x)), x).doit() == Derivative(
         f(x, g(x)), g(x))*Derivative(g(x), x) + Subs(Derivative(
         f(y, g(x)), y), y, x)
+
+
+
+def test_Subs_composite_arguments_derivative():
+    x, y, z = symbols('x y z')
+    f = Function('f')
+
+    # Regression test: differentiating a function with multiple
+    # composite arguments must not introduce spurious free symbols.
+    result = f(x + y, x*y).diff(y).diff(x)
+    assert result.free_symbols == {x, y}
+
+    # Check that repeated differentiation with different composite
+    # arguments and differentiation orders does not introduce
+    # unexpected free symbols.
+    cases = [
+        # Different differentiation order.
+        (f(x + y, x*y), (x, y), {x, y}),
+
+        # Composite arguments involving powers and constants.
+        (f(x**2 + y, x*y + 1), (y, x), {x, y}),
+
+        # Multiple arguments containing the same composite expression.
+        (f(x + y, x + y), (y, x), {x, y}),
+
+        # Three composite arguments with overlapping free symbols.
+        (f(x + y, x*y, x*z + y), (y, x), {x, y, z}),
+
+        # Nested composite expressions.
+        (f((x + y)**2, x*y + x), (y, x), {x, y}),
+
+        # Repeated differentiation of the same expression.
+        (f(x + y, x*y), (y, x, y), {x, y}),
+
+        # Different powers and a different differentiation order.
+        (f(x**2 + y**2, x*y + y**3), (x, y, x), {x, y}),
+    ]
+
+    for expr, variables, allowed_symbols in cases:
+        result = expr
+        for variable in variables:
+            result = result.diff(variable)
+
+        assert result.free_symbols <= allowed_symbols
+
+
 
 def test_doitdoit():
     done = Derivative(f(x, g(x)), x, g(x)).doit()

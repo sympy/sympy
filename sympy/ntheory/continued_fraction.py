@@ -213,7 +213,7 @@ def continued_fraction_reduce(cf):
     >>> continued_fraction_reduce([1, 4, 2, [3, 1]])
     (sqrt(21) + 287)/238
     >>> continued_fraction_reduce([[1]])
-    (1 + sqrt(5))/2
+    (sqrt(5) + 1)/2
     >>> from sympy.ntheory.continued_fraction import continued_fraction_periodic
     >>> continued_fraction_reduce(continued_fraction_periodic(8, 5, 13))
     (sqrt(13) + 8)/5

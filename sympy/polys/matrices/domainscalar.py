@@ -9,18 +9,27 @@ convenience routines for unifying elements with different domains.
 It assists in Scalar Multiplication and getitem for DomainMatrix.
 
 """
+
 from __future__ import annotations
+from typing import TYPE_CHECKING, Generic
 from ..constructor import construct_domain
 
 from sympy.polys.domains import Domain, ZZ
+from sympy.polys.domains.domain import Er, Es
+
+if TYPE_CHECKING:
+    from sympy.core.expr import Expr
 
 
-class DomainScalar:
+class DomainScalar(Generic[Er]):
     r"""
     docstring
     """
 
-    def __new__(cls, element, domain):
+    element: Er
+    domain: Domain[Er]
+
+    def __new__(cls, element: Er, domain: Domain[Er]) -> DomainScalar[Er]:
         if not isinstance(domain, Domain):
             raise TypeError("domain should be of type Domain")
         if not domain.of_type(element):
@@ -28,13 +37,13 @@ class DomainScalar:
         return cls.new(element, domain)
 
     @classmethod
-    def new(cls, element, domain):
-        obj = super().__new__(cls)
+    def new(cls, element: Es, domain: Domain[Es]) -> DomainScalar[Es]:
+        obj: DomainScalar[Es] = object.__new__(DomainScalar)
         obj.element = element
         obj.domain = domain
         return obj
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return repr(self.element)
 
     @classmethod
@@ -42,21 +51,21 @@ class DomainScalar:
         [domain, [element]] = construct_domain([expr])
         return cls.new(element, domain)
 
-    def to_sympy(self):
+    def to_sympy(self) -> Expr:
         return self.domain.to_sympy(self.element)
 
-    def to_domain(self, domain):
+    def to_domain(self, domain: Domain[Es]) -> DomainScalar[Es]:
         element = domain.convert_from(self.element, self.domain)
         return self.new(element, domain)
 
-    def convert_to(self, domain):
+    def convert_to(self, domain: Domain[Es]) -> DomainScalar[Es]:
         return self.to_domain(domain)
 
     def unify(self, other):
         domain = self.domain.unify(other.domain)
         return self.to_domain(domain), other.to_domain(domain)
 
-    def __bool__(self):
+    def __bool__(self) -> bool:
         return bool(self.element)
 
     def __add__(self, other):
@@ -100,24 +109,24 @@ class DomainScalar:
         q, r = self.domain.div(self.element, other.element)
         return (self.new(q, self.domain), self.new(r, self.domain))
 
-    def __pow__(self, n):
+    def __pow__(self, n: int) -> DomainScalar[Er]:
         if not isinstance(n, int):
             return NotImplemented
         return self.new(self.element**n, self.domain)
 
-    def __pos__(self):
+    def __pos__(self) -> DomainScalar[Er]:
         return self.new(+self.element, self.domain)
 
-    def __neg__(self):
+    def __neg__(self) -> DomainScalar[Er]:
         return self.new(-self.element, self.domain)
 
-    def __eq__(self, other):
+    def __eq__(self, other: object) -> bool:
         if not isinstance(other, DomainScalar):
             return NotImplemented
         return self.element == other.element and self.domain == other.domain
 
-    def is_zero(self):
+    def is_zero(self) -> bool:
         return self.element == self.domain.zero
 
-    def is_one(self):
+    def is_one(self) -> bool:
         return self.element == self.domain.one

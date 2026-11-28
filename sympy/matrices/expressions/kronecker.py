@@ -119,6 +119,26 @@ class KroneckerProduct(MatrixExpr):
         return super().__new__(cls, *args)
 
     @property
+    def is_zero_matrix(self):
+        """True if any factor is a zero matrix, None if unknown.
+
+        A Kronecker product is zero if and only if at least one factor
+        is zero.  For symbolic ``MatrixSymbol`` arguments whose zero
+        status is unknown we return ``None`` (SymPy fuzzy-bool
+        convention) instead of ``False``.
+        """
+        found_unknown = False
+        for arg in self.args:
+            z = _is_zero_mat(arg)
+            if z is True:
+                return True
+            if z is None:
+                found_unknown = True
+        if found_unknown:
+            return None
+        return False
+
+    @property
     def shape(self):
         rows, cols = self.args[0].shape
         for mat in self.args[1:]:
@@ -144,6 +164,8 @@ class KroneckerProduct(MatrixExpr):
         return KroneckerProduct(*list(map(transpose, self.args))).doit()
 
     def _eval_trace(self):
+        if not all(a.is_square for a in self.args):
+            return None
         from .trace import trace
         return Mul(*[trace(a) for a in self.args])
 
@@ -161,6 +183,22 @@ class KroneckerProduct(MatrixExpr):
         except ShapeError:
             from sympy.matrices.expressions.inverse import Inverse
             return Inverse(self)
+
+    def _eval_power(self, exp):
+        if exp == S.Zero:
+            if self.is_square:
+                return Identity(self.rows)
+            return MatPow(self, exp)
+        if exp == S.One:
+            return self
+
+        if not all(arg.is_square for arg in self.args):
+            return super()._eval_power(exp)
+
+        if exp.is_integer:
+            return KroneckerProduct(*[arg**exp for arg in self.args])
+
+        return super()._eval_power(exp)
 
     def structurally_equal(self, other):
         '''Determine whether two matrices have the same Kronecker product structure
@@ -377,9 +415,36 @@ def kronecker_product_extract_singleton_matrices(kron: KroneckerProduct):
         return kron
 
 
+def _is_zero_mat(m):
+    """Return True / False / None following SymPy fuzzy-bool convention."""
+    if isinstance(m, MatrixBase):
+        return m.is_zero_matrix
+    # For MatrixExpr subclasses: is_ZeroMatrix is a class-level flag
+    # (True only for ZeroMatrix); otherwise the zero status is unknown.
+    if m.is_ZeroMatrix:
+        return True
+    return None
+
+
+def extract_zeromatrix(kron):
+    """Replace a KroneckerProduct with ZeroMatrix if any factor is zero.
+
+    Placed after ``flatten`` in the rule pipeline so that all args are
+    guaranteed to be non-KroneckerProduct leaves.
+    """
+    if any(_is_zero_mat(arg) is True for arg in kron.args):
+        from sympy.matrices.expressions.special import ZeroMatrix
+        ret = ZeroMatrix(*kron.shape)
+        if all(isinstance(m, MatrixBase) for m in kron.args):
+            return ret.as_explicit()
+        return ret
+    return kron
+
+
 rules = (unpack,
          explicit_kronecker_product,
          flatten,
+         extract_zeromatrix,
          extract_commutative,
          kronecker_product_extract_singleton_matrices)
 
@@ -438,7 +503,7 @@ def kronecker_mat_add(expr):
     krons = []
     for group in args.values():
         # Greedily merge each addend into the first mergeable partner:
-        merged: list[tuple] = []
+        merged = []
         for pair in map(_coeff_kron, group):
             for i, other in enumerate(merged):
                 combined = _kronecker_merge_add(other, pair)

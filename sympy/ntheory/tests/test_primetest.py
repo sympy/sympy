@@ -14,8 +14,13 @@ from sympy.core.numbers import I, Float
 
 
 def test_is_fermat_pseudoprime():
+    assert is_fermat_pseudoprime(2, 1)
     assert is_fermat_pseudoprime(5, 1)
     assert is_fermat_pseudoprime(9, 1)
+    assert not is_fermat_pseudoprime(1, 1)
+    assert not is_fermat_pseudoprime(4, 1)
+    raises(ValueError, lambda: is_fermat_pseudoprime(0, 1))
+    raises(ValueError, lambda: is_fermat_pseudoprime(-3, 1))
 
 
 def test_euler_pseudoprimes():
@@ -53,8 +58,13 @@ def test_euler_pseudoprimes():
 
 
 def test_is_euler_jacobi_pseudoprime():
+    assert is_euler_jacobi_pseudoprime(2, 1)
     assert is_euler_jacobi_pseudoprime(11, 1)
     assert is_euler_jacobi_pseudoprime(15, 1)
+    assert not is_euler_jacobi_pseudoprime(1, 1)
+    assert not is_euler_jacobi_pseudoprime(4, 1)
+    raises(ValueError, lambda: is_euler_jacobi_pseudoprime(0, 1))
+    raises(ValueError, lambda: is_euler_jacobi_pseudoprime(-3, 1))
 
 
 def test_lucas_extrastrong_params():

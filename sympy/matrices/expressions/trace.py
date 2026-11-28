@@ -50,15 +50,15 @@ class Trace(Expr):
         from .matexpr import MatrixElement
         if isinstance(v, MatrixElement):
             return self.rewrite(Sum).diff(v)
-        expr = self.doit()
-        if isinstance(expr, Trace):
-            # Avoid looping infinitely:
-            return trace(expr.arg.diff(v))
-        return expr._eval_derivative(v)
+        return trace(self.arg.diff(v))
 
     @property
     def arg(self):
         return self.args[0]
+
+    @property
+    def kind(self):
+        return self.arg.kind.element_kind
 
     def doit(self, **hints):
         if hints.get('deep', True):

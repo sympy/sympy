@@ -9,6 +9,12 @@ N-dim array
 Classes
 -------
 
+.. autoclass:: DenseNDimArray
+   :members:
+
+.. autoclass:: SparseNDimArray
+   :members:
+
 .. autoclass:: ImmutableDenseNDimArray
    :members:
 

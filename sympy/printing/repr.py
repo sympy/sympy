@@ -177,11 +177,8 @@ class ReprPrinter(Printer):
                                        self._print(expr.rows),
                                        self._print(expr.cols),
                                        self._print([]))
-        l = []
-        for i in range(expr.rows):
-            l.append([])
-            for j in range(expr.cols):
-                l[-1].append(expr[i, j])
+        l = [[expr[i, j] for j in range(expr.cols)]
+             for i in range(expr.rows)]
         return '%s(%s)' % (expr.__class__.__name__, self._print(l))
 
     def _print_CharacterTable(self, expr):

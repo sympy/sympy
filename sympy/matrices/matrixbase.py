@@ -150,6 +150,9 @@ class MatrixBase(Printable):
         def cols(self) -> int:
             ...
 
+        def __iter__(self) -> Iterator[Expr]:
+            ...
+
     @overload
     @classmethod
     def _sympify(cls, expr: SExpr, /) -> Expr: ...
@@ -196,6 +199,47 @@ class MatrixBase(Printable):
     def as_explicit(self) -> Self:
         """Convert MatrixExpr to a matrix with explicit elements."""
         return self
+
+    def equals(self, other, failing_expression=False):
+        """Applies ``equals`` to corresponding elements of the matrices,
+        trying to prove that the elements are equivalent, returning True
+        if they are, False if any pair is not, and None (or the first
+        failing expression if failing_expression is True) if it cannot
+        be decided if the expressions are equivalent or not. This is, in
+        general, an expensive operation.
+
+        Examples
+        ========
+
+        >>> from sympy import Matrix
+        >>> from sympy.abc import x
+        >>> A = Matrix([x*(x - 1), 0])
+        >>> B = Matrix([x**2 - x, 0])
+        >>> A == B
+        False
+        >>> A.simplify() == B.simplify()
+        True
+        >>> A.equals(B)
+        True
+        >>> A.equals(2)
+        False
+
+        See Also
+        ========
+        sympy.core.expr.Expr.equals
+        """
+        if self.shape != getattr(other, 'shape', None):
+            return False
+
+        rv = True
+        for i in range(self.rows):
+            for j in range(self.cols):
+                ans = self[i, j].equals(other[i, j], failing_expression)
+                if ans is False:
+                    return False
+                elif ans is not True and rv is True:
+                    rv = ans
+        return rv
 
     def __eq__(self, other):
         raise NotImplementedError("Subclasses must implement this.")
@@ -2798,7 +2842,7 @@ class MatrixBase(Printable):
         return self.conjugate()
 
     # should mirror core.basic.xreplace
-    def xreplace(self, rule: Mapping[SBasic, SBasic]) -> Self:
+    def xreplace(self, rule: Mapping[Tbasic, Expr]) -> Self:
         """Return a new matrix with xreplace applied to each entry.
 
         Examples
@@ -3429,7 +3473,7 @@ class MatrixBase(Printable):
         (Matrix([
         [1, 0],
         [0, 1]]), Matrix([
-        [ -r1 + r2],
+        [  r2 - r1],
         [2*r1 - r2]]))
         """
         r, _ = _rref(self.hstack(self, self.eye(self.rows), rhs))
@@ -3917,7 +3961,7 @@ class MatrixBase(Printable):
         """Computes eigenvalues of a Matrix using Berkowitz method."""
         return self.eigenvals(**flags)
 
-    def berkowitz_minors(self) -> tuple[Expr]:
+    def berkowitz_minors(self) -> tuple[Expr, ...]:
         """Computes principal minors using Berkowitz method."""
         sign, minors = self.one, []
 
@@ -4777,6 +4821,8 @@ class MatrixBase(Printable):
         if self.is_symmetric():
             return work
 
+        acum: Expr
+
         for i in range(1, n):
             for j in range(1, n):
                 acum = S.Zero
@@ -4896,7 +4942,7 @@ class MatrixBase(Printable):
                     "Cannot evaluate the function because the "
                     "function {} is not analytic at the given "
                     "eigenvalue {}".format(f, f_val[row]))
-            val = S.One
+            val: Expr = S.One
             for a in range(n):
                 r[row][a] = val
                 val *= i
@@ -4944,8 +4990,8 @@ class MatrixBase(Printable):
         >>> m = Matrix([[0, 1], [-1, 0]]) * t
         >>> m.exp()
         Matrix([
-        [    exp(I*t)/2 + exp(-I*t)/2, -I*exp(I*t)/2 + I*exp(-I*t)/2],
-        [I*exp(I*t)/2 - I*exp(-I*t)/2,      exp(I*t)/2 + exp(-I*t)/2]])
+        [    exp(-I*t)/2 + exp(I*t)/2, I*exp(-I*t)/2 - I*exp(I*t)/2],
+        [I*exp(I*t)/2 - I*exp(-I*t)/2,     exp(-I*t)/2 + exp(I*t)/2]])
         """
         if not self.is_square:
             raise NonSquareMatrixError(
@@ -5200,7 +5246,7 @@ class MatrixBase(Printable):
             out = self.applyfunc(lambda i: i / norm)
         return out
 
-    def norm(self, ord: int | str | None = 2) -> Expr:
+    def norm(self, ord: int | str | None = None) -> Expr:
         """Return the Norm of a Matrix or Vector.
 
         In the simplest case this is the geometric size of the vector
@@ -5255,7 +5301,7 @@ class MatrixBase(Printable):
         # Row or Column Vector Norms
         vals = list(self.values()) or [S.Zero]
         if S.One in self.shape:
-            if ord == 2:  # Common case sqrt(<x, x>)
+            if ord in (2, None):  # Common case sqrt(<x, x>)
                 return sqrt(Add(*(abs(i) ** 2 for i in vals)))
 
             elif ord == 1:  # sum(abs(x))
@@ -5487,7 +5533,7 @@ class MatrixBase(Printable):
     def LDLsolve(self, rhs) -> Self:
         return _LDLsolve(self, rhs)
 
-    def LUsolve(self, rhs, iszerofunc=_iszero) -> Self:
+    def LUsolve(self, rhs: Tmat, iszerofunc: Callable[[Expr], bool | None] = _iszero) -> Tmat:
         return _LUsolve(self, rhs, iszerofunc=iszerofunc)
 
     def QRsolve(self, b) -> Self:

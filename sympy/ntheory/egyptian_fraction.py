@@ -219,8 +219,8 @@ def egypt_golomb(x: int, y: int) -> list[int]:
 def egypt_harmonic(r: Rational) -> tuple[list[Integer], Rational]:
     # assumes r is Rational
     rv: list[Integer] = []
-    d = S.One
-    acc = S.Zero
+    d: Integer = S.One
+    acc: Rational = S.Zero
     while acc + 1/d <= r:
         acc += 1/d
         rv.append(d)

@@ -595,16 +595,32 @@ def test_evolute():
     x, y, h, k = symbols('x y h k',real = True)
     a, b = symbols('a b')
     e = Ellipse(Point(h, k), a, b)
-    t1 = (e.hradius*(x - e.center.x))**Rational(2, 3)
-    t2 = (e.vradius*(y - e.center.y))**Rational(2, 3)
-    E = t1 + t2 - (e.hradius**2 - e.vradius**2)**Rational(2, 3)
+    t1 = Abs(e.hradius*(x - e.center.x))**Rational(2, 3)
+    t2 = Abs(e.vradius*(y - e.center.y))**Rational(2, 3)
+    E = t1 + t2 - Abs(e.hradius**2 - e.vradius**2)**Rational(2, 3)
     assert e.evolute() == E
     #Numerical Example
     e = Ellipse(Point(1, 1), 6, 3)
-    t1 = (6*(x - 1))**Rational(2, 3)
-    t2 = (3*(y - 1))**Rational(2, 3)
-    E = t1 + t2 - (27)**Rational(2, 3)
+    t1 = Abs(6*(x - 1))**Rational(2, 3)
+    t2 = Abs(3*(y - 1))**Rational(2, 3)
+    E = t1 + t2 - 27**Rational(2, 3)
     assert e.evolute() == E
+
+    # centers of curvature in all four quadrants (issue 31258)
+    e = Ellipse((0, 0), 3, 1)
+    f = e.evolute(x, y)
+    assert f.subs({x: 0, y: -8}) == 0
+    assert f.subs({x: 0, y: 8}) == 0
+    assert f.subs({x: -Rational(8, 3), y: 0}) == 0
+    assert f.subs({x: Rational(8, 3), y: 0}) == 0
+
+    # vertical ellipse
+    e_vert = Ellipse((0, 0), 1, 3)
+    f_vert = e_vert.evolute(x, y)
+    assert f_vert.subs({x: -8, y: 0}) == 0
+    assert f_vert.subs({x: 8, y: 0}) == 0
+    assert f_vert.subs({x: 0, y: -Rational(8, 3)}) == 0
+    assert f_vert.subs({x: 0, y: Rational(8, 3)}) == 0
 
 
 def test_svg():

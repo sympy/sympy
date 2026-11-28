@@ -532,6 +532,7 @@ class LatticeOp(AssocOp):
             evaluate = global_parameters.evaluate
 
         if not evaluate:
+            args = tuple(args)
             obj = super().__new__(cls, *args, evaluate=False, **options)
             obj._argset = frozenset(args)
             return obj

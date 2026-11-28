@@ -1,6 +1,7 @@
 from __future__ import annotations
 import sys
 from sympy.core.cache import cacheit, cached_property, lazy_function
+from sympy.core.coreerrors import LazyExceptionMessage
 from sympy.testing.pytest import raises
 
 def test_cacheit_doc():
@@ -56,6 +57,31 @@ def test_cachit_exception():
     # Unhashable type
     raises(TypeError, lambda: testf2([]))
     assert len(a) == 1
+
+def test_cacheit_nonstring_exception():
+    rendered = []
+
+    def render_message():
+        rendered.append(True)
+        return "error"
+
+    for message in (None, 1, LazyExceptionMessage(render_message)):
+        error = TypeError(message)
+        calls = []
+
+        @cacheit
+        def testf(x):
+            calls.append(x)
+            raise error
+
+        for arg in (1, []):
+            calls.clear()
+            with raises(TypeError) as exc:
+                testf(arg)
+            assert exc.value is error
+            assert calls == [arg]
+        assert rendered == []
+
 
 def test_cached_property():
     class A:

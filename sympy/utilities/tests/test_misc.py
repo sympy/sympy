@@ -4,12 +4,15 @@ import sys
 from subprocess import Popen, PIPE
 import os
 
+from sympy.core.relational import Eq
 from sympy.core.singleton import S
 from sympy.testing.pytest import (raises, warns_deprecated_sympy,
                                   skip_under_pyodide)
 from sympy.utilities.misc import (translate, replace, ordinal, rawlines,
-                                  strlines, as_int, find_executable)
+                                  strlines, as_int, find_executable,
+                                  filldedent, func_name)
 
+from sympy.abc import x
 
 def test_translate():
     abc = 'abc'
@@ -147,3 +150,20 @@ def test_as_int():
 def test_deprecated_find_executable():
     with warns_deprecated_sympy():
         find_executable('python')
+
+
+def test_filldedent():
+    # indentation is removed, lines are joined and a leading newline is added
+    assert filldedent("""
+        hello   world
+        again""") == '\nhello   world again'
+    # w sets the line width
+    assert filldedent('a b c d e f', w=5) == '\na b c\nd e f'
+
+
+def test_func_name():
+    assert func_name(x) == 'Symbol'
+    assert func_name(3) == 'int'
+    assert func_name([]) == 'list'
+    assert func_name(Eq(x, 1)) == 'Equality'
+    assert func_name(Eq(x, 1), short=True) == 'Eq'

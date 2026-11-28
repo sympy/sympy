@@ -13,7 +13,7 @@ See the webpage for more information and documentation:
 """
 
 
-# Keep this in sync with setup.py/pyproject.toml
+# Keep this in sync with pyproject.toml
 import sys
 if sys.version_info < (3, 10):
     raise ImportError("Python version 3.10 or above is required for SymPy.")
@@ -196,7 +196,7 @@ from .matrices import (ShapeError, NonSquareMatrixError, GramSchmidt,
         BlockDiagMatrix, BlockMatrix, FunctionMatrix, Identity, Inverse,
         MatAdd, MatMul, MatPow, MatrixExpr, MatrixSymbol, Trace, Transpose,
         ZeroMatrix, OneMatrix, blockcut, block_collapse, matrix_symbols,
-        Adjoint, hadamard_product, HadamardProduct, HadamardPower,
+        Adjoint, Conjugate, hadamard_product, HadamardProduct, HadamardPower,
         Determinant, det, diagonalize_vector, DiagMatrix, DiagonalMatrix,
         DiagonalOf, trace, DotProduct, kronecker_product, KroneckerProduct,
         PermutationMatrix, MatrixPermute, Permanent, per, rot_ccw_axis1,
@@ -436,7 +436,7 @@ __all__ = [
     'BlockDiagMatrix', 'BlockMatrix', 'FunctionMatrix', 'Identity', 'Inverse',
     'MatAdd', 'MatMul', 'MatPow', 'MatrixExpr', 'MatrixSymbol', 'Trace',
     'Transpose', 'ZeroMatrix', 'OneMatrix', 'blockcut', 'block_collapse',
-    'matrix_symbols', 'Adjoint', 'hadamard_product', 'HadamardProduct',
+    'matrix_symbols', 'Adjoint', 'Conjugate', 'hadamard_product', 'HadamardProduct',
     'HadamardPower', 'Determinant', 'det', 'diagonalize_vector', 'DiagMatrix',
     'DiagonalMatrix', 'DiagonalOf', 'trace', 'DotProduct',
     'kronecker_product', 'KroneckerProduct', 'PermutationMatrix',

@@ -11,7 +11,7 @@ from sympy.core.containers import Tuple
 from sympy.core.function import Function, Lambda
 from sympy.core.numbers import I, pi, Float
 from sympy.core.singleton import S
-from sympy.core.symbol import symbols, Symbol, Dummy
+from sympy.core.symbol import symbols, Symbol, Dummy, Wild
 from sympy.concrete.summations import Sum
 from sympy.functions.elementary.trigonometric import (cos, sin)
 from sympy.functions.special.gamma_functions import gamma
@@ -49,6 +49,21 @@ def test_immutable():
     assert not hasattr(b1, '__dict__')
     with raises(AttributeError):
         b1.x = 1
+
+
+def test_copy():
+    copied = b21.copy()
+    assert copied == b21
+    assert copied is not b21
+    assert all(a is b for a, b in zip(copied.args, b21.args))
+
+
+def test_atom_copy():
+    x = Symbol('x', positive=True)
+    atoms = [x, Atom(), Dummy('d'), Wild('w', exclude=[x]),
+             S(2), S(2)/3, Float('1.23456789', 50)]
+    for atom in atoms:
+        assert atom.copy() is atom
 
 
 def test_equality():

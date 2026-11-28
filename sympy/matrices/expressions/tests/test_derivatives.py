@@ -4,7 +4,7 @@ Some examples have been taken from:
 http://www.math.uwaterloo.ca/~hwolkowi//matrixcookbook.pdf
 """
 from __future__ import annotations
-from sympy import KroneckerProduct, Matrix, diag, diff, eye, Array, MatPow
+from sympy import KroneckerProduct, Matrix, diag, diff, eye, Array, MatPow, derive_by_array
 from sympy.combinatorics import Permutation
 from sympy.concrete.summations import Sum
 from sympy.core.numbers import Rational
@@ -882,3 +882,52 @@ def test_derivative_object_routing():
     assert Derivative(Trace(A2*X2), X2).doit() == A2.T
     assert Derivative(Trace(X2*X2), X2, 2).doit() == \
         Trace(X2*X2).diff(X2).diff(X2)
+
+
+def test_hadamard_product_derivative():
+    # https://github.com/sympy/sympy/issues/30902 (item 15)
+    # HadamardProduct used to raise NotImplementedError instead of using the
+    # generic MatrixExpr -> array conversion fallback.
+    from sympy.utilities.iterables import flatten
+    X2 = MatrixSymbol("X2", 2, 2)
+    Y2 = MatrixSymbol("Y2", 2, 2)
+    nums = {X2: Matrix([[1, 2], [3, 4]]), Y2: Matrix([[2, 0], [1, 3]])}
+    Xe, Ye = X2.as_explicit(), Y2.as_explicit()
+    for expr, explicit in [
+        (Determinant(HadamardProduct(X2, Y2)),
+         Xe.multiply_elementwise(Ye).det()),
+        (Inverse(HadamardProduct(X2, Y2)),
+         Xe.multiply_elementwise(Ye).inv()),
+    ]:
+        dexpr = expr.diff(X2).as_explicit().subs(nums).doit()
+        ref = derive_by_array(explicit, Xe).subs(nums).doit()
+        assert list(flatten(dexpr.tolist())) == list(flatten(ref.tolist()))
+
+
+def test_matadd_eval_derivative():
+    from sympy.matrices.expressions.special import MatrixUnit
+    x, y = symbols('x y')
+    A = MatrixSymbol('A', 3, 3)
+    B = MatrixSymbol('B', 3, 3)
+
+    assert (x*A + y*B).diff(x) == A
+    assert (x*A + y*B).diff(y) == B
+    assert (A + B).diff(x) == ZeroMatrix(3, 3)
+    assert (A + B).diff(A[0, 1]) == MatrixUnit(3, 3, 0, 1)
+
+
+def test_matmul_eval_derivative():
+    from sympy.matrices.expressions.special import MatrixUnit
+    x, y = symbols('x y')
+    A = MatrixSymbol('A', 3, 3)
+    B = MatrixSymbol('B', 3, 3)
+    C = MatrixSymbol('C', 3, 3)
+
+    assert (A * B).diff(x) == ZeroMatrix(3, 3)
+    assert (x * A * B).diff(x) == A * B
+    assert ((x**2) * A * (y * B)).diff(x) == (2*x*y) * A * B
+    assert ((x*A + B) * (x*B + A)).diff(x) == (x*A + B)*B + A*(x*B + A)
+    expected = -A * (x*B + C).I * B * (x*B + C).I * A
+    assert (A * (x*B + C).I * A).diff(x) == expected
+    assert (A * B).diff(A[0, 1]) == MatrixUnit(3, 3, 0, 1) * B
+    assert (A * B).diff(B[1, 2]) == A * MatrixUnit(3, 3, 1, 2)

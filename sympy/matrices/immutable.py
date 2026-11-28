@@ -46,7 +46,7 @@ class ImmutableRepMatrix(RepMatrix, MatrixExpr): # type: ignore
         return cls._new(*args, **kwargs)
 
     def __hash__(self):
-        return MatrixExpr.__hash__(self)
+        return hash((ImmutableRepMatrix, self.shape))
 
     def copy(self):
         return self

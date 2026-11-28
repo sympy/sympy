@@ -17,7 +17,7 @@ from sympy.matrices import Matrix
 from sympy.simplify.simplify import simplify
 from sympy.solvers.solvers import solve
 from sympy.utilities.iterables import has_dups, has_variety, uniq, rotate_left, least_rotation
-from sympy.utilities.misc import as_int, func_name
+from sympy.utilities.misc import as_int, func_name, Undecidable
 
 
 import warnings
@@ -2143,17 +2143,22 @@ class Triangle(Polygon):
             nodup.pop()  # last point was same as first
 
         # remove collinear points
-        i = -3
-        while i < len(nodup) - 3 and len(nodup) > 2:
-            a, b, c = sorted(
-                [nodup[i], nodup[i + 1], nodup[i + 2]], key=default_sort_key)
-            if Point.is_collinear(a, b, c):
-                nodup[i] = a
-                nodup[i + 1] = None
-                nodup.pop(i + 1)
-            i += 1
+        if len(nodup) == 3 and Point.is_collinear(*nodup):
+            for i in range(3):
+                b = nodup[i]
+                a, c = nodup[(i + 1) % 3], nodup[(i + 2) % 3]
+                dot = (a - b).dot(c - b)
+                if dot.is_nonpositive:  # b is between a and c
+                    nodup = sorted([a, c], key=default_sort_key)
+                    break
+                try:
+                    if b in Segment(a, c):
+                        nodup = sorted([a, c], key=default_sort_key)
+                        break
+                except (Undecidable, ValueError):
+                    continue
 
-        vertices = list(filter(lambda x: x is not None, nodup))
+        vertices = nodup
 
         if len(vertices) == 3:
             return GeometryEntity.__new__(cls, *vertices, **kwargs)
@@ -2654,7 +2659,7 @@ class Triangle(Polygon):
         >>> p1, p2, p3 = Point(0, 0), Point(6, 0), Point(0, 2)
         >>> t = Triangle(p1, p2, p3)
         >>> t.exradii[t.sides[2]]
-        -2 + sqrt(10)
+        sqrt(10) - 2
 
         References
         ==========

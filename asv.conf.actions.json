@@ -27,9 +27,8 @@
     // List of branches to benchmark. If not provided, defaults to "master"
     // (for git) or "tip" (for mercurial).
 
-    // This list needs to be updated after each release of sympy. The branch to
-    // be checked should always be the previous release.
-    "branches": ["upstream/1.14", "upstream/master", "HEAD"], // for git
+    // The benchmarks workflow points benchmark-release at the latest stable tag.
+    "branches": ["benchmark-release", "upstream/master", "HEAD"], // for git
     // "branches": ["tip"],    // for mercurial
 
     // The DVCS being used.  If not set, it will be automatically

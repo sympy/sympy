@@ -162,22 +162,22 @@ by a contraction of the 2nd and 3rd axes (in Python indexing axes number 1, 2).
 
 >>> D = Array([[2, 1], [0, -1]])
 >>> tensorcontraction(tensorproduct(C, D), (1, 2))
-[[2*x, x - y], [2*z, -t + z]]
+[[2*x, x - y], [2*z, z - t]]
 
 One may verify that the matrix product is equivalent:
 
 >>> from sympy import Matrix
 >>> Matrix([[x, y], [z, t]])*Matrix([[2, 1], [0, -1]])
 Matrix([
-[2*x,  x - y],
-[2*z, -t + z]])
+[2*x, x - y],
+[2*z, z - t]])
 
 or equivalently
 
 >>> C.tomatrix()*D.tomatrix()
 Matrix([
-[2*x,  x - y],
-[2*z, -t + z]])
+[2*x, x - y],
+[2*z, z - t]])
 
 Diagonal operator
 -----------------

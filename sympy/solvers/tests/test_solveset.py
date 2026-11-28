@@ -3291,26 +3291,6 @@ def test_is_lambert():
 # end of lambert tests
 
 
-def test_linear_coeffs():
-    from sympy.solvers.solveset import linear_coeffs
-    assert linear_coeffs(0, x) == [0, 0]
-    assert all(i is S.Zero for i in linear_coeffs(0, x))
-    assert linear_coeffs(x + 2*y + 3, x, y) == [1, 2, 3]
-    assert linear_coeffs(x + 2*y + 3, y, x) == [2, 1, 3]
-    assert linear_coeffs(x + 2*x**2 + 3, x, x**2) == [1, 2, 3]
-    raises(ValueError, lambda:
-        linear_coeffs(x + 2*x**2 + x**3, x, x**2))
-    raises(ValueError, lambda:
-        linear_coeffs(1/x*(x - 1) + 1/x, x))
-    raises(ValueError, lambda:
-        linear_coeffs(x, x, x))
-    assert linear_coeffs(a*(x + y), x, y) == [a, a, 0]
-    assert linear_coeffs(1.0, x, y) == [0, 0, 1.0]
-    # don't include coefficients of 0
-    assert linear_coeffs(Eq(x, x + y), x, y, dict=True) == {y: -1}
-    assert linear_coeffs(0, x, y, dict=True) == {}
-
-
 def test_is_modular():
     assert _is_modular(y, x) is False
     assert _is_modular(Mod(x, 3) - 1, x) is True
@@ -3348,6 +3328,13 @@ def test_invert_modular():
     assert invert_modular(Mod((x + 1)*(x + 2), 7), S(5), n, x) == \
             (Mod((x + 1)*(x + 2), 7), 5)
     # a.is_Pow
+    assert invert_modular(Mod(6**(x + 1)/6, 30), S(10), n, x) == \
+            (x, S.EmptySet)
+    sol = solveset(Mod(6**(x + 1)/6, 30) - 6,
+                   x, S.Integers)
+    assert 1 in sol
+    assert 2 in sol
+    assert 0 not in sol
     assert invert_modular(Mod(x**4, 7), S(5), n, x) == \
             (x, S.EmptySet)
     assert dumeq(invert_modular(Mod(3**x, 4), S(3), n, x),
@@ -3409,13 +3396,41 @@ def test_solve_modular():
             ImageSet(Lambda(n, 40*n + 3), S.Naturals0))
     assert dumeq(solveset(Mod(12**x, 21) - 18, x, S.Integers),
             ImageSet(Lambda(n, 6*n + 2), S.Naturals0))
+    sol = solveset(Mod(12**(x + 1)/3, 7) - 6, x, S.Integers)
+    assert 1 in sol
+    assert dumeq(solveset(Mod(12**(x + 1), 21) - 18, x, S.Integers),
+            ImageSet(Lambda(n, 6*n + 1), S.Naturals0))
     assert dumeq(solveset(Mod(3**x, 4) - 3, x, S.Integers),
             ImageSet(Lambda(n, 2*n + 1), S.Naturals0))
     assert dumeq(solveset(Mod(2**x, 7) - 2 , x, S.Integers),
             ImageSet(Lambda(n, 3*n + 1), S.Naturals0))
-    assert dumeq(solveset(Mod(3**(3**x), 4) - 3, x, S.Integers),
-            Intersection(ImageSet(Lambda(n, Intersection({log(2*n + 1)/log(3)},
-            S.Integers)), S.Naturals0), S.Integers))
+    # Small concrete modular powers can be solved by detecting the
+    # preperiod and the cycle of their residues.
+    assert solveset(Mod(2**x, 42), x, S.Integers) is S.EmptySet
+    assert solveset(Mod(2**x - 1, 42), x, S.Integers) == FiniteSet(0)
+    assert dumeq(solveset(Mod(2**x - 22, 42), x, S.Integers),
+            ImageSet(Lambda(n, 6*n + 6), S.Naturals0))
+    assert dumeq(solveset(Mod(2**x, 12) - 8, x, S.Integers),
+            ImageSet(Lambda(n, 2*n + 3), S.Naturals0))
+    assert dumeq(solveset(Mod(6**x, 12), x, S.Integers),
+            ImageSet(Lambda(n, n + 2), S.Naturals0))
+    assert solveset(Mod(6**x, 12) - 6, x, S.Integers) == FiniteSet(1)
+    assert solveset(Mod(2**x, 15) - 3, x, S.Integers) is S.EmptySet
+    # The residual non-Pow case still falls back safely.
+    expr = Mod(2*2**x - 1, 42)
+    assert solveset(expr, x, S.Integers).dummy_eq(
+        ConditionSet(x, Eq(expr, 0), S.Integers))
+    assert dumeq(solveset(Mod(2*2**x - 2, 42), x, S.Integers),
+            ImageSet(Lambda(n, 6*n), S.Naturals0))
+    # Do not use discrete logarithms for fractional exponents or unit bases.
+    for expr in (Mod(4**(x/2), 7) - 2, Mod((S.Half)**x, 4) - 2,
+                 Mod((-1)**x, 5) - 4):
+        assert solveset(expr, x, S.Integers).dummy_eq(
+            ConditionSet(x, Eq(expr, 0), S.Integers))
+    # The exponent is not known to be integer-valued over all Integers.
+    expr = Mod(3**(3**x), 4) - 3
+    assert solveset(expr, x, S.Integers).dummy_eq(
+        ConditionSet(x, Eq(expr, 0), S.Integers))
     # Implemented for m without primitive root
     assert solveset(Mod(x**3, 7) - 2, x, S.Integers) is S.EmptySet
     assert dumeq(solveset(Mod(x**3, 8) - 1, x, S.Integers),

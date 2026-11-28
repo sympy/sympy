@@ -1,8 +1,9 @@
 from __future__ import annotations
-from sympy.core.numbers import (Float, I, Rational)
+from sympy.core.numbers import (Float, I, Rational, pi)
 from sympy.core.singleton import S
 from sympy.core.symbol import (Symbol, symbols)
 from sympy.functions.elementary.complexes import Abs
+from sympy.functions.elementary.trigonometric import cos
 from sympy.polys.polytools import Poly
 from sympy.matrices import \
     Matrix, MutableSparseMatrix, ImmutableSparseMatrix, SparseMatrix, eye, \
@@ -677,6 +678,12 @@ def test_sparse_solve():
     assert A*s == A[:, 0]
     s = A.solve_least_squares(A[:, 0], 'LDL')
     assert A*s == A[:, 0]
+    # Complex matrices must use the conjugate transpose (self.H), not self.T
+    Ac = SparseMatrix([[1], [S.ImaginaryUnit]])
+    bc = SparseMatrix([1, 1])
+    sc = Ac.solve_least_squares(bc, 'LDL')
+    assert sc == SparseMatrix([(1 - S.ImaginaryUnit)/2])
+    assert (Ac*sc - bc).norm() == 1
 
 
 def test_lower_triangular_solve():
@@ -744,3 +751,13 @@ def test_hermitian():
     assert a.is_hermitian is None
     a[0, 1] = a[1, 0]*I
     assert a.is_hermitian is False
+
+
+def test_sparse_applyfunc():
+    m = SparseMatrix([[0, 5], [0, 0]])
+    assert m.applyfunc(lambda x: x + 1) == SparseMatrix([[1, 6], [1, 1]])
+    assert m.applyfunc(lambda x: 2*x) == SparseMatrix([[0, 10], [0, 0]])
+    assert m.applyfunc(lambda x: x - 5).todok() == {(0, 0): -5, (1, 0): -5, (1, 1): -5}
+
+    im = ImmutableSparseMatrix([[0, pi], [0, 0]])
+    assert im.applyfunc(cos) == ImmutableSparseMatrix([[1, -1], [1, 1]])

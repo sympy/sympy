@@ -622,10 +622,10 @@ class LatexPrinter(Printer):
                 if self._needs_mul_brackets(numer, last=True):
                     tex += r"\frac{1}{%s}%s\left(%s\right)" \
                         % (sdenom, separator, snumer)
-                elif numer.is_Mul:
+                elif isinstance(numer, Mul):
                     # split a long numerator
-                    a = S.One
-                    b = S.One
+                    a: Expr = S.One
+                    b: Expr = S.One
                     for x in numer.args:
                         if self._needs_mul_brackets(x, last=False) or \
                                 len(convert(a*x).split()) > ratio*ldenom or \
@@ -681,7 +681,7 @@ class LatexPrinter(Printer):
             elif self._settings['fold_frac_powers'] and q != 1:
                 base = self.parenthesize(expr.base, PRECEDENCE['Pow'])
                 # issue #12886: add parentheses for superscripts raised to powers
-                if expr.base.is_Symbol:
+                if expr.base.is_Symbol or (expr.base.is_Float and not expr.base.is_negative):
                     base = self.parenthesize_super(base)
                 if expr.base.is_Function:
                     return self._print(expr.base, exp="%s/%s" % (p, q))
@@ -689,6 +689,8 @@ class LatexPrinter(Printer):
             elif expr.exp.is_negative and expr.base.is_commutative:
                 # special case for 1^(-x), issue 9216
                 if expr.base == 1:
+                    if expr.exp == -1:
+                        return r"\frac{1}{1}"
                     return r"%s^{%s}" % (expr.base, expr.exp)
                 # special case for (1/x)^(-y) and (-1/-x)^(-y), issue 20252
                 if expr.base.is_Rational:
@@ -823,7 +825,7 @@ class LatexPrinter(Printer):
                 lower = self._print(expr.lower)
             else:
                 lower = self._print(S.Zero)
-            interval = '{lower}\\mathrel{{..}}\\nobreak {upper}'.format(
+            interval = '{lower}\\mathrel{{..}}{upper}'.format(
                     lower = lower, upper = upper)
             return '{{{label}}}_{{{interval}}}'.format(
                 label = label, interval = interval)
@@ -853,7 +855,8 @@ class LatexPrinter(Printer):
             tex = r"\frac{%s^{%s}}{%s}" % (diff_symbol, self._print(dim), tex)
 
         precedence = PRECEDENCE["Mul"]
-        if self._settings['mul_symbol']:
+        if (self._settings['mul_symbol'] or
+                precedence_traditional(expr.expr) == precedence):
             # Nudge up the precedence so d/dx (f(x) * g(x)) also gets parenthesized
             precedence += 1
         if any(i.could_extract_minus_sign() for i in expr.args):
@@ -1153,14 +1156,16 @@ class LatexPrinter(Printer):
 
     def _print_Not(self, e):
         from sympy.logic.boolalg import (Equivalent, Implies)
-        if isinstance(e.args[0], Equivalent):
-            return self._print_Equivalent(e.args[0], r"\not\Leftrightarrow")
-        if isinstance(e.args[0], Implies):
-            return self._print_Implies(e.args[0], r"\not\Rightarrow")
-        if (e.args[0].is_Boolean):
-            return r"\neg \left(%s\right)" % self._print(e.args[0])
+        from sympy.sets.contains import Contains
+        arg = e.args[0]
+        if isinstance(arg, Equivalent):
+            return self._print_Equivalent(arg, r"\not\Leftrightarrow")
+        if isinstance(arg, Implies):
+            return self._print_Implies(arg, r"\not\Rightarrow")
+        if (arg.is_Boolean or arg.is_Relational or isinstance(arg, Contains)) and not arg.is_Not:
+            return r"\neg \left(%s\right)" % self._print(arg)
         else:
-            return r"\neg %s" % self._print(e.args[0])
+            return r"\neg %s" % self._print(arg)
 
     def _print_LogOp(self, args, char):
         arg = args[0]
@@ -1840,6 +1845,9 @@ class LatexPrinter(Printer):
             else:
                 return r"%s^{%s}" % (s, adjoint_style)
 
+    def _print_Conjugate(self, expr, exp=None):
+        return self._print_conjugate(expr, exp=exp)
+
     def _print_MatMul(self, expr):
         from sympy import MatMul
 
@@ -1967,7 +1975,7 @@ class LatexPrinter(Printer):
         block_str = r'\begin{%MATSTR%}%s\end{%MATSTR%}'
         block_str = block_str.replace('%MATSTR%', mat_str)
         if mat_str == 'array':
-            block_str = block_str.replace('%s', '{' + 'c'*expr.shape[0] + '}%s')
+            block_str = block_str.replace('%s', '{%COLS%}%s')
 
         if self._settings['mat_delim']:
             left_delim: str = self._settings['mat_delim']
@@ -1975,8 +1983,11 @@ class LatexPrinter(Printer):
             block_str = r'\left' + left_delim + block_str + \
                         r'\right' + right_delim
 
-        if expr.ndim == 0:
-            return block_str % ""
+        def block(content, ncols):
+            return block_str.replace('%COLS%', 'c'*ncols) % content
+
+        if 0 in expr.shape:
+            return block("", 0)
 
         level_str: list[list[str]] = [[] for i in range(expr.ndim + 1)]
         shape_ranges = [list(range(i)) for i in expr.shape]
@@ -1991,7 +2002,8 @@ class LatexPrinter(Printer):
                         r" & ".join(level_str[back_outer_i+1]))
                 else:
                     level_str[back_outer_i].append(
-                        block_str % (r"\\".join(level_str[back_outer_i+1])))
+                        block(r"\\".join(level_str[back_outer_i+1]),
+                              expr.shape[back_outer_i+1]))
                     if len(level_str[back_outer_i+1]) == 1:
                         level_str[back_outer_i][-1] = r"\left[" + \
                             level_str[back_outer_i][-1] + r"\right]"
@@ -2001,7 +2013,7 @@ class LatexPrinter(Printer):
         out_str = level_str[0][0]
 
         if expr.ndim % 2 == 1:
-            out_str = block_str % out_str
+            out_str = block(out_str, expr.shape[0])
 
         return out_str
 
@@ -2889,10 +2901,16 @@ class LatexPrinter(Printer):
     def _print_Quaternion(self, expr):
         # TODO: This expression is potentially confusing,
         # shall we print it as `Quaternion( ... )`?
-        s = [self.parenthesize(i, PRECEDENCE["Mul"], strict=True)
-             for i in expr.args]
-        a = [s[0]] + [i+" "+j for i, j in zip(s[1:], "ijk")]
-        return " + ".join(a)
+        tex = ""
+        for c, unit in zip(expr.args, ("", " i", " j", " k")):
+            neg = c.could_extract_minus_sign()
+            term = self.parenthesize(-c if neg else c, PRECEDENCE["Mul"],
+                                     strict=True) + unit
+            if tex:
+                tex += (" - " if neg else " + ") + term
+            else:
+                tex = ("- " if neg else "") + term
+        return tex
 
     def _print_QuotientRing(self, R):
         # TODO nicer fractions for few generators...
@@ -3030,6 +3048,8 @@ class LatexPrinter(Printer):
 
     def _print_mpq(self, expr):
         return str(expr)
+
+    _print_PythonMPQ = _print_mpq
 
     def _print_fmpz(self, expr):
         return str(expr)

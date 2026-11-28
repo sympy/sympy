@@ -3382,6 +3382,12 @@ def test_sympy__matrices__expressions__adjoint__Adjoint():
     assert _test_args(Adjoint(MatrixSymbol('A', 3, 5)))
 
 
+def test_sympy__matrices__expressions__conjugate__Conjugate():
+    from sympy.matrices.expressions.conjugate import Conjugate
+    from sympy.matrices.expressions import MatrixSymbol
+    assert _test_args(Conjugate(MatrixSymbol('A', 3, 5)))
+
+
 def test_sympy__matrices__expressions__trace__Trace():
     from sympy.matrices.expressions.trace import Trace
     from sympy.matrices.expressions import MatrixSymbol

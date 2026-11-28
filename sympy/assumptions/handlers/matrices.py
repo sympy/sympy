@@ -9,10 +9,10 @@ from sympy.assumptions import Q
 from sympy.assumptions.ask import _ask_recursive
 from sympy.assumptions.handlers import test_closed_group
 from sympy.matrices import MatrixBase
-from sympy.matrices.expressions import (BlockMatrix, BlockDiagMatrix, Determinant,
-    DiagMatrix, DiagonalMatrix, HadamardProduct, Identity, Inverse, MatAdd, MatMul,
-    MatPow, MatrixExpr, MatrixSlice, MatrixSymbol, OneMatrix, Trace, Transpose,
-    ZeroMatrix)
+from sympy.matrices.expressions import (Adjoint, BlockMatrix, BlockDiagMatrix, Conjugate,
+    Determinant, DiagMatrix, DiagonalMatrix, HadamardProduct, Identity, Inverse,
+    MatAdd, MatMul, MatPow, MatrixExpr, MatrixSlice, MatrixSymbol, OneMatrix,
+    Trace, Transpose, ZeroMatrix)
 from sympy.matrices.expressions.blockmatrix import reblock_2x2
 from sympy.matrices.expressions.factorizations import Factorization
 from sympy.matrices.expressions.fourier import DFT
@@ -83,7 +83,7 @@ def _(expr, assumptions):
     if Q.symmetric(expr) in conjuncts(assumptions):
         return True
 
-@SymmetricPredicate.register_many(OneMatrix, ZeroMatrix)
+@SymmetricPredicate.register_many(OneMatrix, ZeroMatrix, DiagonalMatrix, DiagMatrix)
 def _(expr, assumptions):
     return _ask_recursive(Q.square(expr), assumptions)
 
@@ -152,7 +152,7 @@ def _(expr, assumptions):
 def _(expr, assumptions):
     return expr.shape[0] == 1 and expr.shape[1] == 1
 
-@InvertiblePredicate.register(Transpose)
+@InvertiblePredicate.register_many(Transpose, Adjoint, Conjugate)
 def _(expr, assumptions):
     return _ask_recursive(Q.invertible(expr.arg), assumptions)
 
@@ -297,7 +297,7 @@ def _(expr, assumptions):
     if Q.unitary(expr) in conjuncts(assumptions):
         return True
 
-@UnitaryPredicate.register_many(Inverse, Transpose)
+@UnitaryPredicate.register_many(Inverse, Transpose, Adjoint, Conjugate)
 def _(expr, assumptions):
     return _ask_recursive(Q.unitary(expr.arg), assumptions)
 
@@ -349,7 +349,7 @@ def _(expr, assumptions):
 def _(expr, assumptions):
     return expr.shape[0] == 1 and expr.shape[1] == 1
 
-@FullRankPredicate.register_many(Inverse, Transpose)
+@FullRankPredicate.register_many(Inverse, Transpose, Adjoint, Conjugate)
 def _(expr, assumptions):
     return _ask_recursive(Q.fullrank(expr.arg), assumptions)
 
@@ -447,7 +447,7 @@ def _(expr, assumptions):
     if Q.upper_triangular(expr) in conjuncts(assumptions):
         return True
 
-@UpperTriangularPredicate.register_many(Identity, ZeroMatrix)
+@UpperTriangularPredicate.register_many(Identity, ZeroMatrix, DiagonalMatrix, DiagMatrix)
 def _(expr, assumptions):
     return True
 
@@ -505,7 +505,7 @@ def _(expr, assumptions):
     if Q.lower_triangular(expr) in conjuncts(assumptions):
         return True
 
-@LowerTriangularPredicate.register_many(Identity, ZeroMatrix)
+@LowerTriangularPredicate.register_many(Identity, ZeroMatrix, DiagonalMatrix, DiagMatrix)
 def _(expr, assumptions):
     return True
 
@@ -575,7 +575,7 @@ def _(expr, assumptions):
 def _(expr, assumptions):
     return expr.shape[0] == 1 and expr.shape[1] == 1
 
-@DiagonalPredicate.register_many(Inverse, Transpose)
+@DiagonalPredicate.register_many(Inverse, Transpose, Adjoint, Conjugate)
 def _(expr, assumptions):
     return _ask_recursive(Q.diagonal(expr.arg), assumptions)
 
@@ -647,6 +647,10 @@ def _(expr, assumptions):
 def _(expr, assumptions):
     return BM_elements(Q.integer_elements, expr, assumptions)
 
+@IntegerElementsPredicate.register_many(DiagMatrix, DiagonalMatrix)
+def _(expr, assumptions):
+    return _ask_recursive(Q.integer_elements(expr.args[0]), assumptions)
+
 
 # RealElementsPredicate
 
@@ -680,6 +684,10 @@ def _(expr, assumptions):
 def _(expr, assumptions):
     return BM_elements(Q.real_elements, expr, assumptions)
 
+@RealElementsPredicate.register_many(DiagMatrix, DiagonalMatrix)
+def _(expr, assumptions):
+    return _ask_recursive(Q.real_elements(expr.args[0]), assumptions)
+
 
 # ComplexElementsPredicate
 
@@ -712,6 +720,10 @@ def _(expr, assumptions):
 @ComplexElementsPredicate.register(BlockMatrix)
 def _(expr, assumptions):
     return BM_elements(Q.complex_elements, expr, assumptions)
+
+@ComplexElementsPredicate.register_many(DiagMatrix, DiagonalMatrix)
+def _(expr, assumptions):
+    return _ask_recursive(Q.complex_elements(expr.args[0]), assumptions)
 
 @ComplexElementsPredicate.register(DFT)
 def _(expr, assumptions):

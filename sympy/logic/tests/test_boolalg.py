@@ -4,7 +4,7 @@ from sympy.assumptions.refine import refine
 from sympy.core.numbers import oo
 from sympy.core.relational import Equality, Eq, Ne
 from sympy.core.singleton import S
-from sympy.core.symbol import (Dummy, symbols)
+from sympy.core.symbol import (Dummy, Symbol, symbols)
 from sympy.functions import Piecewise
 from sympy.functions.elementary.trigonometric import cos, sin
 from sympy.sets.sets import Interval, Union
@@ -1368,6 +1368,13 @@ def test_issue_26985():
     assert result == d
 
 
+def test_evaluate_false_atoms():
+    # https://github.com/sympy/sympy/issues/31133
+    for op in (And, Or):
+        expr = op(x > 1, y > 2, evaluate=False)
+        assert expr.atoms(Symbol) == {x, y}
+
+
 def test_evaluate_false():
     x, y = symbols('x y')
 
@@ -1467,3 +1474,14 @@ def test_simplify_logic_dontcare_issue_28369():
 
    # Test 2: Fast path form check
    assert simplify_logic(A | B, dontcare=A, form='dnf') == B
+
+
+def test_simplify_univariate_endpoints():
+    assert simplify(~((x > 2) & (x < 5))) == (x <= 2) | (x >= 5)
+    assert simplify(~((x >= 2) & (x <= 5))) == (x < 2) | (x > 5)
+    assert simplify(~((x >= 2) & (x < 5))) == (x < 2) | (x >= 5)
+    assert simplify(~((x > 2) & (x <= 5))) == (x <= 2) | (x > 5)
+    expr = ~((x > 2) & (x < 4)) & ~((x > 5) & (x < 7))
+    res = simplify(expr)
+    for v in range(9):
+        assert res.subs(x, v) == expr.subs(x, v)

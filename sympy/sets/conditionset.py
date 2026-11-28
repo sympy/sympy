@@ -227,21 +227,16 @@ with
 
     def _eval_subs(self, old, new):
         sym, cond, base = self.args
-        dsym = sym.subs(old, adummy)
-        insym = dsym.has(adummy)
-        # prioritize changing a symbol in the base
-        newbase = base.subs(old, new)
-        if newbase != base:
-            if not insym:
-                cond = cond.subs(old, new)
-            return self.func(sym, cond, newbase)
-        if insym:
-            pass  # no change of bound symbols via subs
-        elif getattr(new, '_diff_wrt', False):
-            cond = cond.subs(old, new)
-        else:
-            pass  # let error about the symbol raise from __new__
-        return self.func(sym, cond, base)
+
+        # Leave bound symbols unchanged in the condition.
+        if sym.subs(old, adummy).has(adummy):
+            return self.func(sym, cond, base.subs(old, new))
+
+        cond = cond.subs(old, new)
+        if cond is S.false:
+            return S.EmptySet
+
+        return self.func(sym, cond, base.subs(old, new))
 
     def _kind(self):
         return SetKind(self.sym.kind)

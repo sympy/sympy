@@ -500,7 +500,7 @@ accessed from the muscle actuator models:
    :nofigs:
 
    >>> biceps.rhs()
-   Matrix([[((1/2 - tanh(10.0*a_biceps(t) - 10.0*e_biceps(t))/2)/(0.0225*a_biceps(t) + 0.0075) + 16.6666666666667*(3*a_biceps(t)/2 + 1/2)*(tanh(10.0*a_biceps(t) - 10.0*e_biceps(t))/2 + 1/2))*(-a_biceps(t) + e_biceps(t))]])
+   Matrix([[(16.6666666666667*(3*a_biceps(t)/2 + 1/2)*(tanh(10.0*a_biceps(t) - 10.0*e_biceps(t))/2 + 1/2) + (1/2 - tanh(10.0*a_biceps(t) - 10.0*e_biceps(t))/2)/(0.0225*a_biceps(t) + 0.0075))*(e_biceps(t) - a_biceps(t))]])
 
 .. plot::
    :format: doctest
@@ -509,7 +509,7 @@ accessed from the muscle actuator models:
    :nofigs:
 
    >>> triceps.rhs()
-   Matrix([[((1/2 - tanh(10.0*a_triceps(t) - 10.0*e_triceps(t))/2)/(0.0225*a_triceps(t) + 0.0075) + 16.6666666666667*(3*a_triceps(t)/2 + 1/2)*(tanh(10.0*a_triceps(t) - 10.0*e_triceps(t))/2 + 1/2))*(-a_triceps(t) + e_triceps(t))]])
+   Matrix([[(16.6666666666667*(3*a_triceps(t)/2 + 1/2)*(tanh(10.0*a_triceps(t) - 10.0*e_triceps(t))/2 + 1/2) + (1/2 - tanh(10.0*a_triceps(t) - 10.0*e_triceps(t))/2)/(0.0225*a_triceps(t) + 0.0075))*(e_triceps(t) - a_triceps(t))]])
 
 Store the muscle activation differential equations together in a matrix:
 

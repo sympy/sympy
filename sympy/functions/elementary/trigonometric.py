@@ -23,8 +23,10 @@ from sympy.ntheory import factorint
 from sympy.polys.specialpolys import symmetric_poly
 from sympy.utilities.iterables import numbered_symbols
 from typing import TYPE_CHECKING
+from typing import cast
 
 if TYPE_CHECKING:
+    from typing import ClassVar
     from sympy.core.expr import Expr
 
 
@@ -47,6 +49,11 @@ def _imaginary_unit_as_coefficient(arg):
 
 class TrigonometricFunction(DefinedFunction):
     """Base class for trigonometric functions. """
+
+    if TYPE_CHECKING:
+        @property
+        def args(self) -> tuple[Expr]:
+            ...
 
     unbranched = True
     _singularities = (S.ComplexInfinity,)
@@ -272,7 +279,7 @@ class sin(TrigonometricFunction):
     >>> sin(pi/6)
     1/2
     >>> sin(pi/12)
-    -sqrt(2)/4 + sqrt(6)/4
+    sqrt(6)/4 - sqrt(2)/4
 
 
     See Also
@@ -871,7 +878,7 @@ class cos(TrigonometricFunction):
         apart = ipartfrac(*denoms)
         decomp = (pi_coeff.p * Rational(n, d) for n, d in zip(apart, denoms))
         X = [(x[1], x[0]*pi) for x in zip(decomp, numbered_symbols('z'))]
-        pcls = cos(sum(x[0] for x in X))._eval_expand_trig().subs(X)
+        pcls = cast('cos', cos(sum(x[0] for x in X)))._eval_expand_trig().subs(X)
 
         if not FC or len(FC) == 1:
             return pcls
@@ -986,7 +993,7 @@ class tan(TrigonometricFunction):
     >>> tan(1).diff(x)
     0
     >>> tan(pi/8).expand()
-    -1 + sqrt(2)
+    sqrt(2) - 1
 
     See Also
     ========
@@ -1645,7 +1652,8 @@ class cot(TrigonometricFunction):
 class ReciprocalTrigonometricFunction(TrigonometricFunction):
     """Base class for reciprocal functions of trigonometric functions. """
 
-    _reciprocal_of = None       # mandatory, to be defined in subclass
+    # mandatory, to be defined in subclass
+    _reciprocal_of: ClassVar[type[TrigonometricFunction]]
     _singularities = (S.ComplexInfinity,)
 
     is_zero = False # Assuming that the subclasses are sec and csc

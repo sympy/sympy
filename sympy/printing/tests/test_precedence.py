@@ -1,7 +1,9 @@
 from __future__ import annotations
 from sympy.concrete.products import Product
 from sympy.concrete.summations import Sum
+from sympy.core.expr import UnevaluatedExpr
 from sympy.core.function import Derivative, Function
+from sympy.core.mul import Mul
 from sympy.core.numbers import Integer, Rational, Float, oo
 from sympy.core.relational import Rel
 from sympy.core.symbol import symbols
@@ -9,7 +11,8 @@ from sympy.functions import sin
 from sympy.integrals.integrals import Integral
 from sympy.series.order import Order
 
-from sympy.printing.precedence import precedence, PRECEDENCE
+from sympy.printing.precedence import (precedence, precedence_traditional,
+    PRECEDENCE)
 
 x, y = symbols("x,y")
 
@@ -32,6 +35,12 @@ def test_Integral():
 def test_Mul():
     assert precedence(x*y) == PRECEDENCE["Mul"]
     assert precedence(-x*y) == PRECEDENCE["Add"]
+    assert precedence_traditional(x*y) == PRECEDENCE["Mul"]
+    assert precedence_traditional(-x*y) == PRECEDENCE["Add"]
+
+    e = Mul(-1, UnevaluatedExpr(x + y), evaluate=False)
+    assert precedence(e) == PRECEDENCE["Mul"]
+    assert precedence_traditional(e) == PRECEDENCE["Add"]
 
 
 def test_Number():

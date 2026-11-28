@@ -75,6 +75,14 @@ def test_horner():
     assert horner(4*x**2*y**2 + 2*x**2*y + 2*x*y**2 + x*y, wrt=y) == ((
         4*x + 2)*y*x + (2*x + 1)*x)*y
 
+    assert horner(0, gens=(x, y)) == 0
+
+    f = x*y + x*y**2 + x**2*y
+    assert horner(f, gens=[y, x]) == y*(x*y + x*(x + 1))
+
+    f = x*y*z + x*y*z**2 + x*y**2*z + x**2*y*z
+    assert horner(f, gens=(x, y, z)) == x*(x*y*z + y*(y*z + z*(z + 1)))
+
 
 def test_interpolate():
     assert interpolate([1, 4, 9, 16], x) == x**2
