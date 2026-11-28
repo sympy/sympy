@@ -2198,7 +2198,7 @@ def Gompertz(name, b, eta):
 class KumaraswamyDistribution(SingleContinuousDistribution):
     _argnames = ('a', 'b')
 
-    set = Interval(0, oo)
+    set = Interval(0, 1)
 
     @staticmethod
     def check(a, b):
