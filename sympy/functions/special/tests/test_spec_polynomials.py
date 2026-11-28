@@ -197,6 +197,7 @@ def test_legendre():
 def test_legendre_q():
     from sympy.functions.special.polynomials import legendre_q
     from sympy.functions.elementary.hyperbolic import atanh
+    from sympy.functions.special.hyper import hyper
     import mpmath
 
     assert legendre_q(0, x) == atanh(x)
@@ -212,6 +213,23 @@ def test_legendre_q():
     assert abs(result - expected) < 1e-10
 
     assert legendre_q(-5, x).func == legendre_q
+
+    expr = legendre_q(S.Half, S.Half).rewrite(hyper)
+    expected = mpmath.legenq(0.5, 0, 0.5)
+    assert expr.has(hyper)
+    assert abs(expr.evalf() - expected) < 1e-12
+
+    expr = legendre_q(S.Half, S(1)/5).rewrite(hyper)
+    expected = mpmath.legenq(0.5, 0, 0.2)
+    assert abs(expr.evalf() - expected) < 1e-12
+
+    expr = legendre_q(-S.Half, S.Half).rewrite(hyper)
+    expected = mpmath.legenq(-0.5, 0, 0.5)
+    assert abs(expr.evalf() - expected) < 1e-12
+
+    expr = legendre_q(S.Half, 2).rewrite(hyper)
+    expected = mpmath.legenq(0.5, 0, 2)
+    assert abs(expr.evalf() - expected) < 1e-12
 
     n = Symbol('n')
     assert legendre_q(n, x).func == legendre_q
