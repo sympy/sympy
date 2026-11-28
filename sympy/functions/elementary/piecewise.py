@@ -366,11 +366,19 @@ class Piecewise(DefinedFunction):
                     if len(free) == 1:
                         from sympy.solvers.inequalities import (
                             reduce_inequalities, _solve_inequality)
-                        try:
-                            t = reduce_inequalities(andargs, free[0])
-                            # ValueError when there are potentially
-                            # nonvanishing imaginary parts
-                        except (ValueError, NotImplementedError):
+                        t = None
+                        # reduce_inequalities would also restrict the symbol
+                        # to where the expressions are real, e.g.
+                        # Ne(log(y), 0) would become (y > 0) & Ne(y, 1) and
+                        # lose y = -2
+                        if not any(isinstance(a, (Eq, Ne)) for a in andargs):
+                            try:
+                                t = reduce_inequalities(andargs, free[0])
+                            except (ValueError, NotImplementedError):
+                                # ValueError when there are potentially
+                                # nonvanishing imaginary parts
+                                pass
+                        if t is None:
                             # at least isolate free symbol on left
                             t = And(*[_solve_inequality(
                                 a, free[0], linear=True)

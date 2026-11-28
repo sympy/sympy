@@ -780,7 +780,7 @@ def test_integrate_returns_piecewise():
     assert integrate(x*sin(n*x), x) == Piecewise(
         (-x*cos(n*x)/n + sin(n*x)/n**2, Ne(n, 0)), (0, True))
     assert integrate(exp(x*y), (x, 0, z)) == Piecewise(
-        (exp(y*z)/y - 1/y, (y > -oo) & (y < oo) & Ne(y, 0)), (z, True))
+        (exp(y*z)/y - 1/y, Ne(y, 0)), (z, True))
     # https://github.com/sympy/sympy/issues/23707
     assert integrate(exp(t)*exp(-t*sqrt(x - y)), t) == Piecewise(
         (-exp(t)/(sqrt(x - y)*exp(t*sqrt(x - y)) - exp(t*sqrt(x - y))),
@@ -1753,7 +1753,7 @@ def test_issue_15509():
     N = CoordSys3D('N')
     x = N.x
     assert integrate(cos(a*x + b), (x, x_1, x_2), heurisch=True) == Piecewise(
-        (-sin(a*x_1 + b)/a + sin(a*x_2 + b)/a, (a > -oo) & (a < oo) & Ne(a, 0)), \
+        (-sin(a*x_1 + b)/a + sin(a*x_2 + b)/a, Ne(a, 0)), \
             (-x_1*cos(b) + x_2*cos(b), True))
 
 
@@ -1868,7 +1868,7 @@ def test_issue_7827():
         Sum(Piecewise((-cos(n*x)/n, Ne(n, 0)), (0, True)), (n, 1, N))
     assert integrate(integrate(summation(sin(n*x), (n,1,N)), x), x) == \
         Piecewise((Sum(Piecewise((-sin(n*x)/n**2, Ne(n, 0)), (-x/n, True)),
-        (n, 1, N)), (n > -oo) & (n < oo) & Ne(n, 0)), (0, True))
+        (n, 1, N)), Ne(n, 0)), (0, True))
     assert integrate(Sum(x, (n, 1, M)), x) == M*x**2/2
     raises(ValueError, lambda: integrate(Sum(x, (x, y, n)), y))
     raises(ValueError, lambda: integrate(Sum(x, (x, 1, n)), n))
@@ -1918,7 +1918,7 @@ def test_issue_5547():
 
     assert integrate(r0**2*cos(R0*z)**2, (z, -L/2, L/2)) == Piecewise(
         (-r0**2*(-L*R0/4 - sin(L*R0/2)*cos(L*R0/2)/2)/R0 +
-         r0**2*(L*R0/4 + sin(L*R0/2)*cos(L*R0/2)/2)/R0, (R0 > -oo) & (R0 < oo) & Ne(R0, 0)),
+         r0**2*(L*R0/4 + sin(L*R0/2)*cos(L*R0/2)/2)/R0, Ne(R0, 0)),
         (L*r0**2, True))
 
     w = 2*pi*z/L
@@ -2432,3 +2432,16 @@ def test_reverse_limits():
     L = Integral(x*y, (x, a, b), y)
     assert L.reverse_limits() == Integral(-x*y, (x, b, a), y)
     assert L.reverse_limits(x) == Integral(-x*y, (x, b, a), y)
+
+
+def test_piecewise_condition_with_Ne_not_restricted_to_reals():
+    # issue 31017: Ne(log(y), 0) was narrowed to (y > 0) & Ne(y, 1), so the
+    # value for y = 1 was used for every y <= 0
+    r = integrate(y**x, (x, 0, 2))
+    assert r == Piecewise((y**2/log(y) - 1/log(y), Ne(log(y), 0)), (2, True))
+    assert r.subs(y, -2) == 3/log(-2)
+    # a complex value of y can be substituted
+    r = integrate(exp(x*y), (x, 0, z))
+    assert r.subs(y, I) == -I*exp(I*z) + I
+    r = integrate(Piecewise((x, Eq(y, I)), (2*x, True)), (x, 0, 1))
+    assert r == Piecewise((S.Half, Eq(y, I)), (1, True))
