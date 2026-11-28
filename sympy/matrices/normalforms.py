@@ -174,3 +174,4 @@ def hermite_normal_decomp(A):
     """
     H,U = _hnd(A._rep)
     return H.to_Matrix() , U.to_Matrix()
+
