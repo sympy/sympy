@@ -1210,6 +1210,15 @@ def test_atan2():
 
     assert atan2(y, x).rewrite(log) == -I*log((x + I*y)/sqrt(x**2 + y**2))
     assert atan2(0, 0) is S.NaN
+    assert atan2(0, zoo) is S.NaN
+    assert atan2(0, nan) is S.NaN
+    assert atan2(nan, 0) is S.NaN
+    assert atan2(zoo, 0) is S.NaN
+    assert atan2(1, zoo) is S.NaN
+    assert atan2(zoo, 1) is S.NaN
+    assert atan2(zoo, zoo) is S.NaN
+    assert atan2(nan, zoo) is S.NaN
+    assert atan2(zoo, nan) is S.NaN
 
     ex = atan2(y, x) - arg(x + I*y)
     assert ex.subs({x:2, y:3}).rewrite(arg) == 0

@@ -2478,3 +2478,12 @@ def test__unevaluated_Mul():
 def test_Float_zero_division_error():
     # issue 27165
     assert Float('1.7567e-1417').round(15) == Float(0)
+
+
+def test_issue_28926_is_constant_equals_no_typeerror():
+    from sympy.functions.elementary.trigonometric import atan2
+    a = Symbol('a')
+    dif = 1 - atan2(a, 2/a)
+    assert dif.equals(0) is None
+    assert dif.is_constant() is False
+    assert atan2(a, 2/a).equals(0) is False
