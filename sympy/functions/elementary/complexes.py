@@ -1127,8 +1127,12 @@ class polar_lift(DefinedFunction):
 
 
 def unbranched_argument(ar):
-    '''
-    Returns periodic argument of arg with period as infinity.
+    """
+    Return the unbranched argument of a polar number.
+
+    This is the argument on the full Riemann surface of the logarithm, without
+    reducing it to a finite branch interval. Equivalently, this returns
+    ``periodic_argument(arg, oo)``.
 
     Examples
     ========
@@ -1144,7 +1148,7 @@ def unbranched_argument(ar):
     ========
 
     periodic_argument
-    '''
+    """
     from sympy.functions.elementary.exponential import exp_polar, log
     if isinstance(ar, principal_branch):
         return periodic_argument(*ar.args)
