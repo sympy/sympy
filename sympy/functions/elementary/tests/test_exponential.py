@@ -3,14 +3,17 @@ from sympy.assumptions.refine import refine
 from sympy.calculus.accumulationbounds import AccumBounds
 from sympy.concrete.products import Product
 from sympy.concrete.summations import Sum
-from sympy.core.function import expand_log
+from sympy.core.function import (
+    ArgumentIndexError, Derivative, expand, expand_log)
 from sympy.core.numbers import (E, Float, I, Rational, nan, oo, pi, zoo)
+from sympy.core.parameters import global_parameters
 from sympy.core.power import Pow
 from sympy.core.singleton import S
 from sympy.core.symbol import (Symbol, symbols)
 from sympy.functions.combinatorial.factorials import factorial
 from sympy.functions.elementary.complexes import (adjoint, conjugate, re, sign, transpose)
-from sympy.functions.elementary.exponential import (LambertW, exp, exp_polar, log)
+from sympy.functions.elementary.exponential import (
+    LambertW, _linear_slope, exp, exp_polar, log, match_real_imag)
 from sympy.functions.elementary.hyperbolic import (cosh, sinh, tanh)
 from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.functions.elementary.trigonometric import (cos, sin, tan)
@@ -18,11 +21,9 @@ from sympy.matrices.expressions.matexpr import MatrixSymbol
 from sympy.polys.polytools import gcd
 from sympy.series.order import O
 from sympy.simplify.simplify import simplify
-from sympy.core.parameters import global_parameters
-from sympy.functions.elementary.exponential import match_real_imag
+from sympy.tensor.indexed import IndexedBase
 from sympy.abc import x, y, z
 from sympy.core.expr import unchanged
-from sympy.core.function import ArgumentIndexError
 from sympy.testing.pytest import raises, XFAIL, _both_exp_pow
 
 
@@ -229,7 +230,179 @@ def test_exp_MatrixSymbol():
 
 def test_exp_fdiff():
     x = Symbol('x')
+    n = Symbol('n', integer=True, nonnegative=True)
+    a, b = symbols('a b')
     raises(ArgumentIndexError, lambda: exp(x).fdiff(2))
+    assert exp(x).diff((x, n)) == exp(x)
+    assert exp(a*x + b).diff((x, n)) == a**n*exp(a*x + b)
+    assert exp(2*x + 3).diff((x, 5)) == 2**5*exp(2*x + 3)
+
+def test_exp_linear_slope():
+    a, b = symbols('a b')
+
+    assert _linear_slope(x, x) == 1
+    assert _linear_slope(b, x) == 0
+    assert _linear_slope(a*x + b, x) == a
+    assert _linear_slope(a*(x + b), x) == a
+    assert _linear_slope(a*(b*(x + 1) + x), x) == a*(b + 1)
+    assert _linear_slope(a*x, x) == a
+    assert _linear_slope(Sum(b*x, (x, 0, 1)), x) == 0
+    assert _linear_slope(x**2, x) is None
+    assert _linear_slope(x*(x + a), x) is None
+    assert _linear_slope((x + 1)*(x + 2), x) is None
+    assert _linear_slope(x + sin(x), x) is None
+
+
+def test_exp_derivative_n_times_affine():
+    a, b = symbols('a b')
+    n = Symbol('n', integer=True, nonnegative=True)
+    X = IndexedBase('X')
+    A = Symbol('A', commutative=False)
+
+    assert exp(x).diff(x, 2) == exp(x)
+    assert exp(x).diff((x, 10**8)) == exp(x)
+
+    assert exp(x).diff((x, n)) == exp(x)
+    assert exp(X[0]).diff((X[0], n)) == exp(X[0])
+    assert exp(A).diff((A, n)) == exp(A)
+
+    assert exp(a*x + b).diff((x, 2)) == a**2*exp(a*x + b)
+    assert exp(a*x + b).diff((x, 3)) == a**3*exp(a*x + b)
+    assert exp(2*x + 3).diff((x, 5)) == 2**5*exp(2*x + 3)
+
+    assert exp(a*x + b).diff((x, n)) == a**n*exp(a*x + b)
+    assert exp(a*(x + b)).diff((x, n)) == a**n*exp(a*(x + b))
+    assert exp(a*(b*(x + 1) + x)).diff((x, n)) == (
+        (a*(b + 1))**n*exp(a*(b*(x + 1) + x)))
+
+    assert exp(a*x + b).diff((x, 0)) == exp(a*x + b)
+
+
+def test_exp_derivative_n_times_monomial():
+    a, b = symbols('a b')
+
+    positive_power_cases = [
+        (x**2, 2, 2*exp(x**2)*(2*x**2 + 1)),
+        (x**2, 5, 8*x*exp(x**2)*(4*x**4 + 20*x**2 + 15)),
+        (x**3, 4, 9*x**2*exp(x**3)*(9*x**6 + 36*x**3 + 20)),
+        (-x**3, 3, 3*exp(-x**3)*(-9*x**6 + 18*x**3 - 2)),
+        (x**2/2, 3, x*exp(x**2/2)*(x**2 + 3)),
+        (x**17, 3, 17*x**14*exp(x**17)*(289*x**34 + 816*x**17 + 240)),
+        (2*x**5, 5, 80*exp(2*x**5)*(
+            1250*x**20 + 5000*x**15 + 4500*x**10 + 750*x**5 + 3)),
+    ]
+    reciprocal_power_cases = [
+        (1/x, 4, exp(1/x)*(24 + 36/x + 12/x**2 + 1/x**3)/x**5),
+        (1/x**2, 4, 4*exp(1/x**2)*(30 + 75/x**2 + 36/x**4 + 4/x**6)/x**6),
+        (1/x**3, 3, -3*exp(1/x**3)*(20 + 36/x**3 + 9/x**6)/x**6),
+    ]
+    coefficient_cases = [
+        (I*x**2, 3, -4*x*exp(I*x**2)*(2*I*x**2 + 3)),
+        (pi*x**2, 3, 4*pi**2*x*exp(pi*x**2)*(2*pi*x**2 + 3)),
+        (a*x**3, 3, 3*a*exp(a*x**3)*(9*a**2*x**6 + 18*a*x**3 + 2)),
+        (2*a*x**3, 3, 12*a*exp(2*a*x**3)*(18*a**2*x**6 + 18*a*x**3 + 1)),
+        (a*x**3/2, 3, 3*a*exp(a*x**3/2)*(9*a**2*x**6/8 + 9*a*x**3/2 + 1)),
+        (a*b*x**3, 3, 3*a*b*exp(a*b*x**3)*(
+            9*a**2*b**2*x**6 + 18*a*b*x**3 + 2)),
+    ]
+
+    for arg, order, expected in (
+        positive_power_cases + reciprocal_power_cases + coefficient_cases
+    ):
+        assert exp(arg).diff((x, order)) == expected
+
+    assert exp(x**2).diff(x, 100).subs(x, 0) == factorial(100)/factorial(50)
+
+
+def test_exp_derivative_n_times_monomial_constant():
+    a, b = symbols('a b')
+
+    for arg in [
+        x**2 + 1,
+        3*x**2 + 5,
+        a*x**3 + b,
+        1/x + 3,
+    ]:
+        expr = exp(arg)
+        assert expand(expr.diff(x, 4) -
+                      expr.diff(x).diff(x).diff(x).diff(x)) == 0
+
+    assert exp(x**2 + 1).diff(x, 100).subs(x, 0) == (
+        E*factorial(100)/factorial(50))
+
+
+@_both_exp_pow
+def test_exp_derivative_n_times_pow_compat():
+    a, b = symbols('a b')
+
+    assert exp(x).diff((x, 5)) == exp(x)
+    assert exp(a*x + b).diff((x, 5)) == a**5*exp(a*x + b)
+    assert exp(x**2).diff((x, 5)) == (
+        8*x*exp(x**2)*(4*x**4 + 20*x**2 + 15))
+
+
+def test_exp_derivative_n_times_fallback():
+    a, b = symbols('a b')
+    n = Symbol('n', integer=True, nonnegative=True)
+    p = Symbol('p', integer=True, positive=True)
+    X = IndexedBase('X')
+    A, B = symbols('A B', commutative=False)
+
+    for order in [Symbol('k'), Symbol('k', integer=True), S.Half]:
+        assert exp(x).diff((x, order)) == Derivative(exp(x), (x, order))
+
+    assert exp(x**2).diff((x, n)) == Derivative(exp(x**2), (x, n))
+    assert exp(x*(x + a)).diff((x, n)) == (
+        Derivative(exp(x*(x + a)), (x, n)))
+
+    z = Symbol('z', integer=True, nonnegative=True)
+    for expr, var in [(exp(z*x), x), (exp(a*x + z**2), x),
+                      (exp(a*z + b), z)]:
+        assert expr.diff((var, z)) == Derivative(expr, (var, z))
+    assert exp(z*x).diff((x, z), (z, 1)) == Derivative(exp(z*x), (x, z), z)
+
+    assert exp(b).diff((x, p)) == 0
+    assert exp(b).diff((x, n)) == Derivative(exp(b), (x, n))
+    expr = exp(sin(x)**2 + cos(x)**2)
+    assert expr.diff(x, 3) == 0
+    assert expr.diff((x, n)) == Derivative(expr, (x, n))
+
+    i, j = symbols('i j', integer=True)
+    for expr in [exp(X[j]**2), exp(X[i]*X[j])]:
+        assert expr.diff(X[i], 2, simplify=False) == expr.diff(X[i]).diff(X[i])
+
+    expr = exp(A*x + B)
+    assert expr.diff(x, 3) == expr*A**3
+    assert expr.diff((x, n)) == Derivative(expr, (x, n))
+
+    for value in [oo, -oo, zoo]:
+        expr = exp(value*x)
+        assert expr.diff(x, 3) == value**3*expr
+        assert expr.diff((x, n)) == Derivative(exp(value*x), (x, n))
+
+    s = Symbol('s', infinite=True)
+    assert exp(s).diff((s, n)) == Derivative(exp(s), (s, n))
+    expr = exp(2*s + 1)
+    assert expr.diff((s, n)) == Derivative(expr, (s, n))
+
+    expr = exp(log(1 + x), evaluate=False)
+    for order in range(2, 6):
+        assert expr.diff(x, order) == 0
+        assert expr.diff(x, order, simplify=False) == 0
+
+    k = Symbol('k', integer=True)
+    assert exp(2*I*pi*k, evaluate=False).diff(k, 2) == 0
+    expr = exp(2*I*pi*k**2, evaluate=False)
+    assert expr.diff(k, 2, simplify=False) == expr.diff(k).diff(k)
+
+    for arg in [tan(x), x**2 + x, sin(x), exp(x), sqrt(x),
+                Float('0.3')*x**3]:
+        expr = exp(arg)
+        assert expr.diff(x, 3, simplify=False) == expr.diff(x).diff(x).diff(x)
+
+    expr = exp(x**2 + x)
+    expected = (8*x**3 + 12*x**2 + 18*x + 7)*exp(x**2 + x)
+    assert expand(expr.diff(x, 3, simplify=False)) == expand(expected)
 
 
 def test_log_values():

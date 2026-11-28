@@ -7,7 +7,7 @@ from sympy.core.function import (DefinedFunction, ArgumentIndexError, expand_log
     expand_mul, FunctionClass, PoleError, expand_multinomial, expand_complex)
 from sympy.core.logic import fuzzy_and, fuzzy_not, fuzzy_or
 from sympy.core.mul import Mul
-from sympy.core.numbers import Integer, Rational, pi, I
+from sympy.core.numbers import Float, Integer, Rational, pi, I
 from sympy.core.parameters import global_parameters
 from sympy.core.power import Pow
 from sympy.core.singleton import S
@@ -216,6 +216,35 @@ class exp_polar(ExpBase):
         if self.args[0] == 0:
             return self, S.One
         return ExpBase.as_base_exp(self)
+
+
+def _linear_slope(expr, s):
+    if expr == s:
+        return S.One
+    if not expr.has_free(s):
+        return S.Zero
+    if expr.is_Add:
+        coeffs = [_linear_slope(a, s) for a in expr.args]
+        if all(c is not None for c in coeffs):
+            return Add(*coeffs)
+    elif expr.is_Mul:
+        independent, dependent = expr.as_independent(s, as_Add=False)
+        if not dependent.is_Mul:
+            coefficient = _linear_slope(dependent, s)
+            if coefficient is not None:
+                return independent*coefficient
+    return None
+
+
+def _exp_monomial_derivative(expr, coefficient, s, exponent, n):
+    q = [1]
+    for order in range(n):
+        q = [(exponent*k - order)*q_current + exponent*q_previous
+             for k, (q_current, q_previous) in enumerate(
+                 zip(q + [0], [0] + q))]
+    return Add(*[Mul(q_current, coefficient**k,
+                     s**(exponent*k - n), expr)
+                 for k, q_current in enumerate(q) if q_current])
 
 
 class ExpMeta(FunctionClass):
@@ -563,6 +592,34 @@ class exp(ExpBase, metaclass=ExpMeta):
         if arg0.is_infinite is False:
             return exp(arg0)
         raise PoleError("Cannot expand %s around 0" % (self))
+
+    def _eval_derivative_n_times(self, s, n):
+        arg = self.args[0]
+        if (arg == s and n.is_integer and n.is_nonnegative
+                and not s.is_infinite):
+            return self
+        if n is S.One:
+            return self._eval_derivative(s)
+        if (n.is_integer and n.is_nonnegative
+                and s.is_Symbol and self.is_commutative
+                and not arg.has_free(*n.free_symbols)
+                and not arg.has(S.NaN, S.Infinity, S.NegativeInfinity,
+                                S.ComplexInfinity)
+                and not any(v.is_infinite for v in arg.free_symbols)):
+            slope = _linear_slope(arg, s)
+            if slope is not None:
+                if not slope.is_zero and self.func(arg) == self:
+                    return self*slope**n
+            elif n.is_Integer and not arg.has(Float):
+                _, dependent = arg.as_independent(s, as_Add=True)
+                coefficient, monomial = dependent.as_independent(
+                    s, as_Add=False)
+                base, exponent_of_s = monomial.as_base_exp()
+                if (base == s and exponent_of_s.is_Integer
+                        and self.func(arg) == self):
+                    return _exp_monomial_derivative(
+                        self, coefficient, s, int(exponent_of_s), int(n))
+        return super()._eval_derivative_n_times(s, n)
 
     def _eval_rewrite_as_sin(self, arg, **kwargs):
         from sympy.functions.elementary.trigonometric import sin
