@@ -31,7 +31,7 @@ from sympy.polys.domains.finitefield import FF
 from sympy.polys.domains.integerring import ZZ
 from sympy.polys.domains.rationalfield import QQ
 from sympy.polys.domains.realfield import RR
-from sympy.polys.orderings import (grlex, ilex)
+from sympy.polys.orderings import ProductOrder, grlex, ilex, lex
 from sympy.polys.polytools import groebner
 from sympy.polys.rootoftools import (RootSum, rootof)
 from sympy.series.formal import fps
@@ -5150,6 +5150,13 @@ GroebnerBasis⎝⎣2⋅x - y  - y + 1, y  + 2⋅y  - 3⋅y  - 16⋅y + 7⎦, x, 
 
     assert pretty(expr) == ascii_str
     assert upretty(expr) == ucode_str
+
+
+def test_GroebnerBasis_product_order():
+    order = ProductOrder((lex, lambda m: (m[0],)), (lex, lambda m: (m[1],)))
+    basis = groebner([y + 1], x, y, order=order)
+    assert pretty(basis) == (
+        'GroebnerBasis([y + 1], x, y, domain=ZZ, order=ProductOrder(lex, lex))')
 
 
 def test_pretty_UniversalSet():

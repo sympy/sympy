@@ -752,6 +752,11 @@ def test_RootSum():
         z, z**2), auto=False)) == "RootSum(w**5 + 2*w - 1, Lambda(w, w**2))"
 
 
+def test_GroebnerBasis_generator_order():
+    basis = groebner([x + y], y, x, order='lex')
+    assert str(basis) == "GroebnerBasis([y + x], y, x, domain='ZZ', order='lex')"
+
+
 def test_GroebnerBasis():
     assert str(groebner(
         [], x, y)) == "GroebnerBasis([], x, y, domain='ZZ', order='lex')"

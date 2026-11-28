@@ -398,7 +398,7 @@ basis is a univariate polynomial. Consider the following example::
 
     >>> groebner([f, c**2 + s**2 - 1])
                  ⎛⎡ 2    2       20      18       16       14      12    10⎤                           ⎞
-    GroebnerBasis⎝⎣c  + s  - 1, c   - 5⋅c   + 10⋅c   - 10⋅c   + 5⋅c   - c  ⎦, s, c, domain=ℤ, order=lex⎠
+    GroebnerBasis⎝⎣s  + c  - 1, c   - 5⋅c   + 10⋅c   - 10⋅c   + 5⋅c   - c  ⎦, s, c, domain=ℤ, order=lex⎠
 
 The result is an ordinary Python list, so we can easily apply a function to
 all its elements, for example we can factor those elements::

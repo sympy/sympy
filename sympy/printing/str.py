@@ -905,7 +905,7 @@ class StrPrinter(Printer):
     def _print_GroebnerBasis(self, basis):
         cls = basis.__class__.__name__
 
-        exprs = [self._print_Add(arg, order=basis.order) for arg in basis.exprs]
+        exprs = [self._print_poly_expr(poly, basis.order) for poly in basis.polys]
         exprs = "[%s]" % ", ".join(exprs)
 
         gens = [ self._print(gen) for gen in basis.gens ]
