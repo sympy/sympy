@@ -224,6 +224,10 @@ def test_Equivalent():
     assert Equivalent(A < 1, A >= 1, 1) is false
     assert Equivalent(A < 1, S.One > A) == Equivalent(1, 1) == Equivalent(0, 0)
     assert Equivalent(Equality(A, B), Equality(B, A)) is true
+    assert Equivalent(Eq(A, B), Eq(B, A), C) == Equivalent(Eq(A, B), C)
+    assert Equivalent(A > 1, -A < -1, C) == Equivalent(A > 1, C)
+    assert Equivalent(Eq(A, B), Eq(B, A), Ne(A, B)) is false
+    assert Equivalent(A > 1, -A < -1, True) == (A > 1)
 
 
 def test_Exclusive():
