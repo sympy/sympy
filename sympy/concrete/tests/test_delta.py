@@ -596,3 +596,10 @@ def test_deltasummation_reversed_limits():
     assert s.doit().subs(n, 5) == 0
     for nv in range(-3, 6):
         assert s.doit().subs(n, nv) == s.subs(n, nv).doit()
+
+def test_deltasummation_reversed_limits_delta_range():
+    n = symbols("n", integer=True)
+    assert ds(KD(i, j, (0, n - 1)), (j, 0, n - 2)) == \
+        Piecewise((1, And(0 <= i, i <= n - 2)), (0, True))
+    assert ds(KD(i, j, (0, n - 1)), (j, 1, n - 1)) == \
+        Piecewise((1, And(1 <= i, i <= n - 1)), (0, True))

@@ -284,6 +284,15 @@ def deltasummation(f, limit, no_piecewise=False, reversed_limits=True):
     >>> deltasummation(i*KroneckerDelta(i, j), (i, -oo, oo))
     j
 
+    If the upper limit is symbolic, it may later take a value below the lower
+    limit. Such a reversed sum is the negative of the sum over the skipped
+    range, and the result includes that case:
+
+    >>> from sympy import Symbol
+    >>> n = Symbol('n', integer=True)
+    >>> deltasummation(KroneckerDelta(i, k), (k, 2, n))
+    Piecewise((1, (i >= 2) & (i <= n)), (-1, (i <= 1) & (i >= n + 1)), (0, True))
+
     See Also
     ========
 
@@ -327,7 +336,9 @@ def deltasummation(f, limit, no_piecewise=False, reversed_limits=True):
     a, b = limit[1:3]
     val = expr.subs(x, value)
     forward = (val, Interval(a, b).as_relational(value))
-    if not reversed_limits:
+    if not reversed_limits or delta.delta_range is not None:
+        # A delta with its own range (e.g. from Identity) is zero outside
+        # that range, so the reversed-range case is not added here.
         return Piecewise(forward, (S.Zero, True))
     reverse = (-val, Interval(b + 1, a - 1).as_relational(value))
     return Piecewise(forward, reverse, (S.Zero, True))
