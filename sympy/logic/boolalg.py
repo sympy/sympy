@@ -1354,22 +1354,16 @@ class Equivalent(BooleanFunction):
                 argset.discard(x)
                 argset.add(bool(x))
         rel = []
-        for r in argset:
+        for r in ordered(argset):
             if isinstance(r, Relational):
                 rel.append((r, r.canonical, r.negated.canonical))
-        remove = []
         for i, (r, c, nc) in enumerate(rel):
             for j in range(i + 1, len(rel)):
                 rj, cj = rel[j][:2]
                 if cj == nc:
                     return false
                 elif cj == c:
-                    remove.append((r, rj))
-                    break
-        for a, b in remove:
-            argset.remove(a)
-            argset.remove(b)
-            argset.add(True)
+                    argset.discard(rj)
         if len(argset) <= 1:
             return true
         if True in argset:
