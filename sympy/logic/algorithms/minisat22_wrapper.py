@@ -43,6 +43,5 @@ def minisat22_satisfiable(expr, all_models=False, minimal=False):
                 satisfiable = True
             if not satisfiable:
                 yield False
-            raise StopIteration
 
         return _gen(r)
